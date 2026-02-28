@@ -1,0 +1,2927 @@
+{
+  "tables": [
+    {
+      "id": "tbl8nW6nn2tVxpkkw",
+      "name": "transcripts",
+      "primaryFieldId": "fldXcUhg27ArIpGo7",
+      "fields": [
+        {
+          "type": "formula",
+          "options": {
+            "isValid": true,
+            "formula": "\"M-\" & RIGHT(\"000000\" & {fldvQFlDXLAYPWxqD}, 6)",
+            "referencedFieldIds": [
+              "fldvQFlDXLAYPWxqD"
+            ],
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldXcUhg27ArIpGo7",
+          "name": "Transcript ID"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldJmEOzLtoSXVCzw",
+          "name": "Title"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "sel5sWne8IDGjdCOC",
+                "name": "single_meeting",
+                "color": "blueLight2"
+              },
+              {
+                "id": "sel1qBpAp3dlVaWNs",
+                "name": "baseline_pack",
+                "color": "cyanLight2"
+              }
+            ]
+          },
+          "id": "fld0yqALNi3mEVGxM",
+          "name": "Analysis Type"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "selYVWjSVksQOqQbm",
+                "name": "exec_staff",
+                "color": "blueLight2"
+              },
+              {
+                "id": "selAj4Nw484aw4QV1",
+                "name": "board",
+                "color": "cyanLight2"
+              },
+              {
+                "id": "selpil6QCR2DjrlVk",
+                "name": "all_hands",
+                "color": "tealLight2"
+              },
+              {
+                "id": "seltaps3K7avUacWE",
+                "name": "cross_functional",
+                "color": "greenLight2"
+              },
+              {
+                "id": "selCx3uhCD1JOrf9U",
+                "name": "project_review",
+                "color": "yellowLight2"
+              },
+              {
+                "id": "selwWSbG79IdW44vc",
+                "name": "sprint_planning",
+                "color": "orangeLight2"
+              },
+              {
+                "id": "selMSCpAPnph8TZWp",
+                "name": "sprint_retrospective",
+                "color": "redLight2"
+              },
+              {
+                "id": "selWuzK4YWWz5sW73",
+                "name": "incident_review",
+                "color": "pinkLight2"
+              },
+              {
+                "id": "selVK0wvkHJIsE77v",
+                "name": "client_call",
+                "color": "purpleLight2"
+              },
+              {
+                "id": "seluQYIuhi084XP4l",
+                "name": "one_on_one",
+                "color": "grayLight2"
+              },
+              {
+                "id": "selSybVvzcyYyUDMM",
+                "name": "stand_up",
+                "color": "blueLight2"
+              },
+              {
+                "id": "selG1iZMS4e10PHBH",
+                "name": "other",
+                "color": "cyanLight2"
+              }
+            ]
+          },
+          "id": "fld8H4WOopU7YgVoI",
+          "name": "Meeting Type"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "selMY4SsQYcTMJvOG",
+                "name": "chair",
+                "color": "blueLight2"
+              },
+              {
+                "id": "selSUAayIK77b4h34",
+                "name": "presenter",
+                "color": "cyanLight2"
+              },
+              {
+                "id": "selW83VuRj4N1mV9f",
+                "name": "participant",
+                "color": "tealLight2"
+              },
+              {
+                "id": "selJuJ4jeI6qucxo1",
+                "name": "manager_1to1",
+                "color": "greenLight2"
+              },
+              {
+                "id": "selsJnjw36U9CeINc",
+                "name": "report_1to1",
+                "color": "yellowLight2"
+              }
+            ]
+          },
+          "id": "fldEHFIpuOicWem9G",
+          "name": "Target Role"
+        },
+        {
+          "type": "date",
+          "options": {
+            "dateFormat": {
+              "name": "iso",
+              "format": "YYYY-MM-DD"
+            }
+          },
+          "id": "fldlzbkQL0plIEUUy",
+          "name": "Meeting Date"
+        },
+        {
+          "type": "multilineText",
+          "id": "fldURLj0vM7HSxarm",
+          "name": "Raw Transcript Text"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldhOJDtCJSLGv1vJ",
+          "name": "Baseline Pack ID"
+        },
+        {
+          "type": "number",
+          "options": {
+            "precision": 0
+          },
+          "id": "fldCZYcaPFopwUFOL",
+          "name": "Pack Size"
+        },
+        {
+          "type": "multilineText",
+          "id": "fldXc7WIjwqJeG3JG",
+          "name": "Meetings JSON"
+        },
+        {
+          "type": "createdTime",
+          "options": {
+            "result": {
+              "type": "dateTime",
+              "options": {
+                "dateFormat": {
+                  "name": "iso",
+                  "format": "YYYY-MM-DD"
+                },
+                "timeFormat": {
+                  "name": "12hour",
+                  "format": "h:mma"
+                },
+                "timeZone": "client"
+              }
+            }
+          },
+          "id": "fldAeqpsNi21uK9Tm",
+          "name": "Created Time"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbljGID885oqrsm7b",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fldATGnAhbp5t9WgB"
+          },
+          "id": "fldh9HUwjxmvINxw4",
+          "name": "runs"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblajoG4WOfnEClFT",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fldOxyiW8hNtU6Hve"
+          },
+          "id": "fld06KaFmXQDRduyb",
+          "name": "gate2_reports"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldBE8NaNii89tt8u",
+          "name": "Use Config Name"
+        },
+        {
+          "type": "lastModifiedTime",
+          "options": {
+            "isValid": true,
+            "referencedFieldIds": [],
+            "result": {
+              "type": "dateTime",
+              "options": {
+                "dateFormat": {
+                  "name": "local",
+                  "format": "l"
+                },
+                "timeFormat": {
+                  "name": "12hour",
+                  "format": "h:mma"
+                },
+                "timeZone": "client"
+              }
+            }
+          },
+          "id": "fldYDFUxO4KYzS57B",
+          "name": "Last Modified"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          },
+          "id": "fldKoacZJ8kXQXGOf",
+          "name": "Run Requested"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          },
+          "id": "fldgr3A1Lk4saLAtY",
+          "name": "Gate2 Requested"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldlGcWM10hpO1gSm",
+          "name": "Gate 2 Batch_ID"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblYM41aSULHycSpv",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldMrtWbc1M9FmcoH"
+          },
+          "id": "fldgA2BNDNdQLeQqX",
+          "name": "Baseline Pack"
+        },
+        {
+          "type": "formula",
+          "options": {
+            "isValid": true,
+            "formula": "RECORD_ID()",
+            "referencedFieldIds": [],
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldue11mQC8Fea0nS",
+          "name": "record_id"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblFvpSvbtBZneSy5",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fld27Yih3LhofIIH3"
+          },
+          "id": "fldnULsM4u02sJPqZ",
+          "name": "baseline_pack_items"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblOKcUmPG7M8rLca",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fldoRvHQFv2MfNrMV"
+          },
+          "id": "fldNdYNr2tcNbv0it",
+          "name": "run_requests"
+        },
+        {
+          "type": "multipleAttachments",
+          "options": {
+            "isReversed": false
+          },
+          "id": "fldTMgioGPrEfBBtW",
+          "name": "Transcript File"
+        },
+        {
+          "type": "aiText",
+          "options": {
+            "referencedFieldIds": [
+              "fldTMgioGPrEfBBtW"
+            ],
+            "prompt": [
+              "Extract the text from the attached .txt file\n\nAttachment:",
+              {
+                "field": {
+                  "fieldId": "fldTMgioGPrEfBBtW"
+                }
+              },
+              "\n"
+            ]
+          },
+          "id": "fldbq6vCNGF7nJl9W",
+          "name": "Transcript (extracted)"
+        },
+        {
+          "type": "autoNumber",
+          "id": "fldvQFlDXLAYPWxqD",
+          "name": "AutoID"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbldiUjBdCiSliiu3",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fldJWr9gAAf9IyBcR"
+          },
+          "id": "fldtS3ZCoQmHya8ZG",
+          "name": "experiment_events"
+        }
+      ],
+      "views": [
+        {
+          "id": "viwibpW9Tqizwxr4K",
+          "name": "Grid view",
+          "type": "grid"
+        },
+        {
+          "id": "viwcwMLUPYXBEQuB3",
+          "name": "Ready to Run",
+          "type": "levels"
+        }
+      ]
+    },
+    {
+      "id": "tblOKcUmPG7M8rLca",
+      "name": "run_requests",
+      "primaryFieldId": "fldWzIfFtZulblktS",
+      "fields": [
+        {
+          "type": "formula",
+          "options": {
+            "isValid": true,
+            "formula": "\"RR-\"& {fldBJsdEB4CRcFghZ}",
+            "referencedFieldIds": [
+              "fldBJsdEB4CRcFghZ"
+            ],
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldWzIfFtZulblktS",
+          "name": "Request ID"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbl8nW6nn2tVxpkkw",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldNdYNr2tcNbv0it"
+          },
+          "id": "fldoRvHQFv2MfNrMV",
+          "name": "Transcript"
+        },
+        {
+          "type": "formula",
+          "options": {
+            "isValid": true,
+            "formula": "{fldRi5cWCc9O4yTwk}",
+            "referencedFieldIds": [
+              "fldRi5cWCc9O4yTwk"
+            ],
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldiYlOdtuCbgJrNH",
+          "name": "Target Speaker Name"
+        },
+        {
+          "type": "formula",
+          "options": {
+            "isValid": true,
+            "formula": "{fldaMM8uC22aK2QS2}",
+            "referencedFieldIds": [
+              "fldaMM8uC22aK2QS2"
+            ],
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fld1BATXyYtQPAA7u",
+          "name": "Target Speaker Label"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "seliFqJTEILIV1leP",
+                "name": "chair",
+                "color": "blueLight2"
+              },
+              {
+                "id": "selUTv0PtdddBE1lB",
+                "name": "presenter",
+                "color": "cyanLight2"
+              },
+              {
+                "id": "selwKFPLZDAtKw1Dz",
+                "name": "participant",
+                "color": "tealLight2"
+              },
+              {
+                "id": "selUDDZTk9CWVCHnp",
+                "name": "manager_1to1",
+                "color": "greenLight2"
+              },
+              {
+                "id": "sel6vyIqYQbWE8VqJ",
+                "name": "report_1to1",
+                "color": "yellowLight2"
+              }
+            ]
+          },
+          "id": "fld09BUWtwhCWilDG",
+          "name": "Target Role"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "sel58GmdEcceLGpZh",
+                "name": "single_meeting",
+                "color": "blueLight2"
+              },
+              {
+                "id": "selBNYlKWfEAROPs4",
+                "name": "baseline_pack",
+                "color": "cyanLight2"
+              }
+            ]
+          },
+          "id": "fld68TnmKj04fCEJL",
+          "name": "Analysis Type"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblcx0bQKzNSSGPXv",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldCuTGExY3mZHDxD"
+          },
+          "id": "fldXLh50iPofHu2Ff",
+          "name": "Config"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "selr1fJxyQ7rhp1GR",
+                "name": "queued",
+                "color": "blueLight2"
+              },
+              {
+                "id": "selWUaeH5yGFHX89g",
+                "name": "running",
+                "color": "cyanLight2"
+              },
+              {
+                "id": "selCFauppQSS0nFxb",
+                "name": "complete",
+                "color": "tealLight2"
+              },
+              {
+                "id": "selO3bWcLNxgDAqtj",
+                "name": "error",
+                "color": "greenLight2"
+              }
+            ]
+          },
+          "id": "fldG7ZUn3OvdU5bLB",
+          "name": "Status"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbljGID885oqrsm7b",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldDp0fRt9gp4sGkq"
+          },
+          "id": "fldiv8peWQCqcH9J0",
+          "name": "Run"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblYM41aSULHycSpv",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fld5td132ctxqYm7z"
+          },
+          "id": "fld1BdIhXL5Yiq2Sd",
+          "name": "Baseline Pack"
+        },
+        {
+          "type": "lastModifiedTime",
+          "options": {
+            "isValid": true,
+            "referencedFieldIds": [],
+            "result": {
+              "type": "dateTime",
+              "options": {
+                "dateFormat": {
+                  "name": "iso",
+                  "format": "YYYY-MM-DD"
+                },
+                "timeFormat": {
+                  "name": "24hour",
+                  "format": "HH:mm"
+                },
+                "timeZone": "client"
+              }
+            }
+          },
+          "id": "fldW9xsADgjM8BHrY",
+          "name": "Last Modified"
+        },
+        {
+          "type": "autoNumber",
+          "id": "fldBJsdEB4CRcFghZ",
+          "name": "AutoID"
+        },
+        {
+          "type": "richText",
+          "id": "fld86WMXvLfGXpZNF",
+          "name": "Error"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblrrRjzpMfv0cenB",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldaavO2xvqGx6fjG"
+          },
+          "id": "fldB1XbbixKiOfyAG",
+          "name": "User"
+        },
+        {
+          "type": "multipleLookupValues",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fldB1XbbixKiOfyAG",
+            "fieldIdInLinkedTable": "fldZhJlO8lQgBZq8v",
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldG0NND9qELA7TLf",
+          "name": "User ID (from User)"
+        },
+        {
+          "type": "multipleLookupValues",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fldB1XbbixKiOfyAG",
+            "fieldIdInLinkedTable": "fld0HdDYC8KcHDOAZ",
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldRi5cWCc9O4yTwk",
+          "name": "Target Speaker Name (from User)"
+        },
+        {
+          "type": "multipleLookupValues",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fldB1XbbixKiOfyAG",
+            "fieldIdInLinkedTable": "fldhVBVsksl0OCIXt",
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldaMM8uC22aK2QS2",
+          "name": "Target Speaker Label (from User)"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblgZ52AnhevoHOdi",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldWL527mq6vMEZog"
+          },
+          "id": "fldOubDJOZxPbN8GX",
+          "name": "Active Experiment"
+        },
+        {
+          "type": "multipleLookupValues",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fldOubDJOZxPbN8GX",
+            "fieldIdInLinkedTable": "fldeF1jAuMt3MYFJ3",
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fld1mP1972VFne0GQ",
+          "name": "Experiment ID (from Active Experiment)"
+        }
+      ],
+      "views": [
+        {
+          "id": "viwgd7OX5BY9yrxta",
+          "name": "Grid view",
+          "type": "grid"
+        }
+      ]
+    },
+    {
+      "id": "tbljGID885oqrsm7b",
+      "name": "runs",
+      "primaryFieldId": "fldWHbajnd6UryNg0",
+      "fields": [
+        {
+          "type": "formula",
+          "options": {
+            "isValid": true,
+            "formula": "\"RUN-\" & {fldUt9Dj7IPKhrloB}",
+            "referencedFieldIds": [
+              "fldUt9Dj7IPKhrloB"
+            ],
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldWHbajnd6UryNg0",
+          "name": "Run ID"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbl8nW6nn2tVxpkkw",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldh9HUwjxmvINxw4"
+          },
+          "id": "fldATGnAhbp5t9WgB",
+          "name": "Transcript ID"
+        },
+        {
+          "type": "multipleLookupValues",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fldATGnAhbp5t9WgB",
+            "fieldIdInLinkedTable": "fldXcUhg27ArIpGo7",
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldR5jOS5nWeolgM2",
+          "name": "Transcript ID (from Transcript ID)"
+        },
+        {
+          "type": "number",
+          "options": {
+            "precision": 0
+          },
+          "id": "fld1t4r8vK6hQWmOo",
+          "name": "Run Number"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldmW6eSzbRG43hHL",
+          "name": "Model Name"
+        },
+        {
+          "type": "multilineText",
+          "id": "fldSrxo1W6OjhM2su",
+          "name": "Request Payload JSON"
+        },
+        {
+          "type": "multilineText",
+          "id": "fldLPRvq57FBu8Z4S",
+          "name": "Raw Model Output"
+        },
+        {
+          "type": "multilineText",
+          "id": "fldFiUqAzoQpMN04j",
+          "name": "Parsed JSON"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          },
+          "id": "fld2NvgVxotQVN9vS",
+          "name": "Parse OK"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          },
+          "id": "fldJnIm9SuxEtIo3m",
+          "name": "Schema OK"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          },
+          "id": "fldYQCioVUA6iyewd",
+          "name": "Business OK"
+        },
+        {
+          "type": "formula",
+          "options": {
+            "isValid": true,
+            "formula": "IF(AND({fld2NvgVxotQVN9vS},{fldJnIm9SuxEtIo3m},{fldYQCioVUA6iyewd}),\"PASS\",\"FAIL\")",
+            "referencedFieldIds": [
+              "fld2NvgVxotQVN9vS",
+              "fldJnIm9SuxEtIo3m",
+              "fldYQCioVUA6iyewd"
+            ],
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldfrVddyBSxtyKoT",
+          "name": "Gate1 Pass"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldVWo95edpN7Kc6Z",
+          "name": "Schema Version Out"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fld3TKPGGEv8QLdvI",
+          "name": "Focus Pattern"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldk9Dk4GFLyk0yGl",
+          "name": "Micro-Experiment Pattern"
+        },
+        {
+          "type": "richText",
+          "id": "fld94RG7hf6bMga6L",
+          "name": "Strengths Patterns"
+        },
+        {
+          "type": "number",
+          "options": {
+            "precision": 0
+          },
+          "id": "fldOQfRYmtQQchAvN",
+          "name": "Evaluated Patterns Count"
+        },
+        {
+          "type": "number",
+          "options": {
+            "precision": 0
+          },
+          "id": "fld73uPZ5SkS3TCmd",
+          "name": "Evidence Span Count"
+        },
+        {
+          "type": "createdTime",
+          "options": {
+            "result": {
+              "type": "dateTime",
+              "options": {
+                "dateFormat": {
+                  "name": "iso",
+                  "format": "YYYY-MM-DD"
+                },
+                "timeFormat": {
+                  "name": "24hour",
+                  "format": "HH:mm"
+                },
+                "timeZone": "client"
+              }
+            }
+          },
+          "id": "fldgAjBb7acI4SEWm",
+          "name": "Created At"
+        },
+        {
+          "type": "autoNumber",
+          "id": "fldUt9Dj7IPKhrloB",
+          "name": "Auto_ID"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblg52SAzdKpKiMaR",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fldEj4P125P1RzOLy"
+          },
+          "id": "fldo2BNhS4uq7sLrx",
+          "name": "validation_issues"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblajoG4WOfnEClFT",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fldpoV88acrURPtPU"
+          },
+          "id": "fldmV6aFQh9jP4tKc",
+          "name": "gate2_reports"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblajoG4WOfnEClFT",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fldBCxWEDPLXsuNr3"
+          },
+          "id": "fldTFiclOWx4H5T5B",
+          "name": "gate2_reports 2"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblajoG4WOfnEClFT",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fld5tfHOWJwVD3mEv"
+          },
+          "id": "fldhLLT5TctXnq7f6",
+          "name": "gate2_reports 3"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblcx0bQKzNSSGPXv",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldTgCFeQwOPlLIBJ"
+          },
+          "id": "fldI0rGFu5QSgrmLH",
+          "name": "Config Used"
+        },
+        {
+          "type": "multipleLookupValues",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fldI0rGFu5QSgrmLH",
+            "fieldIdInLinkedTable": "fldaA4MvBTgEB3tbt",
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldY2m9eStbYBjwkG",
+          "name": "Config Name (from Config Used)"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldgOUA6WHCUk2Gzf",
+          "name": "Gate2 Batch Id"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fld3Ic00ndoT5JN2y",
+          "name": "Last Gate2 Batch ID"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblYM41aSULHycSpv",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldStDckT4iHeXupZ"
+          },
+          "id": "fldyxVWtBPSlpYLRz",
+          "name": "baseline_pack"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblYM41aSULHycSpv",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fld6o4OkW3BdYUiSw"
+          },
+          "id": "fldp1G06muQ3nskAp",
+          "name": "baseline_packs (Last Run)"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblgZ52AnhevoHOdi",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldcH8SFGbQz7bjwi"
+          },
+          "id": "fldLiD30DJOf51iY4",
+          "name": "Active Experiment"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "sel2FPEDomt6abfKi",
+                "name": "yes",
+                "color": "greenLight2"
+              },
+              {
+                "id": "seluIGfqByg8wce1e",
+                "name": "partial",
+                "color": "yellowLight2"
+              },
+              {
+                "id": "sel3XWWhpnX7r4dgp",
+                "name": "no",
+                "color": "redLight2"
+              },
+              {
+                "id": "selO6nBcL7BkW15It",
+                "name": "unknown",
+                "color": "grayLight2"
+              }
+            ]
+          },
+          "id": "fldRfe8Bs5tQv1PYt",
+          "name": "Attempt (model)"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "selgpf79GNKjFqkO4",
+                "name": "proposed",
+                "color": "blueLight2"
+              },
+              {
+                "id": "selCJ0MDKHxb8FodP",
+                "name": "active",
+                "color": "yellowLight2"
+              },
+              {
+                "id": "sely9rAPZkLW4xuxS",
+                "name": "complete",
+                "color": "greenLight2"
+              },
+              {
+                "id": "selSZa6GjPydEhLfo",
+                "name": "abandoned",
+                "color": "redLight2"
+              },
+              {
+                "id": "sel5T0WZ6jnWkDwVD",
+                "name": "assigned",
+                "color": "cyanLight2"
+              }
+            ]
+          },
+          "id": "fld88uSEp7Ir4JeF2",
+          "name": "Experiment Status (model)"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldUK5AHoshjy1afi",
+          "name": "Experiment ID Out"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblFvpSvbtBZneSy5",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fldMgrhck0DmDlVXH"
+          },
+          "id": "flda1zFXxkhLa4sAI",
+          "name": "baseline_pack_items"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fld3u8lSUyw9CYhhR",
+          "name": "Target Speaker Name"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldDTPy6vDQx474Fm",
+          "name": "Target Speaker Label"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "selUhjvYw8phMHa93",
+                "name": "chair",
+                "color": "blueLight2"
+              },
+              {
+                "id": "selGSgl4UJzkZWS4W",
+                "name": "presenter",
+                "color": "cyanLight2"
+              },
+              {
+                "id": "sel8OSWYRgZvitRjp",
+                "name": "participant",
+                "color": "purpleLight2"
+              },
+              {
+                "id": "selekdRXdXPgebGse",
+                "name": "manager_1to1",
+                "color": "greenLight2"
+              },
+              {
+                "id": "selp06R2Aic1tm2F9",
+                "name": "report_1to1",
+                "color": "yellowLight2"
+              },
+              {
+                "id": "selVAlCxdCfCIasgO",
+                "name": "mixed",
+                "color": "redLight2"
+              }
+            ]
+          },
+          "id": "fld3M7sRgNuiJJPzD",
+          "name": "Target Speaker Role"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblOKcUmPG7M8rLca",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fldiv8peWQCqcH9J0"
+          },
+          "id": "fldDp0fRt9gp4sGkq",
+          "name": "run_requests"
+        },
+        {
+          "type": "multipleLookupValues",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fldDp0fRt9gp4sGkq",
+            "fieldIdInLinkedTable": "fldRi5cWCc9O4yTwk",
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldTfMNA2utCeM84A",
+          "name": "Target Speaker Name (from run_requests)"
+        },
+        {
+          "type": "multipleLookupValues",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fldDp0fRt9gp4sGkq",
+            "fieldIdInLinkedTable": "fldaMM8uC22aK2QS2",
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldARzZbXsksvi34P",
+          "name": "Target Speaker Label (from run_requests)"
+        },
+        {
+          "type": "multipleLookupValues",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fldDp0fRt9gp4sGkq",
+            "fieldIdInLinkedTable": "fld09BUWtwhCWilDG",
+            "result": {
+              "type": "singleSelect",
+              "options": {
+                "choices": [
+                  {
+                    "id": "seliFqJTEILIV1leP",
+                    "name": "chair",
+                    "color": "blueLight2"
+                  },
+                  {
+                    "id": "selUTv0PtdddBE1lB",
+                    "name": "presenter",
+                    "color": "cyanLight2"
+                  },
+                  {
+                    "id": "selwKFPLZDAtKw1Dz",
+                    "name": "participant",
+                    "color": "tealLight2"
+                  },
+                  {
+                    "id": "selUDDZTk9CWVCHnp",
+                    "name": "manager_1to1",
+                    "color": "greenLight2"
+                  },
+                  {
+                    "id": "sel6vyIqYQbWE8VqJ",
+                    "name": "report_1to1",
+                    "color": "yellowLight2"
+                  }
+                ]
+              }
+            }
+          },
+          "id": "fldic3tqPKLoY03kI",
+          "name": "Target Role (from run_requests)"
+        },
+        {
+          "type": "multipleLookupValues",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fldDp0fRt9gp4sGkq",
+            "fieldIdInLinkedTable": "fld68TnmKj04fCEJL",
+            "result": {
+              "type": "singleSelect",
+              "options": {
+                "choices": [
+                  {
+                    "id": "sel58GmdEcceLGpZh",
+                    "name": "single_meeting",
+                    "color": "blueLight2"
+                  },
+                  {
+                    "id": "selBNYlKWfEAROPs4",
+                    "name": "baseline_pack",
+                    "color": "cyanLight2"
+                  }
+                ]
+              }
+            }
+          },
+          "id": "fldfTdL01JbzaxZY5",
+          "name": "Analysis Type (from run_requests)"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbldiUjBdCiSliiu3",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fldvafMrAfqYGsZgB"
+          },
+          "id": "fldzkhFttSOXcjLu3",
+          "name": "experiment_events"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblrrRjzpMfv0cenB",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fld7UJJoyca0A3fgd"
+          },
+          "id": "fldAoL6oqSzFc4Jay",
+          "name": "users"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          },
+          "id": "fldfWQG1mKAsi7m40",
+          "name": "Attempt Event Created?"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldYvh7dgjBPxhxqf",
+          "name": "Analysis Type"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          },
+          "id": "fldIU8nFtXgvbd9Us",
+          "name": "Experiment Instantiated?"
+        }
+      ],
+      "views": [
+        {
+          "id": "viw5jFDjGE5TnKvtO",
+          "name": "Grid view",
+          "type": "grid"
+        },
+        {
+          "id": "viwwYT8EXMOfgRQeS",
+          "name": "Gate 1 Failures",
+          "type": "levels"
+        }
+      ]
+    },
+    {
+      "id": "tblg52SAzdKpKiMaR",
+      "name": "validation_issues",
+      "primaryFieldId": "fld4Ql7HHQ8NRyBYw",
+      "fields": [
+        {
+          "type": "formula",
+          "options": {
+            "isValid": true,
+            "formula": "\"ISSUE-\"&{fldPqZGMxChZ3wVFY}",
+            "referencedFieldIds": [
+              "fldPqZGMxChZ3wVFY"
+            ],
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fld4Ql7HHQ8NRyBYw",
+          "name": "Issue ID"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbljGID885oqrsm7b",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldo2BNhS4uq7sLrx"
+          },
+          "id": "fldEj4P125P1RzOLy",
+          "name": "Run ID"
+        },
+        {
+          "type": "multipleLookupValues",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fldEj4P125P1RzOLy",
+            "fieldIdInLinkedTable": "fldWHbajnd6UryNg0",
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldUEqbcbJiOEDdHo",
+          "name": "Run ID (from Run ID)"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "sel8upDBg88K2eCuQ",
+                "name": "blocking",
+                "color": "blueLight2"
+              },
+              {
+                "id": "sel59naWk4c4YuFN0",
+                "name": "warning",
+                "color": "cyanLight2"
+              }
+            ]
+          },
+          "id": "fldBAy32C21T5a0B4",
+          "name": "Severity"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "selPV0G6wVnr0xLq8",
+                "name": "PARSE_INVALID_JSON",
+                "color": "blueLight2"
+              },
+              {
+                "id": "selV6Yg5P2TQSyCdN",
+                "name": "SCHEMA_REQUIRED_FIELD_MISSING",
+                "color": "cyanLight2"
+              },
+              {
+                "id": "selT3llzHdzRl5NOf",
+                "name": "SCHEMA_ENUM_INVALID",
+                "color": "tealLight2"
+              },
+              {
+                "id": "seliPCtBVC7UW1r0G",
+                "name": "SCHEMA_TYPE_MISMATCH",
+                "color": "greenLight2"
+              },
+              {
+                "id": "sel4ZgvYBrDhElDEf",
+                "name": "BUS_EVAL_SUMMARY_MISSING_ARRAYS",
+                "color": "yellowLight2"
+              },
+              {
+                "id": "seldmXYcK1vytb0YW",
+                "name": "BUS_EVIDENCE_TURN_ID_NOT_INT",
+                "color": "orangeLight2"
+              },
+              {
+                "id": "selpVNQls45W1Jv0P",
+                "name": "BUS_CONV_BAL_NUMERIC_FORBIDDEN",
+                "color": "redLight2"
+              },
+              {
+                "id": "selaFF31kXyawlBnv",
+                "name": "BUS_EXPERIMENT_CONDITIONAL_MISMATCH",
+                "color": "pinkLight2"
+              },
+              {
+                "id": "selcF3BqCwhBFmuQ8",
+                "name": "BUS_TRACE_DENOM_MISMATCH",
+                "color": "purpleLight2"
+              },
+              {
+                "id": "selzk597v6TqcxCDC",
+                "name": "BUS_TRACE_NUMERATOR_MISMATCH",
+                "color": "grayLight2"
+              },
+              {
+                "id": "selpHUy23qxtbRrDE",
+                "name": "BUS_TRACE_RATIO_MISMATCH",
+                "color": "blueLight2"
+              },
+              {
+                "id": "selQmIyt8yXE1USJH",
+                "name": "BUS_OTHER",
+                "color": "cyanLight2"
+              },
+              {
+                "id": "selT8QXiSWUENzmAN",
+                "name": "WORKER_CALL_FAILED",
+                "color": "tealLight2"
+              }
+            ]
+          },
+          "id": "fldGgOrXgb7j1KOSw",
+          "name": "Issue Code"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fld0QgXnxEGCcWlik",
+          "name": "Path"
+        },
+        {
+          "type": "multilineText",
+          "id": "fldoJFjQm3h5zDrNz",
+          "name": "Message"
+        },
+        {
+          "type": "autoNumber",
+          "id": "fldPqZGMxChZ3wVFY",
+          "name": "Auto_ID"
+        },
+        {
+          "type": "createdTime",
+          "options": {
+            "result": {
+              "type": "dateTime",
+              "options": {
+                "dateFormat": {
+                  "name": "iso",
+                  "format": "YYYY-MM-DD"
+                },
+                "timeFormat": {
+                  "name": "12hour",
+                  "format": "h:mma"
+                },
+                "timeZone": "client"
+              }
+            }
+          },
+          "id": "fldxsRTlBh1PTG4ep",
+          "name": "Created"
+        }
+      ],
+      "views": [
+        {
+          "id": "viwgNEA6cexoBUPX6",
+          "name": "Grid view",
+          "type": "grid"
+        },
+        {
+          "id": "viwPF238TCNjKvADl",
+          "name": "Blocking",
+          "type": "levels"
+        }
+      ]
+    },
+    {
+      "id": "tblajoG4WOfnEClFT",
+      "name": "gate2_reports",
+      "primaryFieldId": "fld1PhqEZCQlFXmVf",
+      "fields": [
+        {
+          "type": "formula",
+          "options": {
+            "isValid": true,
+            "formula": "\"G2-\"&{fldjIATKaSpb6uobh}",
+            "referencedFieldIds": [
+              "fldjIATKaSpb6uobh"
+            ],
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fld1PhqEZCQlFXmVf",
+          "name": "Report ID"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbl8nW6nn2tVxpkkw",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fld06KaFmXQDRduyb"
+          },
+          "id": "fldOxyiW8hNtU6Hve",
+          "name": "Transcript ID"
+        },
+        {
+          "type": "multipleLookupValues",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fldOxyiW8hNtU6Hve",
+            "fieldIdInLinkedTable": "fldXcUhg27ArIpGo7",
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldMi9SYPDR9KkTrA",
+          "name": "Transcript ID (from Transcript ID)"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbljGID885oqrsm7b",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldmV6aFQh9jP4tKc"
+          },
+          "id": "fldpoV88acrURPtPU",
+          "name": "Run 1"
+        },
+        {
+          "type": "multipleLookupValues",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fldpoV88acrURPtPU",
+            "fieldIdInLinkedTable": "fldWHbajnd6UryNg0",
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldY0a38IPqOYTDU6",
+          "name": "Run ID (from Run 1)"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbljGID885oqrsm7b",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldTFiclOWx4H5T5B"
+          },
+          "id": "fldBCxWEDPLXsuNr3",
+          "name": "Run 2"
+        },
+        {
+          "type": "multipleLookupValues",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fldBCxWEDPLXsuNr3",
+            "fieldIdInLinkedTable": "fldWHbajnd6UryNg0",
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldlWW0UmPiF61RBd",
+          "name": "Run ID (from Run 2)"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbljGID885oqrsm7b",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldhLLT5TctXnq7f6"
+          },
+          "id": "fld5tfHOWJwVD3mEv",
+          "name": "Run 3"
+        },
+        {
+          "type": "multipleLookupValues",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fld5tfHOWJwVD3mEv",
+            "fieldIdInLinkedTable": "fldWHbajnd6UryNg0",
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldCPbdszd0GbGhrS",
+          "name": "Run ID (from Run 3)"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          },
+          "id": "fldsQt6hfNojlMxFO",
+          "name": "Structure Stable"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          },
+          "id": "fldFSpXkUlTHztS5F",
+          "name": "Core Coaching Stable (>=2/3)"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          },
+          "id": "fldIwKhYdpLaGzEBw",
+          "name": "No Valid→Invalid Flip"
+        },
+        {
+          "type": "formula",
+          "options": {
+            "isValid": true,
+            "formula": "IF(AND({fldsQt6hfNojlMxFO},{fldFSpXkUlTHztS5F},{fldIwKhYdpLaGzEBw}),\"PASS\",\"FAIL\")",
+            "referencedFieldIds": [
+              "fldsQt6hfNojlMxFO",
+              "fldFSpXkUlTHztS5F",
+              "fldIwKhYdpLaGzEBw"
+            ],
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldDCgWCHT8QdWMVs",
+          "name": "Gate2 Pass"
+        },
+        {
+          "type": "multilineText",
+          "id": "fldIfqPDjCB8o1xa4",
+          "name": "Variance Notes"
+        },
+        {
+          "type": "autoNumber",
+          "id": "fldjIATKaSpb6uobh",
+          "name": "Auto_ID"
+        },
+        {
+          "type": "createdTime",
+          "options": {
+            "result": {
+              "type": "dateTime",
+              "options": {
+                "dateFormat": {
+                  "name": "iso",
+                  "format": "YYYY-MM-DD"
+                },
+                "timeFormat": {
+                  "name": "12hour",
+                  "format": "h:mma"
+                },
+                "timeZone": "client"
+              }
+            }
+          },
+          "id": "fld6KzRhj8xeC5RpU",
+          "name": "Created"
+        }
+      ],
+      "views": [
+        {
+          "id": "viwLm4SjVSXOs30WM",
+          "name": "Grid view",
+          "type": "grid"
+        },
+        {
+          "id": "viwPdhwZ7JIHzcyCq",
+          "name": "Latest",
+          "type": "grid"
+        }
+      ]
+    },
+    {
+      "id": "tblcx0bQKzNSSGPXv",
+      "name": "config",
+      "primaryFieldId": "fldaA4MvBTgEB3tbt",
+      "fields": [
+        {
+          "type": "singleLineText",
+          "id": "fldaA4MvBTgEB3tbt",
+          "name": "Config Name"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          },
+          "id": "fldL7kZnE2TUITHhZ",
+          "name": "Active"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldNyp3YMrkQiyQsI",
+          "name": "Model Name"
+        },
+        {
+          "type": "number",
+          "options": {
+            "precision": 1
+          },
+          "id": "fldhRI8IBmJbhXKzH",
+          "name": "Temperature"
+        },
+        {
+          "type": "multilineText",
+          "id": "fld0GXBe0ckRAdCLj",
+          "name": "System Prompt"
+        },
+        {
+          "type": "multilineText",
+          "id": "fldSVDs3G9Bgx2VyI",
+          "name": "Taxonomy Compact Block"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldfHDTogRQzXMSDW",
+          "name": "Schema Version"
+        },
+        {
+          "type": "multilineText",
+          "id": "fldumzv4d3vVser8P",
+          "name": "Schema JSON"
+        },
+        {
+          "type": "multilineText",
+          "id": "fldy6l1Sl1XBT1MkL",
+          "name": "User Prompt Template"
+        },
+        {
+          "type": "number",
+          "options": {
+            "precision": 0
+          },
+          "id": "fldoHALTdkapiThEO",
+          "name": "Max Output Tokens"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          },
+          "id": "fld1LXRvYjohAEo5Y",
+          "name": "Enable Trace Checks"
+        },
+        {
+          "type": "lastModifiedTime",
+          "options": {
+            "isValid": true,
+            "referencedFieldIds": [],
+            "result": {
+              "type": "dateTime",
+              "options": {
+                "dateFormat": {
+                  "name": "local",
+                  "format": "l"
+                },
+                "timeFormat": {
+                  "name": "12hour",
+                  "format": "h:mma"
+                },
+                "timeZone": "client"
+              }
+            }
+          },
+          "id": "fldfRMhJOU621Y4cl",
+          "name": "Updated At"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbljGID885oqrsm7b",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fldI0rGFu5QSgrmLH"
+          },
+          "id": "fldTgCFeQwOPlLIBJ",
+          "name": "runs"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblOKcUmPG7M8rLca",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fldXLh50iPofHu2Ff"
+          },
+          "id": "fldCuTGExY3mZHDxD",
+          "name": "run_requests"
+        }
+      ],
+      "views": [
+        {
+          "id": "viwVBXeE0r1mI2pwC",
+          "name": "Grid view",
+          "type": "grid"
+        }
+      ]
+    },
+    {
+      "id": "tblYM41aSULHycSpv",
+      "name": "baseline_packs",
+      "primaryFieldId": "fldCAmbE1dh1NY9fD",
+      "fields": [
+        {
+          "type": "formula",
+          "options": {
+            "isValid": true,
+            "formula": "\"BP-\" & RIGHT(\"000000\" & {fld4qMxhK7ZGlum2f}, 6)",
+            "referencedFieldIds": [
+              "fld4qMxhK7ZGlum2f"
+            ],
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldCAmbE1dh1NY9fD",
+          "name": "Baseline Pack ID"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldD4zRG3jNGLyCQk",
+          "name": "Client / Leader Name"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "selgIWlNbfuvBQWtD",
+                "name": "chair",
+                "color": "blueLight2"
+              },
+              {
+                "id": "selU7w88oBt5xpjPd",
+                "name": "presenter",
+                "color": "cyanLight2"
+              },
+              {
+                "id": "selLyh9AkPM5ATzbk",
+                "name": "participant",
+                "color": "tealLight2"
+              },
+              {
+                "id": "selPfQGX3z4QbXTGU",
+                "name": "manager_1to1",
+                "color": "greenLight2"
+              },
+              {
+                "id": "selpkpRQiuE2OEhvK",
+                "name": "report_1to1",
+                "color": "yellowLight2"
+              }
+            ]
+          },
+          "id": "flduw0M8jUw3qnZaj",
+          "name": "Target Role"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbl8nW6nn2tVxpkkw",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fldgA2BNDNdQLeQqX"
+          },
+          "id": "fldMrtWbc1M9FmcoH",
+          "name": "Baseline Meetings"
+        },
+        {
+          "type": "multipleLookupValues",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fldMrtWbc1M9FmcoH",
+            "fieldIdInLinkedTable": "fldXcUhg27ArIpGo7",
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fld08NIe4dAOinlSM",
+          "name": "Transcript ID (from Baseline Meetings)"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          },
+          "id": "fldT9ia8foBepe46y",
+          "name": "Baseline Items Ready Ping"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbljGID885oqrsm7b",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldyxVWtBPSlpYLRz"
+          },
+          "id": "fldStDckT4iHeXupZ",
+          "name": "Baseline Run"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "selHQjnyAoPxPQrBP",
+                "name": "intake",
+                "color": "blueLight2"
+              },
+              {
+                "id": "selttf0JJkoBd2Qu0",
+                "name": "baseline_ready",
+                "color": "yellowLight2"
+              },
+              {
+                "id": "selABGncW5uofN57f",
+                "name": "active",
+                "color": "greenLight2"
+              },
+              {
+                "id": "selAKxS9IpmOrl1BY",
+                "name": "paused",
+                "color": "grayLight2"
+              },
+              {
+                "id": "selcTxWUPpWKkM680",
+                "name": "closed",
+                "color": "redLight2"
+              }
+            ]
+          },
+          "id": "fldFvmdI1rj2wOPVr",
+          "name": "Status"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "thumbsUp",
+            "color": "greenBright"
+          },
+          "id": "fldhXGFUn7Aj76kdX",
+          "name": "Move On Requested"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "selMCgn4cRsUwnmV0",
+                "name": "active",
+                "color": "blueLight2"
+              },
+              {
+                "id": "sel7PJS9TLbYDImFw",
+                "name": "complete",
+                "color": "cyanLight2"
+              },
+              {
+                "id": "selBfFHhhHbYGQaPJ",
+                "name": "abandoned",
+                "color": "tealLight2"
+              }
+            ]
+          },
+          "id": "fldOKspXiR9EpkfsI",
+          "name": "Completion Decision"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "thumbsUp",
+            "color": "greenBright"
+          },
+          "id": "fldGcCBBAEDQrxiQz",
+          "name": "Experiment Lock"
+        },
+        {
+          "type": "rollup",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fldMrtWbc1M9FmcoH",
+            "fieldIdInLinkedTable": "fldlzbkQL0plIEUUy",
+            "referencedFieldIds": [],
+            "result": {
+              "type": "date",
+              "options": {
+                "dateFormat": {
+                  "name": "us",
+                  "format": "M/D/YYYY"
+                }
+              }
+            }
+          },
+          "id": "fldtxZHzbChQI98Qd",
+          "name": "Last Meeting Date"
+        },
+        {
+          "type": "rollup",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fldMrtWbc1M9FmcoH",
+            "fieldIdInLinkedTable": "fldlzbkQL0plIEUUy",
+            "referencedFieldIds": [],
+            "result": {
+              "type": "number",
+              "options": {
+                "precision": 0
+              }
+            }
+          },
+          "id": "fldUyvPyCjVqQmj3P",
+          "name": "Meetings Count"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbljGID885oqrsm7b",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldp1G06muQ3nskAp"
+          },
+          "id": "fld6o4OkW3BdYUiSw",
+          "name": "Last Run"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblgZ52AnhevoHOdi",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldU2hLV6QaP8TAph"
+          },
+          "id": "fldGBRtTjNWW8Lvtt",
+          "name": "Active Experiment"
+        },
+        {
+          "type": "lastModifiedTime",
+          "options": {
+            "isValid": true,
+            "referencedFieldIds": [],
+            "result": {
+              "type": "dateTime",
+              "options": {
+                "dateFormat": {
+                  "name": "iso",
+                  "format": "YYYY-MM-DD"
+                },
+                "timeFormat": {
+                  "name": "24hour",
+                  "format": "HH:mm"
+                },
+                "timeZone": "client"
+              }
+            }
+          },
+          "id": "fldqvE2MGhAKZ2sgq",
+          "name": "Last Modified"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblFvpSvbtBZneSy5",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fld0pYMXAmYKRI5RP"
+          },
+          "id": "fld5JDBT47GYnrsYw",
+          "name": "baseline_pack_items"
+        },
+        {
+          "type": "autoNumber",
+          "id": "fld4qMxhK7ZGlum2f",
+          "name": "AutoID"
+        },
+        {
+          "type": "formula",
+          "options": {
+            "isValid": true,
+            "formula": "RECORD_ID()",
+            "referencedFieldIds": [],
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldcZnMFmjXZLFerH",
+          "name": "Record_id"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblOKcUmPG7M8rLca",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fld1BdIhXL5Yiq2Sd"
+          },
+          "id": "fld5td132ctxqYm7z",
+          "name": "run_requests"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldCwXc5s3OLYlYoj",
+          "name": "Speaker Label"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblrrRjzpMfv0cenB",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fldelB2SM0zZwQxNk"
+          },
+          "id": "fldm04wSYvnhMZ1Bx",
+          "name": "users"
+        },
+        {
+          "type": "formula",
+          "options": {
+            "isValid": true,
+            "formula": "{fldFvmdI1rj2wOPVr}=\"baseline_ready\"",
+            "referencedFieldIds": [
+              "fldFvmdI1rj2wOPVr"
+            ],
+            "result": {
+              "type": "number",
+              "options": {
+                "precision": 0
+              }
+            }
+          },
+          "id": "fldM7xHDwvxjaeVZ2",
+          "name": "Is Active"
+        }
+      ],
+      "views": [
+        {
+          "id": "viwcd7gBStMULPtTR",
+          "name": "Grid view",
+          "type": "grid"
+        }
+      ]
+    },
+    {
+      "id": "tblFvpSvbtBZneSy5",
+      "name": "baseline_pack_items",
+      "primaryFieldId": "fldzGzmoVvbjPJpq2",
+      "fields": [
+        {
+          "type": "formula",
+          "options": {
+            "isValid": true,
+            "formula": "\"BPI-\" & {fldzawEoZKMhb8TE5}",
+            "referencedFieldIds": [
+              "fldzawEoZKMhb8TE5"
+            ],
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldzGzmoVvbjPJpq2",
+          "name": "Baseline Pack Item ID"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblYM41aSULHycSpv",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fld5JDBT47GYnrsYw"
+          },
+          "id": "fld0pYMXAmYKRI5RP",
+          "name": "Baseline Pack"
+        },
+        {
+          "type": "multipleLookupValues",
+          "options": {
+            "isValid": true,
+            "recordLinkFieldId": "fld0pYMXAmYKRI5RP",
+            "fieldIdInLinkedTable": "fldCAmbE1dh1NY9fD",
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldJMrjpFLcRYXOhd",
+          "name": "Baseline Pack ID (from Baseline Pack)"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbl8nW6nn2tVxpkkw",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldnULsM4u02sJPqZ"
+          },
+          "id": "fld27Yih3LhofIIH3",
+          "name": "Transcript"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbljGID885oqrsm7b",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "flda1zFXxkhLa4sAI"
+          },
+          "id": "fldMgrhck0DmDlVXH",
+          "name": "Run"
+        },
+        {
+          "type": "multilineText",
+          "id": "fldf0jR5mZ7xvyKfu",
+          "name": "Meeting Summary JSON"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "selJxEyGB55J8tcdk",
+                "name": "pending",
+                "color": "yellowLight2"
+              },
+              {
+                "id": "seleuCPtJEgmQ4Yqw",
+                "name": "ready",
+                "color": "greenLight2"
+              }
+            ]
+          },
+          "id": "fldFhoZGeQrYOHF9t",
+          "name": "Status"
+        },
+        {
+          "type": "autoNumber",
+          "id": "fldzawEoZKMhb8TE5",
+          "name": "AutoID"
+        },
+        {
+          "type": "lastModifiedTime",
+          "options": {
+            "isValid": true,
+            "referencedFieldIds": [],
+            "result": {
+              "type": "dateTime",
+              "options": {
+                "dateFormat": {
+                  "name": "iso",
+                  "format": "YYYY-MM-DD"
+                },
+                "timeFormat": {
+                  "name": "24hour",
+                  "format": "HH:mm"
+                },
+                "timeZone": "client"
+              }
+            }
+          },
+          "id": "fldvTODu06je1fKuX",
+          "name": "Last Modified"
+        }
+      ],
+      "views": [
+        {
+          "id": "viwrwxTXKo8Nfr229",
+          "name": "Grid view",
+          "type": "grid"
+        }
+      ]
+    },
+    {
+      "id": "tblgZ52AnhevoHOdi",
+      "name": "experiments",
+      "primaryFieldId": "fldeF1jAuMt3MYFJ3",
+      "fields": [
+        {
+          "type": "formula",
+          "options": {
+            "isValid": true,
+            "formula": "\"EXP-\" & RIGHT(\"000000\" & {fldXAp7pIACU8AJ3x}, 6)",
+            "referencedFieldIds": [
+              "fldXAp7pIACU8AJ3x"
+            ],
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldeF1jAuMt3MYFJ3",
+          "name": "Experiment ID"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldku8B4FQCuWKrRi",
+          "name": "Title"
+        },
+        {
+          "type": "multilineText",
+          "id": "fld8C1P9hCbMmNRBR",
+          "name": "Instructions"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblYM41aSULHycSpv",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldGBRtTjNWW8Lvtt"
+          },
+          "id": "fldU2hLV6QaP8TAph",
+          "name": "Baseline Pack"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "self5AX9WnHgq2gl8",
+                "name": "proposed",
+                "color": "blueLight2"
+              },
+              {
+                "id": "selcAas1cKz2cZoOV",
+                "name": "active",
+                "color": "yellowLight2"
+              },
+              {
+                "id": "selO71Fwdjd1a1t3f",
+                "name": "complete",
+                "color": "greenLight2"
+              },
+              {
+                "id": "selTzjKKBE6J8fXhw",
+                "name": "abandoned",
+                "color": "redLight2"
+              }
+            ]
+          },
+          "id": "fld0R5rbYE7WcEW87",
+          "name": "Status"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldNlKcKhJSrj6pqZ",
+          "name": "Pattern ID"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbljGID885oqrsm7b",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldLiD30DJOf51iY4"
+          },
+          "id": "fldcH8SFGbQz7bjwi",
+          "name": "Proposed By Run"
+        },
+        {
+          "type": "multilineText",
+          "id": "fldQ7uPIGhm1IrHly",
+          "name": "Success Criteria"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "thumbsUp",
+            "color": "greenBright"
+          },
+          "id": "fld2vZWu2BrLu0AlA",
+          "name": "Locked By User"
+        },
+        {
+          "type": "dateTime",
+          "options": {
+            "dateFormat": {
+              "name": "us",
+              "format": "M/D/YYYY"
+            },
+            "timeFormat": {
+              "name": "12hour",
+              "format": "h:mma"
+            },
+            "timeZone": "utc"
+          },
+          "id": "fldg6hOipdGC3nBIo",
+          "name": "Started At"
+        },
+        {
+          "type": "dateTime",
+          "options": {
+            "dateFormat": {
+              "name": "us",
+              "format": "M/D/YYYY"
+            },
+            "timeFormat": {
+              "name": "12hour",
+              "format": "h:mma"
+            },
+            "timeZone": "utc"
+          },
+          "id": "fldcpRKMHOBuPdbZz",
+          "name": "Ended At"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "selkiu9MBFQzM2QX0",
+                "name": "yes",
+                "color": "blueLight2"
+              },
+              {
+                "id": "seljrGn58HHzfzOK3",
+                "name": "partial",
+                "color": "cyanLight2"
+              },
+              {
+                "id": "selWeoiVkLJbhMMwo",
+                "name": "no",
+                "color": "tealLight2"
+              },
+              {
+                "id": "sel5OwN61MJB0uR7d",
+                "name": "unknown",
+                "color": "greenLight2"
+              }
+            ]
+          },
+          "id": "fld7bcfZKNvQcVgfY",
+          "name": "Last Attempt (model)"
+        },
+        {
+          "type": "dateTime",
+          "options": {
+            "dateFormat": {
+              "name": "us",
+              "format": "M/D/YYYY"
+            },
+            "timeFormat": {
+              "name": "12hour",
+              "format": "h:mma"
+            },
+            "timeZone": "utc"
+          },
+          "id": "fldxDf42mHZipzkQo",
+          "name": "Last Attempt Date"
+        },
+        {
+          "type": "number",
+          "options": {
+            "precision": 0
+          },
+          "id": "fldcg7ty9ji2cJkRX",
+          "name": "Attempt Count (model)"
+        },
+        {
+          "type": "autoNumber",
+          "id": "fldXAp7pIACU8AJ3x",
+          "name": "AutoID"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          },
+          "id": "fldVulEx5YOuzEkw7",
+          "name": "Complete Now?"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          },
+          "id": "fld20qsTIVjuxVPJa",
+          "name": "Move On?"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblrrRjzpMfv0cenB",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldxsNPelqg5yYwUq"
+          },
+          "id": "fld71sn7AAehCsei9",
+          "name": "User"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblOKcUmPG7M8rLca",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fldOubDJOZxPbN8GX"
+          },
+          "id": "fldWL527mq6vMEZog",
+          "name": "run_requests"
+        },
+        {
+          "type": "formula",
+          "options": {
+            "isValid": true,
+            "formula": "RECORD_ID()",
+            "referencedFieldIds": [],
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fld5Ec0oIqhSbALSX",
+          "name": "Record_id"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbldiUjBdCiSliiu3",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fldY4hO18udGmRQzP"
+          },
+          "id": "fldSndyn53n1idbcT",
+          "name": "experiment_events"
+        }
+      ],
+      "views": [
+        {
+          "id": "viwYw9FkbTt624PDK",
+          "name": "Grid view",
+          "type": "grid"
+        }
+      ]
+    },
+    {
+      "id": "tblrrRjzpMfv0cenB",
+      "name": "users",
+      "primaryFieldId": "fldZhJlO8lQgBZq8v",
+      "fields": [
+        {
+          "type": "formula",
+          "options": {
+            "isValid": true,
+            "formula": "\"U-\" & RIGHT(\"0000\" & {flducYZkODVr6QxaG}, 4)",
+            "referencedFieldIds": [
+              "flducYZkODVr6QxaG"
+            ],
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldZhJlO8lQgBZq8v",
+          "name": "User ID"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldhA6fE1O1LRZaSH",
+          "name": "Display Name"
+        },
+        {
+          "type": "email",
+          "id": "fldrSCDXxfUr6qpL5",
+          "name": "Email"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "selEWeGNLpkRXpO0i",
+                "name": "speaker_active",
+                "color": "blueLight2"
+              },
+              {
+                "id": "selC5QQKTDfdSqxoO",
+                "name": "speaker_inactive",
+                "color": "cyanLight2"
+              },
+              {
+                "id": "selGFg0yGRUE1EwsI",
+                "name": "coach",
+                "color": "tealLight2"
+              }
+            ]
+          },
+          "id": "fldUh5dmRloj9kUpt",
+          "name": "Status"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fld0HdDYC8KcHDOAZ",
+          "name": "Target Speaker Name"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldhVBVsksl0OCIXt",
+          "name": "Target Speaker Label"
+        },
+        {
+          "type": "singleLineText",
+          "id": "fldNKyBGTKaPTxOuN",
+          "name": "Default Target Role"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblYM41aSULHycSpv",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldm04wSYvnhMZ1Bx"
+          },
+          "id": "fldelB2SM0zZwQxNk",
+          "name": "Active Baseline Pack"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblgZ52AnhevoHOdi",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fld71sn7AAehCsei9"
+          },
+          "id": "fldxsNPelqg5yYwUq",
+          "name": "Active Experiment"
+        },
+        {
+          "type": "multilineText",
+          "id": "fldJaKZjmx4G1ym49",
+          "name": "Notes"
+        },
+        {
+          "type": "createdTime",
+          "options": {
+            "result": {
+              "type": "dateTime",
+              "options": {
+                "dateFormat": {
+                  "name": "us",
+                  "format": "M/D/YYYY"
+                },
+                "timeFormat": {
+                  "name": "12hour",
+                  "format": "h:mma"
+                },
+                "timeZone": "utc"
+              }
+            }
+          },
+          "id": "fldmUhUQ6eKb0AcSv",
+          "name": "Created"
+        },
+        {
+          "type": "lastModifiedTime",
+          "options": {
+            "isValid": true,
+            "referencedFieldIds": [],
+            "result": {
+              "type": "date",
+              "options": {
+                "dateFormat": {
+                  "name": "us",
+                  "format": "M/D/YYYY"
+                }
+              }
+            }
+          },
+          "id": "fldHPdiijL2fEsbqj",
+          "name": "Last Updated"
+        },
+        {
+          "type": "autoNumber",
+          "id": "flducYZkODVr6QxaG",
+          "name": "AutoID"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblOKcUmPG7M8rLca",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fldB1XbbixKiOfyAG"
+          },
+          "id": "fldaavO2xvqGx6fjG",
+          "name": "run_requests"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbldiUjBdCiSliiu3",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fld7RhKTwMtCfzsnR"
+          },
+          "id": "fldUTXoR4lGOAojc1",
+          "name": "experiment_events"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbljGID885oqrsm7b",
+            "isReversed": false,
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldId": "fldAoL6oqSzFc4Jay"
+          },
+          "id": "fld7UJJoyca0A3fgd",
+          "name": "runs"
+        }
+      ],
+      "views": [
+        {
+          "id": "viwhU0dvOL7lYEI3R",
+          "name": "Grid view",
+          "type": "grid"
+        }
+      ]
+    },
+    {
+      "id": "tbldiUjBdCiSliiu3",
+      "name": "experiment_events",
+      "primaryFieldId": "fldVTaVN7ZEXwV0lt",
+      "fields": [
+        {
+          "type": "formula",
+          "options": {
+            "isValid": true,
+            "formula": "\"EE-\" & RIGHT(\"000000\" & {fldXPdOlYYiqFwOnj}, 5)",
+            "referencedFieldIds": [
+              "fldXPdOlYYiqFwOnj"
+            ],
+            "result": {
+              "type": "singleLineText"
+            }
+          },
+          "id": "fldVTaVN7ZEXwV0lt",
+          "name": "Event ID",
+          "description": "Generates a unique Event ID with 'EE-' prefix and zero-padded AutoID."
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblgZ52AnhevoHOdi",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldSndyn53n1idbcT"
+          },
+          "id": "fldY4hO18udGmRQzP",
+          "name": "Experiment"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tblrrRjzpMfv0cenB",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldUTXoR4lGOAojc1"
+          },
+          "id": "fld7RhKTwMtCfzsnR",
+          "name": "User"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbl8nW6nn2tVxpkkw",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldtS3ZCoQmHya8ZG"
+          },
+          "id": "fldJWr9gAAf9IyBcR",
+          "name": "Transcript"
+        },
+        {
+          "type": "multipleRecordLinks",
+          "options": {
+            "linkedTableId": "tbljGID885oqrsm7b",
+            "isReversed": false,
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldId": "fldzkhFttSOXcjLu3"
+          },
+          "id": "fldvafMrAfqYGsZgB",
+          "name": "Run"
+        },
+        {
+          "type": "dateTime",
+          "options": {
+            "dateFormat": {
+              "name": "iso",
+              "format": "YYYY-MM-DD"
+            },
+            "timeFormat": {
+              "name": "12hour",
+              "format": "h:mma"
+            },
+            "timeZone": "utc"
+          },
+          "id": "fldRo5sEesg9Uw2FF",
+          "name": "Meeting Date"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "selgJJow05lGtkhlI",
+                "name": "attempt_detected",
+                "color": "blueLight2"
+              },
+              {
+                "id": "sel2CKU7KhSD94Vwc",
+                "name": "no_attempt_detected",
+                "color": "cyanLight2"
+              },
+              {
+                "id": "selrN6nd0X9peXxq5",
+                "name": "uncertain",
+                "color": "tealLight2"
+              }
+            ]
+          },
+          "id": "fld7Ndj1ZcBophQD9",
+          "name": "Detection (Model)"
+        },
+        {
+          "type": "multilineText",
+          "id": "fldayZswYE1VDp7RX",
+          "name": "Evidence Span IDs (Model)"
+        },
+        {
+          "type": "multilineText",
+          "id": "fldPJ046TJWtK7kEM",
+          "name": "Coach Message (Model)"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "selele7HcHE4UyaRj",
+                "name": "confirmed_attempt",
+                "color": "blueLight2"
+              },
+              {
+                "id": "sel9myOeJrZ9hSgbA",
+                "name": "confirmed_no_attempt",
+                "color": "cyanLight2"
+              },
+              {
+                "id": "sel1m5kVUvEIEx7sE",
+                "name": "not_reviewed",
+                "color": "tealLight2"
+              }
+            ]
+          },
+          "id": "fldPyjq7S0vae0KdR",
+          "name": "User Confirmation"
+        },
+        {
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "selG8L5CcKnwt79QB",
+                "name": "continue_experiment",
+                "color": "blueLight2"
+              },
+              {
+                "id": "selgnYlZNwmIlRfV2",
+                "name": "move_on",
+                "color": "cyanLight2"
+              },
+              {
+                "id": "selMCIQvzsjorMwNh",
+                "name": "complete_experiment",
+                "color": "tealLight2"
+              },
+              {
+                "id": "selL6xCIas8l4krMI",
+                "name": "none",
+                "color": "greenLight2"
+              }
+            ]
+          },
+          "id": "fldrPzPpEuyZtdo8i",
+          "name": "Action (user intent)"
+        },
+        {
+          "type": "createdTime",
+          "options": {
+            "result": {
+              "type": "dateTime",
+              "options": {
+                "dateFormat": {
+                  "name": "us",
+                  "format": "M/D/YYYY"
+                },
+                "timeFormat": {
+                  "name": "12hour",
+                  "format": "h:mma"
+                },
+                "timeZone": "utc"
+              }
+            }
+          },
+          "id": "flddFMcF5QmRll9xB",
+          "name": "Created At"
+        },
+        {
+          "type": "lastModifiedTime",
+          "options": {
+            "isValid": true,
+            "referencedFieldIds": [],
+            "result": {
+              "type": "date",
+              "options": {
+                "dateFormat": {
+                  "name": "us",
+                  "format": "M/D/YYYY"
+                }
+              }
+            }
+          },
+          "id": "fldxn2QTNBYoQB53z",
+          "name": "Last Updated At"
+        },
+        {
+          "type": "multilineText",
+          "id": "fldwV5jcjNbOcd7au",
+          "name": "Coach Message (Edited)"
+        },
+        {
+          "type": "checkbox",
+          "options": {
+            "icon": "thumbsUp",
+            "color": "greenBright"
+          },
+          "id": "fldTNo0JjsaaCM3YN",
+          "name": "Reviewed?"
+        },
+        {
+          "type": "autoNumber",
+          "id": "fldXPdOlYYiqFwOnj",
+          "name": "AutoID"
+        }
+      ],
+      "views": [
+        {
+          "id": "viwlLzb0pFiCAqxSL",
+          "name": "Grid view",
+          "type": "grid"
+        }
+      ]
+    }
+  ]
+}
