@@ -31,3 +31,4 @@ celery[redis]>=5.4.0
 # File parsing (already partially in P1, confirmed here)
 # python-docx — already above
 # pdfplumber  — already above
+python-multipart
