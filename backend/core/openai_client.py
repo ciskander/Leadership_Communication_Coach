@@ -37,7 +37,7 @@ _RETRYABLE_STATUS = {429, 500, 502, 503, 504}
 def _make_client(api_key: Optional[str] = None) -> OpenAI:
     return OpenAI(
         api_key=api_key or OPENAI_API_KEY,
-        timeout=openai.Timeout(connect=OPENAI_CONNECT_TIMEOUT, read=OPENAI_READ_TIMEOUT),
+        timeout=openai.Timeout(timeout=OPENAI_READ_TIMEOUT),
     )
 
 
