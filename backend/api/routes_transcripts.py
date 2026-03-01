@@ -103,7 +103,7 @@ async def upload_transcript(
     return TranscriptUploadResponse(
         transcript_id=transcript_record_id,
         speaker_labels=parsed.speaker_labels or [],
-        word_count=parsed.word_count,
+        word_count=parsed.metadata.word_count,
         meeting_type=meeting_type,
         meeting_date=meeting_date,
     )
