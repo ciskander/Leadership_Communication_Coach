@@ -831,6 +831,15 @@ def _load_system_prompt_from_config(client: AirtableClient, config_links: list[s
                 return sp
         except Exception:
             pass
+    # Fallback: try active config from Airtable
+    try:
+        cfg = client.get_active_config()
+        if cfg:
+            sp = cfg.get("fields", {}).get("System Prompt")
+            if sp:
+                return sp
+    except Exception:
+        pass
     return load_system_prompt()
 
 
