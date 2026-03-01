@@ -84,8 +84,8 @@ def _set_session_cookie(response: RedirectResponse, signed_token: str) -> None:
         key=SESSION_COOKIE_NAME,
         value=signed_token,
         httponly=True,
-        secure=os.getenv("COOKIE_SECURE", "true").lower() == "true",
-        samesite="lax",
+        secure=True,
+        samesite="none",
         max_age=SESSION_TTL_DAYS * 86_400,
         path="/",
     )

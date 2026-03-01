@@ -39,7 +39,7 @@ def create_app() -> FastAPI:
         SessionMiddleware,
         secret_key=os.environ.get("SESSION_SECRET", "change-me"),
         https_only=os.getenv("COOKIE_SECURE", "true").lower() == "true",
-        same_site="lax",
+        same_site="none",
     )
 
     # ── CORS ──────────────────────────────────────────────────────────────────
