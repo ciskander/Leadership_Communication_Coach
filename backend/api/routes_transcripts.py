@@ -87,7 +87,7 @@ async def upload_transcript(
     fields: dict = {
         "Raw Transcript Text": raw_text[:100_000],
         "Transcript (extracted)": raw_text[:100_000],
-        "Speaker Labels": [lb for lb in (parsed.speaker_labels or [])],
+        "Speaker Labels": ", ".join(parsed.speaker_labels or []),
         "Uploaded By": [user.airtable_user_record_id] if user.airtable_user_record_id else [],
     }
     if meeting_type:
