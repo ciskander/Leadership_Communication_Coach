@@ -325,8 +325,8 @@ class AirtableClient:
         return self.update_record(AT_TABLE_BASELINE_PACKS, record_id, fields)
 
     def get_baseline_pack_items(self, baseline_pack_record_id: str) -> list[dict]:
-        formula = f"FIND('{baseline_pack_record_id}', ARRAYJOIN({{Baseline Pack}}))"
-        return self.search_records(AT_TABLE_BASELINE_PACK_ITEMS, formula, max_records=10)
+    formula = f"FIND('{baseline_pack_record_id}', ARRAYJOIN({{BP Record ID}}))"
+    return self.search_records(AT_TABLE_BASELINE_PACK_ITEMS, formula, max_records=10)
 
     def get_baseline_pack_item(self, record_id: str) -> dict:
         return self.get_record(AT_TABLE_BASELINE_PACK_ITEMS, record_id)
