@@ -133,6 +133,12 @@ async def enqueue_analysis(
         status="queued",
     )
 
+@router.post("/api/coachees/me/analyze", response_model=SingleMeetingEnqueueResponse)
+async def enqueue_analysis_alias(
+    body: SingleMeetingBody,
+    user: UserAuth = Depends(get_current_user),
+):
+    return await enqueue_analysis(body, user)
 
 @router.get("/api/client/summary", response_model=ClientSummaryResponse)
 async def client_summary(
