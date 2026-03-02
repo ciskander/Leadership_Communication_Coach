@@ -81,7 +81,7 @@ from .idempotency import (
     make_experiment_event_key,
     make_run_idempotency_key,
 )
-from .models import MemoryBlock, ValidationIssue
+from .models import MemoryBlock, ValidationIssue, OpenAIResponse
 from .openai_client import call_openai, load_system_prompt
 from .prompt_builder import build_baseline_pack_prompt, build_memory_block, build_single_meeting_prompt
 from .transcript_parser import parse_transcript
