@@ -5,6 +5,46 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import type { ClientSummary } from '@/lib/types';
 
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function JourneyStep({
+  num, label, done, active,
+}: { num: number; label: string; done: boolean; active: boolean }) {
+  return (
+    <div className="flex items-center gap-2">
+      <div
+        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors ${
+          done
+            ? 'bg-emerald-600 border-emerald-600 text-white'
+            : active
+            ? 'bg-white border-emerald-600 text-emerald-600'
+            : 'bg-white border-stone-300 text-stone-400'
+        }`}
+      >
+        {done ? '✓' : num}
+      </div>
+      <span
+        className={`text-xs font-medium ${
+          done ? 'text-emerald-700' : active ? 'text-stone-800' : 'text-stone-400'
+        }`}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function JourneyConnector({ done }: { done: boolean }) {
+  return (
+    <div className={`flex-1 h-0.5 mx-1 rounded-full ${done ? 'bg-emerald-500' : 'bg-stone-200'}`} />
+  );
+}
+
 export default function ClientDashboard() {
   const [summary, setSummary] = useState<ClientSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -16,87 +56,163 @@ export default function ClientDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
       </div>
     );
   }
 
   const bpStatus = summary?.baseline_pack_status ?? 'none';
   const experiment = summary?.active_experiment;
+  const firstName = summary?.user.display_name?.split(' ')[0] ?? null;
+
+  const hasBaseline = bpStatus === 'baseline_ready' || bpStatus === 'completed';
+  const isBuilding = bpStatus === 'intake' || bpStatus === 'building';
+  const hasExperiment = !!experiment && experiment.status !== 'none';
+  const hasRuns = (summary?.recent_runs.length ?? 0) > 0;
+
+  // Journey steps: baseline → first analysis → active experiment
+  const step1Done = hasBaseline;
+  const step2Done = hasRuns;
+  const step3Done = hasExperiment;
+  const currentStep = !step1Done ? 1 : !step2Done ? 2 : !step3Done ? 3 : 3;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6 py-2">
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Welcome back{summary?.user.display_name ? `, ${summary.user.display_name}` : ''}
+        <h1 className="text-2xl font-bold text-stone-900">
+          {getGreeting()}{firstName ? `, ${firstName}` : ''} 👋
         </h1>
-        <p className="text-gray-500 text-sm mt-1">Here's your coaching dashboard.</p>
+        <p className="text-stone-500 text-sm mt-1">
+          Your communication growth dashboard.
+        </p>
       </div>
 
+      {/* Journey tracker */}
+      <div className="bg-white rounded-2xl border border-stone-200 p-5">
+        <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-4">
+          Your Journey
+        </p>
+        <div className="flex items-center">
+          <JourneyStep num={1} label="Baseline" done={step1Done} active={currentStep === 1} />
+          <JourneyConnector done={step1Done} />
+          <JourneyStep num={2} label="First Analysis" done={step2Done} active={currentStep === 2} />
+          <JourneyConnector done={step2Done} />
+          <JourneyStep num={3} label="Experiment" done={step3Done} active={currentStep === 3} />
+          <JourneyConnector done={step3Done} />
+          <JourneyStep num={4} label="Growth" done={false} active={false} />
+        </div>
+        {!hasBaseline && !isBuilding && (
+          <div className="mt-4 pt-4 border-t border-stone-100 flex items-center justify-between">
+            <p className="text-sm text-stone-600">
+              Start by building your baseline from 3 past meetings.
+            </p>
+            <Link
+              href="/client/baseline/new"
+              className="text-sm px-4 py-1.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors whitespace-nowrap"
+            >
+              Get started →
+            </Link>
+          </div>
+        )}
+        {isBuilding && (
+          <div className="mt-4 pt-4 border-t border-stone-100 flex items-center gap-3">
+            <div className="w-4 h-4 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
+            <p className="text-sm text-amber-700 font-medium">Building your baseline… check back in a few minutes.</p>
+          </div>
+        )}
+        {hasBaseline && !hasExperiment && (
+          <div className="mt-4 pt-4 border-t border-stone-100 flex items-center justify-between">
+            <p className="text-sm text-stone-600">
+              Baseline ready! Analyze a meeting to start your first experiment.
+            </p>
+            <Link
+              href="/client/analyze"
+              className="text-sm px-4 py-1.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors whitespace-nowrap"
+            >
+              Analyze meeting →
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {/* Cards row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Baseline Pack Card */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
+        {/* Baseline Pack */}
+        <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-gray-800">Baseline Pack</h2>
-            <BaselineStatusBadge status={bpStatus} />
+            <div className="flex items-center gap-2">
+              <span className="text-lg">◎</span>
+              <h2 className="font-semibold text-stone-800 text-sm">Baseline Pack</h2>
+            </div>
+            <BaselineBadge status={bpStatus} />
           </div>
           {bpStatus === 'none' && (
-            <>
-              <p className="text-sm text-gray-500">
-                Build your baseline from 3 past meetings to unlock deep coaching.
-              </p>
-              <Link
-                href="/client/baseline/new"
-                className="inline-block text-sm px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-              >
-                Create Baseline Pack
-              </Link>
-            </>
-          )}
-          {(bpStatus === 'intake' || bpStatus === 'building') && (
-            <p className="text-sm text-amber-600 flex items-center gap-2">
-              <span className="animate-spin">⏳</span> Processing… check back soon.
+            <p className="text-xs text-stone-500 leading-relaxed">
+              Analyse 3 past meetings to unlock personalised coaching patterns.
             </p>
           )}
-          {bpStatus === 'baseline_ready' && (
-            <p className="text-sm text-green-600">Your baseline is ready!</p>
+          {(hasBaseline) && (
+            <p className="text-xs text-emerald-700 font-medium">
+              ✓ Your communication patterns have been mapped.
+            </p>
+          )}
+          {isBuilding && (
+            <p className="text-xs text-amber-600">Analysis in progress…</p>
+          )}
+          {bpStatus === 'none' && (
+            <Link
+              href="/client/baseline/new"
+              className="inline-block text-xs px-3 py-1.5 bg-stone-900 text-white rounded-lg font-medium hover:bg-stone-700 transition-colors"
+            >
+              Create baseline
+            </Link>
           )}
         </div>
 
-        {/* Active Experiment Card */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-          <h2 className="font-semibold text-gray-800">Active Experiment</h2>
-          {experiment ? (
+        {/* Active Experiment */}
+        <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">◈</span>
+            <h2 className="font-semibold text-stone-800 text-sm">Active Experiment</h2>
+          </div>
+          {experiment && experiment.status !== 'none' ? (
             <>
-              <p className="text-sm text-gray-700 font-medium">{experiment.title}</p>
-              <p className="text-xs text-gray-500 capitalize">{experiment.status}</p>
+              <div className="bg-emerald-50 rounded-lg p-3">
+                <p className="text-sm font-semibold text-stone-800 leading-snug">
+                  {experiment.title}
+                </p>
+                <p className="text-xs text-stone-500 mt-1 capitalize">{experiment.status}</p>
+              </div>
               <Link
                 href="/client/experiment"
-                className="inline-block text-sm text-indigo-600 hover:underline"
+                className="inline-block text-xs text-emerald-700 font-semibold hover:text-emerald-800"
               >
-                View experiment →
+                Track progress →
               </Link>
             </>
           ) : (
-            <p className="text-sm text-gray-500">No active experiment.</p>
+            <p className="text-xs text-stone-500 leading-relaxed">
+              Complete an analysis to receive your first personalised experiment.
+            </p>
           )}
         </div>
       </div>
 
-      {/* CTA */}
+      {/* Quick actions */}
       <div className="flex gap-3">
         <Link
           href="/client/analyze"
-          className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700"
+          className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm"
         >
-          Analyze a Meeting
+          <span>⊕</span> Analyze a Meeting
         </Link>
         {bpStatus === 'none' && (
           <Link
             href="/client/baseline/new"
-            className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50"
+            className="flex items-center gap-2 px-5 py-2.5 bg-white border border-stone-300 text-stone-700 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors"
           >
-            Create Baseline Pack
+            <span>◎</span> Create Baseline
           </Link>
         )}
       </div>
@@ -104,26 +220,31 @@ export default function ClientDashboard() {
       {/* Recent Runs */}
       {summary && summary.recent_runs.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
-            Recent Runs
+          <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
+            Recent Analyses
           </h2>
           <ul className="space-y-2">
             {summary.recent_runs.map((run: Record<string, unknown>, i) => (
               <li key={(run.run_id as string) ?? i}>
                 <Link
                   href={`/client/runs/${run.run_id ?? run.id}`}
-                  className="block bg-white border border-gray-200 rounded-lg px-4 py-3 hover:border-indigo-300 transition-colors"
+                  className="flex items-center justify-between bg-white border border-stone-200 rounded-xl px-4 py-3 hover:border-emerald-300 hover:shadow-sm transition-all"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-800">
-                      {(run.meeting_type as string) ?? 'Meeting'}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {run.created_at
-                        ? new Date(run.created_at as string).toLocaleDateString()
-                        : ''}
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2 h-2 rounded-full ${run.gate1_pass ? 'bg-emerald-500' : 'bg-rose-400'}`} />
+                    <span className="text-sm text-stone-700 font-medium">
+                      {(run.analysis_type as string) === 'baseline_pack'
+                        ? 'Baseline Pack'
+                        : (run.meeting_type as string) ?? 'Meeting Analysis'}
                     </span>
                   </div>
+                  <span className="text-xs text-stone-400">
+                    {run.created_at
+                      ? new Date(run.created_at as string).toLocaleDateString('en-US', {
+                          month: 'short', day: 'numeric',
+                        })
+                      : ''}
+                  </span>
                 </Link>
               </li>
             ))}
@@ -134,20 +255,19 @@ export default function ClientDashboard() {
   );
 }
 
-function BaselineStatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    none: 'bg-gray-100 text-gray-600',
-    intake: 'bg-blue-100 text-blue-700',
-    building: 'bg-amber-100 text-amber-700',
-    baseline_ready: 'bg-green-100 text-green-700',
+function BaselineBadge({ status }: { status: string }) {
+  const map: Record<string, { color: string; label: string }> = {
+    none:           { color: 'bg-stone-100 text-stone-500', label: 'Not started' },
+    intake:         { color: 'bg-blue-100 text-blue-700',   label: 'Uploading' },
+    building:       { color: 'bg-amber-100 text-amber-700', label: 'Building' },
+    baseline_ready: { color: 'bg-emerald-100 text-emerald-700', label: 'Ready' },
+    completed:      { color: 'bg-emerald-100 text-emerald-700', label: 'Ready' },
+    error:          { color: 'bg-rose-100 text-rose-700',   label: 'Error' },
   };
+  const { color, label } = map[status] ?? map.none;
   return (
-    <span
-      className={`text-xs px-2 py-0.5 rounded-full capitalize font-medium ${
-        colors[status] ?? 'bg-gray-100 text-gray-600'
-      }`}
-    >
-      {status === 'none' ? 'Not started' : status.replace('_', ' ')}
+    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${color}`}>
+      {label}
     </span>
   );
 }
