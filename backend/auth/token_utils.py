@@ -19,13 +19,14 @@ def generate_invite_token(coach_id: str, role: str = "coachee") -> str:
     token = secrets.token_urlsafe(TOKEN_BYTES)
     expires_at = datetime.now(timezone.utc) + timedelta(days=TOKEN_TTL_DAYS)
     with get_conn() as conn:
-        conn.execute(
-            """
-            INSERT INTO invite_tokens (token, coach_id, role, expires_at)
-            VALUES (?, ?, ?, ?)
-            """,
-            (token, coach_id, role, expires_at.isoformat()),
-        )
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO invite_tokens (token, coach_id, role, expires_at)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (token, coach_id, role, expires_at.isoformat()),
+            )
         conn.commit()
     return token
 
@@ -36,14 +37,16 @@ def validate_invite_token(token: str) -> Optional[dict]:
     or None if expired / already used / not found.
     """
     with get_conn() as conn:
-        row = conn.execute(
-            "SELECT * FROM invite_tokens WHERE token = ?", (token,)
-        ).fetchone()
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT * FROM invite_tokens WHERE token = %s", (token,)
+            )
+            row = cur.fetchone()
 
     if not row:
         return None
     if row["used_by"] is not None:
-        return None  # already used
+        return None
 
     expires_at = datetime.fromisoformat(str(row["expires_at"]))
     if expires_at.tzinfo is None:
@@ -57,12 +60,13 @@ def validate_invite_token(token: str) -> Optional[dict]:
 def consume_invite_token(token: str, used_by_user_id: str) -> None:
     """Mark the token as consumed."""
     with get_conn() as conn:
-        conn.execute(
-            """
-            UPDATE invite_tokens
-            SET used_by = ?, used_at = ?
-            WHERE token = ?
-            """,
-            (used_by_user_id, datetime.now(timezone.utc).isoformat(), token),
-        )
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE invite_tokens
+                SET used_by = %s, used_at = %s
+                WHERE token = %s
+                """,
+                (used_by_user_id, datetime.now(timezone.utc).isoformat(), token),
+            )
         conn.commit()

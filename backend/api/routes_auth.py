@@ -139,7 +139,9 @@ async def callback(request: Request):
             # Determine if expired vs already used for better UX
             from ..auth.sqlite_db import get_conn as _gc
             with _gc() as c:
-                row = c.execute("SELECT * FROM invite_tokens WHERE token=?", (invite_token,)).fetchone()
+                with c.cursor() as _cur:
+                    _cur.execute("SELECT * FROM invite_tokens WHERE token = %s", (invite_token,))
+                    row = _cur.fetchone()
             if row and row["used_by"]:
                 return invite_already_used()
             return invite_expired()
