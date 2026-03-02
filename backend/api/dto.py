@@ -37,6 +37,7 @@ class TranscriptListItem(BaseModel):
     meeting_type: Optional[str]
     meeting_date: Optional[str]
     created_at: Optional[str]
+    speaker_labels: list[str] = []
 
 
 # ── Runs ──────────────────────────────────────────────────────────────────────

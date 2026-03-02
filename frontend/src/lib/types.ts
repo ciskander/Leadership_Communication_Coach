@@ -91,6 +91,7 @@ export interface TranscriptListItem {
   meeting_type: string | null;
   meeting_date: string | null;
   created_at: string | null;
+  speaker_labels: string[];
 }
 
 export interface BaselinePack {

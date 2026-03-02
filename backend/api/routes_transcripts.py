@@ -123,6 +123,8 @@ async def list_transcripts(
     items = []
     for rec in records:
         f = rec.get("fields", {})
+        raw_labels = f.get("Speaker Labels") or ""
+        speaker_labels = [s.strip() for s in raw_labels.split(",") if s.strip()]
         items.append(
             TranscriptListItem(
                 transcript_id=rec["id"],
@@ -130,6 +132,7 @@ async def list_transcripts(
                 meeting_type=f.get("Meeting Type"),
                 meeting_date=f.get("Meeting Date"),
                 created_at=rec.get("createdTime"),
+                speaker_labels=speaker_labels,
             )
         )
     return items
