@@ -138,7 +138,7 @@ export const api = {
 
   // Experiments
   getActiveExperiment(): Promise<ActiveExperiment> {
-    return request('/api/coachees/me/experiment');
+    return request('/api/client/active_experiment');
   },
   updateExperiment(
     experimentRecordId: string,
