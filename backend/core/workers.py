@@ -348,12 +348,16 @@ def process_single_meeting_analysis(
         _parsed_output["meta"].setdefault("analysis_id", prompt_payload.meta.get("analysis_id"))
         _parsed_output["meta"].setdefault("analysis_type", prompt_payload.meta.get("analysis_type"))
         _parsed_output["meta"].setdefault("generated_at", prompt_payload.meta.get("generated_at"))
-    # Fix experiment_tracking status when no prior experiment context
+    # Fix experiment_tracking
     exp_track = _parsed_output.get("experiment_tracking", {})
     active_exp = exp_track.get("active_experiment", {})
     detection = exp_track.get("detection_in_this_meeting")
-    if active_exp and active_exp.get("status") in ("assigned", "active") and detection is None:
-        active_exp["status"] = "none"
+    if active_exp:
+        if active_exp.get("experiment_id") is None:
+            exp_track["active_experiment"] = {"experiment_id": "EXP-000000", "status": "none"}
+            exp_track["detection_in_this_meeting"] = None
+        elif active_exp.get("status") in ("assigned", "active") and detection is None:
+            active_exp["status"] = "none"
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
     openai_resp = OpenAIResponse(
         parsed=_parsed_output,
