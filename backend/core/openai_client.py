@@ -84,7 +84,7 @@ def call_openai(
             response = client.chat.completions.create(
                 model=effective_model,
                 messages=messages,
-                max_tokens=effective_max_tokens,
+                max_completion_tokens=effective_max_tokens,
                 response_format={"type": "json_object"},
             )
             raw_text = response.choices[0].message.content or ""
