@@ -17,16 +17,15 @@ export default function CoachDashboard() {
   }, []);
 
   const handleInvite = async () => {
-    setInviting(true);
-    try {
-      const res = await fetch('/api/invites/coachee', { method: 'POST', credentials: 'include' });
-      const data = await res.json();
-      setInviteUrl(data.invite_url);
-    } catch {
-      // ignore
-    } finally {
-      setInviting(false);
-    }
+	setInviting(true);
+	try {
+		const data = await api.createCoacheeInvite();
+		setInviteUrl(data.invite_url);
+	} catch {
+		setError('Failed to generate invite link.');
+	} finally {
+		setInviting(false);
+	}
   };
 
   const handleCopy = () => {

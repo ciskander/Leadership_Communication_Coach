@@ -151,6 +151,9 @@ export const api = {
   getCoacheeSummary(coacheeId: string): Promise<CoacheeSummary> {
     return request(`/api/coach/coachees/${coacheeId}`);
   },
+  createCoacheeInvite(): Promise<{ invite_url: string; token: string }> {
+	return request('/api/invites/coachee', { method: 'POST' });
+  },
 
   // Admin
   listAdminUsers(): Promise<AdminUser[]> {
