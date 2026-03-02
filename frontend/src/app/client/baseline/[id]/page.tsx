@@ -22,7 +22,7 @@ export default function BaselineDetailPage() {
 
   // Auto-poll while building
   useEffect(() => {
-    if (pack && (pack.status === 'building' || pack.status === 'intake') && pack.status !== 'completed' && pack.status !== 'baseline_ready') {
+    if (pack && (pack.status === 'building' || pack.status === 'intake')) {
       const t = setTimeout(fetchPack, 5000);
       return () => clearTimeout(t);
     }
