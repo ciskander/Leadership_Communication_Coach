@@ -11,6 +11,7 @@ export default function CoachDashboard() {
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [inviting, setInviting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     api.listCoachees().then(setCoachees).finally(() => setLoading(false));
@@ -98,6 +99,8 @@ export default function CoachDashboard() {
           </button>
         </div>
       )}
+
+	  {error && <p className="text-sm text-rose-600">{error}</p>}
 
       {/* Coachee grid */}
       {coachees.length === 0 ? (
