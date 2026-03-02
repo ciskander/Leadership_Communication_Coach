@@ -459,10 +459,22 @@ def process_baseline_pack_build(
         run_record_id = run_links[0] if run_links else None
 
         if not run_record_id:
-            raise ValueError(
-                f"BaselinePackItem {item['id']} has no Run linked. "
-                "Single-meeting runs must be completed before building the pack."
-            )
+            # Look for an existing passing run by Transcript ID
+            if transcript_record_id:
+                tr_rec = client.get_record("transcripts", transcript_record_id)
+                transcript_id_str = tr_rec.get("fields", {}).get("Transcript ID", "")
+                if transcript_id_str:
+                    formula = f"AND(FIND('{transcript_id_str}', {{Transcript ID (from Transcript)}}), {{Gate1 Pass}}=TRUE(), {{Analysis Type}}='single_meeting')"
+                    existing_runs = client.search_records("runs", formula, max_records=1)
+                    if existing_runs:
+                        run_record_id = existing_runs[0]["id"]
+                        client.update_record("baseline_pack_items", item["id"], {"Run": [run_record_id]})
+
+            if not run_record_id:
+                raise ValueError(
+                    f"BaselinePackItem {item['id']} has no passing single-meeting run. "
+                    "Run single-meeting analysis on each transcript first."
+                )
 
         run_rec = client.get_run(run_record_id)
         run_fields = _extract_fields(run_rec)
