@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from ..auth.models import UserAuth
@@ -31,6 +31,10 @@ class CoachAnalyzeBody(BaseModel):
     target_role: str
 
 
+class AssignCoacheeBody(BaseModel):
+    user_id: str
+
+
 def _require_coach(user: UserAuth) -> UserAuth:
     if user.role not in ("coach", "admin"):
         raise HTTPException(status_code=403, detail="Coach access required.")
@@ -52,6 +56,74 @@ async def list_coachees(user: UserAuth = Depends(get_current_user)):
     ]
 
 
+@router.get("/api/coach/users/search", response_model=list[CoacheeListItem])
+async def search_users(
+    q: str = Query(..., min_length=2),
+    user: UserAuth = Depends(get_current_user),
+):
+    """Search existing coachee users by email or display name."""
+    _require_coach(user)
+
+    from .auth import get_conn
+    q_lower = q.lower()
+
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, email, display_name, airtable_user_record_id
+                FROM users_auth
+                WHERE (LOWER(email) LIKE %s OR LOWER(display_name) LIKE %s)
+                  AND id != %s
+                  AND role = 'coachee'
+                LIMIT 10
+                """,
+                (f"%{q_lower}%", f"%{q_lower}%", user.id),
+            )
+            rows = cur.fetchall()
+
+    return [
+        CoacheeListItem(
+            id=row["id"],
+            email=row["email"],
+            display_name=row["display_name"],
+            airtable_user_record_id=row["airtable_user_record_id"],
+        )
+        for row in rows
+    ]
+
+
+@router.post("/api/coach/assign_coachee", response_model=CoacheeListItem)
+async def assign_coachee(
+    body: AssignCoacheeBody,
+    user: UserAuth = Depends(get_current_user),
+):
+    """Assign an existing coachee user to this coach."""
+    _require_coach(user)
+
+    from .auth import get_user_by_id, get_conn
+    target = get_user_by_id(body.user_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found.")
+    if target.role != "coachee":
+        raise HTTPException(status_code=400, detail="User is not a coachee.")
+
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE users_auth SET coach_id = %s WHERE id = %s",
+                (user.id, body.user_id),
+            )
+        conn.commit()
+
+    return CoacheeListItem(
+        id=target.id,
+        email=target.email,
+        display_name=target.display_name,
+        airtable_user_record_id=target.airtable_user_record_id,
+    )
+
+
 @router.get("/api/coach/coachees/{coachee_auth_id}/summary", response_model=CoacheeSummaryResponse)
 async def coachee_summary(
     coachee_auth_id: str,
@@ -59,7 +131,6 @@ async def coachee_summary(
 ):
     _require_coach(user)
 
-    # Validate the coachee belongs to this coach (unless admin)
     from .auth import get_user_by_id
     coachee = get_user_by_id(coachee_auth_id)
     if not coachee:

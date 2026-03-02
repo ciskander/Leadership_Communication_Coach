@@ -152,7 +152,16 @@ export const api = {
     return request(`/api/coach/coachees/${coacheeId}`);
   },
   createCoacheeInvite(): Promise<{ invite_url: string; token: string }> {
-	return request('/api/invites/coachee', { method: 'POST' });
+    return request('/api/invites/coachee', { method: 'POST' });
+  },
+  searchUsers(q: string): Promise<CoacheeListItem[]> {
+    return request(`/api/coach/users/search?q=${encodeURIComponent(q)}`);
+  },
+  assignCoachee(userId: string): Promise<CoacheeListItem> {
+    return request('/api/coach/assign_coachee', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId }),
+    });
   },
 
   // Admin
