@@ -7,22 +7,29 @@ interface CoachingCardProps {
   microExperiment: MicroExperiment | null;
 }
 
+function PatternLabel({ id }: { id: string }) {
+  return (
+    <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+      {id.replace(/_/g, ' ')}
+    </span>
+  );
+}
+
 export function CoachingCard({ strengths, focus, microExperiment }: CoachingCardProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Strengths */}
       {strengths.length > 0 && (
-        <section>
-          <h3 className="text-sm font-semibold text-emerald-700 uppercase tracking-wide mb-3">
-            Strengths
-          </h3>
-          <div className="space-y-4">
+        <section className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+          <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-stone-100 bg-emerald-50">
+            <span className="text-base">✦</span>
+            <h3 className="text-sm font-semibold text-emerald-800">What you do well</h3>
+          </div>
+          <div className="divide-y divide-stone-100">
             {strengths.map((s) => (
-              <div key={s.pattern_id} className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-                <p className="text-sm font-medium text-gray-800 mb-1 capitalize">
-                  {s.pattern_id.replace(/_/g, ' ')}
-                </p>
-                <p className="text-sm text-gray-700">{s.message}</p>
+              <div key={s.pattern_id} className="px-5 py-4 space-y-2">
+                <PatternLabel id={s.pattern_id} />
+                <p className="text-sm text-stone-700 leading-relaxed">{s.message}</p>
                 {s.quotes.map((q, i) => (
                   <EvidenceQuote key={i} quote={q} />
                 ))}
@@ -34,15 +41,14 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
 
       {/* Focus */}
       {focus && (
-        <section>
-          <h3 className="text-sm font-semibold text-amber-700 uppercase tracking-wide mb-3">
-            Focus Area
-          </h3>
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-            <p className="text-sm font-medium text-gray-800 mb-1 capitalize">
-              {focus.pattern_id.replace(/_/g, ' ')}
-            </p>
-            <p className="text-sm text-gray-700">{focus.message}</p>
+        <section className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+          <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-stone-100 bg-amber-50">
+            <span className="text-base">◎</span>
+            <h3 className="text-sm font-semibold text-amber-800">Area to focus on</h3>
+          </div>
+          <div className="px-5 py-4 space-y-2">
+            <PatternLabel id={focus.pattern_id} />
+            <p className="text-sm text-stone-700 leading-relaxed">{focus.message}</p>
             {focus.quotes.map((q, i) => (
               <EvidenceQuote key={i} quote={q} />
             ))}
@@ -52,22 +58,35 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
 
       {/* Micro-experiment */}
       {microExperiment && (
-        <section>
-          <h3 className="text-sm font-semibold text-indigo-700 uppercase tracking-wide mb-3">
-            Micro-Experiment
-          </h3>
-          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 space-y-3">
+        <section className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+          <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-stone-100 bg-violet-50">
+            <span className="text-base">◈</span>
+            <h3 className="text-sm font-semibold text-violet-800">Your experiment</h3>
+          </div>
+          <div className="px-5 py-4 space-y-4">
             <div>
-              <p className="text-sm font-semibold text-gray-800">{microExperiment.title}</p>
-              <p className="text-xs text-gray-500">{microExperiment.experiment_id}</p>
+              <p className="text-base font-semibold text-stone-900 leading-snug">
+                {microExperiment.title}
+              </p>
+              <p className="text-xs text-stone-400 mt-0.5">{microExperiment.experiment_id}</p>
             </div>
-            <div>
-              <p className="text-xs font-medium text-gray-600 uppercase mb-1">Instruction</p>
-              <p className="text-sm text-gray-700">{microExperiment.instruction}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-gray-600 uppercase mb-1">Success Marker</p>
-              <p className="text-sm text-gray-700">{microExperiment.success_marker}</p>
+            <div className="space-y-3">
+              <div className="bg-stone-50 rounded-xl p-3.5">
+                <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                  What to do
+                </p>
+                <p className="text-sm text-stone-700 leading-relaxed">
+                  {microExperiment.instruction}
+                </p>
+              </div>
+              <div className="bg-stone-50 rounded-xl p-3.5">
+                <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                  How you'll know it worked
+                </p>
+                <p className="text-sm text-stone-700 leading-relaxed">
+                  {microExperiment.success_marker}
+                </p>
+              </div>
             </div>
             {microExperiment.quotes.map((q, i) => (
               <EvidenceQuote key={i} quote={q} />

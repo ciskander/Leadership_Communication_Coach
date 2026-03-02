@@ -20,7 +20,6 @@ export default function BaselineDetailPage() {
     fetchPack();
   }, [id]);
 
-  // Auto-poll while building
   useEffect(() => {
     if (pack && (pack.status === 'building' || pack.status === 'intake')) {
       const t = setTimeout(fetchPack, 5000);
@@ -31,34 +30,71 @@ export default function BaselineDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
       </div>
     );
   }
 
-  if (!pack) return <p className="text-sm text-gray-600">Baseline pack not found.</p>;
+  if (!pack) {
+    return (
+      <div className="max-w-xl mx-auto py-12 text-center">
+        <p className="text-sm text-stone-500">Baseline pack not found.</p>
+      </div>
+    );
+  }
+
+  const isBuilding = pack.status === 'building' || pack.status === 'intake';
+  const isReady = pack.status === 'baseline_ready' || pack.status === 'completed';
+  const isError = pack.status === 'error';
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6 py-2">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Baseline Pack</h1>
-        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+        <h1 className="text-2xl font-bold text-stone-900">Baseline Pack</h1>
+        <span className="text-xs bg-stone-100 text-stone-500 px-2.5 py-1 rounded-full font-mono">
           {pack.baseline_pack_id}
         </span>
       </div>
 
-      {(pack.status === 'building' || pack.status === 'intake') && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center space-y-2">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto" />
-          <p className="text-sm text-blue-700 font-medium">Building your baseline…</p>
-          <p className="text-xs text-blue-600">This usually takes 2–5 minutes.</p>
+      {/* Building state */}
+      {isBuilding && (
+        <div className="bg-white rounded-2xl border border-blue-200 p-8 text-center space-y-4">
+          <div className="relative mx-auto w-14 h-14">
+            <div className="w-14 h-14 rounded-full border-2 border-stone-100" />
+            <div className="absolute inset-0 w-14 h-14 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-stone-800">Building your baseline…</p>
+            <p className="text-xs text-stone-400 mt-1">This usually takes 2–5 minutes. This page will update automatically.</p>
+          </div>
         </div>
       )}
 
-      {(pack.status === 'baseline_ready' || pack.status === 'completed') && (
-        <div className="space-y-6">
-          <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3">
-            <p className="text-sm text-green-700 font-medium">✓ Baseline complete</p>
+      {/* Error state */}
+      {isError && (
+        <div className="bg-white rounded-2xl border border-rose-200 p-6 space-y-3">
+          <p className="text-sm font-semibold text-rose-700">Baseline build failed</p>
+          <p className="text-sm text-stone-500">
+            Something went wrong during analysis. Please try creating a new baseline pack.
+          </p>
+          <Link
+            href="/client/baseline/new"
+            className="inline-block text-sm px-4 py-2 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors"
+          >
+            Try again
+          </Link>
+        </div>
+      )}
+
+      {/* Ready state */}
+      {isReady && (
+        <>
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-3.5 flex items-center gap-3">
+            <span className="text-emerald-600 text-lg">✦</span>
+            <div>
+              <p className="text-sm font-semibold text-emerald-800">Baseline complete</p>
+              <p className="text-xs text-emerald-600">Your communication patterns have been mapped across 3 meetings</p>
+            </div>
           </div>
 
           <CoachingCard
@@ -67,19 +103,21 @@ export default function BaselineDetailPage() {
             microExperiment={pack.micro_experiment ?? null}
           />
 
-          <Link
-            href="/client/experiment"
-            className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-md text-sm hover:bg-indigo-700"
-          >
-            Go to Active Experiment →
-          </Link>
-        </div>
-      )}
-
-      {pack.status === 'error' && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <p className="text-sm text-red-700">Baseline build failed. Please try again.</p>
-        </div>
+          <div className="flex gap-3">
+            <Link
+              href="/client/experiment"
+              className="flex-1 text-center py-3 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm"
+            >
+              View my experiment →
+            </Link>
+            <Link
+              href="/client/analyze"
+              className="px-5 py-3 bg-white border border-stone-300 text-stone-700 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors"
+            >
+              Analyse a meeting
+            </Link>
+          </div>
+        </>
       )}
     </div>
   );

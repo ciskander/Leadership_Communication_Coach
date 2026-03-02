@@ -18,15 +18,11 @@ const ROLE_OPTIONS = [
 export default function AnalyzePage() {
   const router = useRouter();
 
-  // Upload result
   const [transcriptId, setTranscriptId] = useState<string | null>(null);
   const [speakerLabels, setSpeakerLabels] = useState<string[]>([]);
-
-  // Config fields
   const [speakerLabel, setSpeakerLabel] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [role, setRole] = useState<TargetRole | ''>('');
-
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,22 +86,45 @@ export default function AnalyzePage() {
     poll();
   };
 
+  const step = !transcriptId ? 1 : !speakerLabel || !name || !role ? 2 : 3;
+
   return (
-    <div className="max-w-xl mx-auto space-y-6">
+    <div className="max-w-xl mx-auto space-y-5 py-2">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Analyze a Meeting</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Upload a transcript to get coaching insights for a specific speaker.
+        <h1 className="text-2xl font-bold text-stone-900">Analyze a Meeting</h1>
+        <p className="text-sm text-stone-500 mt-1">
+          Upload a transcript to receive personalised coaching feedback.
         </p>
       </div>
 
-      <TranscriptUploadPanel onUploaded={handleUploaded} />
+      {/* Step 1 — Upload */}
+      <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
+        <div className="flex items-center gap-2.5">
+          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+            step > 1 ? 'bg-emerald-600 text-white' : 'bg-stone-900 text-white'
+          }`}>
+            {step > 1 ? '✓' : '1'}
+          </div>
+          <p className="text-sm font-semibold text-stone-800">Upload transcript</p>
+        </div>
+        <TranscriptUploadPanel onUploaded={handleUploaded} />
+      </div>
 
+      {/* Step 2 — Configure */}
       {transcriptId && (
-        <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+        <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-4">
+          <div className="flex items-center gap-2.5">
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+              step > 2 ? 'bg-emerald-600 text-white' : 'bg-stone-900 text-white'
+            }`}>
+              {step > 2 ? '✓' : '2'}
+            </div>
+            <p className="text-sm font-semibold text-stone-800">Configure analysis</p>
+          </div>
+
           {speakerLabels.length > 0 ? (
             <div>
-              <p className="text-xs text-gray-500 mb-1">Select target speaker</p>
+              <p className="text-xs text-stone-500 mb-2">Who are we analysing?</p>
               <SpeakerChips
                 speakers={speakerLabels}
                 selected={speakerLabel}
@@ -114,32 +133,34 @@ export default function AnalyzePage() {
             </div>
           ) : (
             <div>
-              <label className="text-xs text-gray-500">Speaker label</label>
+              <label className="text-xs text-stone-500">Speaker label</label>
               <input
                 type="text"
                 value={speakerLabel ?? ''}
                 onChange={(e) => setSpeakerLabel(e.target.value || null)}
                 placeholder="e.g. SPEAKER_00"
-                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+                className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
               />
             </div>
           )}
+
           <div>
-            <label className="text-xs text-gray-500">Speaker's full name</label>
+            <label className="text-xs text-stone-500">Their full name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Sarah Johnson"
-              className="mt-1 w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+              className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
             />
           </div>
+
           <div>
-            <label className="text-xs text-gray-500">Target role</label>
+            <label className="text-xs text-stone-500">Their role in this meeting</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as TargetRole)}
-              className="mt-1 w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+              className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
             >
               <option value="">Select role…</option>
               {ROLE_OPTIONS.map((r) => (
@@ -147,21 +168,26 @@ export default function AnalyzePage() {
               ))}
             </select>
           </div>
-          {speakerLabel && name && role
-            ? <p className="text-xs text-green-600">✓ Ready</p>
-            : <p className="text-xs text-amber-600">↑ Complete the fields above to continue</p>
-          }
         </div>
       )}
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && (
+        <p className="text-sm text-rose-600 bg-rose-50 rounded-xl px-4 py-3">{error}</p>
+      )}
 
       <button
         onClick={handleSubmit}
         disabled={!ready || submitting}
-        className="w-full py-3 bg-indigo-600 text-white rounded-lg font-medium text-sm hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-semibold text-sm hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
       >
-        {submitting ? 'Analyzing…' : 'Analyze Meeting'}
+        {submitting ? (
+          <span className="flex items-center justify-center gap-2">
+            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            Starting analysis…
+          </span>
+        ) : (
+          'Analyse Meeting →'
+        )}
       </button>
     </div>
   );
