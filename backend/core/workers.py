@@ -441,8 +441,10 @@ def process_baseline_pack_build(
     bp_pack_id_str = bp_fields.get("Baseline Pack ID", "")
     target_role = bp_fields.get("Target Role") or "participant"
     speaker_label = bp_fields.get("Speaker Label") or ""
-
+    user_links = _get_link_ids(bp_fields, "users")
+    config_links = _get_link_ids(bp_fields, "Config") if "Config" in bp_fields else []
     items = client.get_baseline_pack_items(baseline_pack_id)
+    
     if len(items) < 3:
         raise ValueError(f"BaselinePack {baseline_pack_id} has only {len(items)} items (need 3).")
 
@@ -471,10 +473,40 @@ def process_baseline_pack_build(
                         client.update_record("baseline_pack_items", item["id"], {"Run": [run_record_id]})
 
             if not run_record_id:
-                raise ValueError(
-                    f"BaselinePackItem {item['id']} has no passing single-meeting run. "
-                    "Run single-meeting analysis on each transcript first."
+                if not transcript_record_id:
+                    raise ValueError(
+                        f"BaselinePackItem {item['id']} has no Transcript link — cannot auto-run analysis."
+                    )
+                logger.info(
+                    "No passing run found for item %s (transcript %s) — triggering inline single-meeting analysis.",
+                    item["id"], transcript_record_id,
                 )
+                # Create a run_request record so process_single_meeting_analysis can read speaker/role context.
+                rr_fields: dict = {
+                    "Transcript": [transcript_record_id],
+                    "Target Role": target_role,
+                    "Analysis Type": "single_meeting",
+                    "Status": "queued",
+                    "Baseline Pack": [baseline_pack_id],
+                }
+                if user_links:
+                    rr_fields["User"] = [user_links[0]]  # populates speaker name/label via Airtable lookups
+                if config_links:
+                    rr_fields["Config"] = config_links
+
+                rr_record = client.create_run_request(rr_fields)
+                rr_id = rr_record["id"]
+
+                try:
+                    run_record_id = process_single_meeting_analysis(rr_id, client=client)
+                except Exception as exc:
+                    raise ValueError(
+                        f"Auto single-meeting analysis failed for item {item['id']}: {exc}"
+                    ) from exc
+
+                # Link the newly created run back to the baseline_pack_item.
+                client.update_baseline_pack_item(item["id"], {F_BPI_RUN: [run_record_id]})
+                logger.info("Auto-linked run %s to item %s", run_record_id, item["id"])
 
         run_rec = client.get_run(run_record_id)
         run_fields = _extract_fields(run_rec)
@@ -533,7 +565,6 @@ def process_baseline_pack_build(
     )
 
     # Get config (use first item's config if available — fall back to active)
-    config_links = _get_link_ids(bp_fields, "Config") if "Config" in bp_fields else []
     sys_prompt = system_prompt_override or _load_system_prompt_from_config(client, config_links)
     dev_message = developer_message_override or _load_developer_message_from_config(client, config_links)
 
@@ -553,7 +584,6 @@ def process_baseline_pack_build(
     idem_key = f"bp:{bp_pack_id_str}"
 
     # Determine user_record_id from baseline pack users link
-    user_links = _get_link_ids(bp_fields, "users")
     user_record_id = user_links[0] if user_links else ""
 
     # 7. Persist run

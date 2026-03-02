@@ -275,6 +275,9 @@ class AirtableClient:
         if run_record_id:
             fields[F_RR_RUN] = [run_record_id]
         return self.update_record(AT_TABLE_RUN_REQUESTS, record_id, fields)
+        
+    def create_run_request(self, fields: dict) -> dict:
+        return self.create_record(AT_TABLE_RUN_REQUESTS, fields)
 
     # ── Runs ──────────────────────────────────────────────────────────────────
 
@@ -325,7 +328,10 @@ class AirtableClient:
         return self.update_record(AT_TABLE_BASELINE_PACKS, record_id, fields)
 
     def get_baseline_pack_items(self, baseline_pack_record_id: str) -> list[dict]:
-        formula = f"FIND('{baseline_pack_record_id}', ARRAYJOIN({{BP Record ID}}))"
+    # Resolve the human-readable ID so we can use the lookup field in the formula.
+        bp_record = self.get_record(AT_TABLE_BASELINE_PACKS, baseline_pack_record_id)
+        bp_pack_id = bp_record.get("fields", {}).get("Baseline Pack ID", "")
+        formula = f"{{Baseline Pack ID (from Baseline Pack)}} = '{bp_pack_id}'"
         return self.search_records(AT_TABLE_BASELINE_PACK_ITEMS, formula, max_records=10)
 
     def get_baseline_pack_item(self, record_id: str) -> dict:
