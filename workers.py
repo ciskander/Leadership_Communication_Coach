@@ -341,6 +341,23 @@ def process_single_meeting_analysis(
         max_tokens=_get_config_max_tokens(client, config_links),
     )
 
+    # 6c. Inject meta fields the model may omit
+    import json as _json
+    _parsed_output = _json.loads(openai_resp.raw_text)
+    if "meta" in _parsed_output:
+        _parsed_output["meta"].setdefault("analysis_id", prompt_payload.meta.get("analysis_id"))
+        _parsed_output["meta"].setdefault("analysis_type", prompt_payload.meta.get("analysis_type"))
+        _parsed_output["meta"].setdefault("generated_at", prompt_payload.meta.get("generated_at"))
+        patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
+        openai_resp = OpenAIResponse(
+            parsed=_parsed_output,
+            raw_text=patched_raw,
+            model=openai_resp.model,
+            prompt_tokens=openai_resp.prompt_tokens,
+            completion_tokens=openai_resp.completion_tokens,
+            total_tokens=openai_resp.total_tokens,
+        )
+        
     # 7. Gate1 validate
     gate1_result = gate1_validate(openai_resp.raw_text)
 

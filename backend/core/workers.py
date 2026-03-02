@@ -341,6 +341,23 @@ def process_single_meeting_analysis(
         max_tokens=_get_config_max_tokens(client, config_links),
     )
 
+    # 6c. Inject meta fields the model may omit
+    import json as _json
+    _parsed_output = _json.loads(openai_resp.raw_text)
+    if "meta" in _parsed_output:
+        _parsed_output["meta"].setdefault("analysis_id", prompt_payload.meta.get("analysis_id"))
+        _parsed_output["meta"].setdefault("analysis_type", prompt_payload.meta.get("analysis_type"))
+        _parsed_output["meta"].setdefault("generated_at", prompt_payload.meta.get("generated_at"))
+        patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
+        openai_resp = OpenAIResponse(
+            parsed=_parsed_output,
+            raw_text=patched_raw,
+            model=openai_resp.model,
+            prompt_tokens=openai_resp.prompt_tokens,
+            completion_tokens=openai_resp.completion_tokens,
+            total_tokens=openai_resp.total_tokens,
+        )
+        
     # 7. Gate1 validate
     gate1_result = gate1_validate(openai_resp.raw_text)
 
@@ -831,15 +848,6 @@ def _load_system_prompt_from_config(client: AirtableClient, config_links: list[s
                 return sp
         except Exception:
             pass
-    # Fallback: try active config from Airtable
-    try:
-        cfg = client.get_active_config()
-        if cfg:
-            sp = cfg.get("fields", {}).get("System Prompt")
-            if sp:
-                return sp
-    except Exception:
-        pass
     return load_system_prompt()
 
 
@@ -852,14 +860,7 @@ def _load_developer_message_from_config(client: AirtableClient, config_links: li
                 return tc
         except Exception:
             pass
-    try:
-        cfg = client.get_active_config()
-        if cfg:
-            tc = cfg.get("fields", {}).get("Taxonomy Compact Block")
-            if tc:
-                return tc
-    except Exception:
-        pass
+    # Fallback: empty developer message
     return ""
 
 
@@ -867,20 +868,9 @@ def _get_config_model(client: AirtableClient, config_links: list[str]) -> Option
     if config_links:
         try:
             cfg = client.get_record("config", config_links[0])
-            model = _extract_fields(cfg).get("Model Name")
-            if model:
-                return model
+            return _extract_fields(cfg).get("Model Name")
         except Exception:
             pass
-    # Fallback: try active config from Airtable
-    try:
-        cfg = client.get_active_config()
-        if cfg:
-            model = cfg.get("fields", {}).get("Model Name")
-            if model:
-                return model
-    except Exception:
-        pass
     return None
 
 
@@ -889,16 +879,7 @@ def _get_config_max_tokens(client: AirtableClient, config_links: list[str]) -> O
         try:
             cfg = client.get_record("config", config_links[0])
             val = _extract_fields(cfg).get("Max Output Tokens")
-            if val:
-                return int(val)
+            return int(val) if val else None
         except Exception:
             pass
-    try:
-        cfg = client.get_active_config()
-        if cfg:
-            val = cfg.get("fields", {}).get("Max Output Tokens")
-            if val:
-                return int(val)
-    except Exception:
-        pass
     return None
