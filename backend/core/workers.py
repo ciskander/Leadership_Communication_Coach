@@ -577,6 +577,35 @@ def process_baseline_pack_build(
         max_tokens=_get_config_max_tokens(client, config_links),
     )
 
+    import json as _json
+    _parsed_output = _json.loads(openai_resp.raw_text)
+
+    # Patch meta
+    if "meta" in _parsed_output:
+        _parsed_output["meta"].setdefault("analysis_type", "baseline_pack")
+        _parsed_output["meta"].setdefault("generated_at", prompt_payload.meta.get("generated_at") if hasattr(prompt_payload, "meta") else None)
+
+    # Override context consistency fields to booleans (schema requires bool, model returns strings)
+    if "context" in _parsed_output:
+        _parsed_output["context"]["role_consistency"] = (role_consistency == "consistent")
+        _parsed_output["context"]["meeting_type_consistency"] = (meeting_type_consistency == "consistent")
+
+    # Coerce numerator/denominator to integers (model sometimes returns floats)
+    for _item in _parsed_output.get("pattern_snapshot", []):
+        for _field in ("numerator", "denominator"):
+            if isinstance(_item.get(_field), float):
+                _item[_field] = round(_item[_field])
+
+    patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
+    openai_resp = OpenAIResponse(
+        parsed=_parsed_output,
+        raw_text=patched_raw,
+        model=openai_resp.model,
+        prompt_tokens=openai_resp.prompt_tokens,
+        completion_tokens=openai_resp.completion_tokens,
+        total_tokens=openai_resp.total_tokens,
+    )
+
     # 6. Gate1 validate
     gate1_result = gate1_validate(openai_resp.raw_text)
 
