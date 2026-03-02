@@ -27,6 +27,10 @@ _BOILERPLATE_RE = re.compile(
 _HTML_TAG_RE = re.compile(r"<[^>]+>")
 _VOICE_TAG_RE = re.compile(r"<v ([^>]+)>")  # <v Speaker Name>
 _TIMESTAMP_INLINE_RE = re.compile(r"\b\d{1,2}:\d{2}(:\d{2})?(\.\d+)?\b")
+_HEADER_LINE_RE = re.compile(
+    r"^(Meeting\s*#|Meeting\s*Type|Leader|Participants|Date|Location|Duration)\s*:",
+    re.IGNORECASE,
+)
 
 # VTT header / special block markers
 _VTT_BLOCK_SKIP_RE = re.compile(r"^(STYLE|NOTE|REGION)\b", re.IGNORECASE)
@@ -289,11 +293,12 @@ def _parse_txt_format_a(lines: list[str]) -> list[Turn]:
         if not line or _BOILERPLATE_RE.search(line):
             continue
         m = _FMT_A_RE.match(line)
-        if m:
+        if m and not _HEADER_LINE_RE.match(line):
             if current_speaker and current_text:
                 raw.append((current_speaker, " ".join(current_text)))
             current_speaker = _clean_speaker(m.group(1))
-            rest = line[m.end():].strip()
+            colon_pos = line.index(":", len(m.group(1)) - 1)
+            rest = line[colon_pos + 1:].strip()
             current_text = [rest] if rest else []
         else:
             if current_speaker:
