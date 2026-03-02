@@ -231,7 +231,7 @@ def _persist_run_fields(
         active_exp = exp_tracking.get("active_experiment") or {}
         detection = exp_tracking.get("detection_in_this_meeting")
         fields[F_RUN_EXPERIMENT_STATUS_MODEL] = active_exp.get("status")
-        if detection:
+        if detection and isinstance(detection, dict):
             fields[F_RUN_ATTEMPT_MODEL] = detection.get("attempt")
 
     return client.create_run(fields)
