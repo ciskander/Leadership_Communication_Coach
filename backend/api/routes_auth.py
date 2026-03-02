@@ -164,7 +164,7 @@ async def callback(request: Request):
         new_user = create_user(
             email=email,
             display_name=display_name,
-            role="admin",
+            role="coach",
             oauth_provider="google",
             oauth_sub=sub,
         )
