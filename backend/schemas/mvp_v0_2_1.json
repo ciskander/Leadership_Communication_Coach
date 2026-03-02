@@ -149,6 +149,13 @@
             "string",
             "null"
           ]
+        },
+        "meeting_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^M-[0-9]{6}$"
         }
       }
     },
