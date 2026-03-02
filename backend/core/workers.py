@@ -852,7 +852,14 @@ def _load_developer_message_from_config(client: AirtableClient, config_links: li
                 return tc
         except Exception:
             pass
-    # Fallback: empty developer message
+    try:
+        cfg = client.get_active_config()
+        if cfg:
+            tc = cfg.get("fields", {}).get("Taxonomy Compact Block")
+            if tc:
+                return tc
+    except Exception:
+        pass
     return ""
 
 
@@ -860,9 +867,20 @@ def _get_config_model(client: AirtableClient, config_links: list[str]) -> Option
     if config_links:
         try:
             cfg = client.get_record("config", config_links[0])
-            return _extract_fields(cfg).get("Model Name")
+            model = _extract_fields(cfg).get("Model Name")
+            if model:
+                return model
         except Exception:
             pass
+    # Fallback: try active config from Airtable
+    try:
+        cfg = client.get_active_config()
+        if cfg:
+            model = cfg.get("fields", {}).get("Model Name")
+            if model:
+                return model
+    except Exception:
+        pass
     return None
 
 
@@ -871,7 +889,16 @@ def _get_config_max_tokens(client: AirtableClient, config_links: list[str]) -> O
         try:
             cfg = client.get_record("config", config_links[0])
             val = _extract_fields(cfg).get("Max Output Tokens")
-            return int(val) if val else None
+            if val:
+                return int(val)
         except Exception:
             pass
+    try:
+        cfg = client.get_active_config()
+        if cfg:
+            val = cfg.get("fields", {}).get("Max Output Tokens")
+            if val:
+                return int(val)
+    except Exception:
+        pass
     return None

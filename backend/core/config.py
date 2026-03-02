@@ -20,7 +20,7 @@ CONFIG_VERSION: str = "1"          # bump when prompt/model defaults change
 OUTPUT_MODE: str = "coaching_first_2s1e"
 
 # ── OpenAI ───────────────────────────────────────────────────────────────────
-OPENAI_MODEL_DEFAULT: str = "gpt-4o"
+OPENAI_MODEL_DEFAULT: str = "gpt-5.2-chat-latest"
 OPENAI_MAX_TOKENS: int = 8192
 OPENAI_CONNECT_TIMEOUT: float = 10.0
 OPENAI_READ_TIMEOUT: float = 90.0
