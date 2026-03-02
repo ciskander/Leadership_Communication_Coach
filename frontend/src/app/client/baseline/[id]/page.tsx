@@ -22,7 +22,7 @@ export default function BaselineDetailPage() {
 
   // Auto-poll while building
   useEffect(() => {
-    if (pack && (pack.status === 'building' || pack.status === 'intake')) {
+    if (pack && (pack.status === 'building' || pack.status === 'intake') && pack.status !== 'completed' && pack.status !== 'baseline_ready') {
       const t = setTimeout(fetchPack, 5000);
       return () => clearTimeout(t);
     }
@@ -55,7 +55,7 @@ export default function BaselineDetailPage() {
         </div>
       )}
 
-      {pack.status === 'baseline_ready' && (
+      {(pack.status === 'baseline_ready' || pack.status === 'completed') && (
         <div className="space-y-6">
           <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3">
             <p className="text-sm text-green-700 font-medium">✓ Baseline complete</p>

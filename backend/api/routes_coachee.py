@@ -94,6 +94,45 @@ async def build_baseline_pack(
     )
 
 
+@router.get("/api/baseline_packs/{bp_id}")
+async def get_baseline_pack(
+    bp_id: str,
+    user: UserAuth = Depends(get_current_user),
+):
+    at_client = AirtableClient()
+    try:
+        bp_rec = at_client.get_baseline_pack(bp_id)
+    except Exception:
+        return error_response(404, "NOT_FOUND", "Baseline pack not found.")
+
+    bf = bp_rec.get("fields", {})
+
+    strengths, focus, micro_experiment = [], None, None
+    last_run_links = bf.get("Last Run", [])
+    if last_run_links:
+        try:
+            run_rec = at_client.get_run(last_run_links[0])
+            parsed_json_str = run_rec.get("fields", {}).get("Parsed JSON") or "{}"
+            parsed = json.loads(parsed_json_str)
+            coaching = parsed.get("coaching_output", {})
+            strengths = coaching.get("strengths", [])
+            focus = (coaching.get("focus") or [None])[0]
+            micro_experiment = (coaching.get("micro_experiment") or [None])[0]
+        except Exception:
+            pass
+
+    return {
+        "baseline_pack_id": bp_rec["id"],
+        "status": bf.get("Status"),
+        "target_role": bf.get("Target Role"),
+        "role_consistency": bf.get("Role Consistency"),
+        "meeting_type_consistency": bf.get("Meeting Type Consistency"),
+        "strengths": strengths,
+        "focus": focus,
+        "micro_experiment": micro_experiment,
+        "created_at": bp_rec.get("createdTime"),
+    }
+
 @router.post("/api/analyses/single_meeting", response_model=SingleMeetingEnqueueResponse)
 async def enqueue_analysis(
     body: SingleMeetingBody,

@@ -731,7 +731,6 @@ def instantiate_experiment_from_run(
         return None
 
     fields: dict = {
-        F_EXP_EXPERIMENT_ID: exp_id,
         F_EXP_TITLE: title,
         F_EXP_INSTRUCTIONS: instruction,
         F_EXP_SUCCESS_CRITERIA: success_marker,
