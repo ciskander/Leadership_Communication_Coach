@@ -589,7 +589,7 @@ def process_baseline_pack_build(
     # 7. Persist run
     run_record = _persist_run_fields(
         client,
-        transcript_record_id=meetings_meta[0].get("meeting_id", ""),  # No direct transcript for BP run
+        transcript_record_id=meeting_run_data[0]["transcript_record_id"] or "",  # No direct transcript for BP run
         run_request_record_id=None,
         baseline_pack_record_id=baseline_pack_id,
         request_payload=prompt_payload.raw_user_message,
