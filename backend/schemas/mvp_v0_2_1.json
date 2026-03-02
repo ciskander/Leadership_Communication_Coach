@@ -114,6 +114,8 @@
             "other"
           ]
         },
+		"target_speaker_name": { "type": "string" },
+		"target_speaker_label": { "type": "string" },
         "target_role": {
           "type": "string",
           "enum": ["chair", "presenter", "participant", "manager_1to1", "report_1to1"]
