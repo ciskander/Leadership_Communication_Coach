@@ -32,10 +32,11 @@ router = APIRouter()
 # ── Request bodies ────────────────────────────────────────────────────────────
 
 class CreateBaselinePackBody(BaseModel):
-    transcript_ids: list[str]           # exactly 3 Airtable transcript record IDs
+    transcript_ids: list[str]
     target_speaker_name: str
     target_speaker_label: str
     target_role: str
+    coachee_auth_id: Optional[str] = None  # Set by coach when creating on behalf of coachee
 
 
 class SingleMeetingBody(BaseModel):
@@ -59,11 +60,19 @@ async def create_baseline_pack(
     at_client = AirtableClient()
 
     # Create the baseline_pack record
+    # Determine whose Airtable record to use
+    airtable_user_id = user.airtable_user_record_id
+    if body.coachee_auth_id:
+        from .auth import get_user_by_id
+        coachee = get_user_by_id(body.coachee_auth_id)
+        if coachee and coachee.airtable_user_record_id:
+            airtable_user_id = coachee.airtable_user_record_id
+
     bp_record = at_client.create_record("baseline_packs", {
         "Target Role": body.target_role,
         "Speaker Label": body.target_speaker_label,
         "Status": "draft",
-        "users": [user.airtable_user_record_id] if user.airtable_user_record_id else [],
+        "users": [airtable_user_id] if airtable_user_id else [],
     })
     bp_record_id = bp_record["id"]
 

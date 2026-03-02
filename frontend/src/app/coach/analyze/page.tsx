@@ -60,7 +60,7 @@ export default function CoachAnalyzePage() {
     setSubmitting(true);
     setError(null);
     try {
-      const result = await api.enqueueSingleMeeting({
+      const result = await api.coachEnqueueAnalysis(selectedCoacheeId!, {
         transcript_id: transcriptId!,
         target_speaker_name: name,
         target_speaker_label: speakerLabel!,
