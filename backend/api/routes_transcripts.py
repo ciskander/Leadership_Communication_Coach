@@ -114,11 +114,7 @@ async def list_transcripts(
     user: UserAuth = Depends(get_current_user),
 ):
     at_client = AirtableClient()
-    if user.airtable_user_record_id:
-        formula = f"FIND('{user.airtable_user_record_id}', ARRAYJOIN({{Uploaded By}}))"
-        records = at_client.search_records("transcripts", formula, max_records=50)
-    else:
-        records = []
+    records = at_client.search_records("transcripts", "", max_records=50)
 
     items = []
     for rec in records:

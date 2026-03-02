@@ -4,39 +4,56 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { TranscriptUploadPanel } from '@/components/TranscriptUpload';
+import { SpeakerChips } from '@/components/SpeakerChips';
 import type { TargetRole } from '@/lib/types';
 
-interface TranscriptConfig {
-  transcript_id: string;
-  speaker_labels: string[];
-  target_speaker_label: string | null;
-  target_speaker_name: string;
-  target_role: TargetRole | '';
-}
+const ROLE_OPTIONS = [
+  { value: 'chair',        label: 'Chair / Facilitator' },
+  { value: 'presenter',    label: 'Presenter' },
+  { value: 'participant',  label: 'Participant' },
+  { value: 'manager_1to1', label: '1:1 Manager' },
+  { value: 'report_1to1',  label: '1:1 Report' },
+];
 
 export default function AnalyzePage() {
   const router = useRouter();
-  const [config, setConfig] = useState<TranscriptConfig | null>(null);
+
+  // Upload result
+  const [transcriptId, setTranscriptId] = useState<string | null>(null);
+  const [speakerLabels, setSpeakerLabels] = useState<string[]>([]);
+
+  // Config fields
+  const [speakerLabel, setSpeakerLabel] = useState<string | null>(null);
+  const [name, setName] = useState('');
+  const [role, setRole] = useState<TargetRole | ''>('');
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleUploaded = ({ transcript_id, speaker_labels }: { transcript_id: string; speaker_labels: string[] }) => {
+    setTranscriptId(transcript_id);
+    setSpeakerLabels(speaker_labels);
+    setSpeakerLabel(speaker_labels[0] ?? null);
+    setName('');
+    setRole('');
+  };
+
+  const ready = transcriptId && speakerLabel && name && role;
+
   const handleSubmit = async () => {
-    if (!config?.target_speaker_label || !config.target_role) return;
+    if (!ready) return;
     setSubmitting(true);
     setError(null);
     try {
       const result = await api.enqueueSingleMeeting({
-        transcript_id: config.transcript_id,
-        target_speaker_name: config.target_speaker_name,
-        target_speaker_label: config.target_speaker_label,
-        target_role: config.target_role,
+        transcript_id: transcriptId,
+        target_speaker_name: name,
+        target_speaker_label: speakerLabel,
+        target_role: role,
       });
-      // Poll via run_request until run_id is available, then navigate
-      const runId = result.run_id;
-      if (runId) {
-        router.push(`/client/runs/${runId}`);
+      if (result.run_id) {
+        router.push(`/client/runs/${result.run_id}`);
       } else {
-        // Poll run_request
         pollRunRequest(result.run_request_id);
       }
     } catch (e: unknown) {
@@ -73,8 +90,6 @@ export default function AnalyzePage() {
     poll();
   };
 
-  const ready = config?.target_speaker_label && config?.target_role && config?.target_speaker_name;
-
   return (
     <div className="max-w-xl mx-auto space-y-6">
       <div>
@@ -84,10 +99,60 @@ export default function AnalyzePage() {
         </p>
       </div>
 
-      <TranscriptUploadPanel
-        label="Upload transcript"
-        onComplete={(c) => setConfig(c as TranscriptConfig)}
-      />
+      <TranscriptUploadPanel onUploaded={handleUploaded} />
+
+      {transcriptId && (
+        <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+          {speakerLabels.length > 0 ? (
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Select target speaker</p>
+              <SpeakerChips
+                speakers={speakerLabels}
+                selected={speakerLabel}
+                onSelect={setSpeakerLabel}
+              />
+            </div>
+          ) : (
+            <div>
+              <label className="text-xs text-gray-500">Speaker label</label>
+              <input
+                type="text"
+                value={speakerLabel ?? ''}
+                onChange={(e) => setSpeakerLabel(e.target.value || null)}
+                placeholder="e.g. SPEAKER_00"
+                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+              />
+            </div>
+          )}
+          <div>
+            <label className="text-xs text-gray-500">Speaker's full name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Sarah Johnson"
+              className="mt-1 w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500">Target role</label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as TargetRole)}
+              className="mt-1 w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+            >
+              <option value="">Select role…</option>
+              {ROLE_OPTIONS.map((r) => (
+                <option key={r.value} value={r.value}>{r.label}</option>
+              ))}
+            </select>
+          </div>
+          {speakerLabel && name && role
+            ? <p className="text-xs text-green-600">✓ Ready</p>
+            : <p className="text-xs text-amber-600">↑ Complete the fields above to continue</p>
+          }
+        </div>
+      )}
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 

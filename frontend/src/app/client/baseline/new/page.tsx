@@ -38,44 +38,111 @@ function TranscriptSlot({
     existingTranscripts.length > 0 ? 'select' : 'upload'
   );
 
-  // select-mode state
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Shared config state — owned here, not inside child components
+  const [transcriptId, setTranscriptId] = useState<string | null>(null);
   const [speakerLabels, setSpeakerLabels] = useState<string[]>([]);
   const [speakerLabel, setSpeakerLabel] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [role, setRole] = useState<TargetRole | ''>('');
 
-  // Notify parent whenever select-mode fields change
-  useEffect(() => {
-    if (mode !== 'select') return;
-    if (selectedId && speakerLabel && name && role) {
-      onComplete({ transcript_id: selectedId, speaker_labels: speakerLabels, target_speaker_label: speakerLabel, target_speaker_name: name, target_role: role });
+  const notify = (
+    tid: string | null,
+    sl: string | null,
+    n: string,
+    r: TargetRole | '',
+    labels: string[]
+  ) => {
+    if (tid && sl && n && r) {
+      onComplete({ transcript_id: tid, speaker_labels: labels, target_speaker_label: sl, target_speaker_name: n, target_role: r });
     } else {
       onComplete(null);
     }
-  }, [mode, selectedId, speakerLabel, name, role]);
+  };
 
-  const handleSelect = (t: TranscriptListItem) => {
-    setSelectedId(t.transcript_id);
-    setSpeakerLabels(t.speaker_labels);
-    setSpeakerLabel(t.speaker_labels[0] ?? null);
+  const setField = (patch: { speakerLabel?: string | null; name?: string; role?: TargetRole | '' }) => {
+    const sl = patch.speakerLabel !== undefined ? patch.speakerLabel : speakerLabel;
+    const n = patch.name !== undefined ? patch.name : name;
+    const r = patch.role !== undefined ? patch.role : role;
+    if (patch.speakerLabel !== undefined) setSpeakerLabel(sl);
+    if (patch.name !== undefined) setName(n);
+    if (patch.role !== undefined) setRole(r);
+    notify(transcriptId, sl, n, r, speakerLabels);
+  };
+
+  const applyTranscript = (tid: string, labels: string[]) => {
+    setTranscriptId(tid);
+    setSpeakerLabels(labels);
+    setSpeakerLabel(labels[0] ?? null);
     setName('');
     setRole('');
-    onComplete(null);
+    notify(tid, labels[0] ?? null, '', '', labels);
   };
 
   const switchMode = (next: 'select' | 'upload') => {
     setMode(next);
-    setSelectedId(null);
+    setTranscriptId(null);
+    setSpeakerLabels([]);
     setSpeakerLabel(null);
     setName('');
     setRole('');
     onComplete(null);
   };
 
+  const configForm = transcriptId && (
+    <div className="space-y-2 pt-1">
+      {speakerLabels.length > 0 ? (
+        <div>
+          <p className="text-xs text-gray-500 mb-1">Select target speaker</p>
+          <SpeakerChips
+            speakers={speakerLabels}
+            selected={speakerLabel}
+            onSelect={(s) => setField({ speakerLabel: s })}
+          />
+        </div>
+      ) : (
+        <div>
+          <label className="text-xs text-gray-500">Speaker label</label>
+          <input
+            type="text"
+            value={speakerLabel ?? ''}
+            onChange={(e) => setField({ speakerLabel: e.target.value || null })}
+            placeholder="e.g. SPEAKER_00"
+            className="mt-1 w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+          />
+        </div>
+      )}
+      <div>
+        <label className="text-xs text-gray-500">Speaker's full name</label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setField({ name: e.target.value })}
+          placeholder="e.g. Sarah Johnson"
+          className="mt-1 w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+        />
+      </div>
+      <div>
+        <label className="text-xs text-gray-500">Target role</label>
+        <select
+          value={role}
+          onChange={(e) => setField({ role: e.target.value as TargetRole })}
+          className="mt-1 w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+        >
+          <option value="">Select role…</option>
+          {ROLE_OPTIONS.map((r) => (
+            <option key={r.value} value={r.value}>{r.label}</option>
+          ))}
+        </select>
+      </div>
+      {speakerLabel && name && role
+        ? <p className="text-xs text-green-600">✓ Ready</p>
+        : <p className="text-xs text-amber-600">↑ Complete the fields above to continue</p>
+      }
+    </div>
+  );
+
   return (
     <div className="border border-gray-200 rounded-lg p-4 space-y-3">
-      {/* Header + mode toggle */}
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-gray-700">Meeting {index + 1} of 3</p>
         <div className="flex gap-1 text-xs bg-gray-100 rounded-md p-0.5">
@@ -95,18 +162,23 @@ function TranscriptSlot({
         </div>
       </div>
 
-      {/* Upload mode */}
       {mode === 'upload' && (
-        <TranscriptUploadPanel label="" onComplete={(c) => onComplete(c)} />
+        <div className="space-y-3">
+          <TranscriptUploadPanel
+            onUploaded={({ transcript_id, speaker_labels }) =>
+              applyTranscript(transcript_id, speaker_labels)
+            }
+          />
+          {configForm}
+        </div>
       )}
 
-      {/* Select mode */}
       {mode === 'select' && (
         <div className="space-y-3">
           <div className="max-h-48 overflow-y-auto rounded-md border border-gray-100 divide-y divide-gray-50">
             {existingTranscripts.length === 0 ? (
               <p className="text-xs text-gray-400 text-center py-6">
-                No transcripts uploaded yet.{' '}
+                No transcripts yet.{' '}
                 <button className="text-indigo-600 underline" onClick={() => switchMode('upload')}>
                   Upload one
                 </button>
@@ -116,15 +188,15 @@ function TranscriptSlot({
                 <label
                   key={t.transcript_id}
                   className={`flex items-start gap-3 px-3 py-2.5 cursor-pointer hover:bg-gray-50 transition-colors ${
-                    selectedId === t.transcript_id ? 'bg-indigo-50' : ''
+                    transcriptId === t.transcript_id ? 'bg-indigo-50' : ''
                   }`}
                 >
                   <input
                     type="radio"
                     name={`slot-${index}`}
                     value={t.transcript_id}
-                    checked={selectedId === t.transcript_id}
-                    onChange={() => handleSelect(t)}
+                    checked={transcriptId === t.transcript_id}
+                    onChange={() => applyTranscript(t.transcript_id, t.speaker_labels)}
                     className="mt-0.5 accent-indigo-600"
                   />
                   <div className="min-w-0">
@@ -137,56 +209,7 @@ function TranscriptSlot({
               ))
             )}
           </div>
-
-          {/* Config fields — only show once a transcript is selected */}
-          {selectedId && (
-            <div className="space-y-2 pt-1">
-              {speakerLabels.length > 0 ? (
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Select target speaker</p>
-                  <SpeakerChips
-                    speakers={speakerLabels}
-                    selected={speakerLabel}
-                    onSelect={setSpeakerLabel}
-                  />
-                </div>
-              ) : (
-                <div>
-                  <label className="text-xs text-gray-500">Speaker label</label>
-                  <input
-                    type="text"
-                    value={speakerLabel ?? ''}
-                    onChange={(e) => setSpeakerLabel(e.target.value || null)}
-                    placeholder="e.g. SPEAKER_00"
-                    className="mt-1 w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm"
-                  />
-                </div>
-              )}
-              <div>
-                <label className="text-xs text-gray-500">Display name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Sarah"
-                  className="mt-1 w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-500">Target role</label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as TargetRole)}
-                  className="mt-1 w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm"
-                >
-                  <option value="">Select role…</option>
-                  {ROLE_OPTIONS.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          )}
+          {configForm}
         </div>
       )}
     </div>
