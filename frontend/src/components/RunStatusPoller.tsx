@@ -92,7 +92,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
     );
   }
 
-  // ── Parse experiment tracking ────────────────────────────────────────────────
+  // ── Parse experiment tracking ───────────────────────────────────────────────
   const et = run.experiment_tracking as Record<string, unknown> | null;
   const activeExp = et?.active_experiment as Record<string, unknown> | null;
   const detection = et?.detection_in_this_meeting as Record<string, unknown> | null;
