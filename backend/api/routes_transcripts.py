@@ -60,6 +60,19 @@ def _detect_date_from_text(text: str) -> Optional[str]:
                         continue
     return None
 
+def _extract_speaker_previews(turns: list, max_per_speaker: int = 2) -> dict:
+    """Return up to max_per_speaker utterances per speaker, truncated to 120 chars."""
+    previews: dict = {}
+    for turn in turns:
+        label = turn.speaker_label
+        if label not in previews:
+            previews[label] = []
+        if len(previews[label]) < max_per_speaker:
+            snippet = turn.text.strip()[:120]
+            if len(turn.text.strip()) > 120:
+                snippet += "…"
+            previews[label].append(snippet)
+    return previews
 
 def _extract_text(data: bytes, filename: str) -> str:
     """Extract plain text from various file formats."""
