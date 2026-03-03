@@ -226,8 +226,8 @@ async def client_summary(
                 bp_status = bp_rec.get("fields", {}).get("Status")
 
             # Recent runs (last 5)
-            runs_formula = f"FIND('{user.airtable_user_record_id}', ARRAYJOIN({{users}}))"
-            run_records = at_client.search_records("runs", runs_formula, max_records=5)
+            runs_formula = f"{{Coachee ID}} = '{user.airtable_user_record_id}'"
+            run_records = at_client.search_records("runs", runs_formula, max_records=5))
             for r in run_records:
                 rf = r.get("fields", {})
                 recent_runs.append({
