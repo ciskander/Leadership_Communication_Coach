@@ -401,7 +401,10 @@ def process_single_meeting_analysis(
             for field in ("numerator", "denominator", "ratio", "opportunity_count",
                           "opportunity_events", "opportunity_events_considered",
                           "opportunity_events_counted"):
-                snap.pop(field, None)     
+                snap.pop(field, None)
+        # Backfill required base fields the model sometimes omits
+        snap.setdefault("denominator_rule_id", "qualitative_balance")
+        snap.setdefault("min_required_threshold", None)                
      
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
     openai_resp = OpenAIResponse(
@@ -675,6 +678,9 @@ def process_baseline_pack_build(
                           "opportunity_events", "opportunity_events_considered",
                           "opportunity_events_counted"):
                 snap.pop(field, None)
+        # Backfill required base fields the model sometimes omits
+        snap.setdefault("denominator_rule_id", "qualitative_balance")
+        snap.setdefault("min_required_threshold", None)                
 
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
     openai_resp = OpenAIResponse(
@@ -909,7 +915,6 @@ def create_attempt_event_from_run(
     fields: dict = {
         F_EE_EXPERIMENT: [exp_record_id],
         F_EE_RUN: [run_id],
-        F_EE_DETECTION_MODEL: attempt,
         F_EE_EVIDENCE_SPAN_IDS: json.dumps(es_ids),
         F_EE_IDEMPOTENCY_KEY: idem_key,
         F_EE_ATTEMPT_ENUM: attempt,
