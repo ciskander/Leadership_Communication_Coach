@@ -394,7 +394,15 @@ def process_single_meeting_analysis(
         item.setdefault("evidence_span_ids", [])
     for item in coaching.get("micro_experiment", []):
         item.setdefault("evidence_span_ids", [])
-        
+
+    # Strip numeric fields from conversational_balance — schema forbids them
+    for snap in _parsed_output.get("pattern_snapshot", []):
+        if snap.get("pattern_id") == "conversational_balance":
+            for field in ("numerator", "denominator", "ratio", "opportunity_count",
+                          "opportunity_events", "opportunity_events_considered",
+                          "opportunity_events_counted"):
+                snap.pop(field, None)     
+     
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
     openai_resp = OpenAIResponse(
         parsed=_parsed_output,
@@ -659,6 +667,14 @@ def process_baseline_pack_build(
             "count_attempts": 0, 
             "evidence_span_ids": []
         }
+
+    # Strip numeric fields from conversational_balance — schema forbids them
+    for snap in _parsed_output.get("pattern_snapshot", []):
+        if snap.get("pattern_id") == "conversational_balance":
+            for field in ("numerator", "denominator", "ratio", "opportunity_count",
+                          "opportunity_events", "opportunity_events_considered",
+                          "opportunity_events_counted"):
+                snap.pop(field, None)
 
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
     openai_resp = OpenAIResponse(
