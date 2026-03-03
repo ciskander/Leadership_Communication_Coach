@@ -825,12 +825,6 @@ def create_attempt_event_from_run(
     client: Optional[AirtableClient] = None,
     active_exp_record_id: Optional[str] = None,
 ) -> Optional[str]:
-    """
-    Idempotent: create an experiment_event from the run's detection output.
-
-    Returns:
-        ExperimentEvent record ID, or None if not applicable.
-    """
     if client is None:
         client = AirtableClient()
 
@@ -838,6 +832,7 @@ def create_attempt_event_from_run(
     run_fields = _extract_fields(run_record)
 
     if not run_fields.get("Gate1 Pass"):
+        logger.info("EE_DEBUG run %s: gate1 not passed", run_id)
         return None
 
     parsed_json_str = run_fields.get("Parsed JSON") or "{}"
@@ -847,28 +842,36 @@ def create_attempt_event_from_run(
     active_exp = exp_tracking.get("active_experiment") or {}
     detection = exp_tracking.get("detection_in_this_meeting")
 
+    logger.info("EE_DEBUG run %s: detection=%s active_exp=%s", run_id, detection, active_exp)
+
     if not detection:
+        logger.info("EE_DEBUG run %s: no detection, returning None", run_id)
         return None
 
     status = active_exp.get("status", "none")
     if status not in ("assigned", "active"):
+        logger.info("EE_DEBUG run %s: status=%s not active/assigned, returning None", run_id, status)
         return None
 
-    # Use the Active Experiment link stored directly on the run record
     exp_record_id = active_exp_record_id
     if not exp_record_id:
-        # Fallback: try reading from run record
         active_exp_links = _get_link_ids(run_fields, F_RUN_ACTIVE_EXPERIMENT)
         exp_record_id = active_exp_links[0] if active_exp_links else None
     if not exp_record_id:
-        logger.warning("Run %s has no active experiment; cannot create event", run_id)
+        logger.info("EE_DEBUG run %s: no exp_record_id, returning None", run_id)
         return None
 
+    logger.info("EE_DEBUG run %s: exp_record_id=%s", run_id, exp_record_id)
+
     # Idempotency check
+    exp_id_in_run = active_exp.get("experiment_id")
     idem_key = make_experiment_event_key(run_id, exp_id_in_run)
     existing = client.find_experiment_event_by_idempotency_key(idem_key)
     if existing:
+        logger.info("EE_DEBUG run %s: idempotency hit, event already exists", run_id)
         return existing["id"]
+
+    logger.info("EE_DEBUG run %s: creating experiment event", run_id)
 
     # Extract detection fields
     attempt = detection.get("attempt")
