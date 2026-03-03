@@ -106,21 +106,18 @@ export const api = {
       body: JSON.stringify(body),
     });
   },
-  
-	coachEnqueueAnalysis(
-	  coacheeId: string,
-	  body: {
-		transcript_id: string;
-		target_speaker_name: string;
-		target_speaker_label: string;
-		target_role: string;
-	  }
-	): Promise<RunRequestStatus> {
-	  return request(`/api/coach/coachees/${coacheeId}/analyze`, {
-		method: 'POST',
-		body: JSON.stringify(body),
-	  });
-	},  
+
+  coachEnqueueAnalysis(coacheeAuthId: string, body: {
+    transcript_id: string;
+    target_speaker_name: string;
+    target_speaker_label: string;
+    target_role: string;
+  }): Promise<RunRequestStatus> {
+    return request(`/api/coach/coachees/${coacheeAuthId}/analyze`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
 
   // Baseline packs
   createBaselinePack(body: {
@@ -180,15 +177,43 @@ export const api = {
     });
   },
 
+  // Legacy experiment update (PATCH-based, kept for backward compatibility)
+  updateExperiment(
+    experimentRecordId: string,
+    action: 'complete' | 'abandon'
+  ): Promise<Experiment> {
+    return request(`/api/experiments/${experimentRecordId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ action }),
+    });
+  },
+
+  // Legacy confirm attempt (kept for backward compatibility)
+  confirmAttempt(runId: string, confirmed: boolean): Promise<void> {
+    return request(`/api/runs/${runId}/experiment_attempt`, {
+      method: 'PATCH',
+      body: JSON.stringify({ confirmed }),
+    });
+  },
+
   // Coach
   listCoachees(): Promise<CoacheeListItem[]> {
     return request('/api/coach/coachees');
   },
   getCoacheeSummary(coacheeId: string): Promise<CoacheeSummary> {
-    return request(`/api/coach/coachees/${coacheeId}`);
+    return request(`/api/coach/coachees/${coacheeId}/summary`);
   },
   createCoacheeInvite(): Promise<{ invite_url: string; token: string }> {
     return request('/api/invites/coachee', { method: 'POST' });
+  },
+  searchUsers(q: string): Promise<CoacheeListItem[]> {
+    return request(`/api/coach/users/search?q=${encodeURIComponent(q)}`);
+  },
+  assignCoachee(userId: string): Promise<CoacheeListItem> {
+    return request('/api/coach/assign_coachee', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId }),
+    });
   },
 
   // Admin
