@@ -31,7 +31,7 @@ export default function ExperimentPage() {
         </p>
       </div>
 
-      {!experiment || experiment.status === 'none' ? (
+      {!experiment ? (
         <div className="bg-white rounded-2xl border border-dashed border-stone-300 p-12 text-center space-y-4">
           <div className="text-4xl">◈</div>
           <p className="text-stone-600 font-medium">No active experiment</p>
