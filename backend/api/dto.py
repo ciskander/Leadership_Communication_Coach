@@ -30,7 +30,7 @@ class TranscriptUploadResponse(BaseModel):
     meeting_type: Optional[str]
     meeting_date: Optional[str]
     detected_date: Optional[str] = None
-    speaker_previews: dict[str, list[str]] = {}
+    speaker_previews: dict[str, list[str]] = Field(default_factory=dict)
 
 
 class TranscriptListItem(BaseModel):
@@ -123,11 +123,27 @@ class ExperimentResponse(BaseModel):
     pattern_id: str
     status: str
     created_at: Optional[str]
+    attempt_count: Optional[int] = None
+    started_at: Optional[str] = None
+    ended_at: Optional[str] = None
 
 
 class ActiveExperimentResponse(BaseModel):
     experiment: Optional[ExperimentResponse]
     recent_events: list[dict] = Field(default_factory=list)
+
+
+class ExperimentActionResponse(BaseModel):
+    """Returned by accept / complete / abandon endpoints."""
+    experiment_record_id: str
+    status: str
+    message: str
+
+
+class HumanConfirmResponse(BaseModel):
+    event_record_id: str
+    experiment_record_id: str
+    confirmed: bool
 
 
 # ── Coach ─────────────────────────────────────────────────────────────────────
@@ -143,6 +159,7 @@ class CoacheeSummaryResponse(BaseModel):
     coachee: CoacheeListItem
     active_baseline_pack: Optional[dict] = None
     active_experiment: Optional[ExperimentResponse] = None
+    proposed_experiments: list[ExperimentResponse] = Field(default_factory=list)
     recent_runs: list[dict] = Field(default_factory=list)
 
 
@@ -151,6 +168,7 @@ class CoacheeSummaryResponse(BaseModel):
 class ClientSummaryResponse(BaseModel):
     user: MeResponse
     active_experiment: Optional[ExperimentResponse] = None
+    proposed_experiments: list[ExperimentResponse] = Field(default_factory=list)
     baseline_pack_status: Optional[str] = None
     recent_runs: list[dict] = Field(default_factory=list)
 

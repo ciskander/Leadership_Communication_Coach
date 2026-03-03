@@ -100,6 +100,7 @@ F_RUN_COACHEE_ID = "Coachee ID"
 F_RUN_RUN_REQUESTS = "run_requests"          # Link
 F_RUN_EXPERIMENT_INSTANTIATED = "Experiment Instantiated?"
 F_RUN_ATTEMPT_EVENT_CREATED = "Attempt Event Created?"
+F_RUN_ACTIVE_EXPERIMENT = "Active Experiment"   # Link to experiments table
 
 # validation_issues
 F_VI_ISSUE_ID = "Issue ID"
@@ -141,6 +142,11 @@ F_EXP_CREATED_FROM_RUN_ID = "Created From Run ID"
 F_EXP_USER = "User"                          # Link
 F_EXP_INSTRUCTION = "Instruction"
 F_EXP_SUCCESS_MARKER = "Success Marker"
+F_EXP_STARTED_AT = "Started At"
+F_EXP_ENDED_AT = "Ended At"
+F_EXP_LAST_ATTEMPT_MODEL = "Last Attempt (model)"
+F_EXP_LAST_ATTEMPT_DATE = "Last Attempt Date"
+F_EXP_ATTEMPT_COUNT = "Attempt Count (model)"
 
 # experiment_events
 F_EE_EVENT_ID = "Event ID"
@@ -362,6 +368,71 @@ class AirtableClient:
         if not exp_links:
             return None
         return self.get_experiment(exp_links[0])
+
+    def get_proposed_experiments_for_user(self, user_record_id: str, max_records: int = 3) -> list[dict]:
+        """Return proposed experiments for a user, most recent first."""
+        formula = (
+            f"AND("
+            f"FIND('{user_record_id}', ARRAYJOIN({{User}})), "
+            f"{{{F_EXP_STATUS}}} = 'proposed'"
+            f")"
+        )
+        return self.search_records(
+            AT_TABLE_EXPERIMENTS,
+            formula,
+            max_records=max_records,
+        )
+
+    def update_experiment_attempt_fields(
+        self,
+        experiment_record_id: str,
+        attempt: str,
+        attempt_date: Optional[str],
+    ) -> dict:
+        """Update last attempt fields and increment attempt count."""
+        # Read current count first
+        exp_rec = self.get_experiment(experiment_record_id)
+        current_count = exp_rec.get("fields", {}).get(F_EXP_ATTEMPT_COUNT) or 0
+        fields: dict = {
+            F_EXP_LAST_ATTEMPT_MODEL: attempt,
+            F_EXP_ATTEMPT_COUNT: current_count + 1,
+        }
+        if attempt_date:
+            fields[F_EXP_LAST_ATTEMPT_DATE] = attempt_date
+        return self.update_experiment(experiment_record_id, fields)
+
+    def accept_experiment(self, experiment_record_id: str, user_record_id: str) -> dict:
+        """Transition a proposed experiment to active and set it on the user."""
+        from datetime import datetime, timezone
+        started_at = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        self.update_experiment(experiment_record_id, {
+            F_EXP_STATUS: "active",
+            F_EXP_STARTED_AT: started_at,
+        })
+        self.set_active_experiment_for_user(user_record_id, experiment_record_id)
+        return self.get_experiment(experiment_record_id)
+
+    def complete_experiment(self, experiment_record_id: str, user_record_id: str) -> dict:
+        """Mark experiment complete, clear user's active experiment."""
+        from datetime import datetime, timezone
+        ended_at = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        self.update_experiment(experiment_record_id, {
+            F_EXP_STATUS: "completed",
+            F_EXP_ENDED_AT: ended_at,
+        })
+        self.update_user(user_record_id, {F_USER_ACTIVE_EXPERIMENT: []})
+        return self.get_experiment(experiment_record_id)
+
+    def abandon_experiment(self, experiment_record_id: str, user_record_id: str) -> dict:
+        """Mark experiment abandoned, clear user's active experiment."""
+        from datetime import datetime, timezone
+        ended_at = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        self.update_experiment(experiment_record_id, {
+            F_EXP_STATUS: "abandoned",
+            F_EXP_ENDED_AT: ended_at,
+        })
+        self.update_user(user_record_id, {F_USER_ACTIVE_EXPERIMENT: []})
+        return self.get_experiment(experiment_record_id)
 
     # ── Experiment Events ─────────────────────────────────────────────────────
 

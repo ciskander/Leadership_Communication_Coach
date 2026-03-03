@@ -71,6 +71,12 @@ from .airtable_client import (
     F_RUN_TARGET_SPEAKER_ROLE,
     F_RUN_TRANSCRIPT,
     F_USER_ACTIVE_EXPERIMENT,
+    F_EXP_STARTED_AT,
+    F_EXP_ENDED_AT,
+    F_EXP_ATTEMPT_COUNT,
+    F_EXP_LAST_ATTEMPT_MODEL,
+    F_EXP_LAST_ATTEMPT_DATE,
+    F_RUN_ACTIVE_EXPERIMENT,
 )
 from .config import CONFIG_VERSION
 from .gate1_validator import validate as gate1_validate
@@ -181,6 +187,7 @@ def _persist_run_fields(
     transcript_record_id: str,
     run_request_record_id: Optional[str],
     baseline_pack_record_id: Optional[str],
+    active_experiment_record_id: Optional[str] = None,
     request_payload: str,
     raw_output: str,
     parsed_json: Optional[dict],
@@ -218,6 +225,8 @@ def _persist_run_fields(
         fields[F_RUN_RUN_REQUESTS] = [run_request_record_id]
     if baseline_pack_record_id:
         fields[F_RUN_BASELINE_PACK] = [baseline_pack_record_id]
+    if active_experiment_record_id:
+        fields[F_RUN_ACTIVE_EXPERIMENT] = [active_experiment_record_id]
 
     if parsed_json:
         fields[F_RUN_PARSED_JSON] = _safe_json_dumps(parsed_json)
@@ -407,6 +416,7 @@ def process_single_meeting_analysis(
         transcript_record_id=transcript_record_id,
         run_request_record_id=run_request_id,
         baseline_pack_record_id=None,
+        active_experiment_record_id=active_exp_record_id,
         request_payload=prompt_payload.raw_user_message,
         raw_output=openai_resp.raw_text,
         parsed_json=openai_resp.parsed,
@@ -430,10 +440,22 @@ def process_single_meeting_analysis(
 
     # 8. Post-pass actions
     if gate1_result.passed:
-        # Create experiment_event if applicable
+        # Create experiment_event if active experiment was tracked
         exp_event_id = create_attempt_event_from_run(run_record_id, client=client)
         if exp_event_id:
             client.update_run(run_record_id, {F_RUN_ATTEMPT_EVENT_CREATED: True})
+
+        # Propose a new experiment from micro_experiment output, but only
+        # when there is no active experiment (avoid queue noise).
+        if not active_exp_record_id:
+            exp_record_id = instantiate_experiment_from_run(
+                run_record_id,
+                client=client,
+                user_record_id=user_record_id or None,
+                baseline_pack_record_id=None,
+            )
+            if exp_record_id:
+                client.update_run(run_record_id, {F_RUN_EXPERIMENT_INSTANTIATED: True})
 
     # 10. Update run_request status
     new_status = "completed" if gate1_result.passed else "gate1_failed"
@@ -696,7 +718,7 @@ def process_baseline_pack_build(
             F_BPI_MEETING_SUMMARY: _safe_json_dumps(mrd["slim_summary"]),
         })
 
-    # 7b. Instantiate experiment if gate1 passed
+    # 7b. Propose experiment from baseline pack output if gate1 passed
     if gate1_result.passed:
         exp_record_id = instantiate_experiment_from_run(
             run_record_id,
@@ -706,11 +728,11 @@ def process_baseline_pack_build(
         )
         if exp_record_id:
             client.update_run(run_record_id, {F_RUN_EXPERIMENT_INSTANTIATED: True})
+            # Link proposed experiment to the baseline pack for reference
             client.update_baseline_pack(baseline_pack_id, {
                 "Active Experiment": [exp_record_id],
             })
-            if user_record_id:
-                client.set_active_experiment_for_user(user_record_id, exp_record_id)
+            # NOTE: do NOT auto-activate — coachee must accept from the queue.
 
     logger.info(
         "Completed baseline_pack build %s → run %s (gate1_pass=%s)",
@@ -774,7 +796,7 @@ def instantiate_experiment_from_run(
         F_EXP_SUCCESS_CRITERIA: success_marker,
         F_EXP_SUCCESS_MARKER: success_marker,
         F_EXP_PATTERN_ID: pattern_id,
-        F_EXP_STATUS: "assigned",
+        F_EXP_STATUS: "proposed",
         F_EXP_PROPOSED_BY_RUN: [run_id],
         F_EXP_CREATED_FROM_RUN_ID: run_id,
     }
@@ -786,11 +808,9 @@ def instantiate_experiment_from_run(
     exp_record = client.create_experiment(fields)
     exp_record_id = exp_record["id"]
 
-    # Set as active experiment on user
-    if user_record_id:
-        client.set_active_experiment_for_user(user_record_id, exp_record_id)
-
-    logger.info("Created experiment %s from run %s", exp_record_id, run_id)
+    # NOTE: do NOT set as active experiment here — coachee must explicitly
+    # accept from the proposed queue. See POST /api/client/experiments/{id}/accept.
+    logger.info("Proposed experiment %s from run %s", exp_record_id, run_id)
     return exp_record_id
 
 
@@ -829,27 +849,13 @@ def create_attempt_event_from_run(
     if status not in ("assigned", "active"):
         return None
 
-    # Find active experiment record
-    exp_id_in_run = active_exp.get("experiment_id")
-    if not exp_id_in_run:
+    # Use the Active Experiment link stored directly on the run record
+    active_exp_links = _get_link_ids(run_fields, F_RUN_ACTIVE_EXPERIMENT)
+    if not active_exp_links:
+        logger.warning("Run %s has no Active Experiment link; cannot create event", run_id)
         return None
 
-    # Look up experiment record
-    exp_record = client.find_experiment_by_run_id(run_id)
-    # If no experiment was created from THIS run, try finding by experiment_id field
-    if not exp_record:
-        records = client.search_records(
-            "experiments",
-            f"{{Experiment ID}} = '{exp_id_in_run}'",
-            max_records=1,
-        )
-        exp_record = records[0] if records else None
-
-    if not exp_record:
-        logger.warning("Cannot find experiment record for experiment_id %s", exp_id_in_run)
-        return None
-
-    exp_record_id = exp_record["id"]
+    exp_record_id = active_exp_links[0]
 
     # Idempotency check
     idem_key = make_experiment_event_key(run_id, exp_id_in_run)
@@ -893,7 +899,17 @@ def create_attempt_event_from_run(
     event_record = client.create_experiment_event(fields)
     event_record_id = event_record["id"]
 
-    logger.info("Created experiment_event %s for run %s exp %s", event_record_id, run_id, exp_id_in_run)
+    # Update attempt tracking fields on the experiment record
+    try:
+        client.update_experiment_attempt_fields(
+            exp_record_id,
+            attempt=attempt,
+            attempt_date=meeting_date,
+        )
+    except Exception as exc:
+        logger.warning("Could not update experiment attempt fields: %s", exc)
+
+    logger.info("Created experiment_event %s for run %s", event_record_id, run_id)
     return event_record_id
 
 
