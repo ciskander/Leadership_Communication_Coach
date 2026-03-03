@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { TranscriptUploadPanel } from '@/components/TranscriptUpload';
@@ -15,9 +15,19 @@ const ROLE_OPTIONS = [
   { value: 'report_1to1',  label: '1:1 Report' },
 ];
 
+function getFirstName(displayName: string): string {
+  return displayName.trim().split(/\s+/)[0].toLowerCase();
+}
+
+function matchSpeakerByFirstName(speakers: string[], firstName: string): string | null {
+  const lower = firstName.toLowerCase();
+  return speakers.find((s) => s.toLowerCase().startsWith(lower)) ?? null;
+}
+
 export default function AnalyzePage() {
   const router = useRouter();
 
+  const [currentUserName, setCurrentUserName] = useState('');
   const [transcriptId, setTranscriptId] = useState<string | null>(null);
   const [speakerLabels, setSpeakerLabels] = useState<string[]>([]);
   const [speakerLabel, setSpeakerLabel] = useState<string | null>(null);
@@ -26,11 +36,28 @@ export default function AnalyzePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleUploaded = ({ transcript_id, speaker_labels }: { transcript_id: string; speaker_labels: string[] }) => {
+  useEffect(() => {
+    api.me().then((user) => {
+      if (user.display_name) setCurrentUserName(user.display_name);
+    }).catch(() => {});
+  }, []);
+
+  const handleUploaded = ({
+    transcript_id,
+    speaker_labels,
+  }: {
+    transcript_id: string;
+    speaker_labels: string[];
+    meeting_date?: string | null;
+    detected_date?: string | null;
+  }) => {
     setTranscriptId(transcript_id);
     setSpeakerLabels(speaker_labels);
-    setSpeakerLabel(speaker_labels[0] ?? null);
-    setName('');
+
+    const firstName = currentUserName ? getFirstName(currentUserName) : '';
+    const matched = firstName ? matchSpeakerByFirstName(speaker_labels, firstName) : null;
+    setSpeakerLabel(matched ?? speaker_labels[0] ?? null);
+    setName(currentUserName || '');
     setRole('');
   };
 
@@ -97,7 +124,6 @@ export default function AnalyzePage() {
         </p>
       </div>
 
-      {/* Step 1 — Upload */}
       <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
         <div className="flex items-center gap-2.5">
           <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
@@ -107,10 +133,9 @@ export default function AnalyzePage() {
           </div>
           <p className="text-sm font-semibold text-stone-800">Upload transcript</p>
         </div>
-        <TranscriptUploadPanel onUploaded={handleUploaded} />
+        <TranscriptUploadPanel onUploaded={handleUploaded} withMetadata={true} />
       </div>
 
-      {/* Step 2 — Configure */}
       {transcriptId && (
         <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-4">
           <div className="flex items-center gap-2.5">

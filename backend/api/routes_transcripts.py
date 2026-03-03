@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import io
 import os
-import tempfile
+import re
 from datetime import datetime
 from typing import Optional
 
@@ -23,6 +23,42 @@ router = APIRouter()
 
 _ALLOWED_EXTENSIONS = {".txt", ".vtt", ".srt", ".docx", ".pdf"}
 _MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+# Date patterns to try detecting from raw transcript text
+_DATE_PATTERNS = [
+    # ISO: 2026-03-03
+    (r'\b(\d{4}-\d{2}-\d{2})\b', '%Y-%m-%d'),
+    # US long: March 3, 2026 / March 03, 2026
+    (r'\b((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4})\b', None),
+    # US short: 03/03/2026 or 3/3/2026
+    (r'\b(\d{1,2}/\d{1,2}/\d{4})\b', '%m/%d/%Y'),
+]
+
+
+def _detect_date_from_text(text: str) -> Optional[str]:
+    """Try to extract a meeting date from the first 2000 chars of transcript text.
+    Returns an ISO date string (YYYY-MM-DD) or None."""
+    sample = text[:2000]
+    for pattern, fmt in _DATE_PATTERNS:
+        match = re.search(pattern, sample, re.IGNORECASE)
+        if match:
+            raw = match.group(1)
+            if fmt:
+                try:
+                    dt = datetime.strptime(raw, fmt)
+                    return dt.strftime('%Y-%m-%d')
+                except ValueError:
+                    continue
+            else:
+                # Try parsing month-name formats
+                for month_fmt in ('%B %d, %Y', '%B %d %Y', '%B %dst, %Y', '%B %dnd, %Y', '%B %drd, %Y', '%B %dth, %Y'):
+                    try:
+                        clean = re.sub(r'(\d+)(st|nd|rd|th)', r'\1', raw, flags=re.IGNORECASE)
+                        dt = datetime.strptime(clean.strip().rstrip(','), '%B %d %Y')
+                        return dt.strftime('%Y-%m-%d')
+                    except ValueError:
+                        continue
+    return None
 
 
 def _extract_text(data: bytes, filename: str) -> str:
@@ -51,6 +87,7 @@ def _extract_text(data: bytes, filename: str) -> str:
 @router.post("/api/transcripts", response_model=TranscriptUploadResponse)
 async def upload_transcript(
     file: UploadFile = File(...),
+    title: Optional[str] = Form(default=None),
     meeting_type: Optional[str] = Form(default=None),
     meeting_date: Optional[str] = Form(default=None),
     user: UserAuth = Depends(get_current_user),
@@ -81,6 +118,13 @@ async def upload_transcript(
     except Exception as exc:
         return transcript_parse_fail(f"Transcript parse error: {exc}")
 
+    # Auto-detect date from raw text if not provided
+    detected_date: Optional[str] = None
+    if not meeting_date:
+        detected_date = _detect_date_from_text(raw_text)
+
+    effective_date = meeting_date or detected_date
+
     # Write to Airtable
     at_client = AirtableClient()
 
@@ -89,13 +133,12 @@ async def upload_transcript(
         "Transcript (extracted)": raw_text[:100_000],
         "Speaker Labels": ", ".join(parsed.speaker_labels or []),
         "Uploaded By": [user.airtable_user_record_id] if user.airtable_user_record_id else [],
+        "Title": title or file.filename or "Untitled",
     }
     if meeting_type:
         fields["Meeting Type"] = meeting_type
-    if meeting_date:
-        fields["Meeting Date"] = meeting_date
-    if file.filename:
-        fields["Title"] = file.filename
+    if effective_date:
+        fields["Meeting Date"] = effective_date
 
     transcript_record = at_client.create_record("transcripts", fields)
     transcript_record_id = transcript_record["id"]
@@ -105,7 +148,8 @@ async def upload_transcript(
         speaker_labels=parsed.speaker_labels or [],
         word_count=parsed.metadata.word_count,
         meeting_type=meeting_type,
-        meeting_date=meeting_date,
+        meeting_date=effective_date,
+        detected_date=detected_date,
     )
 
 

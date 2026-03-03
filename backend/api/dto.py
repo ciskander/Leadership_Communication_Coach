@@ -29,6 +29,7 @@ class TranscriptUploadResponse(BaseModel):
     word_count: Optional[int]
     meeting_type: Optional[str]
     meeting_date: Optional[str]
+    detected_date: Optional[str] = None
 
 
 class TranscriptListItem(BaseModel):
