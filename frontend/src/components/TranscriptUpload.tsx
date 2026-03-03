@@ -4,13 +4,17 @@ import { useRef, useState } from 'react';
 import { api } from '@/lib/api';
 
 const MEETING_TYPE_OPTIONS = [
-  'team_meeting',
-  'one_on_one',
+  'exec_staff',
+  'board',
   'all_hands',
+  'cross_functional',
+  'project_review',
+  'sprint_planning',
+  'sprint_retrospective',
+  'stand_up',
+  'incident_review',
   'client_call',
-  'interview',
-  'presentation',
-  'workshop',
+  'one_on_one',
   'other',
 ];
 

@@ -86,6 +86,12 @@ from .openai_client import call_openai, load_system_prompt
 from .prompt_builder import build_baseline_pack_prompt, build_memory_block, build_single_meeting_prompt
 from .transcript_parser import parse_transcript
 
+_VALID_MEETING_TYPES = {
+    'exec_staff', 'board', 'all_hands', 'cross_functional', 'project_review',
+    'sprint_planning', 'sprint_retrospective', 'stand_up', 'incident_review',
+    'client_call', 'one_on_one', 'other',
+}
+
 logger = logging.getLogger(__name__)
 
 
@@ -295,6 +301,9 @@ def process_single_meeting_analysis(
     transcript_text = tr_fields.get("Transcript (extracted)") or tr_fields.get("Raw Transcript Text") or ""
     transcript_id_str = tr_fields.get("Transcript ID") or transcript_record_id
     meeting_type = tr_fields.get("Meeting Type") or "other"
+    if meeting_type not in _VALID_MEETING_TYPES:
+        logger.warning("Invalid meeting_type '%s' coerced to 'other'", meeting_type)
+        meeting_type = "other"
     meeting_date = tr_fields.get("Meeting Date") or ""
 
     parsed = parse_transcript(
