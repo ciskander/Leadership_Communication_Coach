@@ -353,9 +353,13 @@ def process_single_meeting_analysis(
     active_exp = exp_track.get("active_experiment", {})
     detection = exp_track.get("detection_in_this_meeting")
 
-    # Coerce string detection values to None — schema requires object or null
+    # Coerce non-dict detection values to a no-attempt sentinel object
     if not isinstance(detection, dict):
-        exp_track["detection_in_this_meeting"] = None
+        exp_track["detection_in_this_meeting"] = {
+            "attempt": None,
+            "count_attempts": 0,
+            "evidence_span_ids": [],
+        }
         detection = None
 
     if active_exp:
@@ -610,10 +614,14 @@ def process_baseline_pack_build(
             if isinstance(_item.get(_field), float):
                 _item[_field] = round(_item[_field])
                 
-    # Coerce string detection values to None — schema requires object or null
+    # Coerce string detection values to None — schema requires object
     _exp_track = _parsed_output.get("experiment_tracking", {})
     if not isinstance(_exp_track.get("detection_in_this_meeting"), dict):
-        _exp_track["detection_in_this_meeting"] = None
+        _exp_track["detection_in_this_meeting"] = {
+            "attempt": None,
+            "count_attempts": 0,
+            "evidence_span_ids": [],
+        }
 
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
     openai_resp = OpenAIResponse(
