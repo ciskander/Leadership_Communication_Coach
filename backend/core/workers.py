@@ -441,7 +441,11 @@ def process_single_meeting_analysis(
     # 8. Post-pass actions
     if gate1_result.passed:
         # Create experiment_event if active experiment was tracked
-        exp_event_id = create_attempt_event_from_run(run_record_id, client=client)
+        exp_event_id = create_attempt_event_from_run(
+            run_record_id,
+            client=client,
+            active_exp_record_id=active_exp_record_id,
+        )
         if exp_event_id:
             client.update_run(run_record_id, {F_RUN_ATTEMPT_EVENT_CREATED: True})
 
@@ -819,6 +823,7 @@ def instantiate_experiment_from_run(
 def create_attempt_event_from_run(
     run_id: str,
     client: Optional[AirtableClient] = None,
+    active_exp_record_id: Optional[str] = None,
 ) -> Optional[str]:
     """
     Idempotent: create an experiment_event from the run's detection output.
@@ -850,12 +855,14 @@ def create_attempt_event_from_run(
         return None
 
     # Use the Active Experiment link stored directly on the run record
-    active_exp_links = _get_link_ids(run_fields, F_RUN_ACTIVE_EXPERIMENT)
-    if not active_exp_links:
-        logger.warning("Run %s has no Active Experiment link; cannot create event", run_id)
+    exp_record_id = active_exp_record_id
+    if not exp_record_id:
+        # Fallback: try reading from run record
+        active_exp_links = _get_link_ids(run_fields, F_RUN_ACTIVE_EXPERIMENT)
+        exp_record_id = active_exp_links[0] if active_exp_links else None
+    if not exp_record_id:
+        logger.warning("Run %s has no active experiment; cannot create event", run_id)
         return None
-
-    exp_record_id = active_exp_links[0]
 
     # Idempotency check
     idem_key = make_experiment_event_key(run_id, exp_id_in_run)
