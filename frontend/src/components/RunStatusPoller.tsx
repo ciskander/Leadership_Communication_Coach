@@ -95,11 +95,17 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         </div>
       </div>
 
-      <CoachingCard
-        strengths={run.strengths}
-        focus={run.focus}
-        microExperiment={run.micro_experiment}
-      />
+	<CoachingCard
+	  strengths={run.strengths}
+	  focus={run.focus}
+	  microExperiment={
+		run.experiment_tracking &&
+		(run.experiment_tracking as Record<string, unknown>).active_experiment &&
+		((run.experiment_tracking as Record<string, unknown>).active_experiment as Record<string, unknown>).experiment_id !== 'EXP-000000'
+		  ? null
+		  : run.micro_experiment
+	  }
+	/>
 
 	{run.experiment_tracking && (() => {
 	  const et = run.experiment_tracking as Record<string, unknown>;
@@ -111,11 +117,11 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 	  const attempt = detection?.attempt as string | null;
 	  const countAttempts = detection?.count_attempts as number | null;
 
-	  const attemptConfig = attempt === 'full_attempt'
-		? { icon: '✦', color: 'emerald', label: 'Full attempt detected', desc: `The model detected ${countAttempts ?? 'multiple'} clear attempt${(countAttempts ?? 0) !== 1 ? 's' : ''} at your experiment in this meeting.` }
-		: attempt === 'partial_attempt'
-		? { icon: '◎', color: 'amber', label: 'Partial attempt detected', desc: `You made a partial attempt at your experiment. ${countAttempts ? `${countAttempts} instance${countAttempts !== 1 ? 's' : ''} noted.` : ''}` }
-		: { icon: '◈', color: 'stone', label: 'No attempt detected', desc: 'The model didn\'t detect your experiment being tried in this meeting. That\'s ok — keep it in mind for next time.' };
+	  const attemptConfig = attempt === 'yes'
+	    ? { icon: '✦', color: 'emerald', label: 'Full attempt detected', desc: `The model detected ${countAttempts ?? 'multiple'} clear attempt${(countAttempts ?? 0) !== 1 ? 's' : ''} at your experiment in this meeting.` }
+	    : attempt === 'partial'
+	    ? { icon: '◎', color: 'amber', label: 'Partial attempt detected', desc: `You made a partial attempt at your experiment. ${countAttempts ? `${countAttempts} instance${countAttempts !== 1 ? 's' : ''} noted.` : ''}` }
+	    : { icon: '◈', color: 'stone', label: 'No attempt detected', desc: 'The model didn\'t detect your experiment being tried in this meeting. That\'s ok — keep it in mind for next time.' };
 
 	  const colorMap: Record<string, string> = {
 		emerald: 'bg-emerald-50 border-emerald-200',

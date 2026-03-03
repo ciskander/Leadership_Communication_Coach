@@ -365,9 +365,10 @@ def process_single_meeting_analysis(
     # Coerce non-dict detection values to a no-attempt sentinel object
     if not isinstance(detection, dict):
         exp_track["detection_in_this_meeting"] = {
-            "attempt": None,
-            "count_attempts": 0,
-            "evidence_span_ids": [],
+            "experiment_id": "EXP-000000", 
+            "attempt": "no", 
+            "count_attempts": 0, 
+            "evidence_span_ids": []
         }
         detection = None
 
@@ -627,9 +628,10 @@ def process_baseline_pack_build(
     _exp_track = _parsed_output.get("experiment_tracking", {})
     if not isinstance(_exp_track.get("detection_in_this_meeting"), dict):
         _exp_track["detection_in_this_meeting"] = {
-            "attempt": None,
-            "count_attempts": 0,
-            "evidence_span_ids": [],
+            "experiment_id": "EXP-000000", 
+            "attempt": "no", 
+            "count_attempts": 0, 
+            "evidence_span_ids": []
         }
 
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
