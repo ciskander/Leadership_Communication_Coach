@@ -14,6 +14,10 @@ const MEETING_TYPE_OPTIONS = [
   'other',
 ];
 
+function isGenericLabel(label: string): boolean {
+  return /^SPEAKER_\d+/i.test(label) || /^UNKNOWN$/i.test(label);
+}
+
 interface UploadResult {
   transcript_id: string;
   speaker_labels: string[];
@@ -21,6 +25,7 @@ interface UploadResult {
   detected_date?: string | null;
   meeting_type?: string | null;
   title?: string | null;
+  speaker_previews?: Record<string, string[]>;
 }
 
 interface TranscriptUploadPanelProps {
@@ -64,14 +69,15 @@ export function TranscriptUploadPanel({ onUploaded, withMetadata = false }: Tran
 
       const result = await api.uploadTranscript(fd);
       setUploaded(true);
-      onUploaded({
-        transcript_id: result.transcript_id,
-        speaker_labels: result.speaker_labels,
-        meeting_date: result.meeting_date,
-        detected_date: (result as Record<string, unknown>).detected_date as string | null,
-        meeting_type: result.meeting_type,
-        title: titleVal || file.name,
-      });
+		onUploaded({
+		  transcript_id: result.transcript_id,
+		  speaker_labels: result.speaker_labels,
+		  meeting_date: result.meeting_date,
+		  detected_date: result.detected_date ?? null,
+		  speaker_previews: result.speaker_previews ?? {},
+		  meeting_type: result.meeting_type,
+		  title: titleVal || file.name,
+		});
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Upload failed');
     } finally {

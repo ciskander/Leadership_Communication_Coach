@@ -125,6 +125,9 @@ async def upload_transcript(
 
     effective_date = meeting_date or detected_date
 
+    # Build speaker previews from parsed turns
+    speaker_previews = _extract_speaker_previews(parsed.turns)
+
     # Write to Airtable
     at_client = AirtableClient()
 
@@ -150,8 +153,8 @@ async def upload_transcript(
         meeting_type=meeting_type,
         meeting_date=effective_date,
         detected_date=detected_date,
+        speaker_previews=speaker_previews,
     )
-
 
 @router.get("/api/transcripts", response_model=list[TranscriptListItem])
 async def list_transcripts(

@@ -24,9 +24,12 @@ function matchSpeakerByFirstName(speakers: string[], firstName: string): string 
   return speakers.find((s) => s.toLowerCase().startsWith(lower)) ?? null;
 }
 
+function isGenericLabel(label: string): boolean {
+  return /^SPEAKER_\d+/i.test(label) || /^UNKNOWN$/i.test(label);
+}
+
 export default function AnalyzePage() {
   const router = useRouter();
-
   const [currentUserName, setCurrentUserName] = useState('');
   const [transcriptId, setTranscriptId] = useState<string | null>(null);
   const [speakerLabels, setSpeakerLabels] = useState<string[]>([]);
@@ -35,6 +38,8 @@ export default function AnalyzePage() {
   const [role, setRole] = useState<TargetRole | ''>('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [speakerPreviews, setSpeakerPreviews] = useState<Record<string, string[]>>({});
+  const [needsSpeakerPick, setNeedsSpeakerPick] = useState(false);
 
   useEffect(() => {
     api.me().then((user) => {
@@ -42,24 +47,41 @@ export default function AnalyzePage() {
     }).catch(() => {});
   }, []);
 
-  const handleUploaded = ({
-    transcript_id,
-    speaker_labels,
-  }: {
-    transcript_id: string;
-    speaker_labels: string[];
-    meeting_date?: string | null;
-    detected_date?: string | null;
-  }) => {
-    setTranscriptId(transcript_id);
-    setSpeakerLabels(speaker_labels);
+	const handleUploaded = ({
+	  transcript_id,
+	  speaker_labels,
+	  speaker_previews = {},
+	}: {
+	  transcript_id: string;
+	  speaker_labels: string[];
+	  speaker_previews?: Record<string, string[]>;
+	  meeting_date?: string | null;
+	  detected_date?: string | null;
+	}) => {
+	  setTranscriptId(transcript_id);
+	  setSpeakerLabels(speaker_labels);
+	  setSpeakerPreviews(speaker_previews);
 
-    const firstName = currentUserName ? getFirstName(currentUserName) : '';
-    const matched = firstName ? matchSpeakerByFirstName(speaker_labels, firstName) : null;
-    setSpeakerLabel(matched ?? speaker_labels[0] ?? null);
-    setName(currentUserName || '');
-    setRole('');
-  };
+	  const allGeneric = speaker_labels.every(isGenericLabel);
+	  const firstName = currentUserName ? getFirstName(currentUserName) : '';
+	  const matched = !allGeneric && firstName
+		? matchSpeakerByFirstName(speaker_labels, firstName)
+		: null;
+
+	  if (matched) {
+		setSpeakerLabel(matched);
+		setNeedsSpeakerPick(false);
+	  } else if (allGeneric && speaker_labels.length > 1) {
+		setSpeakerLabel(null);
+		setNeedsSpeakerPick(true);
+	  } else {
+		setSpeakerLabel(speaker_labels[0] ?? null);
+		setNeedsSpeakerPick(false);
+	  }
+
+	  setName(currentUserName || '');
+	  setRole('');
+	};
 
   const ready = transcriptId && speakerLabel && name && role;
 
@@ -147,27 +169,56 @@ export default function AnalyzePage() {
             <p className="text-sm font-semibold text-stone-800">Configure analysis</p>
           </div>
 
-          {speakerLabels.length > 0 ? (
-            <div>
-              <p className="text-xs text-stone-500 mb-2">Who are we analysing?</p>
-              <SpeakerChips
-                speakers={speakerLabels}
-                selected={speakerLabel}
-                onSelect={setSpeakerLabel}
-              />
-            </div>
-          ) : (
-            <div>
-              <label className="text-xs text-stone-500">Speaker label</label>
-              <input
-                type="text"
-                value={speakerLabel ?? ''}
-                onChange={(e) => setSpeakerLabel(e.target.value || null)}
-                placeholder="e.g. SPEAKER_00"
-                className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
-              />
-            </div>
-          )}
+          {needsSpeakerPick ? (
+			  <div className="space-y-3">
+				<p className="text-xs text-stone-500 font-medium">Which speaker are you?</p>
+				<div className="grid grid-cols-1 gap-2">
+				  {speakerLabels.map((label) => {
+					const quotes = speakerPreviews[label] ?? [];
+					return (
+					  <button
+						key={label}
+						onClick={() => { setSpeakerLabel(label); setNeedsSpeakerPick(false); }}
+						className={`text-left p-3.5 rounded-xl border transition-colors ${
+						  speakerLabel === label
+							? 'border-emerald-500 bg-emerald-50'
+							: 'border-stone-200 bg-white hover:border-stone-300'
+						}`}
+					  >
+						<p className="text-xs font-semibold text-stone-500 uppercase tracking-widest mb-1.5">
+						  {label}
+						</p>
+						{quotes.map((q, i) => (
+						  <p key={i} className="text-sm text-stone-600 leading-snug">
+							"{q}"
+						  </p>
+						))}
+					  </button>
+					);
+				  })}
+				</div>
+			  </div>
+			) : speakerLabels.length > 0 ? (
+			  <div>
+				<p className="text-xs text-stone-500 mb-2">Who are we analysing?</p>
+				<SpeakerChips
+				  speakers={speakerLabels}
+				  selected={speakerLabel}
+				  onSelect={setSpeakerLabel}
+				/>
+			  </div>
+			) : (
+			  <div>
+				<label className="text-xs text-stone-500">Speaker label</label>
+				<input
+				  type="text"
+				  value={speakerLabel ?? ''}
+				  onChange={(e) => setSpeakerLabel(e.target.value || null)}
+				  placeholder="e.g. SPEAKER_00"
+				  className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
+				/>
+			  </div>
+		    )}
 
           <div>
             <label className="text-xs text-stone-500">Their full name</label>

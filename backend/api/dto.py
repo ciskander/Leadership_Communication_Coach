@@ -30,6 +30,7 @@ class TranscriptUploadResponse(BaseModel):
     meeting_type: Optional[str]
     meeting_date: Optional[str]
     detected_date: Optional[str] = None
+    speaker_previews: dict[str, list[str]] = {}
 
 
 class TranscriptListItem(BaseModel):

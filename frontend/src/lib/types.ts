@@ -83,6 +83,8 @@ export interface TranscriptUpload {
   word_count: number | null;
   meeting_type: string | null;
   meeting_date: string | null;
+  detected_date: string | null;
+  speaker_previews: Record<string, string[]>;
 }
 
 export interface TranscriptListItem {
