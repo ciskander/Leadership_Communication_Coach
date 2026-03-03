@@ -202,6 +202,7 @@ def _persist_run_fields(
     analysis_type: str,
     idempotency_key: str,
     coachee_id: str,
+    user_record_id: Optional[str] = None,    
 ) -> dict:
     """Create the run record in Airtable and return it."""
     fields: dict = {
@@ -227,6 +228,8 @@ def _persist_run_fields(
         fields[F_RUN_BASELINE_PACK] = [baseline_pack_record_id]
     if active_experiment_record_id:
         fields[F_RUN_ACTIVE_EXPERIMENT] = [active_experiment_record_id]
+    if user_record_id:
+        fields["users"] = [user_record_id]
 
     if parsed_json:
         fields[F_RUN_PARSED_JSON] = _safe_json_dumps(parsed_json)
@@ -442,6 +445,7 @@ def process_single_meeting_analysis(
         analysis_type=analysis_type,
         idempotency_key=idem_key,
         coachee_id=coachee_id,
+        user_record_id=user_record_id or None,        
     )
     run_record_id = run_record["id"]
 
@@ -721,6 +725,7 @@ def process_baseline_pack_build(
         analysis_type="baseline_pack",
         idempotency_key=idem_key,
         coachee_id=user_record_id,
+        user_record_id=user_record_id or None,       
     )
     run_record_id = run_record["id"]
 
