@@ -843,7 +843,7 @@
           "type": "string",
           "enum": [
             "none",
-            "assigned",
+            "proposed",
             "active",
             "completed",
             "abandoned"
@@ -922,7 +922,7 @@
                 "properties": {
                   "status": {
                     "enum": [
-                      "assigned",
+                      "proposed",
                       "active"
                     ]
                   }

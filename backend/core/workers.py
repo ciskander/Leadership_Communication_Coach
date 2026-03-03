@@ -375,13 +375,20 @@ def process_single_meeting_analysis(
     detection = exp_track.get("detection_in_this_meeting")
 
     # Coerce non-dict detection values to a no-attempt sentinel object
-    if not isinstance(detection, dict):
-        exp_track["detection_in_this_meeting"] = {
-            "experiment_id": "EXP-000000", 
-            "attempt": "no", 
-            "count_attempts": 0, 
-            "evidence_span_ids": []
-        }
+    active_status = exp_track.get("active_experiment", {}).get("status", "none")
+    if active_status == "active":
+        # Active experiment — sentinel object required when model returns non-dict
+        if not isinstance(detection, dict):
+            exp_track["detection_in_this_meeting"] = {
+                "experiment_id": exp_track.get("active_experiment", {}).get("experiment_id", "EXP-000000"),
+                "attempt": "no",
+                "count_attempts": 0,
+                "evidence_span_ids": [],
+            }
+            detection = None
+    else:
+        # No active experiment — detection must be null
+        exp_track["detection_in_this_meeting"] = None
         detection = None
 
     if active_exp:
@@ -407,7 +414,24 @@ def process_single_meeting_analysis(
                 snap.pop(field, None)
         # Backfill required base fields the model sometimes omits
         snap.setdefault("denominator_rule_id", "qualitative_balance")
-        snap.setdefault("min_required_threshold", None)                
+        snap.setdefault("min_required_threshold", None)    
+
+    # Coerce zero-denominator evaluable patterns to insufficient_signal
+    for snap in _parsed_output.get("pattern_snapshot", []):
+        if (
+            snap.get("evaluable_status") == "evaluable"
+            and snap.get("pattern_id") != "conversational_balance"
+            and snap.get("denominator") == 0
+        ):
+            snap["evaluable_status"] = "insufficient_signal"
+            for field in ("numerator", "denominator", "ratio"):
+                snap.pop(field, None)   
+
+    # Coerce legacy 'assigned' status to 'proposed'
+    _exp_track = _parsed_output.get("experiment_tracking", {})
+    _active_exp = _exp_track.get("active_experiment", {})
+    if _active_exp.get("status") == "assigned":
+        _active_exp["status"] = "proposed"                
      
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
     openai_resp = OpenAIResponse(
@@ -684,7 +708,18 @@ def process_baseline_pack_build(
                 snap.pop(field, None)
         # Backfill required base fields the model sometimes omits
         snap.setdefault("denominator_rule_id", "qualitative_balance")
-        snap.setdefault("min_required_threshold", None)                
+        snap.setdefault("min_required_threshold", None)     
+
+    # Coerce zero-denominator evaluable patterns to insufficient_signal
+    for snap in _parsed_output.get("pattern_snapshot", []):
+        if (
+            snap.get("evaluable_status") == "evaluable"
+            and snap.get("pattern_id") != "conversational_balance"
+            and snap.get("denominator") == 0
+        ):
+            snap["evaluable_status"] = "insufficient_signal"
+            for field in ("numerator", "denominator", "ratio"):
+                snap.pop(field, None)        
 
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
     openai_resp = OpenAIResponse(

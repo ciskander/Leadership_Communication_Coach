@@ -97,10 +97,9 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
   const activeExp = et?.active_experiment as Record<string, unknown> | null;
   const detection = et?.detection_in_this_meeting as Record<string, unknown> | null;
 
-  const hasActiveExp =
-    !!activeExp &&
-    activeExp.experiment_id !== 'EXP-000000' &&
-    activeExp.status !== 'none';
+	const hasActiveExp =
+	  !!activeExp &&
+	  activeExp.status === 'active';
 
   const attempt = detection?.attempt as string | null;
   const countAttempts = detection?.count_attempts as number | null;
