@@ -25,7 +25,7 @@ const ATTEMPT_CONFIG: Record<string, { color: string; label: string; dot: string
 };
 
 const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
-  assigned:  { bg: 'bg-blue-100',    text: 'text-blue-700',    label: 'Assigned' },
+  proposed:  { bg: 'bg-violet-100',  text: 'text-violet-700',  label: 'Proposed' },
   active:    { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Active' },
   completed: { bg: 'bg-stone-100',   text: 'text-stone-600',   label: 'Completed' },
   abandoned: { bg: 'bg-rose-100',    text: 'text-rose-700',    label: 'Abandoned' },
@@ -44,8 +44,8 @@ export function ExperimentTracker({ experiment, events, onUpdate }: ExperimentTr
     }
   };
 
-  const isActive = experiment.status === 'assigned' || experiment.status === 'active';
-  const statusCfg = STATUS_CONFIG[experiment.status] ?? STATUS_CONFIG.assigned;
+  const isActive = experiment.status === 'active';
+  const statusCfg = STATUS_CONFIG[experiment.status] ?? STATUS_CONFIG.active;
 
   const successCount = events.filter((e) => e.attempt === 'yes').length;
   const partialCount = events.filter((e) => e.attempt === 'partial').length;
