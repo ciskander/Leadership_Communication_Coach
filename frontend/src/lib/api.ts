@@ -160,9 +160,9 @@ export const api = {
   listCoachees(): Promise<CoacheeListItem[]> {
     return request('/api/coach/coachees');
   },
-  getCoacheeSummary(coacheeId: string): Promise<CoacheeSummary> {
-    return request(`/api/coach/coachees/${coacheeId}`);
-  },
+	getCoacheeSummary(coacheeId: string): Promise<CoacheeSummary> {
+	  return request(`/api/coach/coachees/${coacheeId}/summary`);
+	},
   createCoacheeInvite(): Promise<{ invite_url: string; token: string }> {
     return request('/api/invites/coachee', { method: 'POST' });
   },
