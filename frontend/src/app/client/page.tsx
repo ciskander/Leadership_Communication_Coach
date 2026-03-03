@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import type { ClientSummary } from '@/lib/types';
+import type { ClientSummary, Experiment } from '@/lib/types';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -45,12 +45,97 @@ function JourneyConnector({ done }: { done: boolean }) {
   );
 }
 
+function PatternLabel({ id }: { id: string }) {
+  return (
+    <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+      {id.replace(/_/g, ' ')}
+    </span>
+  );
+}
+
+function ProposedExperimentCard({
+  experiment,
+  hasActiveExperiment,
+  onAccepted,
+}: {
+  experiment: Experiment;
+  hasActiveExperiment: boolean;
+  onAccepted: () => void;
+}) {
+  const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  async function handleAccept() {
+    if (state !== 'idle') return;
+    setState('loading');
+    setErrorMsg(null);
+    try {
+      await api.acceptExperiment(experiment.experiment_record_id);
+      onAccepted();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Something went wrong.';
+      setErrorMsg(msg);
+      setState('error');
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
+      <div className="space-y-1">
+        <PatternLabel id={experiment.pattern_id} />
+        <p className="text-sm font-semibold text-stone-900 leading-snug">
+          {experiment.title}
+        </p>
+      </div>
+      <div className="bg-stone-50 rounded-xl p-3">
+        <p className="text-xs text-stone-600 leading-relaxed line-clamp-3">
+          {experiment.instruction}
+        </p>
+      </div>
+      {errorMsg && (
+        <p className="text-xs text-rose-600">{errorMsg}</p>
+      )}
+      <div className="flex items-center gap-3">
+        {hasActiveExperiment ? (
+          <div className="group relative">
+            <button
+              disabled
+              className="px-4 py-2 bg-stone-100 text-stone-400 rounded-xl text-xs font-semibold cursor-not-allowed"
+            >
+              Accept
+            </button>
+            <div className="absolute bottom-full left-0 mb-1.5 hidden group-hover:block z-10">
+              <div className="bg-stone-800 text-white text-xs rounded-lg px-3 py-1.5 whitespace-nowrap">
+                Complete your current experiment first
+              </div>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={handleAccept}
+            disabled={state === 'loading'}
+            className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
+          >
+            {state === 'loading' ? 'Accepting…' : 'Accept experiment'}
+          </button>
+        )}
+        <span className="text-xs text-stone-400">{experiment.experiment_id}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function ClientDashboard() {
   const [summary, setSummary] = useState<ClientSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  function reload() {
+    setLoading(true);
     api.clientSummary().then(setSummary).finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    reload();
   }, []);
 
   if (loading) {
@@ -63,14 +148,14 @@ export default function ClientDashboard() {
 
   const bpStatus = summary?.baseline_pack_status ?? 'none';
   const experiment = summary?.active_experiment;
+  const proposedExperiments = summary?.proposed_experiments ?? [];
   const firstName = summary?.user.display_name?.split(' ')[0] ?? null;
 
   const hasBaseline = bpStatus === 'baseline_ready' || bpStatus === 'completed';
   const isBuilding = bpStatus === 'intake' || bpStatus === 'building';
-  const hasExperiment = !!experiment && experiment.status !== 'none';
+  const hasExperiment = !!experiment;
   const hasRuns = (summary?.recent_runs.length ?? 0) > 0;
 
-  // Journey steps: baseline → first analysis → active experiment
   const step1Done = hasBaseline;
   const step2Done = hasRuns;
   const step3Done = hasExperiment;
@@ -121,10 +206,10 @@ export default function ClientDashboard() {
             <p className="text-sm text-amber-700 font-medium">Building your baseline… check back in a few minutes.</p>
           </div>
         )}
-        {hasBaseline && !hasExperiment && (
+        {hasBaseline && !hasExperiment && proposedExperiments.length === 0 && (
           <div className="mt-4 pt-4 border-t border-stone-100 flex items-center justify-between">
             <p className="text-sm text-stone-600">
-              Baseline ready! Analyze a meeting to start your first experiment.
+              Baseline ready! Analyze a meeting to receive your first experiment suggestion.
             </p>
             <Link
               href="/client/analyze"
@@ -152,7 +237,7 @@ export default function ClientDashboard() {
               Analyse 3 past meetings to unlock personalised coaching patterns.
             </p>
           )}
-          {(hasBaseline) && (
+          {hasBaseline && (
             <p className="text-xs text-emerald-700 font-medium">
               ✓ Your communication patterns have been mapped.
             </p>
@@ -176,13 +261,18 @@ export default function ClientDashboard() {
             <span className="text-lg">◈</span>
             <h2 className="font-semibold text-stone-800 text-sm">Active Experiment</h2>
           </div>
-          {experiment && experiment.status !== 'none' ? (
+          {experiment ? (
             <>
-              <div className="bg-emerald-50 rounded-lg p-3">
+              <div className="bg-emerald-50 rounded-lg p-3 space-y-1">
+                <PatternLabel id={experiment.pattern_id} />
                 <p className="text-sm font-semibold text-stone-800 leading-snug">
                   {experiment.title}
                 </p>
-                <p className="text-xs text-stone-500 mt-1 capitalize">{experiment.status}</p>
+                {experiment.attempt_count != null && experiment.attempt_count > 0 && (
+                  <p className="text-xs text-emerald-700 font-medium">
+                    {experiment.attempt_count} meeting{experiment.attempt_count !== 1 ? 's' : ''} attempted
+                  </p>
+                )}
               </div>
               <Link
                 href="/client/experiment"
@@ -191,6 +281,10 @@ export default function ClientDashboard() {
                 Track progress →
               </Link>
             </>
+          ) : proposedExperiments.length > 0 ? (
+            <p className="text-xs text-stone-500 leading-relaxed">
+              You have experiment suggestions waiting below — accept one to get started.
+            </p>
           ) : (
             <p className="text-xs text-stone-500 leading-relaxed">
               Complete an analysis to receive your first personalised experiment.
@@ -198,6 +292,30 @@ export default function ClientDashboard() {
           )}
         </div>
       </div>
+
+      {/* Suggested experiments queue */}
+      {proposedExperiments.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+              Suggested Experiments
+            </h2>
+            <span className="text-xs text-stone-400">
+              {proposedExperiments.length} suggestion{proposedExperiments.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <div className="space-y-3">
+            {proposedExperiments.map((exp) => (
+              <ProposedExperimentCard
+                key={exp.experiment_record_id}
+                experiment={exp}
+                hasActiveExperiment={hasExperiment}
+                onAccepted={reload}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Quick actions */}
       <div className="flex gap-3">

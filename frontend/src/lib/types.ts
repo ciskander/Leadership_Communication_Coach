@@ -61,8 +61,23 @@ export interface Experiment {
   instruction: string;
   success_marker: string;
   pattern_id: string;
-  status: 'none' | 'assigned' | 'active' | 'completed' | 'abandoned';
+  status: 'proposed' | 'active' | 'completed' | 'abandoned';
   created_at: string | null;
+  attempt_count: number | null;
+  started_at: string | null;
+  ended_at: string | null;
+}
+
+export interface ExperimentActionResponse {
+  experiment_record_id: string;
+  status: string;
+  message: string;
+}
+
+export interface HumanConfirmResponse {
+  event_record_id: string;
+  experiment_record_id: string;
+  confirmed: boolean;
 }
 
 export interface ActiveExperiment {
@@ -73,6 +88,7 @@ export interface ActiveExperiment {
 export interface ClientSummary {
   user: User;
   active_experiment: Experiment | null;
+  proposed_experiments: Experiment[];
   baseline_pack_status: string | null;
   recent_runs: Record<string, unknown>[];
 }
@@ -116,6 +132,7 @@ export interface CoacheeSummary {
   coachee: CoacheeListItem;
   active_baseline_pack: Record<string, unknown> | null;
   active_experiment: Experiment | null;
+  proposed_experiments: Experiment[];
   recent_runs: Record<string, unknown>[];
 }
 

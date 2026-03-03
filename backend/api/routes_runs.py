@@ -140,7 +140,19 @@ def _build_run_response(run_record: dict) -> RunStatusResponse:
     resp.micro_experiment = micro_exp
     resp.pattern_snapshot = parsed_json.get("pattern_snapshot")
     resp.evaluation_summary = parsed_json.get("evaluation_summary")
-    resp.experiment_tracking = parsed_json.get("experiment_tracking")
+    # Inject experiment_record_id into active_experiment so the frontend
+    # can call lifecycle endpoints without a separate lookup
+    exp_tracking = parsed_json.get("experiment_tracking")
+    if exp_tracking:
+        active_exp = exp_tracking.get("active_experiment") or {}
+        exp_id_str = active_exp.get("experiment_id")
+        if exp_id_str and exp_id_str != "EXP-000000":
+            # Use the Active Experiment link stored directly on the run record
+            from ..core.airtable_client import AirtableClient as _ATC
+            _links = fields.get("Active Experiment", [])
+            if _links:
+                active_exp["experiment_record_id"] = _links[0]
+    resp.experiment_tracking = exp_tracking
 
     return resp
 

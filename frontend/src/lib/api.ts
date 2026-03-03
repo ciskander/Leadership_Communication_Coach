@@ -53,6 +53,8 @@ import type {
   BaselinePack,
   ActiveExperiment,
   Experiment,
+  ExperimentActionResponse,
+  HumanConfirmResponse,
   CoacheeListItem,
   CoacheeSummary,
   AdminUser,
@@ -104,18 +106,6 @@ export const api = {
       body: JSON.stringify(body),
     });
   },
-  
-  coachEnqueueAnalysis(coacheeAuthId: string, body: {
-	  transcript_id: string;
-	  target_speaker_name: string;
-	  target_speaker_label: string;
-	  target_role: string;
-	}): Promise<RunRequestStatus> {
-	  return request(`/api/coach/coachees/${coacheeAuthId}/analyze`, {
-		method: 'POST',
-		body: JSON.stringify(body),
-	  });
-	},
 
   // Baseline packs
   createBaselinePack(body: {
@@ -136,23 +126,42 @@ export const api = {
     return request(`/api/baseline_packs/${id}`);
   },
 
-  // Experiments
+  // Experiments — active
   getActiveExperiment(): Promise<ActiveExperiment> {
     return request('/api/client/active_experiment');
   },
-  updateExperiment(
-    experimentRecordId: string,
-    action: 'complete' | 'abandon'
-  ): Promise<Experiment> {
-    return request(`/api/experiments/${experimentRecordId}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ action }),
+
+  // Experiments — proposed queue
+  getProposedExperiments(): Promise<Experiment[]> {
+    return request('/api/client/experiments/proposed');
+  },
+
+  // Experiment lifecycle actions
+  acceptExperiment(experimentRecordId: string): Promise<ExperimentActionResponse> {
+    return request(`/api/client/experiments/${experimentRecordId}/accept`, {
+      method: 'POST',
     });
   },
-  confirmAttempt(runId: string, confirmed: boolean): Promise<void> {
-    return request(`/api/runs/${runId}/experiment_attempt`, {
-      method: 'PATCH',
-      body: JSON.stringify({ confirmed }),
+  completeExperiment(experimentRecordId: string): Promise<ExperimentActionResponse> {
+    return request(`/api/client/experiments/${experimentRecordId}/complete`, {
+      method: 'POST',
+    });
+  },
+  abandonExperiment(experimentRecordId: string): Promise<ExperimentActionResponse> {
+    return request(`/api/client/experiments/${experimentRecordId}/abandon`, {
+      method: 'POST',
+    });
+  },
+
+  // Human confirmation of experiment attempt
+  confirmExperimentAttempt(
+    experimentRecordId: string,
+    runId: string,
+    confirmed: boolean
+  ): Promise<HumanConfirmResponse> {
+    return request(`/api/client/experiments/${experimentRecordId}/confirm_attempt`, {
+      method: 'POST',
+      body: JSON.stringify({ run_id: runId, confirmed }),
     });
   },
 
@@ -160,20 +169,11 @@ export const api = {
   listCoachees(): Promise<CoacheeListItem[]> {
     return request('/api/coach/coachees');
   },
-	getCoacheeSummary(coacheeId: string): Promise<CoacheeSummary> {
-	  return request(`/api/coach/coachees/${coacheeId}/summary`);
-	},
+  getCoacheeSummary(coacheeId: string): Promise<CoacheeSummary> {
+    return request(`/api/coach/coachees/${coacheeId}`);
+  },
   createCoacheeInvite(): Promise<{ invite_url: string; token: string }> {
     return request('/api/invites/coachee', { method: 'POST' });
-  },
-  searchUsers(q: string): Promise<CoacheeListItem[]> {
-    return request(`/api/coach/users/search?q=${encodeURIComponent(q)}`);
-  },
-  assignCoachee(userId: string): Promise<CoacheeListItem> {
-    return request('/api/coach/assign_coachee', {
-      method: 'POST',
-      body: JSON.stringify({ user_id: userId }),
-    });
   },
 
   // Admin

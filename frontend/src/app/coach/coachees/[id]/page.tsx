@@ -4,8 +4,38 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import type { CoacheeSummary } from '@/lib/types';
+import type { CoacheeSummary, Experiment } from '@/lib/types';
 import { ExperimentTracker } from '@/components/ExperimentTracker';
+
+function PatternLabel({ id }: { id: string }) {
+  return (
+    <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+      {id.replace(/_/g, ' ')}
+    </span>
+  );
+}
+
+function ProposedExperimentRow({ experiment }: { experiment: Experiment }) {
+  return (
+    <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-2">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1 min-w-0">
+          <PatternLabel id={experiment.pattern_id} />
+          <p className="text-sm font-semibold text-stone-800 leading-snug">
+            {experiment.title}
+          </p>
+        </div>
+        <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-violet-100 text-violet-700 whitespace-nowrap shrink-0">
+          Proposed
+        </span>
+      </div>
+      <p className="text-xs text-stone-500 leading-relaxed line-clamp-2">
+        {experiment.instruction}
+      </p>
+      <p className="text-xs text-stone-400">{experiment.experiment_id}</p>
+    </div>
+  );
+}
 
 export default function CoacheeDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +56,8 @@ export default function CoacheeDetailPage() {
 
   if (!data) return <p className="text-sm text-gray-500">Coachee not found.</p>;
 
+  const proposedExperiments = data.proposed_experiments ?? [];
+
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       <div>
@@ -36,7 +68,7 @@ export default function CoacheeDetailPage() {
       </div>
 
       {/* Active Experiment */}
-      {data.active_experiment && (
+      {data.active_experiment ? (
         <section>
           <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
             Active Experiment
@@ -45,6 +77,37 @@ export default function CoacheeDetailPage() {
             experiment={data.active_experiment}
             events={[]}
           />
+        </section>
+      ) : (
+        <section>
+          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+            Active Experiment
+          </h2>
+          <div className="bg-white border border-gray-200 rounded-lg px-4 py-3">
+            <p className="text-sm text-gray-400">No active experiment.</p>
+          </div>
+        </section>
+      )}
+
+      {/* Proposed Experiments */}
+      {proposedExperiments.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+              Suggested Experiments
+            </h2>
+            <span className="text-xs text-stone-400">
+              {proposedExperiments.length} in queue
+            </span>
+          </div>
+          <div className="space-y-2">
+            {proposedExperiments.map((exp) => (
+              <ProposedExperimentRow key={exp.experiment_record_id} experiment={exp} />
+            ))}
+          </div>
+          <p className="text-xs text-stone-400 mt-2">
+            The coachee can accept one of these from their dashboard when ready.
+          </p>
         </section>
       )}
 
