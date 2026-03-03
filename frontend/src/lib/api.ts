@@ -106,6 +106,21 @@ export const api = {
       body: JSON.stringify(body),
     });
   },
+  
+	coachEnqueueAnalysis(
+	  coacheeId: string,
+	  body: {
+		transcript_id: string;
+		target_speaker_name: string;
+		target_speaker_label: string;
+		target_role: string;
+	  }
+	): Promise<RunRequestStatus> {
+	  return request(`/api/coach/coachees/${coacheeId}/analyze`, {
+		method: 'POST',
+		body: JSON.stringify(body),
+	  });
+	},  
 
   // Baseline packs
   createBaselinePack(body: {
