@@ -352,6 +352,12 @@ def process_single_meeting_analysis(
     exp_track = _parsed_output.get("experiment_tracking", {})
     active_exp = exp_track.get("active_experiment", {})
     detection = exp_track.get("detection_in_this_meeting")
+
+    # Coerce string detection values to None — schema requires object or null
+    if not isinstance(detection, dict):
+        exp_track["detection_in_this_meeting"] = None
+        detection = None
+
     if active_exp:
         if active_exp.get("experiment_id") is None:
             exp_track["active_experiment"] = {"experiment_id": "EXP-000000", "status": "none"}
@@ -595,6 +601,11 @@ def process_baseline_pack_build(
         for _field in ("numerator", "denominator"):
             if isinstance(_item.get(_field), float):
                 _item[_field] = round(_item[_field])
+                
+    # Coerce string detection values to None — schema requires object or null
+    _exp_track = _parsed_output.get("experiment_tracking", {})
+    if not isinstance(_exp_track.get("detection_in_this_meeting"), dict):
+        _exp_track["detection_in_this_meeting"] = None
 
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
     openai_resp = OpenAIResponse(
