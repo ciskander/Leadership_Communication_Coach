@@ -101,6 +101,47 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         microExperiment={run.micro_experiment}
       />
 
+	{run.experiment_tracking && (() => {
+	  const et = run.experiment_tracking as Record<string, unknown>;
+	  const activeExp = et.active_experiment as Record<string, unknown> | null;
+	  const detection = et.detection_in_this_meeting as Record<string, unknown> | null;
+
+	  if (!activeExp || activeExp.status === 'none' || activeExp.experiment_id === 'EXP-000000') return null;
+
+	  const attempt = detection?.attempt as string | null;
+	  const countAttempts = detection?.count_attempts as number | null;
+
+	  const attemptConfig = attempt === 'full_attempt'
+		? { icon: '✦', color: 'emerald', label: 'Full attempt detected', desc: `The model detected ${countAttempts ?? 'multiple'} clear attempt${(countAttempts ?? 0) !== 1 ? 's' : ''} at your experiment in this meeting.` }
+		: attempt === 'partial_attempt'
+		? { icon: '◎', color: 'amber', label: 'Partial attempt detected', desc: `You made a partial attempt at your experiment. ${countAttempts ? `${countAttempts} instance${countAttempts !== 1 ? 's' : ''} noted.` : ''}` }
+		: { icon: '◈', color: 'stone', label: 'No attempt detected', desc: 'The model didn\'t detect your experiment being tried in this meeting. That\'s ok — keep it in mind for next time.' };
+
+	  const colorMap: Record<string, string> = {
+		emerald: 'bg-emerald-50 border-emerald-200',
+		amber: 'bg-amber-50 border-amber-200',
+		stone: 'bg-stone-50 border-stone-200',
+	  };
+	  const textMap: Record<string, string> = {
+		emerald: 'text-emerald-800',
+		amber: 'text-amber-800',
+		stone: 'text-stone-600',
+	  };
+
+	  return (
+		<section className={`rounded-2xl border p-5 space-y-1.5 ${colorMap[attemptConfig.color]}`}>
+		  <div className="flex items-center gap-2">
+			<span className="text-base">{attemptConfig.icon}</span>
+			<p className={`text-sm font-semibold ${textMap[attemptConfig.color]}`}>
+			  Experiment: {attemptConfig.label}
+			</p>
+		  </div>
+		  <p className="text-sm text-stone-600 leading-relaxed">{attemptConfig.desc}</p>
+		  <p className="text-xs text-stone-400">Experiment {activeExp.experiment_id as string}</p>
+		</section>
+	  );
+	})()}
+
       {run.pattern_snapshot && run.pattern_snapshot.length > 0 && (
         <section>
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">

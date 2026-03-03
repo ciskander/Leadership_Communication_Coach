@@ -166,10 +166,21 @@ async def enqueue_analysis(
     try:
         user_rec = at_client.get_user(user.airtable_user_record_id or "")
         ae_links = user_rec.get("fields", {}).get("Active Experiment", [])
+        if not ae_links:
+            # Fallback: query experiments table directly for assigned/active experiment
+            exp_records = at_client.search_records(
+                "experiments",
+                f"AND({{User}} = '{user.airtable_user_record_id}', OR({{Status}} = 'assigned', {{Status}} = 'active'))",
+                max_records=1,
+            )
+            if exp_records:
+                ae_links = [exp_records[0]["id"]]
+                # Repair the user record so future lookups work
+                at_client.set_active_experiment_for_user(user.airtable_user_record_id, ae_links[0])
         if ae_links:
             rr_fields["Active Experiment"] = ae_links
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Could not attach active experiment to run_request: %s", e)
 
     rr_record = at_client.create_record("run_requests", rr_fields)
     rr_id = rr_record["id"]

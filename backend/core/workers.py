@@ -362,8 +362,6 @@ def process_single_meeting_analysis(
         if active_exp.get("experiment_id") is None:
             exp_track["active_experiment"] = {"experiment_id": "EXP-000000", "status": "none"}
             exp_track["detection_in_this_meeting"] = None
-        elif active_exp.get("status") in ("assigned", "active") and detection is None:
-            active_exp["status"] = "none"
             
     # Coerce missing evidence_span_ids on focus/strengths/micro_experiment items
     coaching = _parsed_output.get("coaching_output", {})
