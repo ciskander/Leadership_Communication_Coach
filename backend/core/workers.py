@@ -364,6 +364,16 @@ def process_single_meeting_analysis(
             exp_track["detection_in_this_meeting"] = None
         elif active_exp.get("status") in ("assigned", "active") and detection is None:
             active_exp["status"] = "none"
+            
+    # Coerce missing evidence_span_ids on focus/strengths/micro_experiment items
+    coaching = _parsed_output.get("coaching_output", {})
+    for item in coaching.get("focus", []):
+        item.setdefault("evidence_span_ids", [])
+    for item in coaching.get("strengths", []):
+        item.setdefault("evidence_span_ids", [])
+    for item in coaching.get("micro_experiment", []):
+        item.setdefault("evidence_span_ids", [])
+        
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
     openai_resp = OpenAIResponse(
         parsed=_parsed_output,
