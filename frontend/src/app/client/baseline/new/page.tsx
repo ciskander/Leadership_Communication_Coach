@@ -242,7 +242,7 @@ function TranscriptSlot({
                   selected={speakerLabel}
                   onSelect={(s) => {
                     setSpeakerLabel(s);
-                    notify(transcriptId, s, role, speakerLabels);
+                    notify(transcriptId, s, role, speakerLabels, meetingDate);
                   }}
                 />
               </div>
@@ -255,7 +255,7 @@ function TranscriptSlot({
                   onChange={(e) => {
                     const s = e.target.value || null;
                     setSpeakerLabel(s);
-                    notify(transcriptId, s, role, speakerLabels);
+                    notify(transcriptId, s, role, speakerLabels, meetingDate);
                   }}
                   placeholder="e.g. SPEAKER_00"
                   className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-400"
