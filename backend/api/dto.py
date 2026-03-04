@@ -85,7 +85,12 @@ class RunStatusResponse(BaseModel):
 
 # ── Run Request status (lightweight poll) ─────────────────────────────────────
 
-class RunRequestStatusResponse(BaseModel):
+class TranscriptUpdateRequest(BaseModel):
+    """Body for PATCH /api/transcripts/{id}."""
+    meeting_date: Optional[str] = None   # ISO-8601 date string, or null to clear
+
+
+
     run_request_id: str
     status: str
     run_id: Optional[str] = None

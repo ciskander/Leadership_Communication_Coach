@@ -12,6 +12,7 @@ interface TranscriptConfig {
   speaker_labels: string[];
   target_speaker_label: string | null;
   target_role: TargetRole | '';
+  meeting_date: string | null;
 }
 
 const ROLE_OPTIONS = [
@@ -55,19 +56,21 @@ function TranscriptSlot({
   const [needsSpeakerPick, setNeedsSpeakerPick] = useState(false);
   const [speakerLabel, setSpeakerLabel] = useState<string | null>(null);
   const [role, setRole] = useState<TargetRole | ''>('');
+  const [meetingDate, setMeetingDate] = useState<string | null>(null);
 
-  const notify = (tid: string | null, sl: string | null, r: TargetRole | '', labels: string[]) => {
+  const notify = (tid: string | null, sl: string | null, r: TargetRole | '', labels: string[], date: string | null) => {
     if (tid && sl && r) {
-      onComplete({ transcript_id: tid, speaker_labels: labels, target_speaker_label: sl, target_role: r });
+      onComplete({ transcript_id: tid, speaker_labels: labels, target_speaker_label: sl, target_role: r, meeting_date: date });
     } else {
       onComplete(null);
     }
   };
 
-  const applyTranscript = (tid: string, labels: string[], previews: Record<string, string[]> = {}) => {
+  const applyTranscript = (tid: string, labels: string[], previews: Record<string, string[]> = {}, date: string | null = null) => {
     setTranscriptId(tid);
     setSpeakerLabels(labels);
     setSpeakerPreviews(previews);
+    setMeetingDate(date);
 
     const allGeneric = labels.every(isGenericLabel);
     const firstName = currentUserName ? getFirstName(currentUserName) : '';
@@ -76,16 +79,16 @@ function TranscriptSlot({
     if (matched) {
       setSpeakerLabel(matched);
       setNeedsSpeakerPick(false);
-      notify(tid, matched, role, labels);
+      notify(tid, matched, role, labels, date);
     } else if (allGeneric && labels.length > 1) {
       setSpeakerLabel(null);
       setNeedsSpeakerPick(true);
-      notify(tid, null, role, labels);
+      notify(tid, null, role, labels, date);
     } else {
       const first = labels[0] ?? null;
       setSpeakerLabel(first);
       setNeedsSpeakerPick(false);
-      notify(tid, first, role, labels);
+      notify(tid, first, role, labels, date);
     }
 
     setRole('');
@@ -99,18 +102,25 @@ function TranscriptSlot({
     setSpeakerLabel(null);
     setNeedsSpeakerPick(false);
     setRole('');
+    setMeetingDate(null);
     onComplete(null);
   };
 
   const pickSpeaker = (label: string) => {
     setSpeakerLabel(label);
     setNeedsSpeakerPick(false);
-    notify(transcriptId, label, role, speakerLabels);
+    notify(transcriptId, label, role, speakerLabels, meetingDate);
   };
 
   const setRoleField = (r: TargetRole | '') => {
     setRole(r);
-    notify(transcriptId, speakerLabel, r, speakerLabels);
+    notify(transcriptId, speakerLabel, r, speakerLabels, meetingDate);
+  };
+
+  const setDateField = (d: string) => {
+    const date = d || null;
+    setMeetingDate(date);
+    notify(transcriptId, speakerLabel, role, speakerLabels, date);
   };
 
   const isComplete = !!(transcriptId && speakerLabel && role);
@@ -151,8 +161,8 @@ function TranscriptSlot({
         {mode === 'upload' && (
           <TranscriptUploadPanel
             withMetadata={true}
-            onUploaded={({ transcript_id, speaker_labels, speaker_previews = {} }) =>
-              applyTranscript(transcript_id, speaker_labels, speaker_previews)
+            onUploaded={({ transcript_id, speaker_labels, speaker_previews = {}, meeting_date, detected_date }) =>
+              applyTranscript(transcript_id, speaker_labels, speaker_previews, meeting_date || detected_date || null)
             }
           />
         )}
@@ -179,7 +189,7 @@ function TranscriptSlot({
                     name={`slot-${index}`}
                     value={t.transcript_id}
                     checked={transcriptId === t.transcript_id}
-                    onChange={() => applyTranscript(t.transcript_id, t.speaker_labels)}
+                    onChange={() => applyTranscript(t.transcript_id, t.speaker_labels, {}, t.meeting_date || null)}
                     className="mt-0.5 accent-emerald-600"
                   />
                   <div className="min-w-0">
@@ -254,6 +264,21 @@ function TranscriptSlot({
             )}
 
             <div>
+              <label className="text-xs text-stone-500">Meeting date</label>
+              <input
+                type="date"
+                value={meetingDate ?? ''}
+                onChange={(e) => setDateField(e.target.value)}
+                className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-400"
+              />
+              {!meetingDate && (
+                <p className="text-xs text-amber-600 mt-1">
+                  ⚠ No date set — required for correct ordering in your progress chart.
+                </p>
+              )}
+            </div>
+
+            <div>
               <label className="text-xs text-stone-500">Your role in this meeting</label>
               <select
                 value={role}
@@ -315,6 +340,15 @@ export default function BaselineNewPage() {
     setSubmitting(true);
     setError(null);
     try {
+      // Update meeting dates on transcript records before building.
+      // This ensures the baseline_pack's Last Meeting Date rollup is correct,
+      // which is used as the anchor point on the progress chart.
+      await Promise.all(
+        configs
+          .filter((c): c is TranscriptConfig => !!c && !!c.meeting_date)
+          .map((c) => api.updateTranscriptDate(c.transcript_id, c.meeting_date))
+      );
+
       const first = configs[0]!;
       const created = await api.createBaselinePack({
         transcript_ids: configs.map((c) => c!.transcript_id),

@@ -19,7 +19,7 @@ from ..auth.models import UserAuth
 from ..core.airtable_client import AirtableClient
 from ..core.transcript_parser import parse_transcript
 from .dependencies import get_current_user
-from .dto import TranscriptListItem, TranscriptUploadResponse
+from .dto import TranscriptListItem, TranscriptUpdateRequest, TranscriptUploadResponse
 from .errors import invalid_input, transcript_parse_fail
 
 router = APIRouter()
@@ -216,3 +216,35 @@ async def list_transcripts(
             )
         )
     return items
+
+
+@router.patch("/api/transcripts/{transcript_id}")
+async def update_transcript(
+    transcript_id: str,
+    body: TranscriptUpdateRequest,
+    user: UserAuth = Depends(get_current_user),
+):
+    """Update mutable fields on a transcript. Currently supports: meeting_date."""
+    at_client = AirtableClient()
+
+    try:
+        rec = at_client.get_transcript(transcript_id)
+    except Exception:
+        return JSONResponse(status_code=404, content={"detail": "Transcript not found."})
+
+    # Ownership: coachees can only update their own transcripts
+    if user.role == "coachee":
+        uploaded_by = rec.get("fields", {}).get("Uploaded By", [])
+        if user.airtable_user_record_id not in uploaded_by:
+            return JSONResponse(status_code=403, content={"detail": "Transcript does not belong to this user."})
+
+    fields: dict = {}
+    if body.meeting_date is not None:
+        # Empty string clears the field; a valid date string sets it
+        fields["Meeting Date"] = body.meeting_date if body.meeting_date else None
+
+    if fields:
+        at_client.update_record("transcripts", transcript_id, fields)
+        logger.info("User %s updated transcript %s: %s", user.id, transcript_id, list(fields.keys()))
+
+    return {"transcript_id": transcript_id, "updated": True}

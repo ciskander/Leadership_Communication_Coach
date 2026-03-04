@@ -85,6 +85,12 @@ export const api = {
   listTranscripts(): Promise<TranscriptListItem[]> {
     return request('/api/transcripts');
   },
+  updateTranscriptDate(transcriptId: string, meetingDate: string | null): Promise<{ transcript_id: string; updated: boolean }> {
+    return request(`/api/transcripts/${transcriptId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ meeting_date: meetingDate ?? '' }),
+    });
+  },
 
   // Runs
   getRun(runId: string): Promise<RunStatus> {

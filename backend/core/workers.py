@@ -960,12 +960,23 @@ def create_attempt_event_from_run(
     # Get related records from run
     transcript_links = _get_link_ids(run_fields, "Transcript ID")
     user_links = _get_link_ids(run_fields, "users")
+    baseline_pack_links = _get_link_ids(run_fields, "baseline_pack")
     transcript_record_id = transcript_links[0] if transcript_links else None
     user_record_id = user_links[0] if user_links else None
+    baseline_pack_record_id = baseline_pack_links[0] if baseline_pack_links else None
 
-    # Get meeting date from transcript
+    # For baseline pack runs, use the pack's Last Meeting Date rollup as the
+    # anchor date — it represents the most recent of the three baseline meetings
+    # and correctly precedes all post-baseline experiment events on the chart.
+    # For single-meeting runs, use the transcript's own Meeting Date.
     meeting_date = None
-    if transcript_record_id:
+    if baseline_pack_record_id:
+        try:
+            bp_rec = client.get_record("baseline_packs", baseline_pack_record_id)
+            meeting_date = bp_rec.get("fields", {}).get("Last Meeting Date")
+        except Exception as exc:
+            logger.warning("Could not get baseline pack date for event: %s", exc)
+    elif transcript_record_id:
         tr_rec = client.get_transcript(transcript_record_id)
         meeting_date = _extract_fields(tr_rec).get("Meeting Date")
 
