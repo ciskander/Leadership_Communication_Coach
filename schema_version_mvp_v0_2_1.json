@@ -149,6 +149,13 @@
             "string",
             "null"
           ]
+        },
+        "meeting_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^M-[0-9]{6}$"
         }
       }
     },
@@ -940,13 +947,16 @@
               }
             }
           },
-          "else": {
-            "properties": {
-              "detection_in_this_meeting": {
-                "type": "null"
-              }
-            }
-          }
+			"else": {
+			  "properties": {
+				"detection_in_this_meeting": {
+				  "oneOf": [
+					{ "$ref": "#/$defs/ExperimentDetection" },
+					{ "type": "null" }
+				  ]
+				}
+			  }
+			}
         }
       ]
     },

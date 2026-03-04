@@ -377,7 +377,6 @@ def process_single_meeting_analysis(
     # Coerce non-dict detection values to a no-attempt sentinel object
     active_status = exp_track.get("active_experiment", {}).get("status", "none")
     if active_status == "active":
-        # Active experiment — sentinel object required when model returns non-dict
         if not isinstance(detection, dict):
             exp_track["detection_in_this_meeting"] = {
                 "experiment_id": exp_track.get("active_experiment", {}).get("experiment_id", "EXP-000000"),
@@ -385,11 +384,13 @@ def process_single_meeting_analysis(
                 "count_attempts": 0,
                 "evidence_span_ids": [],
             }
-            detection = None
     else:
-        # No active experiment — detection must be null
-        exp_track["detection_in_this_meeting"] = None
-        detection = None
+        exp_track["detection_in_this_meeting"] = {
+            "experiment_id": "EXP-000000",
+            "attempt": "no",
+            "count_attempts": 0,
+            "evidence_span_ids": [],
+        }
 
     if active_exp:
         if active_exp.get("experiment_id") is None:

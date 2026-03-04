@@ -947,13 +947,16 @@
               }
             }
           },
-          "else": {
-            "properties": {
-              "detection_in_this_meeting": {
-                "type": "null"
-              }
-            }
-          }
+			"else": {
+			  "properties": {
+				"detection_in_this_meeting": {
+				  "oneOf": [
+					{ "$ref": "#/$defs/ExperimentDetection" },
+					{ "type": "null" }
+				  ]
+				}
+			  }
+			}
         }
       ]
     },
