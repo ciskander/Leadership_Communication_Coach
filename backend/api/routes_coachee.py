@@ -659,7 +659,7 @@ async def client_progress(
     )
 
     # ── Fetch past experiments ────────────────────────────────────────────────
-user_primary_id = ""
+    user_primary_id = ""
     try:
         user_rec = at_client.get_user(user.airtable_user_record_id)
         user_primary_id = user_rec.get("fields", {}).get("User ID", "")
