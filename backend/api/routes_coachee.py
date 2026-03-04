@@ -558,7 +558,8 @@ async def active_experiment(
         exp_resp = _build_experiment_response(exp_rec)
 
         # Recent events
-        events_formula = f"FIND('{ae_links[0]}', ARRAYJOIN({{Experiment}}))"
+        exp_primary_id = exp_rec.get("fields", {}).get("Experiment ID", "")
+        events_formula = f"FIND('{exp_primary_id}', ARRAYJOIN({{Experiment}}))"
         event_records = at_client.search_records("experiment_events", events_formula, max_records=10)
         events_out = []
         for er in event_records:
