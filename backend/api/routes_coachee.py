@@ -98,6 +98,7 @@ async def create_baseline_pack(
 
     bp_record = at_client.create_record("baseline_packs", {
         "Target Role": body.target_role,
+        "Target Speaker Name": body.target_speaker_name,
         "Speaker Label": body.target_speaker_label,
         "Status": "draft",
         "users": [airtable_user_id] if airtable_user_id else [],

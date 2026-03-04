@@ -21,7 +21,7 @@ export default function BaselineDetailPage() {
   }, [id]);
 
   useEffect(() => {
-    if (pack && (pack.status === 'building' || pack.status === 'intake')) {
+    if (pack && (pack.status === 'draft' || pack.status === 'building' || pack.status === 'intake')) {
       const t = setTimeout(fetchPack, 5000);
       return () => clearTimeout(t);
     }

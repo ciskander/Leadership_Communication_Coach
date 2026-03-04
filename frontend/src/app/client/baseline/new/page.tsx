@@ -11,7 +11,6 @@ interface TranscriptConfig {
   transcript_id: string;
   speaker_labels: string[];
   target_speaker_label: string | null;
-  target_speaker_name: string;
   target_role: TargetRole | '';
 }
 
@@ -55,82 +54,41 @@ function TranscriptSlot({
   const [speakerPreviews, setSpeakerPreviews] = useState<Record<string, string[]>>({});
   const [needsSpeakerPick, setNeedsSpeakerPick] = useState(false);
   const [speakerLabel, setSpeakerLabel] = useState<string | null>(null);
-  const [name, setName] = useState('');
   const [role, setRole] = useState<TargetRole | ''>('');
 
-  const notify = (
-    tid: string | null,
-    sl: string | null,
-    n: string,
-    r: TargetRole | '',
-    labels: string[],
-  ) => {
-    if (tid && sl && n && r) {
-      onComplete({
-        transcript_id: tid,
-        speaker_labels: labels,
-        target_speaker_label: sl,
-        target_speaker_name: n,
-        target_role: r,
-      });
+  const notify = (tid: string | null, sl: string | null, r: TargetRole | '', labels: string[]) => {
+    if (tid && sl && r) {
+      onComplete({ transcript_id: tid, speaker_labels: labels, target_speaker_label: sl, target_role: r });
     } else {
       onComplete(null);
     }
   };
 
-  const setField = (patch: {
-    speakerLabel?: string | null;
-    name?: string;
-    role?: TargetRole | '';
-  }) => {
-    const sl = patch.speakerLabel !== undefined ? patch.speakerLabel : speakerLabel;
-    const n = patch.name !== undefined ? patch.name : name;
-    const r = patch.role !== undefined ? patch.role : role;
-    if (patch.speakerLabel !== undefined) setSpeakerLabel(sl);
-    if (patch.name !== undefined) setName(n);
-    if (patch.role !== undefined) setRole(r);
-    notify(transcriptId, sl, n, r, speakerLabels);
-  };
-
-  const applyTranscript = (
-    tid: string,
-    labels: string[],
-    previews: Record<string, string[]> = {},
-  ) => {
+  const applyTranscript = (tid: string, labels: string[], previews: Record<string, string[]> = {}) => {
     setTranscriptId(tid);
     setSpeakerLabels(labels);
     setSpeakerPreviews(previews);
 
     const allGeneric = labels.every(isGenericLabel);
     const firstName = currentUserName ? getFirstName(currentUserName) : '';
-    const matched = !allGeneric && firstName
-      ? matchSpeakerByFirstName(labels, firstName)
-      : null;
+    const matched = !allGeneric && firstName ? matchSpeakerByFirstName(labels, firstName) : null;
 
     if (matched) {
       setSpeakerLabel(matched);
       setNeedsSpeakerPick(false);
-      setName(currentUserName || '');
-      notify(tid, matched, currentUserName || '', role, labels);
+      notify(tid, matched, role, labels);
     } else if (allGeneric && labels.length > 1) {
       setSpeakerLabel(null);
       setNeedsSpeakerPick(true);
-      setName(currentUserName || '');
-      notify(tid, null, currentUserName || '', role, labels);
+      notify(tid, null, role, labels);
     } else {
       const first = labels[0] ?? null;
       setSpeakerLabel(first);
       setNeedsSpeakerPick(false);
-      setName(currentUserName || '');
-      notify(tid, first, currentUserName || '', role, labels);
+      notify(tid, first, role, labels);
     }
 
     setRole('');
-  };
-
-  // For existing transcript selection (no previews available)
-  const applyExistingTranscript = (tid: string, labels: string[]) => {
-    applyTranscript(tid, labels, {});
   };
 
   const switchMode = (next: 'select' | 'upload') => {
@@ -140,7 +98,6 @@ function TranscriptSlot({
     setSpeakerPreviews({});
     setSpeakerLabel(null);
     setNeedsSpeakerPick(false);
-    setName('');
     setRole('');
     onComplete(null);
   };
@@ -148,10 +105,15 @@ function TranscriptSlot({
   const pickSpeaker = (label: string) => {
     setSpeakerLabel(label);
     setNeedsSpeakerPick(false);
-    notify(transcriptId, label, name, role, speakerLabels);
+    notify(transcriptId, label, role, speakerLabels);
   };
 
-  const isComplete = !!(transcriptId && speakerLabel && name && role);
+  const setRoleField = (r: TargetRole | '') => {
+    setRole(r);
+    notify(transcriptId, speakerLabel, r, speakerLabels);
+  };
+
+  const isComplete = !!(transcriptId && speakerLabel && role);
 
   return (
     <div className={`bg-white rounded-2xl border transition-colors ${
@@ -200,10 +162,7 @@ function TranscriptSlot({
             {existingTranscripts.length === 0 ? (
               <p className="text-xs text-stone-400 text-center py-6">
                 No transcripts yet.{' '}
-                <button
-                  className="text-emerald-600 underline"
-                  onClick={() => switchMode('upload')}
-                >
+                <button className="text-emerald-600 underline" onClick={() => switchMode('upload')}>
                   Upload one
                 </button>
               </p>
@@ -220,13 +179,11 @@ function TranscriptSlot({
                     name={`slot-${index}`}
                     value={t.transcript_id}
                     checked={transcriptId === t.transcript_id}
-                    onChange={() => applyExistingTranscript(t.transcript_id, t.speaker_labels)}
+                    onChange={() => applyTranscript(t.transcript_id, t.speaker_labels)}
                     className="mt-0.5 accent-emerald-600"
                   />
                   <div className="min-w-0">
-                    <p className="text-sm text-stone-800 truncate font-medium">
-                      {t.title || 'Untitled'}
-                    </p>
+                    <p className="text-sm text-stone-800 truncate font-medium">{t.title || 'Untitled'}</p>
                     <p className="text-xs text-stone-400">
                       {[t.meeting_type, t.meeting_date].filter(Boolean).join(' · ')}
                     </p>
@@ -240,7 +197,6 @@ function TranscriptSlot({
         {/* Config fields — shown after transcript selected */}
         {transcriptId && (
           <div className="space-y-3 pt-1 border-t border-stone-100">
-            {/* Speaker picker — generic labels with previews */}
             {needsSpeakerPick ? (
               <div className="space-y-2">
                 <p className="text-xs text-stone-500 font-medium">Which speaker are you?</p>
@@ -261,9 +217,7 @@ function TranscriptSlot({
                           {label}
                         </p>
                         {quotes.map((q, i) => (
-                          <p key={i} className="text-sm text-stone-600 leading-snug">
-                            "{q}"
-                          </p>
+                          <p key={i} className="text-sm text-stone-600 leading-snug">"{q}"</p>
                         ))}
                       </button>
                     );
@@ -272,11 +226,14 @@ function TranscriptSlot({
               </div>
             ) : speakerLabels.length > 0 ? (
               <div>
-                <p className="text-xs text-stone-500 mb-2">Target speaker</p>
+                <p className="text-xs text-stone-500 mb-2">Your speaker label in this transcript</p>
                 <SpeakerChips
                   speakers={speakerLabels}
                   selected={speakerLabel}
-                  onSelect={(s) => setField({ speakerLabel: s })}
+                  onSelect={(s) => {
+                    setSpeakerLabel(s);
+                    notify(transcriptId, s, role, speakerLabels);
+                  }}
                 />
               </div>
             ) : (
@@ -285,37 +242,29 @@ function TranscriptSlot({
                 <input
                   type="text"
                   value={speakerLabel ?? ''}
-                  onChange={(e) => setField({ speakerLabel: e.target.value || null })}
+                  onChange={(e) => {
+                    const s = e.target.value || null;
+                    setSpeakerLabel(s);
+                    notify(transcriptId, s, role, speakerLabels);
+                  }}
                   placeholder="e.g. SPEAKER_00"
                   className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-400"
                 />
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-stone-500">Speaker's name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setField({ name: e.target.value })}
-                  placeholder="Full name"
-                  className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-400"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-stone-500">Role</label>
-                <select
-                  value={role}
-                  onChange={(e) => setField({ role: e.target.value as TargetRole })}
-                  className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-400"
-                >
-                  <option value="">Select…</option>
-                  {ROLE_OPTIONS.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
-                  ))}
-                </select>
-              </div>
+            <div>
+              <label className="text-xs text-stone-500">Your role in this meeting</label>
+              <select
+                value={role}
+                onChange={(e) => setRoleField(e.target.value as TargetRole)}
+                className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-400"
+              >
+                <option value="">Select…</option>
+                {ROLE_OPTIONS.map((r) => (
+                  <option key={r.value} value={r.value}>{r.label}</option>
+                ))}
+              </select>
             </div>
           </div>
         )}
@@ -327,6 +276,7 @@ function TranscriptSlot({
 export default function BaselineNewPage() {
   const router = useRouter();
   const [currentUserName, setCurrentUserName] = useState('');
+  const [speakerName, setSpeakerName] = useState('');
   const [existingTranscripts, setExistingTranscripts] = useState<TranscriptListItem[]>([]);
   const [loadingTranscripts, setLoadingTranscripts] = useState(true);
   const [configs, setConfigs] = useState<(TranscriptConfig | null)[]>([null, null, null]);
@@ -335,7 +285,10 @@ export default function BaselineNewPage() {
 
   useEffect(() => {
     api.me().then((user) => {
-      if (user.display_name) setCurrentUserName(user.display_name);
+      if (user.display_name) {
+        setCurrentUserName(user.display_name);
+        setSpeakerName(user.display_name);
+      }
     }).catch(() => {});
 
     api.listTranscripts()
@@ -353,9 +306,9 @@ export default function BaselineNewPage() {
   };
 
   const completedCount = configs.filter(
-    (c) => c && c.target_speaker_label && c.target_role && c.target_speaker_name
+    (c) => c && c.target_speaker_label && c.target_role
   ).length;
-  const allReady = completedCount === 3;
+  const allReady = completedCount === 3 && !!speakerName.trim();
 
   const handleSubmit = async () => {
     if (!allReady) return;
@@ -365,7 +318,7 @@ export default function BaselineNewPage() {
       const first = configs[0]!;
       const created = await api.createBaselinePack({
         transcript_ids: configs.map((c) => c!.transcript_id),
-        target_speaker_name: first.target_speaker_name,
+        target_speaker_name: speakerName.trim(),
         target_speaker_label: first.target_speaker_label!,
         target_role: first.target_role as TargetRole,
       });
@@ -387,6 +340,23 @@ export default function BaselineNewPage() {
         </p>
       </div>
 
+      {/* Speaker name — single field for all 3 transcripts */}
+      <div className="bg-white rounded-2xl border border-stone-200 p-5">
+        <label className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+          Your full name
+        </label>
+        <p className="text-xs text-stone-400 mt-0.5 mb-2">
+          Used to identify you across all three transcripts.
+        </p>
+        <input
+          type="text"
+          value={speakerName}
+          onChange={(e) => setSpeakerName(e.target.value)}
+          placeholder="e.g. Sarah Johnson"
+          className="w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
+        />
+      </div>
+
       {/* Progress */}
       <div className="flex items-center gap-2 bg-white rounded-2xl border border-stone-200 px-5 py-3.5">
         <div className="flex gap-1.5">
@@ -394,10 +364,7 @@ export default function BaselineNewPage() {
             <div
               key={i}
               className={`h-1.5 w-8 rounded-full transition-colors ${
-                configs[i] &&
-                configs[i]!.target_speaker_label &&
-                configs[i]!.target_speaker_name &&
-                configs[i]!.target_role
+                configs[i] && configs[i]!.target_speaker_label && configs[i]!.target_role
                   ? 'bg-emerald-500'
                   : 'bg-stone-200'
               }`}
