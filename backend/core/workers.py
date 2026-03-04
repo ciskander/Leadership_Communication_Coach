@@ -455,8 +455,6 @@ def process_single_meeting_analysis(
     gate1_result = gate1_validate(openai_resp.raw_text)
 
     # 8/9. Persist run
-    parsed_json = openai_resp.parsed if gate1_result.passed else None
-
     run_record = _persist_run_fields(
         client,
         transcript_record_id=transcript_record_id,

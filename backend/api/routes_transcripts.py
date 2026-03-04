@@ -174,7 +174,17 @@ async def list_transcripts(
     user: UserAuth = Depends(get_current_user),
 ):
     at_client = AirtableClient()
-    records = at_client.search_records("transcripts", "", max_records=50)
+
+    # Coaches and admins can see all transcripts; coachees only see their own.
+    if user.role in ("coach", "admin"):
+        formula = ""
+    elif user.airtable_user_record_id:
+        formula = f"FIND('{user.airtable_user_record_id}', ARRAYJOIN({{Uploaded By}}))"
+    else:
+        # No Airtable record linked — return empty list rather than leaking all transcripts
+        return []
+
+    records = at_client.search_records("transcripts", formula, max_records=50)
 
     items = []
     for rec in records:

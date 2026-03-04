@@ -3,9 +3,12 @@ api/routes_coach.py — Coach-facing endpoints.
 """
 from __future__ import annotations
 
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+
+logger = logging.getLogger(__name__)
 from pydantic import BaseModel
 
 from ..auth.models import UserAuth
@@ -227,6 +230,20 @@ async def coach_analyze(
     }
     if coachee.airtable_user_record_id:
         rr_fields["User"] = [coachee.airtable_user_record_id]
+
+    # Attach coachee's active experiment so the worker can populate experiment
+    # tracking and create experiment_events — mirrors what enqueue_analysis does.
+    if coachee.airtable_user_record_id:
+        try:
+            coachee_at_rec = at_client.get_user(coachee.airtable_user_record_id)
+            ae_links = coachee_at_rec.get("fields", {}).get("Active Experiment", [])
+            if ae_links:
+                rr_fields["Active Experiment"] = ae_links
+        except Exception as exc:
+            logger.warning(
+                "Could not attach active experiment to coach-initiated run_request for coachee %s: %s",
+                coachee.airtable_user_record_id, exc,
+            )
 
     rr_record = at_client.create_record("run_requests", rr_fields)
     rr_id = rr_record["id"]

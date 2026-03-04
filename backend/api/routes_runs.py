@@ -148,7 +148,6 @@ def _build_run_response(run_record: dict) -> RunStatusResponse:
         exp_id_str = active_exp.get("experiment_id")
         if exp_id_str and exp_id_str != "EXP-000000":
             # Use the Active Experiment link stored directly on the run record
-            from ..core.airtable_client import AirtableClient as _ATC
             _links = fields.get("Active Experiment", [])
             if _links:
                 active_exp["experiment_record_id"] = _links[0]
