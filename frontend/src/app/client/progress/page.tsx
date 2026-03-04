@@ -294,7 +294,7 @@ function PatternTrendsChart({ history }: { history: RunHistoryPoint[] }) {
                       axisLine={false}
                     />
                     <Tooltip
-                      formatter={(v: number) => [`${v}%`, 'Score']}
+                      formatter={(v: number | undefined) => [`${v ?? 0}%`, 'Score']}
                       cursor={{ fill: '#f9fafb' }}
                     />
                     <Bar dataKey="score" fill="#2563eb" radius={[4, 4, 0, 0]} maxBarSize={48} />
