@@ -47,11 +47,11 @@ function ProposedExperimentCard({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="bg-stone-50 rounded-xl p-3">
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">What to do</p>
-          <p className="text-xs text-stone-600 leading-relaxed line-clamp-3">{experiment.instruction}</p>
+          <p className="text-xs text-stone-600 leading-relaxed">{experiment.instruction}</p>
         </div>
         <div className="bg-stone-50 rounded-xl p-3">
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Success looks like</p>
-          <p className="text-xs text-stone-600 leading-relaxed line-clamp-3">{experiment.success_marker}</p>
+          <p className="text-xs text-stone-600 leading-relaxed">{experiment.success_marker}</p>
         </div>
       </div>
       {errorMsg && <p className="text-xs text-rose-600">{errorMsg}</p>}
@@ -63,7 +63,13 @@ function ProposedExperimentCard({
         >
           {state === 'loading' ? 'Accepting…' : 'Accept experiment'}
         </button>
-        <span className="text-xs text-stone-400">{experiment.experiment_id}</span>
+        <Link
+          href="/client"
+          className="text-xs text-stone-500 hover:text-stone-700 transition-colors"
+        >
+          Decide later
+        </Link>
+        <span className="text-xs text-stone-400 ml-auto">{experiment.experiment_id}</span>
       </div>
     </div>
   );

@@ -363,7 +363,13 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
       <CoachingCard
         strengths={run.strengths}
         focus={run.focus}
-        microExperiment={hasActiveExp ? null : run.micro_experiment}
+        microExperiment={
+          hasActiveExp ||
+          proposedExperiments.length > 0 ||
+          !!(run as Record<string, unknown>).baseline_pack_id
+            ? null
+            : run.micro_experiment
+        }
       />
 
       <ProposedExperimentSection />

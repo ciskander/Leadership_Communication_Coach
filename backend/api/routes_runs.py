@@ -70,11 +70,15 @@ def _build_run_response(run_record: dict) -> RunStatusResponse:
     if not gate1_pass and status == "complete":
         status = "complete"  # complete but with gate1 fail
 
+    bp_links = fields.get("baseline_pack", [])
+    baseline_pack_id = bp_links[0] if isinstance(bp_links, list) and bp_links else None
+
     resp = RunStatusResponse(
         run_id=run_id,
         status=status,
         gate1_pass=gate1_pass,
         analysis_type=analysis_type,
+        baseline_pack_id=baseline_pack_id,
     )
 
     if not parsed_json_str:

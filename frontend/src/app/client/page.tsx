@@ -87,10 +87,15 @@ function ProposedExperimentCard({
           {experiment.title}
         </p>
       </div>
-      <div className="bg-stone-50 rounded-xl p-3">
-        <p className="text-xs text-stone-600 leading-relaxed line-clamp-3">
-          {experiment.instruction}
-        </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="bg-stone-50 rounded-xl p-3">
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">What to do</p>
+          <p className="text-xs text-stone-600 leading-relaxed">{experiment.instruction}</p>
+        </div>
+        <div className="bg-stone-50 rounded-xl p-3">
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Success looks like</p>
+          <p className="text-xs text-stone-600 leading-relaxed">{experiment.success_marker}</p>
+        </div>
       </div>
       {errorMsg && (
         <p className="text-xs text-rose-600">{errorMsg}</p>
@@ -111,15 +116,23 @@ function ProposedExperimentCard({
             </div>
           </div>
         ) : (
-          <button
-            onClick={handleAccept}
-            disabled={state === 'loading'}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
-          >
-            {state === 'loading' ? 'Accepting…' : 'Accept experiment'}
-          </button>
+          <>
+            <button
+              onClick={handleAccept}
+              disabled={state === 'loading'}
+              className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
+            >
+              {state === 'loading' ? 'Accepting…' : 'Accept experiment'}
+            </button>
+            <Link
+              href="/client"
+              className="text-xs text-stone-500 hover:text-stone-700 transition-colors"
+            >
+              Decide later
+            </Link>
+          </>
         )}
-        <span className="text-xs text-stone-400">{experiment.experiment_id}</span>
+        <span className="text-xs text-stone-400 ml-auto">{experiment.experiment_id}</span>
       </div>
     </div>
   );

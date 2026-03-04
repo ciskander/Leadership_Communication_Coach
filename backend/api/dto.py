@@ -72,6 +72,7 @@ class RunStatusResponse(BaseModel):
     status: str                         # queued | running | complete | error
     gate1_pass: Optional[bool] = None
     analysis_type: Optional[str] = None
+    baseline_pack_id: Optional[str] = None   # set if this run is a baseline pack sub-run
     error: Optional[dict] = None
     # Populated when status=complete and gate1_pass=True
     strengths: list[CoachingItemWithQuotes] = Field(default_factory=list)
