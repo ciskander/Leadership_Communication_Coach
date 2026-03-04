@@ -30,7 +30,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
               <div key={s.pattern_id} className="px-5 py-4 space-y-2">
                 <PatternLabel id={s.pattern_id} />
                 <p className="text-sm text-stone-700 leading-relaxed">{s.message}</p>
-                {s.quotes.map((q, i) => (
+                {(s.quotes ?? []).map((q, i) => (
                   <EvidenceQuote key={i} quote={q} />
                 ))}
               </div>
@@ -49,7 +49,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
           <div className="px-5 py-4 space-y-2">
             <PatternLabel id={focus.pattern_id} />
             <p className="text-sm text-stone-700 leading-relaxed">{focus.message}</p>
-            {focus.quotes.map((q, i) => (
+            {(focus.quotes ?? []).map((q, i) => (
               <EvidenceQuote key={i} quote={q} />
             ))}
           </div>
@@ -88,7 +88,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
                 </p>
               </div>
             </div>
-            {microExperiment.quotes.map((q, i) => (
+            {(microExperiment.quotes ?? []).map((q, i) => (
               <EvidenceQuote key={i} quote={q} />
             ))}
           </div>

@@ -1,11 +1,93 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { api } from '@/lib/api';
 import { useActiveExperiment } from '@/hooks/useActiveExperiment';
 import { ExperimentTracker } from '@/components/ExperimentTracker';
+import type { Experiment } from '@/lib/types';
+
+function PatternLabel({ id }: { id: string }) {
+  return (
+    <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+      {id.replace(/_/g, ' ')}
+    </span>
+  );
+}
+
+function ProposedExperimentCard({
+  experiment,
+  onAccepted,
+}: {
+  experiment: Experiment;
+  onAccepted: () => void;
+}) {
+  const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  async function handleAccept() {
+    if (state !== 'idle') return;
+    setState('loading');
+    setErrorMsg(null);
+    try {
+      await api.acceptExperiment(experiment.experiment_record_id);
+      onAccepted();
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong.');
+      setState('error');
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
+      <div className="space-y-1">
+        <PatternLabel id={experiment.pattern_id} />
+        <p className="text-sm font-semibold text-stone-900 leading-snug">{experiment.title}</p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="bg-stone-50 rounded-xl p-3">
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">What to do</p>
+          <p className="text-xs text-stone-600 leading-relaxed line-clamp-3">{experiment.instruction}</p>
+        </div>
+        <div className="bg-stone-50 rounded-xl p-3">
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Success looks like</p>
+          <p className="text-xs text-stone-600 leading-relaxed line-clamp-3">{experiment.success_marker}</p>
+        </div>
+      </div>
+      {errorMsg && <p className="text-xs text-rose-600">{errorMsg}</p>}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={handleAccept}
+          disabled={state === 'loading'}
+          className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
+        >
+          {state === 'loading' ? 'Accepting…' : 'Accept experiment'}
+        </button>
+        <span className="text-xs text-stone-400">{experiment.experiment_id}</span>
+      </div>
+    </div>
+  );
+}
 
 export default function ExperimentPage() {
   const { data, loading, error, refetch } = useActiveExperiment();
+  const [proposed, setProposed] = useState<Experiment[]>([]);
+  const [proposedLoading, setProposedLoading] = useState(true);
+
+  function fetchProposed() {
+    setProposedLoading(true);
+    api.getProposedExperiments()
+      .then(setProposed)
+      .catch(() => setProposed([]))
+      .finally(() => setProposedLoading(false));
+  }
+
+  useEffect(() => { fetchProposed(); }, []);
+
+  function handleAccepted() {
+    refetch();
+    fetchProposed();
+  }
 
   if (loading) {
     return (
@@ -21,6 +103,7 @@ export default function ExperimentPage() {
 
   const experiment = data?.experiment;
   const events = data?.recent_events ?? [];
+  const hasActive = !!experiment && experiment.status === 'active';
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 py-2">
@@ -31,7 +114,50 @@ export default function ExperimentPage() {
         </p>
       </div>
 
-      {!experiment ? (
+      {hasActive ? (
+        <>
+          <ExperimentTracker
+            experiment={experiment}
+            events={events as Record<string, unknown>[]}
+            onUpdate={refetch}
+          />
+          {(experiment.status === 'completed' || experiment.status === 'abandoned') && (
+            <div className="bg-stone-50 rounded-2xl border border-stone-200 p-5 text-center space-y-3">
+              <p className="text-sm font-medium text-stone-700">
+                {experiment.status === 'completed'
+                  ? '🎉 Experiment complete! Ready for your next challenge?'
+                  : 'Moving on — ready to try something new?'}
+              </p>
+              <Link
+                href="/client/analyze"
+                className="inline-block px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors"
+              >
+                Analyse next meeting →
+              </Link>
+            </div>
+          )}
+        </>
+      ) : !proposedLoading && proposed.length > 0 ? (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+              Suggested Experiments
+            </h2>
+            <span className="text-xs text-stone-400">
+              {proposed.length} suggestion{proposed.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <div className="space-y-3">
+            {proposed.map((exp) => (
+              <ProposedExperimentCard
+                key={exp.experiment_record_id}
+                experiment={exp}
+                onAccepted={handleAccepted}
+              />
+            ))}
+          </div>
+        </section>
+      ) : !proposedLoading ? (
         <div className="bg-white rounded-2xl border border-dashed border-stone-300 p-12 text-center space-y-4">
           <div className="text-4xl">◈</div>
           <p className="text-stone-600 font-medium">No active experiment</p>
@@ -53,31 +179,7 @@ export default function ExperimentPage() {
             </Link>
           </div>
         </div>
-      ) : (
-        <>
-          <ExperimentTracker
-            experiment={experiment}
-            events={events as Record<string, unknown>[]}
-            onUpdate={refetch}
-          />
-
-          {(experiment.status === 'completed' || experiment.status === 'abandoned') && (
-            <div className="bg-stone-50 rounded-2xl border border-stone-200 p-5 text-center space-y-3">
-              <p className="text-sm font-medium text-stone-700">
-                {experiment.status === 'completed'
-                  ? '🎉 Experiment complete! Ready for your next challenge?'
-                  : 'Moving on — ready to try something new?'}
-              </p>
-              <Link
-                href="/client/analyze"
-                className="inline-block px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors"
-              >
-                Analyse next meeting →
-              </Link>
-            </div>
-          )}
-        </>
-      )}
+      ) : null}
     </div>
   );
 }
