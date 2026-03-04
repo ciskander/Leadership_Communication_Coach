@@ -167,3 +167,33 @@ export type MeetingType =
   | 'client_call'
   | 'one_on_one'
   | 'other';
+
+export interface PatternDataPoint {
+  pattern_id: string;
+  ratio: number;
+  opportunity_count: number;
+}
+
+export interface RunHistoryPoint {
+  run_id: string;
+  meeting_date: string | null;
+  is_baseline: boolean;
+  analysis_type: string | null;
+  patterns: PatternDataPoint[];
+}
+
+export interface PastExperiment {
+  experiment_record_id: string;
+  experiment_id: string;
+  title: string;
+  pattern_id: string;
+  status: string;
+  started_at: string | null;
+  ended_at: string | null;
+  attempt_count: number | null;
+}
+
+export interface ClientProgress {
+  pattern_history: RunHistoryPoint[];
+  past_experiments: PastExperiment[];
+}

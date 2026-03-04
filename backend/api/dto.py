@@ -197,3 +197,34 @@ class AdminUserListItem(BaseModel):
     coach_id: Optional[str]
     created_at: Optional[datetime]
     last_login: Optional[datetime]
+
+# ── Client Progress ──────────────────────────────────────────────────────────
+
+class PatternDataPoint(BaseModel):
+    pattern_id: str
+    ratio: float
+    opportunity_count: int
+
+
+class RunHistoryPoint(BaseModel):
+    run_id: str
+    meeting_date: Optional[str]
+    is_baseline: bool
+    analysis_type: Optional[str]
+    patterns: list[PatternDataPoint]
+
+
+class PastExperiment(BaseModel):
+    experiment_record_id: str
+    experiment_id: str
+    title: str
+    pattern_id: str
+    status: str
+    started_at: Optional[str]
+    ended_at: Optional[str]
+    attempt_count: Optional[int]
+
+
+class ClientProgressResponse(BaseModel):
+    pattern_history: list[RunHistoryPoint]
+    past_experiments: list[PastExperiment]

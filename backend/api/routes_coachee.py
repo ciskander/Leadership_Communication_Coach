@@ -23,6 +23,7 @@ from .dto import (
     CoacheeListItem,
     ExperimentActionResponse,
     ExperimentResponse,
+    ClientProgressResponse,    
     HumanConfirmResponse,
     MeResponse,
     SingleMeetingEnqueueResponse,
@@ -566,3 +567,118 @@ async def active_experiment(
 
     except Exception:
         return ActiveExperimentResponse(experiment=None)
+
+@router.get("/api/client/progress", response_model=ClientProgressResponse)
+async def client_progress(
+    user: UserAuth = Depends(get_current_user),
+):
+    """
+    Return pattern history (for the trend chart) and past experiments
+    (completed or abandoned) for the authenticated coachee.
+    """
+    at_client = AirtableClient()
+
+    pattern_history = []
+    past_experiments = []
+
+    if not user.airtable_user_record_id:
+        return ClientProgressResponse(pattern_history=[], past_experiments=[])
+
+    # ── Fetch eligible runs ───────────────────────────────────────────────────
+    runs_formula = (
+        f"AND({{Coachee ID}} = '{user.airtable_user_record_id}', {{Gate1 Pass}} = TRUE())"
+    )
+    try:
+        run_records = at_client.search_records("runs", runs_formula, max_records=60)
+    except Exception as e:
+        logger.warning("client_progress: error fetching runs: %s", e)
+        run_records = []
+
+    for run_rec in run_records:
+        rf = run_rec.get("fields", {})
+        analysis_type = rf.get("Analysis Type", "")
+        baseline_pack_links = rf.get("baseline_pack", [])
+
+        # Skip baseline sub-runs (single_meeting runs that belong to a baseline pack)
+        if analysis_type == "single_meeting" and baseline_pack_links:
+            continue
+
+        is_baseline = analysis_type == "baseline_pack"
+
+        # Get meeting date from the linked transcript
+        meeting_date: Optional[str] = None
+        transcript_links = rf.get("Transcript ID", [])
+        if transcript_links:
+            try:
+                tr_rec = at_client.get_transcript(transcript_links[0])
+                meeting_date = tr_rec.get("fields", {}).get("Meeting Date")
+            except Exception as e:
+                logger.warning("client_progress: could not fetch transcript %s: %s", transcript_links[0], e)
+
+        # Parse pattern_snapshot from Parsed JSON
+        patterns = []
+        parsed_json_str = rf.get("Parsed JSON") or "{}"
+        try:
+            parsed = json.loads(parsed_json_str)
+            snapshot = parsed.get("pattern_snapshot", [])
+            for p in snapshot:
+                pid = p.get("pattern_id", "")
+                if not pid:
+                    continue
+                patterns.append({
+                    "pattern_id": pid,
+                    "ratio": float(p.get("ratio", 0.0)),
+                    "opportunity_count": int(p.get("opportunity_count", 0)),
+                })
+        except Exception as e:
+            logger.warning("client_progress: could not parse run %s JSON: %s", run_rec["id"], e)
+
+        if not patterns:
+            continue
+
+        pattern_history.append({
+            "run_id": run_rec["id"],
+            "meeting_date": meeting_date,
+            "is_baseline": is_baseline,
+            "analysis_type": analysis_type,
+            "patterns": patterns,
+        })
+
+    # Sort chronologically (runs with no date go last)
+    pattern_history.sort(
+        key=lambda x: (x["meeting_date"] is None, x["meeting_date"] or "")
+    )
+
+    # ── Fetch past experiments ────────────────────────────────────────────────
+    exp_formula = (
+        f"AND("
+        f"FIND('{user.airtable_user_record_id}', ARRAYJOIN({{users}})), "
+        f"OR({{Status}} = 'completed', {{Status}} = 'abandoned')"
+        f")"
+    )
+    try:
+        exp_records = at_client.search_records("experiments", exp_formula, max_records=30)
+    except Exception as e:
+        logger.warning("client_progress: error fetching past experiments: %s", e)
+        exp_records = []
+
+    for exp_rec in exp_records:
+        ef = exp_rec.get("fields", {})
+        past_experiments.append({
+            "experiment_record_id": exp_rec["id"],
+            "experiment_id": ef.get("Experiment ID", ""),
+            "title": ef.get("Title", ""),
+            "pattern_id": ef.get("Pattern ID", ""),
+            "status": ef.get("Status", ""),
+            "started_at": ef.get("Started At"),
+            "ended_at": ef.get("Ended At"),
+            "attempt_count": ef.get("Attempt Count (model)"),
+        })
+
+    # Most recent first (by ended_at)
+    past_experiments.sort(key=lambda x: (x["ended_at"] or ""), reverse=True)
+
+    return ClientProgressResponse(
+        pattern_history=pattern_history,
+        past_experiments=past_experiments,
+    )

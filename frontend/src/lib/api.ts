@@ -58,6 +58,7 @@ import type {
   CoacheeListItem,
   CoacheeSummary,
   AdminUser,
+  ClientProgress,
 } from './types';
 
 export const api = {
@@ -72,6 +73,11 @@ export const api = {
   // Client summary
   clientSummary(): Promise<ClientSummary> {
     return request('/api/client/summary');
+  },
+  
+  // Client progress
+  getClientProgress(): Promise<ClientProgress> {
+    return request('/api/client/progress');
   },
 
   // Transcripts
