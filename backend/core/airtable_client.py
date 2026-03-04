@@ -371,9 +371,16 @@ class AirtableClient:
 
     def get_proposed_experiments_for_user(self, user_record_id: str, max_records: int = 3) -> list[dict]:
         """Return proposed experiments for a user, most recent first."""
+        # User is a linked record field; ARRAYJOIN in a formula returns the primary
+        # field values of linked records (e.g. "U-0001"), not Airtable record IDs.
+        # Fetch the user's primary field value first so the FIND matches correctly.
+        user_rec = self.get_record(AT_TABLE_USERS, user_record_id)
+        user_primary_id = user_rec.get("fields", {}).get(F_USER_USER_ID, "")
+        if not user_primary_id:
+            return []
         formula = (
             f"AND("
-            f"FIND('{user_record_id}', ARRAYJOIN({{User}})), "
+            f"FIND('{user_primary_id}', ARRAYJOIN({{User}})), "
             f"{{{F_EXP_STATUS}}} = 'proposed'"
             f")"
         )

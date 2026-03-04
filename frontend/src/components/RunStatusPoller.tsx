@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useRunPoller } from '@/hooks/useRunPoller';
 import { CoachingCard } from './CoachingCard';
@@ -20,6 +20,26 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
   const [confirmState, setConfirmState] = useState<'idle' | 'loading' | 'done'>('idle');
   const [completeState, setCompleteState] = useState<'idle' | 'loading' | 'done'>('idle');
+  const [proposedExperiments, setProposedExperiments] = useState<Experiment[]>([]);
+  const [acceptedExpId, setAcceptedExpId] = useState<string | null>(null);
+  const [acceptLoading, setAcceptLoading] = useState(false);
+
+  // When the run completes without an active experiment, fetch any proposed
+  // experiments so the user can accept inline without going back to the dashboard.
+  useEffect(() => {
+    if (run?.status === 'complete' && run?.gate1_pass === true) {
+      const activeExpStatus = (
+        run.experiment_tracking as Record<string, unknown> | null
+      )?.active_experiment as Record<string, unknown> | null;
+      const isActive = activeExpStatus?.status === 'active';
+      if (!isActive) {
+        api.getProposedExperiments()
+          .then(setProposedExperiments)
+          .catch(() => {});
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [run?.status]);
 
   if (pollState === 'polling' || !run) {
     return (
@@ -138,6 +158,73 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
     } catch {
       setCompleteState('idle');
     }
+  }
+
+  // ── Proposed experiment section (shown when run completes with no active exp) ──
+
+  function ProposedExperimentSection() {
+    if (hasActiveExp || proposedExperiments.length === 0) return null;
+    const exp = proposedExperiments[0];
+
+    if (acceptedExpId === exp.experiment_record_id) {
+      return (
+        <section className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 flex items-center gap-3">
+          <span className="text-emerald-600 text-lg">✦</span>
+          <div>
+            <p className="text-sm font-semibold text-emerald-800">Experiment accepted — good luck!</p>
+            <Link href="/client" className="text-xs text-emerald-600 hover:text-emerald-800 underline">
+              View on dashboard →
+            </Link>
+          </div>
+        </section>
+      );
+    }
+
+    return (
+      <section className="bg-violet-50 border border-violet-200 rounded-2xl p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="text-base">◈</span>
+          <p className="text-sm font-semibold text-violet-800">Your experiment is ready</p>
+        </div>
+        <div className="space-y-1">
+          <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+            {exp.pattern_id.replace(/_/g, ' ')}
+          </span>
+          <p className="text-sm font-semibold text-stone-900 leading-snug">{exp.title}</p>
+        </div>
+        <div className="bg-white rounded-xl p-3">
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">What to do</p>
+          <p className="text-xs text-stone-600 leading-relaxed">{exp.instruction}</p>
+        </div>
+        <div className="bg-white rounded-xl p-3">
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Success looks like</p>
+          <p className="text-xs text-stone-600 leading-relaxed">{exp.success_marker}</p>
+        </div>
+        <div className="flex items-center gap-3 pt-1">
+          <button
+            onClick={async () => {
+              if (acceptLoading) return;
+              setAcceptLoading(true);
+              try {
+                await api.acceptExperiment(exp.experiment_record_id);
+                setAcceptedExpId(exp.experiment_record_id);
+              } catch {
+                // non-fatal — user can always accept from the dashboard
+              } finally {
+                setAcceptLoading(false);
+              }
+            }}
+            disabled={acceptLoading}
+            className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
+          >
+            {acceptLoading ? 'Accepting…' : 'Accept experiment'}
+          </button>
+          <Link href="/client" className="text-xs text-stone-500 hover:text-stone-700 transition-colors">
+            Decide later
+          </Link>
+        </div>
+      </section>
+    );
   }
 
   // ── Experiment section ─────────────────────────────────────────────────────
@@ -278,6 +365,8 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         focus={run.focus}
         microExperiment={hasActiveExp ? null : run.micro_experiment}
       />
+
+      <ProposedExperimentSection />
 
       <ExperimentSection />
 
