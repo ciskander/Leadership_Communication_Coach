@@ -169,11 +169,12 @@ async def get_run(
     except Exception:
         return error_response("NOT_FOUND", f"Run {run_id} not found.", 404)
 
-    # Ownership check (coachees can only see their own runs)
+    # Ownership check: coachees can only see their own runs.
+    # Deny access if Coachee ID is blank — don't silently allow it.
     fields = run_record.get("fields", {})
     coachee_id = fields.get("Coachee ID")
     if user.role == "coachee":
-        if coachee_id and coachee_id != user.airtable_user_record_id:
+        if coachee_id != user.airtable_user_record_id:
             return error_response("FORBIDDEN", "You do not have access to this run.", 403)
 
     return _build_run_response(run_record)
@@ -191,6 +192,13 @@ async def get_run_request_status(
         return error_response("NOT_FOUND", f"RunRequest {rr_id} not found.", 404)
 
     fields = rr_record.get("fields", {})
+
+    # Ownership check: coachees can only poll their own run requests.
+    if user.role == "coachee":
+        user_links = fields.get("User", [])
+        if not isinstance(user_links, list) or user.airtable_user_record_id not in user_links:
+            return error_response("FORBIDDEN", "You do not have access to this run request.", 403)
+
     status = fields.get("Status", "queued")
     run_links = fields.get("Run", [])
     run_id = run_links[0] if isinstance(run_links, list) and run_links else None

@@ -542,6 +542,15 @@ def process_baseline_pack_build(
     speaker_label = bp_fields.get("Speaker Label") or ""
     user_links = _get_link_ids(bp_fields, "users")
     config_links = _get_link_ids(bp_fields, "Config") if "Config" in bp_fields else []
+
+    # 1a. Idempotency check — prevent duplicate LLM calls if task is retried or
+    # the build endpoint is called twice for the same pack.
+    idem_key = f"bp:{bp_pack_id_str}"
+    existing_run = client.find_run_by_idempotency_key(idem_key)
+    if existing_run:
+        logger.info("Idempotency hit for baseline pack %s, returning existing run %s", baseline_pack_id, existing_run["id"])
+        return existing_run["id"]
+
     items = client.get_baseline_pack_items(baseline_pack_id)
     
     if len(items) < 3:
@@ -739,9 +748,6 @@ def process_baseline_pack_build(
 
     # 6. Gate1 validate
     gate1_result = gate1_validate(openai_resp.raw_text)
-
-    # Compute idempotency key (pack-level)
-    idem_key = f"bp:{bp_pack_id_str}"
 
     # Determine user_record_id from baseline pack users link
     user_record_id = user_links[0] if user_links else ""

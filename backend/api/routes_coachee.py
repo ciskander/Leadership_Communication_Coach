@@ -123,6 +123,18 @@ async def build_baseline_pack(
     bp_id: str,
     user: UserAuth = Depends(get_current_user),
 ):
+    at_client = AirtableClient()
+    try:
+        bp_rec = at_client.get_baseline_pack(bp_id)
+    except Exception:
+        return error_response("NOT_FOUND", "Baseline pack not found.", 404)
+
+    # Ownership check: coachees can only build their own packs.
+    if user.role == "coachee":
+        bp_user_links = bp_rec.get("fields", {}).get("users", [])
+        if not isinstance(bp_user_links, list) or user.airtable_user_record_id not in bp_user_links:
+            return error_response("FORBIDDEN", "You do not have access to this baseline pack.", 403)
+
     job = enqueue_baseline_pack_build.delay(bp_id)
     return BaselinePackBuildResponse(
         baseline_pack_id=bp_id,
@@ -141,6 +153,12 @@ async def get_baseline_pack(
         bp_rec = at_client.get_baseline_pack(bp_id)
     except Exception:
         return error_response("NOT_FOUND", "Baseline pack not found.", 404)
+
+    # Ownership check: coachees can only view their own packs.
+    if user.role == "coachee":
+        bp_user_links = bp_rec.get("fields", {}).get("users", [])
+        if not isinstance(bp_user_links, list) or user.airtable_user_record_id not in bp_user_links:
+            return error_response("FORBIDDEN", "You do not have access to this baseline pack.", 403)
 
     bf = bp_rec.get("fields", {})
 
@@ -406,12 +424,13 @@ async def confirm_experiment_attempt(
         )
 
     attempt_value = "yes" if body.confirmed else "no"
+    user_confirmation_value = "confirmed_attempt" if body.confirmed else "confirmed_no_attempt"
 
     fields: dict = {
         "Experiment": [experiment_record_id],
         "Run": [body.run_id],
         "Attempt Enum": attempt_value,
-        "Human Confirmed": body.confirmed,
+        "User Confirmation": user_confirmation_value,
         "Idempotency Key": idem_key,
     }
     if user.airtable_user_record_id:
@@ -539,7 +558,7 @@ async def active_experiment(
                 "event_id": er["id"],
                 "attempt": erf.get("Attempt Enum"),
                 "meeting_date": erf.get("Meeting Date"),
-                "human_confirmed": erf.get("Human Confirmed"),
+                "human_confirmed": erf.get("User Confirmation"),
                 "notes": erf.get("Notes"),
             })
 
