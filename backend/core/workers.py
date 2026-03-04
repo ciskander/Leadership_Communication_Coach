@@ -1014,6 +1014,241 @@ def create_attempt_event_from_run(
     return event_record_id
 
 
+# ── Worker 5: process_next_experiment_suggestion ──────────────────────────────
+
+def process_next_experiment_suggestion(
+    user_record_id: str,
+    client: Optional[AirtableClient] = None,
+) -> Optional[str]:
+    """
+    Generate and propose a next micro-experiment for a user after they
+    complete or abandon their current experiment.
+
+    - Aggregates pattern scores from the user's last 5 eligible runs.
+    - Avoids repeating the pattern_id of the most recent past experiment.
+    - Avoids reusing any past experiment title.
+    - Creates a proposed experiment record linked to the user (no run link).
+
+    Returns:
+        Experiment record ID, or None if skipped.
+    """
+    if client is None:
+        client = AirtableClient()
+
+    # 0. Idempotency: skip if the user already has a proposed experiment queued
+    existing_proposed = client.get_proposed_experiments_for_user(user_record_id, max_records=1)
+    if existing_proposed:
+        logger.info(
+            "process_next_experiment_suggestion: user %s already has proposed experiments — skipping",
+            user_record_id,
+        )
+        return None
+
+    # 1. Fetch up to 5 recent Gate1-passing runs for this user
+    runs_formula = (
+        f"AND("
+        f"{{Coachee ID}} = '{user_record_id}', "
+        f"{{Gate1 Pass}} = TRUE()"
+        f")"
+    )
+    run_records = client.search_records("runs", runs_formula, max_records=5)
+
+    # Exclude single_meeting sub-runs that belong to a baseline pack
+    eligible_runs = [
+        r for r in run_records
+        if not (
+            _extract_fields(r).get(F_RUN_ANALYSIS_TYPE) == "single_meeting"
+            and _get_link_ids(_extract_fields(r), F_RUN_BASELINE_PACK)
+        )
+    ]
+
+    if not eligible_runs:
+        logger.info(
+            "process_next_experiment_suggestion: no eligible runs for user %s — skipping",
+            user_record_id,
+        )
+        return None
+
+    # 2. Fetch past experiments (completed + abandoned), most recent first
+    user_rec = client.get_user(user_record_id)
+    user_primary_id = _extract_fields(user_rec).get("User ID", "")
+
+    past_exp_formula = (
+        f"AND("
+        f"FIND('{user_primary_id}', ARRAYJOIN({{User}})), "
+        f"OR({{Status}} = 'completed', {{Status}} = 'abandoned')"
+        f")"
+    )
+    past_exp_records = client.search_records("experiments", past_exp_formula, max_records=20)
+    past_exp_records.sort(
+        key=lambda x: _extract_fields(x).get(F_EXP_ENDED_AT) or "",
+        reverse=True,
+    )
+
+    recent_pattern_id: Optional[str] = None
+    past_titles: list[str] = []
+    if past_exp_records:
+        recent_pattern_id = _extract_fields(past_exp_records[0]).get(F_EXP_PATTERN_ID)
+        past_titles = [
+            _extract_fields(r).get(F_EXP_TITLE, "")
+            for r in past_exp_records
+            if _extract_fields(r).get(F_EXP_TITLE)
+        ]
+
+    # 3. Aggregate pattern scores across eligible runs
+    pattern_scores: dict[str, list[float]] = {}
+    target_role = "participant"
+
+    for r in eligible_runs:
+        rf = _extract_fields(r)
+        target_role = rf.get(F_RUN_TARGET_SPEAKER_ROLE) or target_role
+        parsed_json_str = rf.get(F_RUN_PARSED_JSON) or "{}"
+        try:
+            parsed = json.loads(parsed_json_str)
+            for p in parsed.get("pattern_snapshot", []):
+                pid = p.get("pattern_id")
+                if pid and p.get("evaluable_status") == "evaluable":
+                    ratio = p.get("ratio")
+                    if ratio is not None:
+                        pattern_scores.setdefault(pid, []).append(float(ratio))
+        except Exception:
+            pass
+
+    avg_scores = {
+        pid: sum(vals) / len(vals)
+        for pid, vals in pattern_scores.items()
+    }
+    sorted_patterns = sorted(avg_scores.items(), key=lambda x: x[1])
+
+    # 4. Build slim prompt
+    pattern_lines = "\n".join(
+        f"  {pid}: {score:.2f}" for pid, score in sorted_patterns
+    ) or "  (no evaluable patterns available)"
+
+    avoid_pattern_note = (
+        f"\nDo NOT propose an experiment for pattern_id '{recent_pattern_id}' — "
+        f"it was the focus of their most recent experiment."
+        if recent_pattern_id else ""
+    )
+    avoid_titles_note = (
+        "\nDo NOT reuse any of these past experiment titles:\n"
+        + "\n".join(f"  - {t}" for t in past_titles[:10])
+        if past_titles else ""
+    )
+
+    user_message = (
+        f"Propose a next micro-experiment for a leadership coaching participant.\n\n"
+        f"Their role: {target_role}\n\n"
+        f"Pattern scores (ratio 0-1, lower = more room to grow, based on recent meetings):\n"
+        f"{pattern_lines}\n"
+        f"{avoid_pattern_note}"
+        f"{avoid_titles_note}\n\n"
+        f"Choose the weakest pattern that is not excluded above. "
+        f"Propose a specific, actionable micro-experiment targeting it.\n\n"
+        f"Return ONLY a JSON object with exactly these fields:\n"
+        f'{{"experiment_id": "EXP-XXXXXX", "title": "...", "instruction": "...", '
+        f'"success_marker": "...", "pattern_id": "..."}}\n\n'
+        f"Rules:\n"
+        f"- experiment_id: must match ^EXP-[0-9]{{6}}$ (use 6 random digits)\n"
+        f"- title: max 140 characters\n"
+        f"- instruction: max 600 characters, a concrete behavioural instruction "
+        f"the person can act on in their next meeting\n"
+        f"- success_marker: max 300 characters, an observable indicator of success\n"
+        f"- pattern_id: must be one of: agenda_clarity, objective_signaling, "
+        f"turn_allocation, facilitative_inclusion, decision_closure, "
+        f"owner_timeframe_specification, summary_checkback, question_quality, "
+        f"listener_response_quality, conversational_balance\n"
+        f"- Never include literal double quotes inside string values"
+    )
+
+    slim_system_prompt = (
+        "You are a leadership coaching assistant. "
+        "Return ONLY one valid JSON object. "
+        "No prose, markdown, code fences, or comments. "
+        "Never include literal double quotes inside string values — "
+        "use single quotes if quoting is needed."
+    )
+
+    # 5. Load model name from active config (best-effort)
+    model_name: Optional[str] = None
+    try:
+        active_cfg = client.get_active_config()
+        if active_cfg:
+            model_name = active_cfg.get("fields", {}).get("Model Name")
+    except Exception:
+        pass
+
+    # 6. Call OpenAI
+    try:
+        openai_resp = call_openai(
+            system_prompt=slim_system_prompt,
+            developer_message="",
+            user_message=user_message,
+            model=model_name,
+            max_tokens=600,
+        )
+    except Exception as exc:
+        logger.error("process_next_experiment_suggestion: OpenAI call failed: %s", exc)
+        return None
+
+    # 7. Parse response — strip accidental markdown fences
+    raw = openai_resp.raw_text.strip()
+    if raw.startswith("```"):
+        parts = raw.split("```")
+        raw = parts[1] if len(parts) > 1 else raw
+        if raw.startswith("json"):
+            raw = raw[4:]
+        raw = raw.strip()
+
+    try:
+        micro = json.loads(raw)
+    except Exception as exc:
+        logger.error(
+            "process_next_experiment_suggestion: JSON parse failed: %s | raw: %.500s",
+            exc, raw,
+        )
+        return None
+
+    # 8. Validate required fields and pattern_id
+    _VALID_PATTERNS = {
+        'agenda_clarity', 'objective_signaling', 'turn_allocation',
+        'facilitative_inclusion', 'decision_closure', 'owner_timeframe_specification',
+        'summary_checkback', 'question_quality', 'listener_response_quality',
+        'conversational_balance',
+    }
+    required_keys = {"experiment_id", "title", "instruction", "success_marker", "pattern_id"}
+    missing = required_keys - micro.keys()
+    if missing:
+        logger.error("process_next_experiment_suggestion: missing fields %s", missing)
+        return None
+    if micro.get("pattern_id") not in _VALID_PATTERNS:
+        logger.error(
+            "process_next_experiment_suggestion: invalid pattern_id '%s'",
+            micro.get("pattern_id"),
+        )
+        return None
+
+    # 9. Create proposed experiment record (linked to user only, no run link)
+    exp_fields: dict = {
+        F_EXP_TITLE: micro["title"][:140],
+        F_EXP_INSTRUCTIONS: micro["instruction"][:600],
+        F_EXP_SUCCESS_CRITERIA: micro["success_marker"][:300],
+        F_EXP_SUCCESS_MARKER: micro["success_marker"][:300],
+        F_EXP_PATTERN_ID: micro["pattern_id"],
+        F_EXP_STATUS: "proposed",
+        F_EXP_USER: [user_record_id],
+    }
+
+    exp_record = client.create_experiment(exp_fields)
+    exp_record_id = exp_record["id"]
+
+    logger.info(
+        "process_next_experiment_suggestion: proposed experiment %s for user %s (pattern: %s)",
+        exp_record_id, user_record_id, micro["pattern_id"],
+    )
+    return exp_record_id
+
+
 # ── Private helpers ───────────────────────────────────────────────────────────
 
 def _build_memory_for_user(

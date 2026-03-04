@@ -9,6 +9,7 @@ Each task wraps exactly one worker function and handles:
 from __future__ import annotations
 
 import logging
+from typing import Optional
 
 from celery import Task
 from celery.exceptions import MaxRetriesExceededError
@@ -100,6 +101,37 @@ def enqueue_baseline_pack_build(self, baseline_pack_id: str) -> str:
         except Exception:
             pass
 
+        try:
+            raise self.retry(exc=exc)
+        except MaxRetriesExceededError:
+            raise
+
+
+@celery_app.task(
+    name="backend.queue.tasks.process_next_experiment_suggestion_task",
+    bind=True,
+    base=BaseWorkerTask,
+    max_retries=2,
+    default_retry_delay=10,
+)
+def enqueue_next_experiment_suggestion(self, user_record_id: str) -> Optional[str]:
+    """
+    Generate and propose a next micro-experiment for a user after they
+    complete or abandon their current experiment.
+
+    Returns:
+        Airtable experiment record ID, or None if skipped (e.g. user already
+        has a proposed experiment in the queue).
+    """
+    from ..core.workers import process_next_experiment_suggestion
+
+    try:
+        exp_record_id = process_next_experiment_suggestion(user_record_id)
+        return exp_record_id
+    except Exception as exc:
+        logger.exception(
+            "Next experiment suggestion failed for user %s", user_record_id
+        )
         try:
             raise self.retry(exc=exc)
         except MaxRetriesExceededError:

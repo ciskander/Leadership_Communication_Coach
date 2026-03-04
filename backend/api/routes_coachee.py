@@ -29,7 +29,7 @@ from .dto import (
     SingleMeetingEnqueueResponse,
 )
 from .errors import error_response, invalid_input
-from ..queue.tasks import enqueue_single_meeting, enqueue_baseline_pack_build
+from ..queue.tasks import enqueue_single_meeting, enqueue_baseline_pack_build, enqueue_next_experiment_suggestion
 
 logger = logging.getLogger(__name__)
 
@@ -329,6 +329,10 @@ async def complete_experiment(
     at_client.complete_experiment(experiment_record_id, user.airtable_user_record_id)
     logger.info("User %s completed experiment %s", user.airtable_user_record_id, experiment_record_id)
 
+    # Fire-and-forget: generate next experiment suggestion in the background
+    if user.airtable_user_record_id:
+        enqueue_next_experiment_suggestion.delay(user.airtable_user_record_id)
+
     return ExperimentActionResponse(
         experiment_record_id=experiment_record_id,
         status="completed",
@@ -365,6 +369,10 @@ async def abandon_experiment(
 
     at_client.abandon_experiment(experiment_record_id, user.airtable_user_record_id)
     logger.info("User %s abandoned experiment %s", user.airtable_user_record_id, experiment_record_id)
+
+    # Fire-and-forget: generate next experiment suggestion in the background
+    if user.airtable_user_record_id:
+        enqueue_next_experiment_suggestion.delay(user.airtable_user_record_id)
 
     return ExperimentActionResponse(
         experiment_record_id=experiment_record_id,

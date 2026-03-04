@@ -30,6 +30,12 @@ const ATTEMPT_CONFIG: Record<string, { color: string; label: string; dot: string
   no:      { color: 'text-stone-500',   label: 'Not attempted',   dot: 'bg-stone-300',   bg: 'bg-stone-50' },
 };
 
+// Human override pill — white background with coloured border to sit on top of the row background
+const HUMAN_PILL_CONFIG: Record<string, { label: string; color: string; border: string }> = {
+  confirmed_attempt:    { label: '↩ You confirmed', color: 'text-emerald-700', border: 'border-emerald-300' },
+  confirmed_no_attempt: { label: '↩ You said no',   color: 'text-stone-500',   border: 'border-stone-300' },
+};
+
 const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
   proposed:  { bg: 'bg-violet-100',  text: 'text-violet-700',  label: 'Proposed' },
   active:    { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Active' },
@@ -37,31 +43,20 @@ const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string }>
   abandoned: { bg: 'bg-rose-100',    text: 'text-rose-700',    label: 'Abandoned' },
 };
 
-// Human confirmation override indicator
-function ConfirmedBadge({ value }: { value?: string }) {
-  if (!value || value === 'not_reviewed') return null;
-  if (value === 'confirmed_attempt') {
-    return (
-      <span className="text-xs text-emerald-600 font-medium ml-1" title="You confirmed this attempt">
-        · you confirmed ✓
-      </span>
-    );
-  }
-  if (value === 'confirmed_no_attempt') {
-    return (
-      <span className="text-xs text-stone-400 font-medium ml-1" title="You said no attempt was made">
-        · you said no
-      </span>
-    );
-  }
-  return null;
-}
-
 export function ExperimentTracker({ experiment, events, onUpdate, onComplete, onAbandon }: ExperimentTrackerProps) {
   const [actionState, setActionState] = useState<'idle' | 'confirm-abandon' | 'loading'>('idle');
 
   const isActive = experiment.status === 'active';
   const statusCfg = STATUS_CONFIG[experiment.status] ?? STATUS_CONFIG.active;
+
+  // Sort most-recent first, cap at 10 rows
+  const sortedEvents = [...events]
+    .sort((a, b) => {
+      const da = a.meeting_date || a.created_at || '';
+      const db = b.meeting_date || b.created_at || '';
+      return db.localeCompare(da);
+    })
+    .slice(0, 10);
 
   const totalAttempted = experiment.attempt_count ?? 0;
   const successCount = events.filter((e) => e.attempt === 'yes').length;
@@ -171,7 +166,7 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
           </div>
         </div>
 
-        {/* Progress summary — only shown once there's data */}
+        {/* Attempt count headline — only shown once there's data */}
         {meetingsAnalysed > 0 && (
           <div className="grid grid-cols-3 gap-3 py-1">
             <div className="bg-emerald-50 rounded-xl p-3 text-center">
@@ -189,30 +184,47 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
           </div>
         )}
 
-        {/* Attempt history timeline */}
-        {meetingsAnalysed > 0 && (
+        {/* Per-meeting timeline — most recent first, max 10 rows */}
+        {sortedEvents.length > 0 && (
           <div>
             <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-2.5">
               Attempt history
             </p>
             <ul className="space-y-1.5">
-              {events.map((ev, i) => {
+              {sortedEvents.map((ev, i) => {
                 const cfg = ATTEMPT_CONFIG[ev.attempt ?? 'no'] ?? ATTEMPT_CONFIG.no;
+                const humanCfg = ev.human_confirmed
+                  ? HUMAN_PILL_CONFIG[ev.human_confirmed]
+                  : undefined;
                 const displayDate = ev.meeting_date || ev.created_at;
+
                 return (
                   <li
                     key={ev.event_id ?? ev.id ?? i}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2 ${cfg.bg}`}
+                    className={`flex items-center gap-2 rounded-lg px-3 py-2 ${cfg.bg}`}
                   >
                     <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
-                    <span className={`text-sm font-medium ${cfg.color}`}>
+
+                    {/* Model detection pill */}
+                    <span className={`text-xs font-semibold ${cfg.color}`}>
                       {cfg.label}
-                      <ConfirmedBadge value={ev.human_confirmed} />
                     </span>
+
+                    {/* Human override pill — shown side-by-side when present */}
+                    {humanCfg && (
+                      <span
+                        className={`text-xs font-medium px-2 py-0.5 rounded-full bg-white border ${humanCfg.border} ${humanCfg.color}`}
+                        title="Your confirmation"
+                      >
+                        {humanCfg.label}
+                      </span>
+                    )}
+
                     {displayDate && (
-                      <span className="text-xs text-stone-400 ml-auto">
+                      <span className="text-xs text-stone-400 ml-auto shrink-0">
                         {new Date(displayDate).toLocaleDateString('en-US', {
-                          month: 'short', day: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
                         })}
                       </span>
                     )}
