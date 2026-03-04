@@ -8,6 +8,7 @@ import {
   Line,
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -149,7 +150,7 @@ function PatternTrendsChart({ history }: { history: RunHistoryPoint[] }) {
   // Count post-baseline meetings
   const baselineIdx = history.findIndex((r) => r.is_baseline);
   const postBaselineCount = baselineIdx >= 0 ? history.length - baselineIdx - 1 : history.length;
-  const showLineChart = postBaselineCount >= 5;
+  const showLineChart = postBaselineCount >= 3;
 
   // Aggregate opportunity counts across all runs to pick top patterns
   const oppCounts: Record<string, number> = {};
@@ -266,7 +267,7 @@ function PatternTrendsChart({ history }: { history: RunHistoryPoint[] }) {
                 pid,
               };
             });
-            const meetingsUntil = 5 - postBaselineCount;
+            const meetingsUntil = 3 - postBaselineCount;
             return (
               <>
                 <div className="mb-3 inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-xs font-medium px-3 py-1.5 rounded-full">
@@ -297,7 +298,11 @@ function PatternTrendsChart({ history }: { history: RunHistoryPoint[] }) {
                       formatter={(v: number | undefined) => [`${v ?? 0}%`, 'Score']}
                       cursor={{ fill: '#f9fafb' }}
                     />
-                    <Bar dataKey="score" fill="#2563eb" radius={[4, 4, 0, 0]} maxBarSize={48} />
+                    <Bar dataKey="score" radius={[4, 4, 0, 0]} maxBarSize={48}>
+                      {barData.map((entry, index) => (
+                        <Cell key={entry.pid} fill={LINE_COLORS[visiblePatterns.indexOf(entry.pid) % LINE_COLORS.length]} />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </>
