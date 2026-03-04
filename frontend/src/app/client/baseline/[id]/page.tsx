@@ -7,10 +7,14 @@ import { api } from '@/lib/api';
 import type { BaselinePack } from '@/lib/types';
 import { CoachingCard } from '@/components/CoachingCard';
 
+const POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+
 export default function BaselineDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [pack, setPack] = useState<BaselinePack | null>(null);
   const [loading, setLoading] = useState(true);
+  const [timedOut, setTimedOut] = useState(false);
+  const [pollStart] = useState(() => Date.now());
 
   const fetchPack = () => {
     api.getBaselinePack(id).then(setPack).finally(() => setLoading(false));
@@ -22,6 +26,10 @@ export default function BaselineDetailPage() {
 
   useEffect(() => {
     if (pack && (pack.status === 'draft' || pack.status === 'building' || pack.status === 'intake')) {
+      if (Date.now() - pollStart > POLL_TIMEOUT_MS) {
+        setTimedOut(true);
+        return;
+      }
       const t = setTimeout(fetchPack, 5000);
       return () => clearTimeout(t);
     }
@@ -45,7 +53,7 @@ export default function BaselineDetailPage() {
 
   const isBuilding = pack.status === 'draft' || pack.status === 'building' || pack.status === 'intake';
   const isReady = pack.status === 'baseline_ready' || pack.status === 'completed';
-  const isError = pack.status === 'error';
+  const isError = pack.status === 'error' || timedOut;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 py-2">
@@ -57,7 +65,7 @@ export default function BaselineDetailPage() {
       </div>
 
       {/* Building state */}
-      {isBuilding && (
+      {isBuilding && !timedOut && (
         <div className="bg-white rounded-2xl border border-blue-200 p-8 text-center space-y-4">
           <div className="relative mx-auto w-14 h-14">
             <div className="w-14 h-14 rounded-full border-2 border-stone-100" />
@@ -73,16 +81,30 @@ export default function BaselineDetailPage() {
       {/* Error state */}
       {isError && (
         <div className="bg-white rounded-2xl border border-rose-200 p-6 space-y-3">
-          <p className="text-sm font-semibold text-rose-700">Baseline build failed</p>
-          <p className="text-sm text-stone-500">
-            Something went wrong during analysis. Please try creating a new baseline pack.
+          <p className="text-sm font-semibold text-rose-700">
+            {timedOut ? 'Build is taking longer than expected' : 'Baseline build failed'}
           </p>
-          <Link
-            href="/client/baseline/new"
-            className="inline-block text-sm px-4 py-2 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors"
-          >
-            Try again
-          </Link>
+          <p className="text-sm text-stone-500">
+            {timedOut
+              ? 'The analysis is still running in the background. Check back in a few minutes, or try creating a new baseline pack.'
+              : 'Something went wrong during analysis. Please try creating a new baseline pack.'}
+          </p>
+          <div className="flex gap-2">
+            {timedOut && (
+              <button
+                onClick={() => { setTimedOut(false); fetchPack(); }}
+                className="inline-block text-sm px-4 py-2 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 transition-colors"
+              >
+                Check again
+              </button>
+            )}
+            <Link
+              href="/client/baseline/new"
+              className="inline-block text-sm px-4 py-2 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors"
+            >
+              Try again
+            </Link>
+          </div>
         </div>
       )}
 

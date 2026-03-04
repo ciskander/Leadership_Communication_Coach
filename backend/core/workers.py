@@ -295,6 +295,8 @@ def process_single_meeting_analysis(
     coachee_id = user_record_id or ""
 
     active_exp_links = _get_link_ids(rr_fields, "Active Experiment")
+    baseline_pack_links = _get_link_ids(rr_fields, "Baseline Pack")
+    baseline_pack_record_id = baseline_pack_links[0] if baseline_pack_links else None
     active_exp_record_id = active_exp_links[0] if active_exp_links else None
 
     # Config
@@ -695,15 +697,10 @@ def process_baseline_pack_build(
             if isinstance(_item.get(_field), float):
                 _item[_field] = round(_item[_field])
                 
-    # Coerce string detection values to None — schema requires object
+    # Coerce string detection values to None — schema requires null
     _exp_track = _parsed_output.get("experiment_tracking", {})
     if not isinstance(_exp_track.get("detection_in_this_meeting"), dict):
-        _exp_track["detection_in_this_meeting"] = {
-            "experiment_id": "EXP-000000", 
-            "attempt": "no", 
-            "count_attempts": 0, 
-            "evidence_span_ids": []
-        }
+        _exp_track["detection_in_this_meeting"] = None
 
     # Strip numeric fields from conversational_balance — schema forbids them
     for snap in _parsed_output.get("pattern_snapshot", []):
