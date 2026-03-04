@@ -38,6 +38,7 @@ export interface RunStatus {
   status: 'queued' | 'running' | 'complete' | 'error';
   gate1_pass: boolean | null;
   analysis_type: string | null;
+  baseline_pack_id: string | null;
   error: Record<string, unknown> | null;
   strengths: CoachingItem[];
   focus: CoachingItem | null;

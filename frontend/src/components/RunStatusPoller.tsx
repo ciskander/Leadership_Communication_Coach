@@ -366,7 +366,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         microExperiment={
           hasActiveExp ||
           proposedExperiments.length > 0 ||
-          !!(run as Record<string, unknown>).baseline_pack_id
+          !!run.baseline_pack_id
             ? null
             : run.micro_experiment
         }
