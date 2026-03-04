@@ -592,13 +592,15 @@ def process_baseline_pack_build(
                 # Create a run_request record so process_single_meeting_analysis can read speaker/role context.
                 rr_fields: dict = {
                     "Transcript": [transcript_record_id],
+                    "Target Speaker Name": bp_fields.get("Target Speaker Name", ""),
+                    "Target Speaker Label": speaker_label,
                     "Target Role": target_role,
                     "Analysis Type": "single_meeting",
                     "Status": "queued",
                     "Baseline Pack": [baseline_pack_id],
                 }
                 if user_links:
-                    rr_fields["User"] = [user_links[0]]  # populates speaker name/label via Airtable lookups
+                    rr_fields["User"] = [user_links[0]]
                 if config_links:
                     rr_fields["Config"] = config_links
 
