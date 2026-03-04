@@ -79,6 +79,7 @@ export default function ExperimentPage() {
   const { data, loading, error, refetch } = useActiveExperiment();
   const [proposed, setProposed] = useState<Experiment[]>([]);
   const [proposedLoading, setProposedLoading] = useState(true);
+  const [lastAction, setLastAction] = useState<'completed' | 'abandoned' | null>(null);
 
   function fetchProposed() {
     setProposedLoading(true);
@@ -90,7 +91,20 @@ export default function ExperimentPage() {
 
   useEffect(() => { fetchProposed(); }, []);
 
+  function handleComplete() {
+    setLastAction('completed');
+    refetch();
+    fetchProposed();
+  }
+
+  function handleAbandon() {
+    setLastAction('abandoned');
+    refetch();
+    fetchProposed();
+  }
+
   function handleAccepted() {
+    setLastAction(null);
     refetch();
     fetchProposed();
   }
@@ -111,6 +125,31 @@ export default function ExperimentPage() {
   const events = data?.recent_events ?? [];
   const hasActive = !!experiment && experiment.status === 'active';
 
+  // Post-action heading shown after the user completes or abandons
+  function PostActionBanner() {
+    if (!lastAction) return null;
+    if (lastAction === 'completed') {
+      return (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 flex items-center gap-3">
+          <span className="text-xl">🎉</span>
+          <div>
+            <p className="text-sm font-semibold text-emerald-800">Experiment complete — well done!</p>
+            <p className="text-xs text-emerald-700 mt-0.5">Ready for your next challenge? Pick one below.</p>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="bg-stone-50 border border-stone-200 rounded-2xl px-5 py-4 flex items-center gap-3">
+        <span className="text-xl">→</span>
+        <div>
+          <p className="text-sm font-semibold text-stone-700">Experiment abandoned.</p>
+          <p className="text-xs text-stone-500 mt-0.5">No problem — pick a new direction below.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto space-y-5 py-2">
       <div>
@@ -121,71 +160,61 @@ export default function ExperimentPage() {
       </div>
 
       {hasActive ? (
+        <ExperimentTracker
+          experiment={experiment}
+          events={events as Record<string, unknown>[]}
+          onComplete={handleComplete}
+          onAbandon={handleAbandon}
+        />
+      ) : (
         <>
-          <ExperimentTracker
-            experiment={experiment}
-            events={events as Record<string, unknown>[]}
-            onUpdate={refetch}
-          />
-          {(experiment.status === 'completed' || experiment.status === 'abandoned') && (
-            <div className="bg-stone-50 rounded-2xl border border-stone-200 p-5 text-center space-y-3">
-              <p className="text-sm font-medium text-stone-700">
-                {experiment.status === 'completed'
-                  ? '🎉 Experiment complete! Ready for your next challenge?'
-                  : 'Moving on — ready to try something new?'}
+          <PostActionBanner />
+
+          {!proposedLoading && proposed.length > 0 ? (
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+                  {lastAction ? 'Choose your next experiment' : 'Suggested Experiments'}
+                </h2>
+                <span className="text-xs text-stone-400">
+                  {proposed.length} suggestion{proposed.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+              <div className="space-y-3">
+                {proposed.map((exp) => (
+                  <ProposedExperimentCard
+                    key={exp.experiment_record_id}
+                    experiment={exp}
+                    onAccepted={handleAccepted}
+                  />
+                ))}
+              </div>
+            </section>
+          ) : !proposedLoading ? (
+            <div className="bg-white rounded-2xl border border-dashed border-stone-300 p-12 text-center space-y-4">
+              <div className="text-4xl">◈</div>
+              <p className="text-stone-600 font-medium">No active experiment</p>
+              <p className="text-sm text-stone-400 max-w-xs mx-auto leading-relaxed">
+                Complete a baseline pack or single-meeting analysis to receive your first personalised experiment.
               </p>
-              <Link
-                href="/client/analyze"
-                className="inline-block px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors"
-              >
-                Analyse next meeting →
-              </Link>
+              <div className="flex gap-3 justify-center pt-2">
+                <Link
+                  href="/client/analyze"
+                  className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors"
+                >
+                  Analyse a meeting
+                </Link>
+                <Link
+                  href="/client/baseline/new"
+                  className="px-5 py-2.5 bg-white border border-stone-300 text-stone-700 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors"
+                >
+                  Create baseline
+                </Link>
+              </div>
             </div>
-          )}
+          ) : null}
         </>
-      ) : !proposedLoading && proposed.length > 0 ? (
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
-              Suggested Experiments
-            </h2>
-            <span className="text-xs text-stone-400">
-              {proposed.length} suggestion{proposed.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-          <div className="space-y-3">
-            {proposed.map((exp) => (
-              <ProposedExperimentCard
-                key={exp.experiment_record_id}
-                experiment={exp}
-                onAccepted={handleAccepted}
-              />
-            ))}
-          </div>
-        </section>
-      ) : !proposedLoading ? (
-        <div className="bg-white rounded-2xl border border-dashed border-stone-300 p-12 text-center space-y-4">
-          <div className="text-4xl">◈</div>
-          <p className="text-stone-600 font-medium">No active experiment</p>
-          <p className="text-sm text-stone-400 max-w-xs mx-auto leading-relaxed">
-            Complete a baseline pack or single-meeting analysis to receive your first personalised experiment.
-          </p>
-          <div className="flex gap-3 justify-center pt-2">
-            <Link
-              href="/client/analyze"
-              className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors"
-            >
-              Analyse a meeting
-            </Link>
-            <Link
-              href="/client/baseline/new"
-              className="px-5 py-2.5 bg-white border border-stone-300 text-stone-700 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors"
-            >
-              Create baseline
-            </Link>
-          </div>
-        </div>
-      ) : null}
+      )}
     </div>
   );
 }
