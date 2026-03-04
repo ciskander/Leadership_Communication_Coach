@@ -661,7 +661,7 @@ async def client_progress(
     # ── Fetch past experiments ────────────────────────────────────────────────
     exp_formula = (
         f"AND("
-        f"FIND('{user.airtable_user_record_id}', ARRAYJOIN({{users}})), "
+        f"FIND('{user.airtable_user_record_id}', ARRAYJOIN({{User}})), "
         f"OR({{Status}} = 'completed', {{Status}} = 'abandoned')"
         f")"
     )
