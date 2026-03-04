@@ -794,6 +794,11 @@ def process_baseline_pack_build(
 
     # 7b. Propose experiment from baseline pack output if gate1 passed
     if gate1_result.passed:
+        # Set the user's Active Baseline Pack so the client dashboard can find it
+        if user_record_id:
+            client.update_user(user_record_id, {"Active Baseline Pack": [baseline_pack_id]})
+            logger.info("Set Active Baseline Pack %s on user %s", baseline_pack_id, user_record_id)
+
         exp_record_id = instantiate_experiment_from_run(
             run_record_id,
             client=client,

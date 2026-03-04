@@ -140,7 +140,7 @@ async def get_baseline_pack(
     try:
         bp_rec = at_client.get_baseline_pack(bp_id)
     except Exception:
-        return error_response(404, "NOT_FOUND", "Baseline pack not found.")
+        return error_response("NOT_FOUND", "Baseline pack not found.", 404)
 
     bf = bp_rec.get("fields", {})
 
@@ -245,7 +245,7 @@ async def accept_experiment(
 ):
     """Accept a proposed experiment. Sets it to active if no active experiment exists."""
     if not user.airtable_user_record_id:
-        return error_response(403, "FORBIDDEN", "No Airtable user record.")
+        return error_response("FORBIDDEN", "No Airtable user record.", 403)
 
     at_client = AirtableClient()
 
@@ -253,25 +253,21 @@ async def accept_experiment(
     try:
         exp_rec = at_client.get_experiment(experiment_record_id)
     except Exception:
-        return error_response(404, "NOT_FOUND", "Experiment not found.")
+        return error_response("NOT_FOUND", "Experiment not found.", 404)
 
     ef = exp_rec.get("fields", {})
     user_links = ef.get("User", [])
     if user.airtable_user_record_id not in user_links:
-        return error_response(403, "FORBIDDEN", "Experiment does not belong to this user.")
+        return error_response("FORBIDDEN", "Experiment does not belong to this user.", 403)
 
     if ef.get("Status") != "proposed":
-        return error_response(400, "INVALID_STATE", f"Experiment is not in proposed state (current: {ef.get('Status')}).")
+        return error_response("INVALID_STATE", f"Experiment is not in proposed state (current: {ef.get('Status')}).", 400)
 
     # Check for existing active experiment
     user_rec = at_client.get_user(user.airtable_user_record_id)
     existing_active = user_rec.get("fields", {}).get("Active Experiment", [])
     if existing_active:
-        return error_response(
-            409,
-            "CONFLICT",
-            "You already have an active experiment. Complete or abandon it before accepting a new one.",
-        )
+        return error_response("CONFLICT", "You already have an active experiment. Complete or abandon it before accepting a new one.", 409)
 
     # Activate
     at_client.accept_experiment(experiment_record_id, user.airtable_user_record_id)
@@ -294,22 +290,22 @@ async def complete_experiment(
 ):
     """Mark an active experiment as complete."""
     if not user.airtable_user_record_id:
-        return error_response(403, "FORBIDDEN", "No Airtable user record.")
+        return error_response("FORBIDDEN", "No Airtable user record.", 403)
 
     at_client = AirtableClient()
 
     try:
         exp_rec = at_client.get_experiment(experiment_record_id)
     except Exception:
-        return error_response(404, "NOT_FOUND", "Experiment not found.")
+        return error_response("NOT_FOUND", "Experiment not found.", 404)
 
     ef = exp_rec.get("fields", {})
     user_links = ef.get("User", [])
     if user.airtable_user_record_id not in user_links:
-        return error_response(403, "FORBIDDEN", "Experiment does not belong to this user.")
+        return error_response("FORBIDDEN", "Experiment does not belong to this user.", 403)
 
     if ef.get("Status") != "active":
-        return error_response(400, "INVALID_STATE", f"Experiment is not active (current: {ef.get('Status')}).")
+        return error_response("INVALID_STATE", f"Experiment is not active (current: {ef.get('Status')}).", 400)
 
     at_client.complete_experiment(experiment_record_id, user.airtable_user_record_id)
     logger.info("User %s completed experiment %s", user.airtable_user_record_id, experiment_record_id)
@@ -331,22 +327,22 @@ async def abandon_experiment(
 ):
     """Abandon an active experiment."""
     if not user.airtable_user_record_id:
-        return error_response(403, "FORBIDDEN", "No Airtable user record.")
+        return error_response("FORBIDDEN", "No Airtable user record.", 403)
 
     at_client = AirtableClient()
 
     try:
         exp_rec = at_client.get_experiment(experiment_record_id)
     except Exception:
-        return error_response(404, "NOT_FOUND", "Experiment not found.")
+        return error_response("NOT_FOUND", "Experiment not found.", 404)
 
     ef = exp_rec.get("fields", {})
     user_links = ef.get("User", [])
     if user.airtable_user_record_id not in user_links:
-        return error_response(403, "FORBIDDEN", "Experiment does not belong to this user.")
+        return error_response("FORBIDDEN", "Experiment does not belong to this user.", 403)
 
     if ef.get("Status") not in ("active", "proposed"):
-        return error_response(400, "INVALID_STATE", f"Experiment cannot be abandoned from state: {ef.get('Status')}.")
+        return error_response("INVALID_STATE", f"Experiment cannot be abandoned from state: {ef.get('Status')}.", 400)
 
     at_client.abandon_experiment(experiment_record_id, user.airtable_user_record_id)
     logger.info("User %s abandoned experiment %s", user.airtable_user_record_id, experiment_record_id)
@@ -373,18 +369,18 @@ async def confirm_experiment_attempt(
     When confirmed=False, records that the coachee did not attempt it.
     """
     if not user.airtable_user_record_id:
-        return error_response(403, "FORBIDDEN", "No Airtable user record.")
+        return error_response("FORBIDDEN", "No Airtable user record.", 403)
 
     at_client = AirtableClient()
 
     try:
         exp_rec = at_client.get_experiment(experiment_record_id)
     except Exception:
-        return error_response(404, "NOT_FOUND", "Experiment not found.")
+        return error_response("NOT_FOUND", "Experiment not found.", 404)
 
     ef = exp_rec.get("fields", {})
     if ef.get("Status") != "active":
-        return error_response(400, "INVALID_STATE", "Can only confirm attempts on active experiments.")
+        return error_response("INVALID_STATE", "Can only confirm attempts on active experiments.", 400)
 
     exp_id = ef.get("Experiment ID", "")
 
