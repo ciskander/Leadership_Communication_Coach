@@ -4,10 +4,13 @@ api/routes_transcripts.py — Transcript file upload and listing.
 from __future__ import annotations
 
 import io
+import logging
 import os
 import re
 from datetime import datetime
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 from fastapi.responses import JSONResponse
@@ -179,7 +182,18 @@ async def list_transcripts(
     if user.role in ("coach", "admin"):
         formula = ""
     elif user.airtable_user_record_id:
-        formula = f"FIND('{user.airtable_user_record_id}', ARRAYJOIN({{Uploaded By}}))"
+        # "Uploaded By" is a linked record field. ARRAYJOIN returns the primary field
+        # values of linked users (e.g. "U-0001"), not Airtable record IDs. We must
+        # fetch the user's Airtable record to get their User ID primary field value.
+        try:
+            at_user = at_client.get_user(user.airtable_user_record_id)
+            user_primary_id = at_user.get("fields", {}).get("User ID", "")
+        except Exception as e:
+            logger.warning("Could not fetch Airtable user record for transcript filter: %s", e)
+            return []
+        if not user_primary_id:
+            return []
+        formula = f"FIND('{user_primary_id}', ARRAYJOIN({{Uploaded By}}))"
     else:
         # No Airtable record linked — return empty list rather than leaking all transcripts
         return []
