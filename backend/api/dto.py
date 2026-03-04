@@ -90,7 +90,7 @@ class TranscriptUpdateRequest(BaseModel):
     meeting_date: Optional[str] = None   # ISO-8601 date string, or null to clear
 
 
-
+class RunRequestStatusResponse(BaseModel):
     run_request_id: str
     status: str
     run_id: Optional[str] = None
