@@ -153,7 +153,7 @@ export default function ClientDashboard() {
 
   const hasBaseline = bpStatus === 'baseline_ready' || bpStatus === 'completed';
   const isBuilding = bpStatus === 'intake' || bpStatus === 'building';
-  const hasExperiment = !!experiment;
+  const hasExperiment = !!experiment && experiment.status === 'active';
   const hasRuns = (summary?.recent_runs.length ?? 0) > 0;
 
   const step1Done = hasBaseline;

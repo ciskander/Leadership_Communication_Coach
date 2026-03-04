@@ -43,7 +43,7 @@ export default function BaselineDetailPage() {
     );
   }
 
-  const isBuilding = pack.status === 'building' || pack.status === 'intake';
+  const isBuilding = pack.status === 'draft' || pack.status === 'building' || pack.status === 'intake';
   const isReady = pack.status === 'baseline_ready' || pack.status === 'completed';
   const isError = pack.status === 'error';
 

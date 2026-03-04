@@ -432,7 +432,12 @@ def process_single_meeting_analysis(
     _exp_track = _parsed_output.get("experiment_tracking", {})
     _active_exp = _exp_track.get("active_experiment", {})
     if _active_exp.get("status") == "assigned":
-        _active_exp["status"] = "proposed"                
+        _active_exp["status"] = "proposed"    
+
+    # Backfill null denominator_rule_id on not_evaluable patterns
+    for snap in _parsed_output.get("pattern_snapshot", []):
+        if snap.get("denominator_rule_id") is None:
+            snap["denominator_rule_id"] = "not_evaluable"        
      
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
     openai_resp = OpenAIResponse(
@@ -489,17 +494,17 @@ def process_single_meeting_analysis(
         if exp_event_id:
             client.update_run(run_record_id, {F_RUN_ATTEMPT_EVENT_CREATED: True})
 
-        # Propose a new experiment from micro_experiment output, but only
-        # when there is no active experiment (avoid queue noise).
-        if not active_exp_record_id:
-            exp_record_id = instantiate_experiment_from_run(
-                run_record_id,
-                client=client,
-                user_record_id=user_record_id or None,
-                baseline_pack_record_id=None,
-            )
-            if exp_record_id:
-                client.update_run(run_record_id, {F_RUN_EXPERIMENT_INSTANTIATED: True})
+    # Only propose experiments from standalone single meeting runs,
+    # not from individual runs that are part of a baseline pack
+    if not active_exp_record_id and not baseline_pack_record_id:
+        exp_record_id = instantiate_experiment_from_run(
+            run_record_id,
+            client=client,
+            user_record_id=user_record_id or None,
+            baseline_pack_record_id=None,
+        )
+        if exp_record_id:
+            client.update_run(run_record_id, {F_RUN_EXPERIMENT_INSTANTIATED: True})
 
     # 10. Update run_request status
     new_status = "completed" if gate1_result.passed else "gate1_failed"
@@ -720,7 +725,12 @@ def process_baseline_pack_build(
         ):
             snap["evaluable_status"] = "insufficient_signal"
             for field in ("numerator", "denominator", "ratio"):
-                snap.pop(field, None)        
+                snap.pop(field, None)   
+
+    # Backfill null denominator_rule_id on not_evaluable patterns
+    for snap in _parsed_output.get("pattern_snapshot", []):
+        if snap.get("denominator_rule_id") is None:
+            snap["denominator_rule_id"] = "not_evaluable"                
 
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
     openai_resp = OpenAIResponse(
