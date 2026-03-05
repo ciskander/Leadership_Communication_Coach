@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { RunStatusPoller } from '@/components/RunStatusPoller';
-import { getToken } from '@/lib/auth';   // adjust if your auth helper is named differently
+import { api } from '@/lib/api';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -39,21 +39,6 @@ function fmtDate(dateStr: string | null | undefined): string {
   }
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
-
-async function fetchRunMeta(runId: string): Promise<RunMeta | null> {
-  try {
-    const token = getToken();
-    const res = await fetch(`${API_BASE}/api/client/runs/${runId}/meta`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function RunResultsPage() {
@@ -61,7 +46,7 @@ export default function RunResultsPage() {
   const [meta, setMeta] = useState<RunMeta | null>(null);
 
   useEffect(() => {
-    if (id) fetchRunMeta(id).then(setMeta);
+    if (id) api.getRunMeta(id).then(setMeta).catch(() => setMeta(null));
   }, [id]);
 
   const isBaseline = meta?.analysis_type === 'baseline_pack';
