@@ -273,7 +273,7 @@ function RecentRunCard({
 
       <div className="min-w-0 space-y-0.5">
         <p className="text-sm font-semibold text-stone-800 truncate">
-          {title || (isBaseline ? 'Baseline Pack' : 'Meeting Analysis')}
+          {isBaseline ? 'Baseline Pack' : (title || 'Meeting Analysis')}
         </p>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-stone-400">
           {isBaseline ? (
@@ -328,7 +328,7 @@ function RecentRunCard({
 
   return (
     <Link
-      href={isBaseline ? `/client/baseline/${run.baseline_pack_id as string}` : `/client/runs/${runId}`}
+      href={`/client/runs/${runId}`}
       className="flex items-start justify-between bg-white border border-stone-200 rounded-xl px-4 py-3 hover:border-emerald-300 hover:shadow-sm transition-all gap-4"
     >
       {metaContent}

@@ -571,7 +571,7 @@ async def client_summary(
             run_records = at_client.search_records("runs", runs_formula, max_records=10)
             for r in run_records:
                 rf = r.get("fields", {})
-                if rf.get("Analysis Type") == "single_meeting" and rf.get("baseline_pack"):
+                if rf.get("baseline_pack_items"):
                     continue
                 transcript_meta: dict = {}
                 transcript_links = rf.get("Transcript ID", [])
