@@ -147,10 +147,11 @@ function buildChartData(
 function PatternTrendsChart({ history }: { history: RunHistoryPoint[] }) {
   const [showAll, setShowAll] = useState(false);
 
-  // Count post-baseline meetings
-  const baselineIdx = history.findIndex((r) => r.is_baseline);
-  const postBaselineCount = baselineIdx >= 0 ? history.length - baselineIdx - 1 : history.length;
-  const showLineChart = postBaselineCount >= 3;
+  // Count post-baseline meetings — count non-baseline runs directly rather than
+  // relying on sort position, so a missing/failed baseline run can't inflate the count.
+  const hasBaseline = history.some((r) => r.is_baseline);
+  const postBaselineCount = history.filter((r) => !r.is_baseline).length;
+  const showLineChart = hasBaseline && postBaselineCount >= 3;
 
   // Aggregate opportunity counts across all runs to pick top patterns
   const oppCounts: Record<string, number> = {};
