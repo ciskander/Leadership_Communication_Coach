@@ -331,7 +331,11 @@ async def complete_experiment(
 
     # Fire-and-forget: generate next experiment suggestion in the background
     if user.airtable_user_record_id:
-        enqueue_next_experiment_suggestion.delay(user.airtable_user_record_id)
+        try:
+            enqueue_next_experiment_suggestion.delay(user.airtable_user_record_id)
+            logger.info("Enqueued next experiment suggestion for user %s", user.airtable_user_record_id)
+        except Exception as e:
+            logger.error("Failed to enqueue next experiment suggestion for user %s: %s", user.airtable_user_record_id, e)
 
     return ExperimentActionResponse(
         experiment_record_id=experiment_record_id,
@@ -372,7 +376,11 @@ async def abandon_experiment(
 
     # Fire-and-forget: generate next experiment suggestion in the background
     if user.airtable_user_record_id:
-        enqueue_next_experiment_suggestion.delay(user.airtable_user_record_id)
+        try:
+            enqueue_next_experiment_suggestion.delay(user.airtable_user_record_id)
+            logger.info("Enqueued next experiment suggestion for user %s", user.airtable_user_record_id)
+        except Exception as e:
+            logger.error("Failed to enqueue next experiment suggestion for user %s: %s", user.airtable_user_record_id, e)
 
     return ExperimentActionResponse(
         experiment_record_id=experiment_record_id,
