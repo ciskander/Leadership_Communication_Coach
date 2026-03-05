@@ -59,6 +59,7 @@ import type {
   CoacheeSummary,
   AdminUser,
   ClientProgress,
+  RunMeta,
 } from './types';
 
 export const api = {
@@ -78,6 +79,11 @@ export const api = {
   // Client progress
   getClientProgress(): Promise<ClientProgress> {
     return request('/api/client/progress');
+  },
+
+  // Run metadata (for detail page header)
+  getRunMeta(runId: string): Promise<RunMeta> {
+    return request(`/api/client/runs/${runId}/meta`);
   },
 
   // Transcripts

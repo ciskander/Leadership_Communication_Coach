@@ -147,6 +147,16 @@ export interface AdminUser {
   last_login: string | null;
 }
 
+export interface RunMeta {
+  run_id: string;
+  analysis_type: string | null;
+  title: string | null;
+  transcript_id: string | null;
+  meeting_date: string | null;
+  meeting_type: string | null;
+  target_role: string | null;
+}
+
 export type TargetRole =
   | 'chair'
   | 'presenter'
