@@ -91,6 +91,7 @@ export interface ClientSummary {
   active_experiment: Experiment | null;
   proposed_experiments: Experiment[];
   baseline_pack_status: string | null;
+  baseline_pack_id: string | null;
   recent_runs: Record<string, unknown>[];
 }
 
@@ -113,6 +114,14 @@ export interface TranscriptListItem {
   speaker_labels: string[];
 }
 
+export interface BaselinePackMeeting {
+  run_id: string | null;
+  title: string | null;
+  meeting_date: string | null;
+  meeting_type: string | null;
+  target_role: string | null;
+}
+
 export interface BaselinePack {
   baseline_pack_id: string;
   status: string;
@@ -120,6 +129,7 @@ export interface BaselinePack {
   strengths?: CoachingItem[];
   focus?: CoachingItem | null;
   micro_experiment?: MicroExperiment | null;
+  meetings?: BaselinePackMeeting[];
 }
 
 export interface CoacheeListItem {

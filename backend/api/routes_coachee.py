@@ -177,6 +177,37 @@ async def get_baseline_pack(
         except Exception:
             pass
 
+    # Fetch constituent meetings from baseline pack items
+    meetings = []
+    try:
+        bpi_records = at_client.get_baseline_pack_items(bp_id)
+        for bpi in bpi_records:
+            bpif = bpi.get("fields", {})
+            run_links = bpif.get("Run", [])
+            transcript_links = bpif.get("Transcript", [])
+            meeting_info: dict = {
+                "run_id": run_links[0] if run_links else None,
+                "title": None,
+                "meeting_date": None,
+                "meeting_type": None,
+                "target_role": None,
+            }
+            if transcript_links:
+                try:
+                    tr_rec = at_client.get_transcript(transcript_links[0])
+                    trf = tr_rec.get("fields", {})
+                    meeting_info.update({
+                        "title": trf.get("Title"),
+                        "meeting_date": trf.get("Meeting Date"),
+                        "meeting_type": trf.get("Meeting Type"),
+                        "target_role": trf.get("Target Role"),
+                    })
+                except Exception as te:
+                    logger.warning("get_baseline_pack: could not fetch transcript %s: %s", transcript_links[0] if transcript_links else "?", te)
+            meetings.append(meeting_info)
+    except Exception as e:
+        logger.warning("get_baseline_pack: could not fetch pack items for %s: %s", bp_id, e)
+
     return {
         "baseline_pack_id": bp_rec["id"],
         "status": bf.get("Status"),
@@ -187,6 +218,7 @@ async def get_baseline_pack(
         "focus": focus,
         "micro_experiment": micro_experiment,
         "created_at": bp_rec.get("createdTime"),
+        "meetings": meetings,
     }
 
 
@@ -490,6 +522,7 @@ async def client_summary(
     active_exp_resp: Optional[ExperimentResponse] = None
     proposed_exps: list[ExperimentResponse] = []
     bp_status: Optional[str] = None
+    bp_id: Optional[str] = None
     recent_runs: list[dict] = []
 
     if user.airtable_user_record_id:
@@ -512,6 +545,7 @@ async def client_summary(
             # Baseline pack status
             bp_links = u_fields.get("Active Baseline Pack", [])
             if bp_links:
+                bp_id = bp_links[0]
                 bp_rec = at_client.get_baseline_pack(bp_links[0])
                 bp_status = bp_rec.get("fields", {}).get("Status")
 
@@ -568,6 +602,7 @@ async def client_summary(
         active_experiment=active_exp_resp,
         proposed_experiments=proposed_exps,
         baseline_pack_status=bp_status,
+        baseline_pack_id=bp_id,
         recent_runs=recent_runs,
     )
 

@@ -10,14 +10,12 @@ export default function BaselineIndexPage() {
   useEffect(() => {
     api.clientSummary().then((summary) => {
       const bpStatus = summary?.baseline_pack_status ?? 'none';
-      if (bpStatus === 'none') {
+      const bpId = summary?.baseline_pack_id ?? null;
+
+      if (bpStatus === 'none' || !bpId) {
         router.replace('/client/baseline/new');
       } else {
-        // There's an active baseline pack — but we don't have its ID from the
-        // summary endpoint yet. For now, send to /new which will show existing
-        // transcripts for selection. We can improve this once the summary
-        // endpoint returns the baseline_pack_id.
-        router.replace('/client/baseline/new');
+        router.replace(`/client/baseline/${bpId}`);
       }
     }).catch(() => {
       router.replace('/client/baseline/new');

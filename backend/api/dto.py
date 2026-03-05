@@ -176,6 +176,7 @@ class ClientSummaryResponse(BaseModel):
     active_experiment: Optional[ExperimentResponse] = None
     proposed_experiments: list[ExperimentResponse] = Field(default_factory=list)
     baseline_pack_status: Optional[str] = None
+    baseline_pack_id: Optional[str] = None
     recent_runs: list[dict] = Field(default_factory=list)
 
 
