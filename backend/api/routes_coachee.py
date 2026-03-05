@@ -692,10 +692,11 @@ async def client_progress(
     for run_rec in run_records:
         rf = run_rec.get("fields", {})
         analysis_type = rf.get("Analysis Type", "")
-        baseline_pack_links = rf.get("baseline_pack", [])
 
-        # Skip baseline sub-runs (single_meeting runs that belong to a baseline pack)
-        if analysis_type == "single_meeting" and baseline_pack_links:
+        # Skip baseline sub-runs — baseline_pack_items is a reverse-link field
+        # set on any run belonging to a baseline pack item, regardless of whether
+        # baseline_pack was set at run creation time (pre-existing runs won't have it).
+        if rf.get("baseline_pack_items"):
             continue
 
         is_baseline = analysis_type == "baseline_pack"
