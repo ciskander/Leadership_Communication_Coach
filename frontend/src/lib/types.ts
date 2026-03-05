@@ -120,6 +120,9 @@ export interface BaselinePackMeeting {
   meeting_date: string | null;
   meeting_type: string | null;
   target_role: string | null;
+  sub_run_strengths?: CoachingItem[];
+  sub_run_focus?: CoachingItem | null;
+  sub_run_pattern_snapshot?: Record<string, unknown>[];
 }
 
 export interface BaselinePack {
@@ -129,6 +132,7 @@ export interface BaselinePack {
   strengths?: CoachingItem[];
   focus?: CoachingItem | null;
   micro_experiment?: MicroExperiment | null;
+  pattern_snapshot?: Record<string, unknown>[];
   meetings?: BaselinePackMeeting[];
 }
 

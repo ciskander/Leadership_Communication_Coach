@@ -4,10 +4,22 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import type { BaselinePack, BaselinePackMeeting } from '@/lib/types';
+import type { BaselinePack, BaselinePackMeeting, CoachingItem, Experiment } from '@/lib/types';
 import { CoachingCard } from '@/components/CoachingCard';
+import { PatternSnapshot } from '@/components/PatternSnapshot';
 
-const POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+const POLL_TIMEOUT_MS = 5 * 60 * 1000;
+
+// PatternItem shape expected by PatternSnapshot component
+type PatternSnapshotItem = {
+  pattern_id: string;
+  evaluable_status: string;
+  numerator?: number;
+  denominator?: number;
+  ratio?: number;
+  balance_assessment?: string;
+  tier?: number;
+};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -30,48 +42,254 @@ function fmtDate(dateStr: string | null | undefined): string {
   }
 }
 
-// ── Meeting card ──────────────────────────────────────────────────────────────
+function PatternLabel({ id }: { id: string }) {
+  return (
+    <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+      {id.replace(/_/g, ' ')}
+    </span>
+  );
+}
 
-function MeetingCard({ meeting, index }: { meeting: BaselinePackMeeting; index: number }) {
-  const title = meeting.title || 'Untitled meeting';
-  const date = fmtDate(meeting.meeting_date);
-  const role = meeting.target_role ? (ROLE_LABELS[meeting.target_role] ?? meeting.target_role) : null;
+// ── Accepted Experiment Panel ─────────────────────────────────────────────────
 
-  const meta = [date, meeting.meeting_type, role].filter(Boolean).join(' · ');
-
-  const inner = (
-    <div className="flex items-start justify-between gap-3">
-      <div className="flex items-start gap-3 min-w-0">
-        <div className="w-6 h-6 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-          {index + 1}
+function AcceptedExperimentPanel({ experiment }: { experiment: Experiment }) {
+  return (
+    <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 space-y-3">
+      <div className="flex items-center gap-2">
+        <span className="text-emerald-600">✦</span>
+        <span className="text-sm font-semibold text-emerald-800">Experiment accepted</span>
+      </div>
+      <div className="space-y-1">
+        <PatternLabel id={experiment.pattern_id} />
+        <p className="text-sm font-semibold text-stone-900 leading-snug">{experiment.title}</p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="bg-white rounded-xl p-3 border border-emerald-100">
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">What to do</p>
+          <p className="text-xs text-stone-600 leading-relaxed">{experiment.instruction}</p>
         </div>
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-stone-800 truncate">{title}</p>
-          {meta && <p className="text-xs text-stone-400 mt-0.5">{meta}</p>}
+        <div className="bg-white rounded-xl p-3 border border-emerald-100">
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Success looks like</p>
+          <p className="text-xs text-stone-600 leading-relaxed">{experiment.success_marker}</p>
         </div>
       </div>
-      {meeting.run_id && (
-        <span className="text-xs text-emerald-700 font-medium flex-shrink-0 mt-0.5">
-          View analysis →
-        </span>
-      )}
+      <Link
+        href="/client/experiment"
+        className="inline-flex items-center text-sm text-emerald-700 font-medium hover:text-emerald-900 transition-colors"
+      >
+        Track progress on My Experiment →
+      </Link>
     </div>
   );
+}
 
-  if (meeting.run_id) {
-    return (
-      <Link
-        href={`/client/runs/${meeting.run_id}`}
-        className="block bg-white border border-stone-200 rounded-xl px-4 py-3 hover:border-emerald-300 hover:shadow-sm transition-all"
-      >
-        {inner}
-      </Link>
-    );
+// ── Proposed Experiment Card ──────────────────────────────────────────────────
+
+function ProposedExperimentCard({
+  experiment,
+  onAccepted,
+}: {
+  experiment: Experiment;
+  onAccepted: (exp: Experiment) => void;
+}) {
+  const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  async function handleAccept() {
+    if (state !== 'idle') return;
+    setState('loading');
+    setErrorMsg(null);
+    try {
+      await api.acceptExperiment(experiment.experiment_record_id);
+      onAccepted(experiment);
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong.');
+      setState('error');
+    }
   }
 
   return (
-    <div className="bg-white border border-stone-200 rounded-xl px-4 py-3 opacity-60">
-      {inner}
+    <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
+      <div className="space-y-1">
+        <PatternLabel id={experiment.pattern_id} />
+        <p className="text-sm font-semibold text-stone-900 leading-snug">{experiment.title}</p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="bg-stone-50 rounded-xl p-3">
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">What to do</p>
+          <p className="text-xs text-stone-600 leading-relaxed">{experiment.instruction}</p>
+        </div>
+        <div className="bg-stone-50 rounded-xl p-3">
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Success looks like</p>
+          <p className="text-xs text-stone-600 leading-relaxed">{experiment.success_marker}</p>
+        </div>
+      </div>
+      {errorMsg && <p className="text-xs text-rose-600">{errorMsg}</p>}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={handleAccept}
+          disabled={state === 'loading'}
+          className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
+        >
+          {state === 'loading' ? 'Accepting…' : 'Accept experiment'}
+        </button>
+        <Link
+          href="/client"
+          className="text-xs text-stone-500 hover:text-stone-700 transition-colors"
+        >
+          Decide later
+        </Link>
+        <span className="text-xs text-stone-400 ml-auto">{experiment.experiment_id}</span>
+      </div>
+    </div>
+  );
+}
+
+// ── Experiment Section ────────────────────────────────────────────────────────
+
+function ExperimentSection() {
+  const [proposed, setProposed] = useState<Experiment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [accepted, setAccepted] = useState<Experiment | null>(null);
+
+  useEffect(() => {
+    api.getProposedExperiments()
+      .then(setProposed)
+      .catch(() => setProposed([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 py-2">
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-stone-400 flex-shrink-0" />
+        <span className="text-xs text-stone-400">Loading your experiment…</span>
+      </div>
+    );
+  }
+
+  if (accepted) {
+    return <AcceptedExperimentPanel experiment={accepted} />;
+  }
+
+  if (proposed.length > 0) {
+    return (
+      <section className="space-y-3">
+        <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+          Your experiment is ready
+        </h2>
+        {proposed.map((exp) => (
+          <ProposedExperimentCard
+            key={exp.experiment_record_id}
+            experiment={exp}
+            onAccepted={(e) => setAccepted(e)}
+          />
+        ))}
+      </section>
+    );
+  }
+
+  // No proposed experiments — link to experiment page for active experiment
+  return (
+    <Link
+      href="/client/experiment"
+      className="inline-flex items-center text-sm text-emerald-700 font-medium hover:text-emerald-900 transition-colors"
+    >
+      View my experiment →
+    </Link>
+  );
+}
+
+// ── Sub-run Pattern Snapshot ──────────────────────────────────────────────────
+
+function SubRunPatternSnapshot({ patterns }: { patterns: Record<string, unknown>[] }) {
+  return (
+    <div className="mt-1">
+      <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-2">
+        Pattern scores
+      </p>
+      <div className="opacity-80">
+        <PatternSnapshot patterns={patterns as PatternSnapshotItem[]} />
+      </div>
+    </div>
+  );
+}
+
+// ── Meeting Accordion Card ────────────────────────────────────────────────────
+
+function MeetingAccordionCard({
+  meeting,
+  index,
+  open,
+  onToggle,
+}: {
+  meeting: BaselinePackMeeting;
+  index: number;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const title = meeting.title || 'Untitled meeting';
+  const date = fmtDate(meeting.meeting_date);
+  const role = meeting.target_role ? (ROLE_LABELS[meeting.target_role] ?? meeting.target_role) : null;
+  const meta = [date, meeting.meeting_type, role].filter(Boolean).join(' · ');
+
+  const hasSubRunData = !!(
+    meeting.sub_run_strengths?.length ||
+    meeting.sub_run_focus ||
+    meeting.sub_run_pattern_snapshot?.length
+  );
+
+  return (
+    <div className={`bg-white border rounded-xl overflow-hidden transition-all ${open ? 'border-stone-300 shadow-sm' : 'border-stone-200'}`}>
+      {/* Header */}
+      <button
+        onClick={onToggle}
+        className="w-full flex items-start justify-between gap-3 px-4 py-3 text-left hover:bg-stone-50 transition-colors"
+      >
+        <div className="flex items-start gap-3 min-w-0">
+          <div className="w-6 h-6 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+            {index + 1}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-stone-800 truncate">{title}</p>
+            {meta && <p className="text-xs text-stone-400 mt-0.5">{meta}</p>}
+          </div>
+        </div>
+        <span className="text-stone-400 flex-shrink-0 mt-0.5 text-xs font-medium">
+          {open ? '▲ Collapse' : '▼ Expand'}
+        </span>
+      </button>
+
+      {/* Expanded content */}
+      {open && (
+        <div className="border-t border-stone-100 px-4 pb-5 pt-4 space-y-5">
+          {meeting.run_id && hasSubRunData ? (
+            <>
+              {(meeting.sub_run_strengths?.length || meeting.sub_run_focus) && (
+                <div>
+                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
+                    Coaching output
+                  </p>
+                  <CoachingCard
+                    strengths={(meeting.sub_run_strengths ?? []) as CoachingItem[]}
+                    focus={(meeting.sub_run_focus ?? null) as CoachingItem | null}
+                    microExperiment={null}
+                  />
+                </div>
+              )}
+              {meeting.sub_run_pattern_snapshot && meeting.sub_run_pattern_snapshot.length > 0 && (
+                <SubRunPatternSnapshot patterns={meeting.sub_run_pattern_snapshot} />
+              )}
+            </>
+          ) : (
+            <p className="text-xs text-stone-400">
+              {meeting.run_id
+                ? 'Analysis data is not available for this meeting.'
+                : 'This meeting has not been analysed yet.'}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -84,6 +302,7 @@ export default function BaselineDetailPage() {
   const [loading, setLoading] = useState(true);
   const [timedOut, setTimedOut] = useState(false);
   const [pollStart] = useState(() => Date.now());
+  const [openMeeting, setOpenMeeting] = useState<number | null>(null);
 
   const fetchPack = () => {
     api.getBaselinePack(id).then(setPack).finally(() => setLoading(false));
@@ -195,14 +414,27 @@ export default function BaselineDetailPage() {
             </div>
           </div>
 
-          {/* Coaching output */}
+          {/* Aggregate coaching output — micro_experiment suppressed */}
           <CoachingCard
             strengths={pack.strengths ?? []}
             focus={pack.focus ?? null}
-            microExperiment={pack.micro_experiment ?? null}
+            microExperiment={null}
           />
 
-          {/* Constituent meetings */}
+          {/* Experiment section */}
+          <ExperimentSection />
+
+          {/* Aggregate pattern snapshot */}
+          {pack.pattern_snapshot && pack.pattern_snapshot.length > 0 && (
+            <section>
+              <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
+                Your communication baseline
+              </h2>
+              <PatternSnapshot patterns={pack.pattern_snapshot as PatternSnapshotItem[]} />
+            </section>
+          )}
+
+          {/* Constituent meetings as accordions */}
           {meetings.length > 0 && (
             <section>
               <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
@@ -210,23 +442,23 @@ export default function BaselineDetailPage() {
               </h2>
               <div className="space-y-2">
                 {meetings.map((meeting, i) => (
-                  <MeetingCard key={meeting.run_id ?? i} meeting={meeting} index={i} />
+                  <MeetingAccordionCard
+                    key={meeting.run_id ?? i}
+                    meeting={meeting}
+                    index={i}
+                    open={openMeeting === i}
+                    onToggle={() => setOpenMeeting(openMeeting === i ? null : i)}
+                  />
                 ))}
               </div>
             </section>
           )}
 
-          {/* Actions */}
-          <div className="flex gap-3">
-            <Link
-              href="/client/experiment"
-              className="flex-1 text-center py-3 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm"
-            >
-              View my experiment →
-            </Link>
+          {/* Bottom CTA */}
+          <div>
             <Link
               href="/client/analyze"
-              className="px-5 py-3 bg-white border border-stone-300 text-stone-700 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors"
+              className="inline-block px-5 py-3 bg-white border border-stone-300 text-stone-700 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors"
             >
               Analyse a meeting
             </Link>

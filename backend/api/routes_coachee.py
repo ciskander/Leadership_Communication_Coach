@@ -163,7 +163,7 @@ async def get_baseline_pack(
 
     bf = bp_rec.get("fields", {})
 
-    strengths, focus, micro_experiment = [], None, None
+    strengths, focus, micro_experiment, pattern_snapshot = [], None, None, []
     last_run_links = bf.get("Last Run", [])
     if last_run_links:
         try:
@@ -174,6 +174,7 @@ async def get_baseline_pack(
             strengths = coaching.get("strengths", [])
             focus = (coaching.get("focus") or [None])[0]
             micro_experiment = (coaching.get("micro_experiment") or [None])[0]
+            pattern_snapshot = parsed.get("pattern_snapshot", [])
         except Exception:
             pass
 
@@ -191,6 +192,9 @@ async def get_baseline_pack(
                 "meeting_date": None,
                 "meeting_type": None,
                 "target_role": None,
+                "sub_run_strengths": [],
+                "sub_run_focus": None,
+                "sub_run_pattern_snapshot": [],
             }
             if transcript_links:
                 try:
@@ -204,6 +208,17 @@ async def get_baseline_pack(
                     })
                 except Exception as te:
                     logger.warning("get_baseline_pack: could not fetch transcript %s: %s", transcript_links[0] if transcript_links else "?", te)
+            if run_links:
+                try:
+                    sub_run_rec = at_client.get_run(run_links[0])
+                    sub_parsed_str = sub_run_rec.get("fields", {}).get("Parsed JSON") or "{}"
+                    sub_parsed = json.loads(sub_parsed_str)
+                    sub_coaching = sub_parsed.get("coaching_output", {})
+                    meeting_info["sub_run_strengths"] = sub_coaching.get("strengths", [])
+                    meeting_info["sub_run_focus"] = (sub_coaching.get("focus") or [None])[0]
+                    meeting_info["sub_run_pattern_snapshot"] = sub_parsed.get("pattern_snapshot", [])
+                except Exception as se:
+                    logger.warning("get_baseline_pack: could not fetch sub-run %s: %s", run_links[0], se)
             meetings.append(meeting_info)
     except Exception as e:
         logger.warning("get_baseline_pack: could not fetch pack items for %s: %s", bp_id, e)
@@ -217,6 +232,7 @@ async def get_baseline_pack(
         "strengths": strengths,
         "focus": focus,
         "micro_experiment": micro_experiment,
+        "pattern_snapshot": pattern_snapshot,
         "created_at": bp_rec.get("createdTime"),
         "meetings": meetings,
     }
@@ -572,15 +588,18 @@ async def client_summary(
                         }
                     except Exception as te:
                         logger.warning("Could not fetch transcript for run %s: %s", r["id"], te)
-                recent_runs.append({
+                run_entry: dict = {
                     "run_id": r["id"],
                     "analysis_type": rf.get("Analysis Type"),
                     "gate1_pass": rf.get("Gate1 Pass"),
                     "focus_pattern": rf.get("Focus Pattern"),
                     "created_at": r.get("createdTime"),
                     **transcript_meta,
-                })
-            # Sort newest meeting date first; runs with no date go to the end
+                }
+                if rf.get("Analysis Type") == "baseline_pack":
+                    bp_run_links = rf.get("baseline_packs (Last Run)", [])
+                    run_entry["baseline_pack_id"] = bp_run_links[0] if bp_run_links else None
+                recent_runs.append(run_entry)            # Sort newest meeting date first; runs with no date go to the end
             recent_runs.sort(
                 key=lambda x: (x.get("meeting_date") is None, x.get("meeting_date") or ""),
                 reverse=True,
