@@ -181,6 +181,57 @@ def _build_slim_meeting_summary(run_fields: dict, parsed_json: dict) -> dict:
     }
 
 
+def _patch_parsed_output(parsed: dict) -> dict:
+    """
+    Apply all post-LLM corrections to a parsed output dict.
+    Returns a new deep-copied dict — does not mutate the input.
+
+    Covers:
+    - Strip numeric fields from conversational_balance (schema forbids them)
+    - Backfill missing denominator_rule_id and min_required_threshold
+    - Coerce zero-denominator evaluable patterns to insufficient_signal
+    - Backfill null denominator_rule_id on not_evaluable patterns
+    - Coerce legacy 'assigned' experiment status to 'proposed'
+    """
+    import copy as _copy
+    parsed = _copy.deepcopy(parsed)
+
+    # Strip numeric fields from conversational_balance — schema forbids them
+    for snap in parsed.get("pattern_snapshot", []):
+        if snap.get("pattern_id") == "conversational_balance":
+            for field in ("numerator", "denominator", "ratio", "opportunity_count",
+                          "opportunity_events", "opportunity_events_considered",
+                          "opportunity_events_counted"):
+                snap.pop(field, None)
+        # Backfill required base fields the model sometimes omits
+        snap.setdefault("denominator_rule_id", "qualitative_balance")
+        snap.setdefault("min_required_threshold", None)
+
+    # Coerce zero-denominator evaluable patterns to insufficient_signal
+    for snap in parsed.get("pattern_snapshot", []):
+        if (
+            snap.get("evaluable_status") == "evaluable"
+            and snap.get("pattern_id") != "conversational_balance"
+            and snap.get("denominator") == 0
+        ):
+            snap["evaluable_status"] = "insufficient_signal"
+            for field in ("numerator", "denominator", "ratio"):
+                snap.pop(field, None)
+
+    # Backfill null denominator_rule_id on not_evaluable patterns
+    for snap in parsed.get("pattern_snapshot", []):
+        if snap.get("denominator_rule_id") is None:
+            snap["denominator_rule_id"] = "not_evaluable"
+
+    # Coerce legacy 'assigned' experiment status to 'proposed'
+    exp_track = parsed.get("experiment_tracking", {})
+    active_exp = exp_track.get("active_experiment", {})
+    if isinstance(active_exp, dict) and active_exp.get("status") == "assigned":
+        active_exp["status"] = "proposed"
+
+    return parsed
+
+
 def _persist_run_fields(
     client: AirtableClient,
     *,
@@ -408,39 +459,7 @@ def process_single_meeting_analysis(
     for item in coaching.get("micro_experiment", []):
         item.setdefault("evidence_span_ids", [])
 
-    # Strip numeric fields from conversational_balance — schema forbids them
-    for snap in _parsed_output.get("pattern_snapshot", []):
-        if snap.get("pattern_id") == "conversational_balance":
-            for field in ("numerator", "denominator", "ratio", "opportunity_count",
-                          "opportunity_events", "opportunity_events_considered",
-                          "opportunity_events_counted"):
-                snap.pop(field, None)
-        # Backfill required base fields the model sometimes omits
-        snap.setdefault("denominator_rule_id", "qualitative_balance")
-        snap.setdefault("min_required_threshold", None)    
-
-    # Coerce zero-denominator evaluable patterns to insufficient_signal
-    for snap in _parsed_output.get("pattern_snapshot", []):
-        if (
-            snap.get("evaluable_status") == "evaluable"
-            and snap.get("pattern_id") != "conversational_balance"
-            and snap.get("denominator") == 0
-        ):
-            snap["evaluable_status"] = "insufficient_signal"
-            for field in ("numerator", "denominator", "ratio"):
-                snap.pop(field, None)   
-
-    # Coerce legacy 'assigned' status to 'proposed'
-    _exp_track = _parsed_output.get("experiment_tracking", {})
-    _active_exp = _exp_track.get("active_experiment", {})
-    if _active_exp.get("status") == "assigned":
-        _active_exp["status"] = "proposed"    
-
-    # Backfill null denominator_rule_id on not_evaluable patterns
-    for snap in _parsed_output.get("pattern_snapshot", []):
-        if snap.get("denominator_rule_id") is None:
-            snap["denominator_rule_id"] = "not_evaluable"        
-     
+    _parsed_output = _patch_parsed_output(_parsed_output)
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
     openai_resp = OpenAIResponse(
         parsed=_parsed_output,
@@ -711,33 +730,7 @@ def process_baseline_pack_build(
     if not isinstance(_exp_track.get("detection_in_this_meeting"), dict):
         _exp_track["detection_in_this_meeting"] = None
 
-    # Strip numeric fields from conversational_balance — schema forbids them
-    for snap in _parsed_output.get("pattern_snapshot", []):
-        if snap.get("pattern_id") == "conversational_balance":
-            for field in ("numerator", "denominator", "ratio", "opportunity_count",
-                          "opportunity_events", "opportunity_events_considered",
-                          "opportunity_events_counted"):
-                snap.pop(field, None)
-        # Backfill required base fields the model sometimes omits
-        snap.setdefault("denominator_rule_id", "qualitative_balance")
-        snap.setdefault("min_required_threshold", None)     
-
-    # Coerce zero-denominator evaluable patterns to insufficient_signal
-    for snap in _parsed_output.get("pattern_snapshot", []):
-        if (
-            snap.get("evaluable_status") == "evaluable"
-            and snap.get("pattern_id") != "conversational_balance"
-            and snap.get("denominator") == 0
-        ):
-            snap["evaluable_status"] = "insufficient_signal"
-            for field in ("numerator", "denominator", "ratio"):
-                snap.pop(field, None)   
-
-    # Backfill null denominator_rule_id on not_evaluable patterns
-    for snap in _parsed_output.get("pattern_snapshot", []):
-        if snap.get("denominator_rule_id") is None:
-            snap["denominator_rule_id"] = "not_evaluable"                
-
+    _parsed_output = _patch_parsed_output(_parsed_output)
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
     openai_resp = OpenAIResponse(
         parsed=_parsed_output,
