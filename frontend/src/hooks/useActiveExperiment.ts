@@ -9,8 +9,8 @@ export function useActiveExperiment() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchExperiment = async () => {
-    setLoading(true);
+  const fetchExperiment = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const result = await api.getActiveExperiment();
       setData(result);

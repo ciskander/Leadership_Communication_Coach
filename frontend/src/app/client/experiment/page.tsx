@@ -105,14 +105,14 @@ export default function ExperimentPage() {
   function handleComplete() {
     setLastAction('completed');
     resetPoller();
-    refetch();
+    refetch(false);
     startPolling();
   }
 
   function handleAbandon() {
     setLastAction('abandoned');
     resetPoller();
-    refetch();
+    refetch(false);
     startPolling();
   }
 
