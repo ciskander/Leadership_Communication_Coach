@@ -328,7 +328,7 @@ function RecentRunCard({
 
   return (
     <Link
-      href={`/client/runs/${runId}`}
+      href={isBaseline ? `/client/baseline/${run.baseline_pack_id as string}` : `/client/runs/${runId}`}
       className="flex items-start justify-between bg-white border border-stone-200 rounded-xl px-4 py-3 hover:border-emerald-300 hover:shadow-sm transition-all gap-4"
     >
       {metaContent}
