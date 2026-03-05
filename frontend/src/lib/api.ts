@@ -86,6 +86,11 @@ export const api = {
     return request(`/api/client/runs/${runId}/meta`);
   },
 
+  // Delete a single-meeting run
+  deleteRun(runId: string): Promise<{ deleted: boolean; run_id: string }> {
+    return request(`/api/client/runs/${runId}`, { method: 'DELETE' });
+  },
+
   // Transcripts
   uploadTranscript(formData: FormData): Promise<TranscriptUpload> {
     return request('/api/transcripts', {

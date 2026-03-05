@@ -516,10 +516,13 @@ async def client_summary(
                 bp_status = bp_rec.get("fields", {}).get("Status")
 
             # Recent runs (last 10, enriched with transcript metadata)
+            # Excludes single_meeting runs that are sub-runs of a baseline pack
             runs_formula = f"{{Coachee ID}} = '{user.airtable_user_record_id}'"
             run_records = at_client.search_records("runs", runs_formula, max_records=10)
             for r in run_records:
                 rf = r.get("fields", {})
+                if rf.get("Analysis Type") == "single_meeting" and rf.get("baseline_pack"):
+                    continue
                 transcript_meta: dict = {}
                 transcript_links = rf.get("Transcript ID", [])
                 if transcript_links:
@@ -778,3 +781,54 @@ async def get_run_meta(
     except Exception as e:
         logger.warning("get_run_meta: error for run %s: %s", run_id, e)
         return error_response("NOT_FOUND", "Run not found.", 404)
+
+@router.delete("/api/client/runs/{run_id}")
+async def delete_run(
+    run_id: str,
+    user: UserAuth = Depends(get_current_user),
+):
+    """
+    Delete a single-meeting run and its linked transcript and run_requests.
+    Baseline pack runs cannot be deleted via this endpoint.
+    """
+    at_client = AirtableClient()
+    try:
+        run_rec = at_client.get_run(run_id)
+    except Exception:
+        return error_response("NOT_FOUND", "Run not found.", 404)
+
+    rf = run_rec.get("fields", {})
+
+    # Ownership check
+    if user.role == "coachee":
+        if rf.get("Coachee ID") != user.airtable_user_record_id:
+            return error_response("FORBIDDEN", "You do not have access to this run.", 403)
+
+    # Block deletion of baseline pack runs (both aggregate and sub-runs)
+    if rf.get("baseline_pack") or rf.get("Analysis Type") == "baseline_pack":
+        return error_response(
+            "FORBIDDEN", "Baseline pack analyses cannot be deleted here.", 403
+        )
+
+    # Delete linked run_requests
+    for rr_id in rf.get("run_requests", []):
+        try:
+            at_client.delete_run_request(rr_id)
+        except Exception as e:
+            logger.warning("delete_run: could not delete run_request %s: %s", rr_id, e)
+
+    # Delete linked transcript
+    for tr_id in rf.get("Transcript ID", []):
+        try:
+            at_client.delete_transcript(tr_id)
+        except Exception as e:
+            logger.warning("delete_run: could not delete transcript %s: %s", tr_id, e)
+
+    # Delete the run itself
+    try:
+        at_client.delete_run(run_id)
+    except Exception as e:
+        logger.warning("delete_run: failed to delete run %s: %s", run_id, e)
+        return error_response("SERVER_ERROR", "Failed to delete run.", 500)
+
+    return {"deleted": True, "run_id": run_id}

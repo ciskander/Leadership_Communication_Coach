@@ -138,7 +138,7 @@ function ProposedExperimentCard({
   );
 }
 
-// ── Recent Analysis Card ───────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const ROLE_LABELS: Record<string, string> = {
   chair: 'Chair',
@@ -159,7 +159,78 @@ function fmtDate(dateStr: string | null | undefined): string {
   }
 }
 
-function RecentRunCard({ run }: { run: Record<string, unknown> }) {
+// ── Confirm Delete Modal ──────────────────────────────────────────────────────
+
+function ConfirmDeleteModal({
+  count,
+  onConfirm,
+  onCancel,
+  deleting,
+}: {
+  count: number;
+  onConfirm: () => void;
+  onCancel: () => void;
+  deleting: boolean;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+      <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-full bg-rose-100 flex items-center justify-center flex-shrink-0">
+            <svg className="w-5 h-5 text-rose-600" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="font-semibold text-stone-900 text-sm">
+              Delete {count === 1 ? 'this meeting' : `${count} meetings`}?
+            </h3>
+            <p className="text-xs text-stone-500 mt-1 leading-relaxed">
+              This will permanently delete the {count === 1 ? 'meeting' : 'meetings'} and{' '}
+              {count === 1 ? 'its' : 'their'} analysis results. This cannot be undone.
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-2 justify-end pt-1">
+          <button
+            onClick={onCancel}
+            disabled={deleting}
+            className="px-4 py-2 text-xs font-semibold text-stone-600 bg-stone-100 rounded-xl hover:bg-stone-200 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={deleting}
+            className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 rounded-xl hover:bg-rose-700 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+          >
+            {deleting && (
+              <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+            )}
+            {deleting ? 'Deleting…' : 'Delete'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Recent Run Card ───────────────────────────────────────────────────────────
+
+function RecentRunCard({
+  run,
+  editMode,
+  selected,
+  onToggle,
+}: {
+  run: Record<string, unknown>;
+  editMode: boolean;
+  selected: boolean;
+  onToggle: (runId: string) => void;
+}) {
   const runId = (run.run_id ?? run.id) as string;
   const isBaseline = run.analysis_type === 'baseline_pack';
   const title = run.title as string | undefined;
@@ -168,46 +239,100 @@ function RecentRunCard({ run }: { run: Record<string, unknown> }) {
   const meetingType = run.meeting_type as string | undefined;
   const targetRole = run.target_role as string | undefined;
 
+  const metaContent = (
+    <div className="flex items-start gap-3 min-w-0 flex-1">
+      {/* Checkbox in edit mode */}
+      {editMode && (
+        <div className="mt-0.5 flex-shrink-0">
+          {isBaseline ? (
+            // Baseline packs: greyed-out, non-interactive checkbox
+            <div
+              className="w-4 h-4 rounded border border-stone-200 bg-stone-100"
+              title="Baseline Pack analyses cannot be deleted here"
+            />
+          ) : (
+            <div
+              className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
+                selected ? 'bg-rose-600 border-rose-600' : 'border-stone-300 bg-white'
+              }`}
+            >
+              {selected && (
+                <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1.5 5.5l2.5 2.5 4.5-5" />
+                </svg>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Status dot (normal mode only) */}
+      {!editMode && (
+        <div className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${run.gate1_pass ? 'bg-emerald-500' : 'bg-rose-400'}`} />
+      )}
+
+      <div className="min-w-0 space-y-0.5">
+        <p className="text-sm font-semibold text-stone-800 truncate">
+          {title || (isBaseline ? 'Baseline Pack Analysis' : 'Meeting Analysis')}
+        </p>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-stone-400">
+          {isBaseline ? (
+            <span className="inline-flex items-center bg-blue-50 text-blue-600 text-xs px-1.5 py-0.5 rounded font-medium">
+              Baseline Pack
+            </span>
+          ) : (
+            <>
+              {transcriptId && <span className="font-mono">{transcriptId}</span>}
+              {meetingType && (
+                <>
+                  {transcriptId && <span>·</span>}
+                  <span>{meetingType}</span>
+                </>
+              )}
+              {targetRole && (
+                <>
+                  <span>·</span>
+                  <span>{ROLE_LABELS[targetRole] ?? targetRole}</span>
+                </>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const dateLabel = (
+    <span className="text-xs text-stone-400 flex-shrink-0 mt-0.5">
+      {fmtDate(meetingDate) || fmtDate(run.created_at as string)}
+    </span>
+  );
+
+  if (editMode) {
+    return (
+      <div
+        onClick={() => !isBaseline && onToggle(runId)}
+        className={`flex items-start justify-between px-4 py-3 rounded-xl border gap-4 transition-all select-none ${
+          isBaseline
+            ? 'bg-stone-50 border-stone-200 cursor-default opacity-60'
+            : selected
+            ? 'bg-rose-50 border-rose-300 cursor-pointer'
+            : 'bg-white border-stone-200 cursor-pointer hover:border-stone-300'
+        }`}
+      >
+        {metaContent}
+        {dateLabel}
+      </div>
+    );
+  }
+
   return (
     <Link
       href={`/client/runs/${runId}`}
       className="flex items-start justify-between bg-white border border-stone-200 rounded-xl px-4 py-3 hover:border-emerald-300 hover:shadow-sm transition-all gap-4"
     >
-      <div className="flex items-start gap-3 min-w-0">
-        <div
-          className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${
-            run.gate1_pass ? 'bg-emerald-500' : 'bg-rose-400'
-          }`}
-        />
-        <div className="min-w-0 space-y-0.5">
-          {/* Title / type */}
-          <p className="text-sm font-semibold text-stone-800 truncate">
-            {title || (isBaseline ? 'Baseline Pack Analysis' : 'Meeting Analysis')}
-          </p>
-          {/* Meta row */}
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-stone-400">
-            {transcriptId && (
-              <span className="font-mono">{transcriptId}</span>
-            )}
-            {meetingType && (
-              <>
-                {transcriptId && <span>·</span>}
-                <span>{meetingType}</span>
-              </>
-            )}
-            {targetRole && (
-              <>
-                <span>·</span>
-                <span>{ROLE_LABELS[targetRole] ?? targetRole}</span>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-      {/* Date */}
-      <span className="text-xs text-stone-400 flex-shrink-0 mt-0.5">
-        {fmtDate(meetingDate) || fmtDate(run.created_at as string)}
-      </span>
+      {metaContent}
+      {dateLabel}
     </Link>
   );
 }
@@ -217,15 +342,55 @@ function RecentRunCard({ run }: { run: Record<string, unknown> }) {
 export default function ClientDashboard() {
   const [summary, setSummary] = useState<ClientSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   function reload() {
     setLoading(true);
     api.clientSummary().then(setSummary).finally(() => setLoading(false));
   }
 
-  useEffect(() => {
+  useEffect(() => { reload(); }, []);
+
+  function toggleEditMode() {
+    setEditMode((v) => !v);
+    setSelected(new Set());
+    setDeleteError(null);
+  }
+
+  function toggleSelect(runId: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(runId)) next.delete(runId);
+      else next.add(runId);
+      return next;
+    });
+  }
+
+  async function handleDeleteConfirmed() {
+    setDeleting(true);
+    setDeleteError(null);
+    const ids = Array.from(selected);
+    const failed: string[] = [];
+    for (const id of ids) {
+      try {
+        await api.deleteRun(id);
+      } catch {
+        failed.push(id);
+      }
+    }
+    setDeleting(false);
+    setShowConfirm(false);
+    if (failed.length > 0) {
+      setDeleteError(`${failed.length} deletion${failed.length > 1 ? 's' : ''} failed. Please try again.`);
+    }
+    setSelected(new Set());
+    setEditMode(false);
     reload();
-  }, []);
+  }
 
   if (loading) {
     return (
@@ -250,8 +415,22 @@ export default function ClientDashboard() {
   const step3Done = hasExperiment;
   const currentStep = !step1Done ? 1 : !step2Done ? 2 : !step3Done ? 3 : 3;
 
+  const deletableRunCount = (summary?.recent_runs ?? []).filter(
+    (r: Record<string, unknown>) => r.analysis_type !== 'baseline_pack'
+  ).length;
+
   return (
     <div className="max-w-3xl mx-auto space-y-6 py-2">
+
+      {showConfirm && (
+        <ConfirmDeleteModal
+          count={selected.size}
+          onConfirm={handleDeleteConfirmed}
+          onCancel={() => setShowConfirm(false)}
+          deleting={deleting}
+        />
+      )}
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-stone-900">
@@ -278,13 +457,8 @@ export default function ClientDashboard() {
         </div>
         {!hasBaseline && !isBuilding && (
           <div className="mt-4 pt-4 border-t border-stone-100 flex items-center justify-between">
-            <p className="text-sm text-stone-600">
-              Start by building your baseline from 3 past meetings.
-            </p>
-            <Link
-              href="/client/baseline/new"
-              className="text-sm px-4 py-1.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors whitespace-nowrap"
-            >
+            <p className="text-sm text-stone-600">Start by building your baseline from 3 past meetings.</p>
+            <Link href="/client/baseline/new" className="text-sm px-4 py-1.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors whitespace-nowrap">
               Get started →
             </Link>
           </div>
@@ -297,13 +471,8 @@ export default function ClientDashboard() {
         )}
         {hasBaseline && !hasExperiment && proposedExperiments.length === 0 && (
           <div className="mt-4 pt-4 border-t border-stone-100 flex items-center justify-between">
-            <p className="text-sm text-stone-600">
-              Baseline ready! Analyze a meeting to receive your first experiment suggestion.
-            </p>
-            <Link
-              href="/client/analyze"
-              className="text-sm px-4 py-1.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors whitespace-nowrap"
-            >
+            <p className="text-sm text-stone-600">Baseline ready! Analyze a meeting to receive your first experiment suggestion.</p>
+            <Link href="/client/analyze" className="text-sm px-4 py-1.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors whitespace-nowrap">
               Analyze meeting →
             </Link>
           </div>
@@ -312,7 +481,6 @@ export default function ClientDashboard() {
 
       {/* Cards row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Baseline Pack */}
         <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -321,30 +489,16 @@ export default function ClientDashboard() {
             </div>
             <BaselineBadge status={bpStatus} />
           </div>
+          {bpStatus === 'none' && <p className="text-xs text-stone-500 leading-relaxed">Analyse 3 past meetings to unlock personalised coaching patterns.</p>}
+          {hasBaseline && <p className="text-xs text-emerald-700 font-medium">✓ Your communication patterns have been mapped.</p>}
+          {isBuilding && <p className="text-xs text-amber-600">Analysis in progress…</p>}
           {bpStatus === 'none' && (
-            <p className="text-xs text-stone-500 leading-relaxed">
-              Analyse 3 past meetings to unlock personalised coaching patterns.
-            </p>
-          )}
-          {hasBaseline && (
-            <p className="text-xs text-emerald-700 font-medium">
-              ✓ Your communication patterns have been mapped.
-            </p>
-          )}
-          {isBuilding && (
-            <p className="text-xs text-amber-600">Analysis in progress…</p>
-          )}
-          {bpStatus === 'none' && (
-            <Link
-              href="/client/baseline/new"
-              className="inline-block text-xs px-3 py-1.5 bg-stone-900 text-white rounded-lg font-medium hover:bg-stone-700 transition-colors"
-            >
+            <Link href="/client/baseline/new" className="inline-block text-xs px-3 py-1.5 bg-stone-900 text-white rounded-lg font-medium hover:bg-stone-700 transition-colors">
               Create baseline
             </Link>
           )}
         </div>
 
-        {/* Active Experiment */}
         <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
           <div className="flex items-center gap-2">
             <span className="text-lg">◈</span>
@@ -354,53 +508,35 @@ export default function ClientDashboard() {
             <>
               <div className="bg-emerald-50 rounded-lg p-3 space-y-1">
                 <PatternLabel id={experiment.pattern_id} />
-                <p className="text-sm font-semibold text-stone-800 leading-snug">
-                  {experiment.title}
-                </p>
+                <p className="text-sm font-semibold text-stone-800 leading-snug">{experiment.title}</p>
                 {experiment.attempt_count != null && experiment.attempt_count > 0 && (
                   <p className="text-xs text-emerald-700 font-medium">
                     {experiment.attempt_count} meeting{experiment.attempt_count !== 1 ? 's' : ''} attempted
                   </p>
                 )}
               </div>
-              <Link
-                href="/client/experiment"
-                className="inline-block text-xs text-emerald-700 font-semibold hover:text-emerald-800"
-              >
+              <Link href="/client/experiment" className="inline-block text-xs text-emerald-700 font-semibold hover:text-emerald-800">
                 Track progress →
               </Link>
             </>
           ) : proposedExperiments.length > 0 ? (
-            <p className="text-xs text-stone-500 leading-relaxed">
-              You have experiment suggestions waiting below — accept one to get started.
-            </p>
+            <p className="text-xs text-stone-500 leading-relaxed">You have experiment suggestions waiting below — accept one to get started.</p>
           ) : (
-            <p className="text-xs text-stone-500 leading-relaxed">
-              Complete an analysis to receive your first personalised experiment.
-            </p>
+            <p className="text-xs text-stone-500 leading-relaxed">Complete an analysis to receive your first personalised experiment.</p>
           )}
         </div>
       </div>
 
-      {/* Suggested experiments queue */}
+      {/* Suggested experiments */}
       {proposedExperiments.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
-              Suggested Experiments
-            </h2>
-            <span className="text-xs text-stone-400">
-              {proposedExperiments.length} suggestion{proposedExperiments.length !== 1 ? 's' : ''}
-            </span>
+            <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Suggested Experiments</h2>
+            <span className="text-xs text-stone-400">{proposedExperiments.length} suggestion{proposedExperiments.length !== 1 ? 's' : ''}</span>
           </div>
           <div className="space-y-3">
             {proposedExperiments.map((exp) => (
-              <ProposedExperimentCard
-                key={exp.experiment_record_id}
-                experiment={exp}
-                hasActiveExperiment={hasExperiment}
-                onAccepted={reload}
-              />
+              <ProposedExperimentCard key={exp.experiment_record_id} experiment={exp} hasActiveExperiment={hasExperiment} onAccepted={reload} />
             ))}
           </div>
         </section>
@@ -408,17 +544,11 @@ export default function ClientDashboard() {
 
       {/* Quick actions */}
       <div className="flex gap-3">
-        <Link
-          href="/client/analyze"
-          className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm"
-        >
+        <Link href="/client/analyze" className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm">
           <span>⊕</span> Analyze a Meeting
         </Link>
         {bpStatus === 'none' && (
-          <Link
-            href="/client/baseline/new"
-            className="flex items-center gap-2 px-5 py-2.5 bg-white border border-stone-300 text-stone-700 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors"
-          >
+          <Link href="/client/baseline/new" className="flex items-center gap-2 px-5 py-2.5 bg-white border border-stone-300 text-stone-700 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors">
             <span>◎</span> Create Baseline
           </Link>
         )}
@@ -427,15 +557,54 @@ export default function ClientDashboard() {
       {/* Recent Analyses */}
       {summary && summary.recent_runs.length > 0 && (
         <section>
-          <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
-            Recent Analyses
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Recent Analyses</h2>
+            <div className="flex items-center gap-2">
+              {editMode && selected.size > 0 && (
+                <button
+                  onClick={() => setShowConfirm(true)}
+                  className="text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  Delete selected ({selected.size})
+                </button>
+              )}
+              {deletableRunCount > 0 && (
+                <button
+                  onClick={toggleEditMode}
+                  className="text-xs font-medium text-stone-500 hover:text-stone-700 transition-colors"
+                >
+                  {editMode ? 'Done' : 'Edit'}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {deleteError && (
+            <div className="mb-2 text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
+              {deleteError}
+            </div>
+          )}
+
+          {editMode && (
+            <p className="text-xs text-stone-400 mb-2">
+              Select meetings to delete. Baseline Pack analyses cannot be deleted here.
+            </p>
+          )}
+
           <ul className="space-y-2">
-            {summary.recent_runs.map((run: Record<string, unknown>, i) => (
-              <li key={(run.run_id as string) ?? i}>
-                <RecentRunCard run={run} />
-              </li>
-            ))}
+            {summary.recent_runs.map((run: Record<string, unknown>, i: number) => {
+              const runId = (run.run_id ?? run.id) as string;
+              return (
+                <li key={runId ?? i}>
+                  <RecentRunCard
+                    run={run}
+                    editMode={editMode}
+                    selected={selected.has(runId)}
+                    onToggle={toggleSelect}
+                  />
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}
@@ -453,9 +622,5 @@ function BaselineBadge({ status }: { status: string }) {
     error:          { color: 'bg-rose-100 text-rose-700',   label: 'Error' },
   };
   const { color, label } = map[status] ?? map.none;
-  return (
-    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${color}`}>
-      {label}
-    </span>
-  );
+  return <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${color}`}>{label}</span>;
 }

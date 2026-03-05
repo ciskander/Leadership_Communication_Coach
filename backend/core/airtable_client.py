@@ -263,6 +263,20 @@ class AirtableClient:
         if fields:
             kwargs["fields"] = fields
         return list(self._table(table_name).all(**kwargs))
+        
+    @_retryable
+    def delete_record(self, table_name: str, record_id: str) -> dict:
+        return self._table(table_name).delete(record_id)
+
+    def delete_run(self, record_id: str) -> dict:
+        return self.delete_record(AT_TABLE_RUNS, record_id)
+
+    def delete_transcript(self, record_id: str) -> dict:
+        return self.delete_record(AT_TABLE_TRANSCRIPTS, record_id)
+
+    def delete_run_request(self, record_id: str) -> dict:
+        return self.delete_record(AT_TABLE_RUN_REQUESTS, record_id)
+
 
     # ── Transcripts ───────────────────────────────────────────────────────────
 
