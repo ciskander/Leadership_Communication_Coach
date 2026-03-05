@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { useActiveExperiment } from '@/hooks/useActiveExperiment';
+import { useProposedPoller } from '@/hooks/useProposedPoller';
 import { ExperimentTracker } from '@/components/ExperimentTracker';
 import type { Experiment } from '@/lib/types';
 
@@ -77,36 +78,52 @@ function ProposedExperimentCard({
 
 export default function ExperimentPage() {
   const { data, loading, error, refetch } = useActiveExperiment();
-  const [proposed, setProposed] = useState<Experiment[]>([]);
-  const [proposedLoading, setProposedLoading] = useState(true);
+  const { proposed, pollState, startPolling, reset: resetPoller } = useProposedPoller();
+
+  // Seed proposed list from a one-shot fetch on mount (for pre-existing proposals)
+  const [seedProposed, setSeedProposed] = useState<Experiment[]>([]);
+  const [seedLoading, setSeedLoading] = useState(true);
   const [lastAction, setLastAction] = useState<'completed' | 'abandoned' | null>(null);
 
-  function fetchProposed() {
-    setProposedLoading(true);
+  useEffect(() => {
     api.getProposedExperiments()
-      .then(setProposed)
-      .catch(() => setProposed([]))
-      .finally(() => setProposedLoading(false));
-  }
+      .then(setSeedProposed)
+      .catch(() => setSeedProposed([]))
+      .finally(() => setSeedLoading(false));
+  }, []);
 
-  useEffect(() => { fetchProposed(); }, []);
+  // Merge seed + poller results, deduplicated by record ID
+  const allProposed = (() => {
+    const map = new Map<string, Experiment>();
+    for (const exp of seedProposed) map.set(exp.experiment_record_id, exp);
+    for (const exp of proposed) map.set(exp.experiment_record_id, exp);
+    return Array.from(map.values());
+  })();
+
+  const isPolling = pollState === 'polling';
 
   function handleComplete() {
     setLastAction('completed');
+    resetPoller();
     refetch();
-    fetchProposed();
+    startPolling();
   }
 
   function handleAbandon() {
     setLastAction('abandoned');
+    resetPoller();
     refetch();
-    fetchProposed();
+    startPolling();
   }
 
   function handleAccepted() {
     setLastAction(null);
+    resetPoller();
     refetch();
-    fetchProposed();
+    // Re-seed proposed list after accepting
+    api.getProposedExperiments()
+      .then(setSeedProposed)
+      .catch(() => setSeedProposed([]));
   }
 
   if (loading) {
@@ -125,7 +142,6 @@ export default function ExperimentPage() {
   const events = data?.recent_events ?? [];
   const hasActive = !!experiment && experiment.status === 'active';
 
-  // Post-action heading shown after the user completes or abandons
   function PostActionBanner() {
     if (!lastAction) return null;
     if (lastAction === 'completed') {
@@ -150,6 +166,8 @@ export default function ExperimentPage() {
     );
   }
 
+  const overallLoading = seedLoading && !lastAction;
+
   return (
     <div className="max-w-2xl mx-auto space-y-5 py-2">
       <div>
@@ -170,18 +188,26 @@ export default function ExperimentPage() {
         <>
           <PostActionBanner />
 
-          {!proposedLoading && proposed.length > 0 ? (
+          {/* Polling indicator */}
+          {isPolling && (
+            <div className="flex items-center gap-3 px-5 py-3 bg-blue-50 rounded-2xl border border-blue-100">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 flex-shrink-0" />
+              <p className="text-sm text-blue-700">Finding your next experiment…</p>
+            </div>
+          )}
+
+          {!overallLoading && allProposed.length > 0 ? (
             <section>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
                   {lastAction ? 'Choose your next experiment' : 'Suggested Experiments'}
                 </h2>
                 <span className="text-xs text-stone-400">
-                  {proposed.length} suggestion{proposed.length !== 1 ? 's' : ''}
+                  {allProposed.length} suggestion{allProposed.length !== 1 ? 's' : ''}
                 </span>
               </div>
               <div className="space-y-3">
-                {proposed.map((exp) => (
+                {allProposed.map((exp) => (
                   <ProposedExperimentCard
                     key={exp.experiment_record_id}
                     experiment={exp}
@@ -190,7 +216,7 @@ export default function ExperimentPage() {
                 ))}
               </div>
             </section>
-          ) : !proposedLoading ? (
+          ) : !overallLoading && !isPolling ? (
             <div className="bg-white rounded-2xl border border-dashed border-stone-300 p-12 text-center space-y-4">
               <div className="text-4xl">◈</div>
               <p className="text-stone-600 font-medium">No active experiment</p>
