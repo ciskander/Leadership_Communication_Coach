@@ -138,6 +138,82 @@ function ProposedExperimentCard({
   );
 }
 
+// ── Recent Analysis Card ───────────────────────────────────────────────────────
+
+const ROLE_LABELS: Record<string, string> = {
+  chair: 'Chair',
+  presenter: 'Presenter',
+  participant: 'Participant',
+  manager_1to1: 'Manager (1:1)',
+  report_1to1: 'Report (1:1)',
+};
+
+function fmtDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return '';
+  try {
+    return new Date(dateStr).toLocaleDateString('en-GB', {
+      day: 'numeric', month: 'short', year: 'numeric',
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
+function RecentRunCard({ run }: { run: Record<string, unknown> }) {
+  const runId = (run.run_id ?? run.id) as string;
+  const isBaseline = run.analysis_type === 'baseline_pack';
+  const title = run.title as string | undefined;
+  const transcriptId = run.transcript_id as string | undefined;
+  const meetingDate = run.meeting_date as string | undefined;
+  const meetingType = run.meeting_type as string | undefined;
+  const targetRole = run.target_role as string | undefined;
+
+  return (
+    <Link
+      href={`/client/runs/${runId}`}
+      className="flex items-start justify-between bg-white border border-stone-200 rounded-xl px-4 py-3 hover:border-emerald-300 hover:shadow-sm transition-all gap-4"
+    >
+      <div className="flex items-start gap-3 min-w-0">
+        <div
+          className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${
+            run.gate1_pass ? 'bg-emerald-500' : 'bg-rose-400'
+          }`}
+        />
+        <div className="min-w-0 space-y-0.5">
+          {/* Title / type */}
+          <p className="text-sm font-semibold text-stone-800 truncate">
+            {title || (isBaseline ? 'Baseline Pack Analysis' : 'Meeting Analysis')}
+          </p>
+          {/* Meta row */}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-stone-400">
+            {transcriptId && (
+              <span className="font-mono">{transcriptId}</span>
+            )}
+            {meetingType && (
+              <>
+                {transcriptId && <span>·</span>}
+                <span>{meetingType}</span>
+              </>
+            )}
+            {targetRole && (
+              <>
+                <span>·</span>
+                <span>{ROLE_LABELS[targetRole] ?? targetRole}</span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+      {/* Date */}
+      <span className="text-xs text-stone-400 flex-shrink-0 mt-0.5">
+        {fmtDate(meetingDate) || fmtDate(run.created_at as string)}
+      </span>
+    </Link>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 export default function ClientDashboard() {
   const [summary, setSummary] = useState<ClientSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -348,7 +424,7 @@ export default function ClientDashboard() {
         )}
       </div>
 
-      {/* Recent Runs */}
+      {/* Recent Analyses */}
       {summary && summary.recent_runs.length > 0 && (
         <section>
           <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
@@ -357,26 +433,7 @@ export default function ClientDashboard() {
           <ul className="space-y-2">
             {summary.recent_runs.map((run: Record<string, unknown>, i) => (
               <li key={(run.run_id as string) ?? i}>
-                <Link
-                  href={`/client/runs/${run.run_id ?? run.id}`}
-                  className="flex items-center justify-between bg-white border border-stone-200 rounded-xl px-4 py-3 hover:border-emerald-300 hover:shadow-sm transition-all"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${run.gate1_pass ? 'bg-emerald-500' : 'bg-rose-400'}`} />
-                    <span className="text-sm text-stone-700 font-medium">
-                      {(run.analysis_type as string) === 'baseline_pack'
-                        ? 'Baseline Pack'
-                        : (run.meeting_type as string) ?? 'Meeting Analysis'}
-                    </span>
-                  </div>
-                  <span className="text-xs text-stone-400">
-                    {run.created_at
-                      ? new Date(run.created_at as string).toLocaleDateString('en-US', {
-                          month: 'short', day: 'numeric',
-                        })
-                      : ''}
-                  </span>
-                </Link>
+                <RecentRunCard run={run} />
               </li>
             ))}
           </ul>

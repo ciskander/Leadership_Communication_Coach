@@ -515,18 +515,39 @@ async def client_summary(
                 bp_rec = at_client.get_baseline_pack(bp_links[0])
                 bp_status = bp_rec.get("fields", {}).get("Status")
 
-            # Recent runs (last 5)
+            # Recent runs (last 10, enriched with transcript metadata)
             runs_formula = f"{{Coachee ID}} = '{user.airtable_user_record_id}'"
-            run_records = at_client.search_records("runs", runs_formula, max_records=5)
+            run_records = at_client.search_records("runs", runs_formula, max_records=10)
             for r in run_records:
                 rf = r.get("fields", {})
+                transcript_meta: dict = {}
+                transcript_links = rf.get("Transcript ID", [])
+                if transcript_links:
+                    try:
+                        tr_rec = at_client.get_transcript(transcript_links[0])
+                        trf = tr_rec.get("fields", {})
+                        transcript_meta = {
+                            "title": trf.get("Title"),
+                            "transcript_id": trf.get("Transcript ID"),
+                            "meeting_date": trf.get("Meeting Date"),
+                            "meeting_type": trf.get("Meeting Type"),
+                            "target_role": trf.get("Target Role"),
+                        }
+                    except Exception as te:
+                        logger.warning("Could not fetch transcript for run %s: %s", r["id"], te)
                 recent_runs.append({
                     "run_id": r["id"],
                     "analysis_type": rf.get("Analysis Type"),
                     "gate1_pass": rf.get("Gate1 Pass"),
                     "focus_pattern": rf.get("Focus Pattern"),
                     "created_at": r.get("createdTime"),
+                    **transcript_meta,
                 })
+            # Sort newest meeting date first; runs with no date go to the end
+            recent_runs.sort(
+                key=lambda x: (x.get("meeting_date") is None, x.get("meeting_date") or ""),
+                reverse=True,
+            )
 
         except Exception as e:
             logger.warning("Error building client summary: %s", e)
@@ -706,3 +727,54 @@ async def client_progress(
         pattern_history=pattern_history,
         past_experiments=past_experiments,
     )
+
+
+@router.get("/api/client/runs/{run_id}/meta")
+async def get_run_meta(
+    run_id: str,
+    user: UserAuth = Depends(get_current_user),
+):
+    """
+    Returns lightweight transcript metadata for the run detail page header.
+    """
+    at_client = AirtableClient()
+    try:
+        run_rec = at_client.get_run(run_id)
+        rf = run_rec.get("fields", {})
+
+        # Ownership check
+        if user.role == "coachee":
+            coachee_id = rf.get("Coachee ID")
+            if coachee_id != user.airtable_user_record_id:
+                return error_response("FORBIDDEN", "You do not have access to this run.", 403)
+
+        transcript_meta: dict = {
+            "run_id": run_id,
+            "analysis_type": rf.get("Analysis Type"),
+            "title": None,
+            "transcript_id": None,
+            "meeting_date": None,
+            "meeting_type": None,
+            "target_role": None,
+        }
+
+        transcript_links = rf.get("Transcript ID", [])
+        if transcript_links:
+            try:
+                tr_rec = at_client.get_transcript(transcript_links[0])
+                trf = tr_rec.get("fields", {})
+                transcript_meta.update({
+                    "title": trf.get("Title"),
+                    "transcript_id": trf.get("Transcript ID"),
+                    "meeting_date": trf.get("Meeting Date"),
+                    "meeting_type": trf.get("Meeting Type"),
+                    "target_role": trf.get("Target Role"),
+                })
+            except Exception as te:
+                logger.warning("get_run_meta: could not fetch transcript for run %s: %s", run_id, te)
+
+        return transcript_meta
+
+    except Exception as e:
+        logger.warning("get_run_meta: error for run %s: %s", run_id, e)
+        return error_response("NOT_FOUND", "Run not found.", 404)
