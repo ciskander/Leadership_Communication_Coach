@@ -175,11 +175,27 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
                             f"conversational_balance must not have {forbidden}.",
                         ))
             else:
-                # Numeric evaluable: must have num/denom/ratio
+                # Numeric evaluable: must have num/denom/ratio.
+                # Exception: median_of_meeting_level_ratios (baseline pack aggregate)
+                # produces null numerator/denominator with a valid ratio — this is expected.
                 num = item.get("numerator")
                 den = item.get("denominator")
                 ratio = item.get("ratio")
-                if den is None or den < 1:
+                is_median = item.get("denominator_rule_id") == "median_of_meeting_level_ratios"
+                if is_median:
+                    if ratio is None:
+                        issues.append(_err(
+                            "MEDIAN_PATTERN_MISSING_RATIO",
+                            f"{path}.ratio",
+                            "median_of_meeting_level_ratios pattern must have a ratio value.",
+                        ))
+                    elif not (0 <= ratio <= 1):
+                        issues.append(_err(
+                            "RATIO_OUT_OF_RANGE",
+                            f"{path}.ratio",
+                            f"ratio ({ratio}) must be in [0, 1].",
+                        ))
+                elif den is None or den < 1:
                     issues.append(_err(
                         "INVALID_DENOMINATOR",
                         f"{path}.denominator",

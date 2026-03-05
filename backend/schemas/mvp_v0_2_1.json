@@ -470,11 +470,11 @@
           ]
         },
         "numerator": {
-          "type": "integer",
+          "type": ["integer", "null"],
           "minimum": 0
         },
         "denominator": {
-          "type": "integer",
+          "type": ["integer", "null"],
           "minimum": 1
         },
         "ratio": {
@@ -524,6 +524,51 @@
           "properties": {
             "evaluable_status": {
               "const": "evaluable"
+            },
+            "numerator": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "denominator": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "not": {
+            "properties": {
+              "pattern_id": {
+                "const": "conversational_balance"
+              }
+            },
+            "required": [
+              "pattern_id"
+            ]
+          }
+        }
+      ]
+    },
+    "PatternMeasurementEvaluableMedian": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/PatternMeasurementBase"
+        },
+        {
+          "type": "object",
+          "required": [
+            "ratio"
+          ],
+          "properties": {
+            "evaluable_status": {
+              "const": "evaluable"
+            },
+            "denominator_rule_id": {
+              "const": "median_of_meeting_level_ratios"
+            },
+            "numerator": {
+              "type": "null"
+            },
+            "denominator": {
+              "type": "null"
             }
           },
           "not": {
@@ -716,6 +761,9 @@
       "oneOf": [
         {
           "$ref": "#/$defs/PatternMeasurementEvaluableNumeric"
+        },
+        {
+          "$ref": "#/$defs/PatternMeasurementEvaluableMedian"
         },
         {
           "$ref": "#/$defs/PatternMeasurementInsufficientSignal"
