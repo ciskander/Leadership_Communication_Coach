@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import type { BaselinePack, BaselinePackMeeting, CoachingItem, Experiment } from '@/lib/types';
+import type { BaselinePack, BaselinePackMeeting, CoachingItem, Experiment, ActiveExperiment } from '@/lib/types';
 import { CoachingCard } from '@/components/CoachingCard';
 import { PatternSnapshot } from '@/components/PatternSnapshot';
+import { ExperimentTracker } from '@/components/ExperimentTracker';
 
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
 
@@ -149,14 +150,18 @@ function ProposedExperimentCard({
 
 function ExperimentSection() {
   const [proposed, setProposed] = useState<Experiment[]>([]);
+  const [activeExpData, setActiveExpData] = useState<ActiveExperiment | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepted, setAccepted] = useState<Experiment | null>(null);
 
   useEffect(() => {
-    api.getProposedExperiments()
-      .then(setProposed)
-      .catch(() => setProposed([]))
-      .finally(() => setLoading(false));
+    Promise.all([
+      api.getProposedExperiments().catch(() => [] as Experiment[]),
+      api.getActiveExperiment().catch(() => null),
+    ]).then(([proposedResult, activeResult]) => {
+      setProposed(proposedResult);
+      setActiveExpData(activeResult);
+    }).finally(() => setLoading(false));
   }, []);
 
   if (loading) {
@@ -189,15 +194,16 @@ function ExperimentSection() {
     );
   }
 
-  // No proposed experiments — link to experiment page for active experiment
-  return (
-    <Link
-      href="/client/experiment"
-      className="inline-flex items-center text-sm text-emerald-700 font-medium hover:text-emerald-900 transition-colors"
-    >
-      View my experiment →
-    </Link>
-  );
+  if (activeExpData?.experiment) {
+    return (
+      <ExperimentTracker
+        experiment={activeExpData.experiment}
+        events={activeExpData.recent_events}
+      />
+    );
+  }
+
+  return null;
 }
 
 // ── Sub-run Pattern Snapshot ──────────────────────────────────────────────────
