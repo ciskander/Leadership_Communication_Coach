@@ -113,6 +113,7 @@ def enqueue_baseline_pack_build(self, baseline_pack_id: str) -> str:
     base=BaseWorkerTask,
     max_retries=2,
     default_retry_delay=10,
+    queue="single_meeting",
 )
 def enqueue_next_experiment_suggestion(self, user_record_id: str) -> Optional[str]:
     """
