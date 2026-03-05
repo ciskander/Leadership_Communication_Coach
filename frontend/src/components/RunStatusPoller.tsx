@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useRunPoller } from '@/hooks/useRunPoller';
 import { CoachingCard } from './CoachingCard';
 import { PatternSnapshot } from './PatternSnapshot';
+import { ExperimentTracker } from './ExperimentTracker';
 import { api } from '@/lib/api';
-import type { Experiment } from '@/lib/types';
+import type { Experiment, ActiveExperiment } from '@/lib/types';
 import Link from 'next/link';
 
 interface RunStatusPollerProps {
@@ -23,9 +24,12 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
   const [proposedExperiments, setProposedExperiments] = useState<Experiment[]>([]);
   const [acceptedExpId, setAcceptedExpId] = useState<string | null>(null);
   const [acceptLoading, setAcceptLoading] = useState(false);
+  const [activeExpData, setActiveExpData] = useState<ActiveExperiment | null>(null);
 
   // When the run completes without an active experiment, fetch any proposed
   // experiments so the user can accept inline without going back to the dashboard.
+  // When it completes WITH an active experiment, fetch the full experiment + events
+  // so we can render ExperimentTracker inline.
   useEffect(() => {
     if (run?.status === 'complete' && run?.gate1_pass === true) {
       const activeExpStatus = (
@@ -35,6 +39,10 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
       if (!isActive) {
         api.getProposedExperiments()
           .then(setProposedExperiments)
+          .catch(() => {});
+      } else {
+        api.getActiveExperiment()
+          .then(setActiveExpData)
           .catch(() => {});
       }
     }
@@ -257,94 +265,89 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
             borderColor: 'border-stone-200',
             labelColor: 'text-stone-700',
             label: 'No attempt detected',
-            desc: null, // handled separately with confirmation prompt
+            desc: null,
           };
 
     return (
-      <section
-        className={`rounded-2xl border p-5 space-y-3 ${attemptConfig.bgColor} ${attemptConfig.borderColor}`}
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-base">{attemptConfig.icon}</span>
-          <p className={`text-sm font-semibold ${attemptConfig.labelColor}`}>
-            Experiment: {attemptConfig.label}
-          </p>
-        </div>
-
-        {attempt !== 'no' && (
-          <p className="text-sm text-stone-600 leading-relaxed">{attemptConfig.desc}</p>
-        )}
-
-        {/* Missed detection prompt */}
-        {attempt === 'no' && confirmState === 'idle' && (
-          <div className="space-y-2">
-            <p className="text-sm text-stone-600 leading-relaxed">
-              The model didn't detect your experiment being tried in this meeting — but it's
-              possible we missed something. Did you attempt the experiment?
+      <div className="space-y-4">
+        {/* Detection banner */}
+        <section
+          className={`rounded-2xl border p-5 space-y-3 ${attemptConfig.bgColor} ${attemptConfig.borderColor}`}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-base">{attemptConfig.icon}</span>
+            <p className={`text-sm font-semibold ${attemptConfig.labelColor}`}>
+              Experiment: {attemptConfig.label}
             </p>
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={() => handleConfirm(true)}
-                className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors"
+          </div>
+
+          {attempt !== 'no' && (
+            <p className="text-sm text-stone-600 leading-relaxed">{attemptConfig.desc}</p>
+          )}
+
+          {/* Missed detection prompt */}
+          {attempt === 'no' && confirmState === 'idle' && (
+            <div className="space-y-2">
+              <p className="text-sm text-stone-600 leading-relaxed">
+                The model didn't detect your experiment being tried in this meeting — but it's
+                possible we missed something. Did you attempt the experiment?
+              </p>
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => handleConfirm(true)}
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors"
+                >
+                  Yes, I tried it
+                </button>
+                <button
+                  onClick={() => handleConfirm(false)}
+                  className="px-4 py-2 bg-white border border-stone-300 text-stone-700 rounded-xl text-xs font-semibold hover:bg-stone-50 transition-colors"
+                >
+                  Not this time
+                </button>
+              </div>
+            </div>
+          )}
+
+          {attempt === 'no' && confirmState === 'loading' && (
+            <p className="text-xs text-stone-400">Saving…</p>
+          )}
+
+          {attempt === 'no' && confirmState === 'done' && (
+            <p className="text-sm text-stone-600 leading-relaxed">
+              Got it — no worries. Just a gentle reminder to try again next time.
+            </p>
+          )}
+
+          <p className="text-xs text-stone-400">
+            Experiment {activeExp?.experiment_id as string}
+          </p>
+        </section>
+
+        {/* Full experiment tracker */}
+        {activeExpData?.experiment ? (
+          <ExperimentTracker
+            experiment={activeExpData.experiment}
+            events={activeExpData.recent_events}
+            onComplete={() => router.push('/client')}
+            onAbandon={() => router.push('/client')}
+          />
+        ) : (
+          // Fallback while data is loading or if fetch failed
+          <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
+            <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+              Your experiment
+            </p>
+            <div className="flex gap-3 flex-wrap">
+              <Link
+                href="/client/experiment"
+                className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition-colors"
               >
-                Yes, I tried it
-              </button>
-              <button
-                onClick={() => handleConfirm(false)}
-                className="px-4 py-2 bg-white border border-stone-300 text-stone-700 rounded-xl text-xs font-semibold hover:bg-stone-50 transition-colors"
-              >
-                Not this time
-              </button>
+                View on My Experiment →
+              </Link>
             </div>
           </div>
         )}
-
-        {attempt === 'no' && confirmState === 'loading' && (
-          <p className="text-xs text-stone-400">Saving…</p>
-        )}
-
-        {attempt === 'no' && confirmState === 'done' && (
-          <p className="text-sm text-stone-600 leading-relaxed">
-            Got it — no worries. Just a gentle reminder to try again next time.
-          </p>
-        )}
-
-        <p className="text-xs text-stone-400">
-          Experiment {activeExp?.experiment_id as string}
-        </p>
-      </section>
-    );
-  }
-
-  // ── Continue / complete widget ──────────────────────────────────────────────
-
-  function ExperimentFooter() {
-    if (!hasActiveExp) return null;
-
-    return (
-      <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
-        <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
-          Your experiment
-        </p>
-        <div className="flex gap-3 flex-wrap">
-          <Link
-            href="/client"
-            className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition-colors"
-          >
-            Keep going
-          </Link>
-          <button
-            onClick={handleComplete}
-            disabled={completeState !== 'idle'}
-            className="px-5 py-2.5 bg-white border border-stone-300 text-stone-700 rounded-xl text-sm font-semibold hover:bg-stone-50 transition-colors disabled:opacity-50"
-          >
-            {completeState === 'loading' ? 'Saving…' : 'Mark experiment complete'}
-          </button>
-        </div>
-        <p className="text-xs text-stone-400 leading-relaxed">
-          Mark complete when you feel you've consistently applied this behaviour. You'll be
-          able to choose a new experiment from your suggestions queue.
-        </p>
       </div>
     );
   }
@@ -384,8 +387,6 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           <PatternSnapshot patterns={run.pattern_snapshot as never} />
         </section>
       )}
-
-      <ExperimentFooter />
     </div>
   );
 }
