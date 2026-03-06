@@ -115,41 +115,20 @@ def test_idempotency_key_is_hex_string():
 # ---------------------------------------------------------------------------
 
 def test_worker_skips_run_if_idempotency_key_exists(
-    mock_airtable, mock_openai, valid_single_meeting_output
+    mock_at, valid_single_meeting_output
 ):
     """If an existing run with the same idempotency key exists, no new run is created."""
-    existing_run = {"id": "rec_run_existing", "fields": {"Run ID": "R-000001"}}
-    mock_airtable.check_run_idempotency.return_value = existing_run  # key already exists
-    mock_airtable.get_run_request.return_value = {
-        "id": "rec_rr_001",
-        "fields": {
-            "Request ID": "rr-001",
-            "Transcript Record ID": "rec_tr_001",
-            "Target Speaker Name": "Alice",
-            "Target Speaker Label": "Alice",
-            "Target Role": "chair",
-            "Analysis Type": "single_meeting",
-            "Status": "queued",
-            "Coachee User Record ID": "rec_user_001",
-        },
-    }
-    mock_airtable.get_transcript.return_value = {
-        "id": "rec_tr_001",
-        "fields": {
-            "Raw Text": "Alice: Hello.\nBob: Hi.",
-            "Meeting Type": "exec_staff",
-            "Meeting Date": "2026-02-12",
-            "Meeting ID": "M-000001",
-            "Speaker Labels": json.dumps(["Alice", "Bob"]),
-        },
+    mock_at.find_run_by_idempotency_key.return_value = {
+        "id": "rec_run_existing",
+        "fields": {"Run ID": "R-000001"},
     }
 
-    with patch("backend.core.workers.AirtableClient", return_value=mock_airtable), \
-         patch("backend.core.workers.OpenAIClient", return_value=mock_openai):
+    with patch("backend.core.workers.call_openai") as mock_openai:
         from backend.core.workers import process_single_meeting_analysis
-        run_id = process_single_meeting_analysis("rec_rr_001")
+        run_id = process_single_meeting_analysis("rec_rr_001", client=mock_at)
 
     # create_run should NOT have been called (second call is no-op)
-    mock_airtable.create_run.assert_not_called()
+    mock_at.create_run.assert_not_called()
+    mock_openai.assert_not_called()
     # Should return the existing run ID
     assert run_id == "rec_run_existing"

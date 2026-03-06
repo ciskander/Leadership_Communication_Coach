@@ -3,8 +3,15 @@ conftest.py — Shared fixtures for all backend tests.
 """
 from __future__ import annotations
 
-import json
 import os
+os.environ.setdefault("DATABASE_URL", "sqlite:///./test.db")
+os.environ.setdefault("JWT_SECRET", "test-secret")
+os.environ.setdefault("OPENAI_API_KEY", "test-key")
+
+from dotenv import load_dotenv
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+
+import json
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -12,14 +19,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 # ---------------------------------------------------------------------------
-# Paths
-# ---------------------------------------------------------------------------
-
-_FIXTURES_DIR = Path(__file__).parent / "fixtures"
-_SCHEMA_PATH = Path(__file__).parent.parent / "core" / "schema_version_mvp_v0_2_1.json"
-
-# ---------------------------------------------------------------------------
-# Minimal valid single-meeting OpenAI output (synthesised from the example)
+# Canonical valid single-meeting OpenAI output
 # ---------------------------------------------------------------------------
 
 VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
@@ -41,14 +41,9 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
     },
     "evaluation_summary": {
         "patterns_evaluated": [
-            "agenda_clarity",
-            "objective_signaling",
-            "turn_allocation",
-            "decision_closure",
-            "owner_timeframe_specification",
-            "summary_checkback",
-            "question_quality",
-            "listener_response_quality",
+            "agenda_clarity", "objective_signaling", "turn_allocation",
+            "decision_closure", "owner_timeframe_specification",
+            "summary_checkback", "question_quality", "listener_response_quality",
             "conversational_balance",
         ],
         "patterns_insufficient_signal": [],
@@ -196,7 +191,7 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
         ],
     },
     "experiment_tracking": {
-        "active_experiment": {"experiment_id": None, "status": "none"},
+        "active_experiment": {"experiment_id": "EXP-000000", "status": "none"},
         "detection_in_this_meeting": None,
     },
     "evidence_spans": [
@@ -204,13 +199,13 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
             "evidence_span_id": "ES-001",
             "turn_start_id": 1,
             "turn_end_id": 2,
-            "excerpt": "Alright, let's get started. Today we have three main items...",
+            "excerpt": "Alright, let's get started. Today we have three main items.",
         },
         {
             "evidence_span_id": "ES-002",
             "turn_start_id": 10,
             "turn_end_id": 11,
-            "excerpt": "Moving to the second item on our agenda...",
+            "excerpt": "Moving to the second item on our agenda.",
         },
         {
             "evidence_span_id": "ES-003",
@@ -266,7 +261,6 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
 
 @pytest.fixture
 def valid_single_meeting_output() -> dict:
-    """Return the canonical valid single-meeting output dict."""
     import copy
     return copy.deepcopy(VALID_SINGLE_MEETING_OUTPUT)
 
@@ -277,66 +271,123 @@ def valid_single_meeting_json(valid_single_meeting_output) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Mock Airtable client
+# Airtable mock
+#
+# Workers accept an optional `client` argument, so the cleanest approach is
+# to build a MagicMock and pass it in directly rather than patching the class.
+# This avoids having to know the precise import path and is more robust.
+# ---------------------------------------------------------------------------
+
+def _make_run_request_record(
+    analysis_type: str = "single_meeting",
+    baseline_pack_id: str | None = None,
+) -> dict:
+    fields: dict = {
+        "Transcript": ["rec_tr_001"],
+        "Target Speaker Name": "Alice",
+        "Target Speaker Label": "Alice",
+        "Target Role": "chair",
+        "Analysis Type": analysis_type,
+        "Status": "queued",
+        "User": ["rec_user_001"],
+        "Config": [],
+    }
+    if baseline_pack_id:
+        fields["Baseline Pack"] = [baseline_pack_id]
+    return {"id": "rec_rr_001", "fields": fields}
+
+
+def _make_transcript_record() -> dict:
+    return {
+        "id": "rec_tr_001",
+        "fields": {
+            "Transcript ID": "T-000001",
+            "Transcript (extracted)": (
+                "Alice: Let's get started. Today we have three main items.\n"
+                "Bob: Sounds good, ready when you are.\n"
+                "Alice: First item is the Q2 budget approval."
+            ),
+            "Meeting Type": "exec_staff",
+            "Meeting Date": "2026-02-12",
+            "Title": "Q2 Budget Review",
+            "Speaker Labels": json.dumps(["Alice", "Bob"]),
+        },
+    }
+
+
+def _make_openai_response(output: dict):
+    """Build a mock OpenAIResponse matching the real models.OpenAIResponse fields."""
+    mock = MagicMock()
+    mock.raw_text = json.dumps(output)
+    mock.parsed = output
+    mock.model = "gpt-4o"
+    mock.prompt_tokens = 1000
+    mock.completion_tokens = 500
+    mock.total_tokens = 1500
+    return mock
+
+
+@pytest.fixture
+def mock_at() -> MagicMock:
+    """
+    A pre-configured MagicMock that stands in for AirtableClient.
+    Pass directly to worker functions via the `client=` argument.
+    """
+    at = MagicMock()
+    at.get_run_request.return_value = _make_run_request_record()
+    at.get_transcript.return_value = _make_transcript_record()
+    at.create_run.return_value = {"id": "rec_run_001", "fields": {"Run ID": "R-000001"}}
+    at.update_run.return_value = {"id": "rec_run_001"}
+    at.update_record.return_value = None
+    at.get_active_config.return_value = None          # no config → use defaults
+    at.find_run_by_idempotency_key.return_value = None  # no prior run
+    at.get_proposed_experiments_for_user.return_value = []
+    at.get_active_experiment_for_user.return_value = None
+    at.bulk_create_validation_issues.return_value = None
+    # create_attempt_event_from_run fetches the run back to read Parsed JSON and Gate1 Pass.
+    # Gate1 Pass=True triggers the event path; detection_in_this_meeting=None means no event
+    # is created, so the function returns None cleanly without further Airtable calls.
+    at.get_run.return_value = {
+        "id": "rec_run_001",
+        "fields": {
+            "Run ID": "R-000001",
+            "Gate1 Pass": True,
+            "Parsed JSON": json.dumps(VALID_SINGLE_MEETING_OUTPUT),
+        },
+    }
+    return at
+
+
+@pytest.fixture
+def mock_at_baseline(mock_at) -> MagicMock:
+    """Variant of mock_at pre-configured for baseline pack scenarios."""
+    mock_at.get_run_request.return_value = _make_run_request_record(
+        analysis_type="single_meeting",
+        baseline_pack_id="rec_bp_001",
+    )
+    return mock_at
+
+
+# ---------------------------------------------------------------------------
+# call_openai mock
+#
+# Workers call `call_openai(...)` which returns an OpenAIResponse object.
+# Patch the function at its use-site inside workers.
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
-def mock_airtable():
-    """Return a MagicMock that replaces AirtableClient."""
-    with patch("backend.core.airtable_client.AirtableClient") as MockClass:
-        instance = MagicMock()
-        MockClass.return_value = instance
-        # Default return values for common methods
-        instance.get_run_request.return_value = {
-            "id": "rec_rr_001",
-            "fields": {
-                "Request ID": "rr-001",
-                "Transcript Record ID": "rec_tr_001",
-                "Target Speaker Name": "Alice",
-                "Target Speaker Label": "Alice",
-                "Target Role": "chair",
-                "Analysis Type": "single_meeting",
-                "Status": "queued",
-                "Coachee User Record ID": "rec_user_001",
-            },
-        }
-        instance.get_transcript.return_value = {
-            "id": "rec_tr_001",
-            "fields": {
-                "Transcript ID": "T-000001",
-                "Raw Text": "Alice: Let's get started.\nBob: Sounds good.",
-                "Meeting Type": "exec_staff",
-                "Meeting Date": "2026-02-12",
-                "Speaker Labels": '["Alice", "Bob"]',
-            },
-        }
-        instance.create_run.return_value = {
-            "id": "rec_run_001",
-            "fields": {"Run ID": "R-000001"},
-        }
-        instance.update_run.return_value = {"id": "rec_run_001"}
-        instance.update_run_request_status.return_value = None
-        yield instance
-
-
-# ---------------------------------------------------------------------------
-# Mock OpenAI client
-# ---------------------------------------------------------------------------
-
-@pytest.fixture
-def mock_openai(valid_single_meeting_output):
-    """Return a mock that makes OpenAI return the valid fixture output."""
-    with patch("backend.core.openai_client.OpenAIClient") as MockClass:
-        instance = MagicMock()
-        MockClass.return_value = instance
-        instance.chat_completion.return_value = json.dumps(valid_single_meeting_output)
-        yield instance
+def mock_call_openai(valid_single_meeting_output):
+    """
+    Patch call_openai inside workers to return a valid OpenAIResponse.
+    Use as a context manager or via pytest fixture injection.
+    """
+    response = _make_openai_response(valid_single_meeting_output)
+    with patch("backend.core.workers.call_openai", return_value=response) as mock:
+        yield mock
 
 
 @pytest.fixture
-def mock_openai_raw():
-    """Return the mock OpenAI client without pre-configured output."""
-    with patch("backend.core.openai_client.OpenAIClient") as MockClass:
-        instance = MagicMock()
-        MockClass.return_value = instance
-        yield instance
+def mock_call_openai_raw():
+    """call_openai mock without pre-configured output — configure per-test."""
+    with patch("backend.core.workers.call_openai") as mock:
+        yield mock

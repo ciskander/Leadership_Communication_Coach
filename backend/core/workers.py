@@ -478,7 +478,7 @@ def process_single_meeting_analysis(
         client,
         transcript_record_id=transcript_record_id,
         run_request_record_id=run_request_id,
-        baseline_pack_record_id=None,
+        baseline_pack_record_id=baseline_pack_record_id,
         active_experiment_record_id=active_exp_record_id,
         request_payload=prompt_payload.raw_user_message,
         raw_output=openai_resp.raw_text,

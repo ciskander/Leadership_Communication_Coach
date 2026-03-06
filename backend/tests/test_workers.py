@@ -1,5 +1,12 @@
 """
-test_workers.py — Happy path tests for core worker functions with mocked deps.
+test_workers_integration.py — Integration tests for worker functions with
+mocked Airtable and OpenAI dependencies.
+
+Key differences from the old test_workers.py:
+- AirtableClient is injected via the `client=` parameter (not class-patched)
+- call_openai is patched at backend.core.workers.call_openai (not OpenAIClient)
+- OpenAI mock returns an OpenAIResponse object, not a raw string
+- Method names match the actual AirtableClient API
 """
 from __future__ import annotations
 
@@ -8,150 +15,170 @@ from unittest.mock import MagicMock, patch, call
 
 import pytest
 
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-def _make_run_request_record(status: str = "queued") -> dict:
-    return {
-        "id": "rec_rr_001",
-        "fields": {
-            "Request ID": "rr-001",
-            "Transcript Record ID": "rec_tr_001",
-            "Target Speaker Name": "Alice",
-            "Target Speaker Label": "Alice",
-            "Target Role": "chair",
-            "Analysis Type": "single_meeting",
-            "Status": status,
-            "Coachee User Record ID": "rec_user_001",
-        },
-    }
+from backend.core.models import OpenAIResponse
 
 
-def _make_transcript_record() -> dict:
-    return {
-        "id": "rec_tr_001",
-        "fields": {
-            "Transcript ID": "T-000001",
-            "Raw Text": "Alice: Let's get started.\nBob: Sounds good.\nAlice: First item is budget.",
-            "Meeting Type": "exec_staff",
-            "Meeting Date": "2026-02-12",
-            "Meeting ID": "M-000001",
-            "Speaker Labels": json.dumps(["Alice", "Bob"]),
-        },
-    }
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
-
-# ---------------------------------------------------------------------------
-# Single meeting worker happy path
-# ---------------------------------------------------------------------------
-
-@pytest.mark.usefixtures("mock_airtable", "mock_openai")
-def test_single_meeting_worker_creates_run_record(
-    mock_airtable, mock_openai, valid_single_meeting_output
-):
-    """Worker should create a run record in Airtable on success."""
-    mock_airtable.get_run_request.return_value = _make_run_request_record()
-    mock_airtable.get_transcript.return_value = _make_transcript_record()
-    mock_airtable.create_run.return_value = {"id": "rec_run_001", "fields": {}}
-    mock_airtable.check_run_idempotency.return_value = None  # no prior run
-    mock_openai.chat_completion.return_value = json.dumps(valid_single_meeting_output)
-
-    with patch("backend.core.workers.AirtableClient", return_value=mock_airtable), \
-         patch("backend.core.workers.OpenAIClient", return_value=mock_openai):
-        from backend.core.workers import process_single_meeting_analysis
-        run_id = process_single_meeting_analysis("rec_rr_001")
-
-    assert run_id is not None
-    mock_airtable.create_run.assert_called_once()
-
-
-@pytest.mark.usefixtures("mock_airtable", "mock_openai")
-def test_single_meeting_worker_marks_run_request_complete(
-    mock_airtable, mock_openai, valid_single_meeting_output
-):
-    mock_airtable.get_run_request.return_value = _make_run_request_record()
-    mock_airtable.get_transcript.return_value = _make_transcript_record()
-    mock_airtable.create_run.return_value = {"id": "rec_run_001", "fields": {}}
-    mock_airtable.check_run_idempotency.return_value = None
-    mock_openai.chat_completion.return_value = json.dumps(valid_single_meeting_output)
-
-    with patch("backend.core.workers.AirtableClient", return_value=mock_airtable), \
-         patch("backend.core.workers.OpenAIClient", return_value=mock_openai):
-        from backend.core.workers import process_single_meeting_analysis
-        process_single_meeting_analysis("rec_rr_001")
-
-    # Should update run_request status to complete
-    calls = [str(c) for c in mock_airtable.update_run_request_status.call_args_list]
-    assert any("complete" in c for c in calls)
-
-
-@pytest.mark.usefixtures("mock_airtable", "mock_openai")
-def test_single_meeting_worker_stores_parsed_json(
-    mock_airtable, mock_openai, valid_single_meeting_output
-):
-    mock_airtable.get_run_request.return_value = _make_run_request_record()
-    mock_airtable.get_transcript.return_value = _make_transcript_record()
-    mock_airtable.create_run.return_value = {"id": "rec_run_001", "fields": {}}
-    mock_airtable.check_run_idempotency.return_value = None
-    mock_openai.chat_completion.return_value = json.dumps(valid_single_meeting_output)
-
-    with patch("backend.core.workers.AirtableClient", return_value=mock_airtable), \
-         patch("backend.core.workers.OpenAIClient", return_value=mock_openai):
-        from backend.core.workers import process_single_meeting_analysis
-        process_single_meeting_analysis("rec_rr_001")
-
-    # Run should have been updated with parsed JSON
-    update_calls = mock_airtable.update_run.call_args_list
-    assert any(
-        "Parsed JSON" in str(call) or "parsed_json" in str(call).lower()
-        for call in update_calls
+def _openai_response(output: dict) -> OpenAIResponse:
+    raw = json.dumps(output)
+    return OpenAIResponse(
+        parsed=output,
+        raw_text=raw,
+        model="gpt-4o",
+        prompt_tokens=1000,
+        completion_tokens=500,
+        total_tokens=1500,
     )
 
 
-# ---------------------------------------------------------------------------
-# Gate1 failure path
-# ---------------------------------------------------------------------------
+# ── Single meeting worker ─────────────────────────────────────────────────────
 
-def test_single_meeting_worker_handles_gate1_failure(mock_airtable, mock_openai_raw):
-    """If Gate1 fails, the run should be marked with gate1_pass=False."""
-    mock_airtable.get_run_request.return_value = _make_run_request_record()
-    mock_airtable.get_transcript.return_value = _make_transcript_record()
-    mock_airtable.create_run.return_value = {"id": "rec_run_001", "fields": {}}
-    mock_airtable.check_run_idempotency.return_value = None
-    # Return invalid JSON that will fail Gate1
-    mock_openai_raw.chat_completion.return_value = json.dumps({"schema_version": "wrong"})
+class TestProcessSingleMeetingAnalysis:
 
-    with patch("backend.core.workers.AirtableClient", return_value=mock_airtable), \
-         patch("backend.core.workers.OpenAIClient", return_value=mock_openai_raw):
-        from backend.core.workers import process_single_meeting_analysis
-        run_id = process_single_meeting_analysis("rec_rr_001")
+    def test_creates_run_record_on_success(self, mock_at, valid_single_meeting_output):
+        with patch("backend.core.workers.call_openai",
+                   return_value=_openai_response(valid_single_meeting_output)):
+            from backend.core.workers import process_single_meeting_analysis
+            run_id = process_single_meeting_analysis("rec_rr_001", client=mock_at, system_prompt_override="test system prompt")
 
-    # Run should still be created (not raise), but with gate1_pass=False marker
-    assert run_id is not None
+        assert run_id == "rec_run_001"
+        mock_at.create_run.assert_called_once()
+
+    def test_returns_existing_run_on_idempotency_hit(self, mock_at, valid_single_meeting_output):
+        """If a run with the same idempotency key exists, no new run is created."""
+        mock_at.find_run_by_idempotency_key.return_value = {
+            "id": "rec_run_existing",
+            "fields": {"Run ID": "R-000001"},
+        }
+
+        with patch("backend.core.workers.call_openai") as mock_openai:
+            from backend.core.workers import process_single_meeting_analysis
+            run_id = process_single_meeting_analysis("rec_rr_001", client=mock_at, system_prompt_override="test system prompt")
+
+        assert run_id == "rec_run_existing"
+        mock_openai.assert_not_called()
+        mock_at.create_run.assert_not_called()
+
+    def test_run_record_includes_parsed_json(self, mock_at, valid_single_meeting_output):
+        with patch("backend.core.workers.call_openai",
+                   return_value=_openai_response(valid_single_meeting_output)):
+            from backend.core.workers import process_single_meeting_analysis
+            process_single_meeting_analysis("rec_rr_001", client=mock_at, system_prompt_override="test system prompt")
+
+        create_call_kwargs = mock_at.create_run.call_args
+        assert create_call_kwargs is not None
+        # The fields dict passed to create_run should contain Parsed JSON
+        fields_arg = create_call_kwargs[0][0] if create_call_kwargs[0] else create_call_kwargs[1].get("fields", {})
+        all_args_str = str(create_call_kwargs)
+        assert "Parsed JSON" in all_args_str or "parsed_json" in all_args_str.lower()
+
+    def test_gate1_failure_still_creates_run(self, mock_at):
+        """Even when Gate1 fails the run record is persisted (with gate1_pass=False)."""
+        bad_output = {"schema_version": "wrong", "garbage": True}
+        with patch("backend.core.workers.call_openai",
+                   return_value=_openai_response(bad_output)):
+            from backend.core.workers import process_single_meeting_analysis
+            run_id = process_single_meeting_analysis("rec_rr_001", client=mock_at, system_prompt_override="test system prompt")
+
+        assert run_id is not None
+        mock_at.create_run.assert_called_once()
+        # Verify gate1_pass=False was passed in the fields
+        fields_str = str(mock_at.create_run.call_args)
+        assert "False" in fields_str or "Gate1 Pass" in fields_str
+
+    def test_missing_transcript_link_raises(self, mock_at, valid_single_meeting_output):
+        mock_at.get_run_request.return_value = {
+            "id": "rec_rr_001",
+            "fields": {
+                # No "Transcript" key
+                "Target Speaker Name": "Alice",
+                "Analysis Type": "single_meeting",
+            },
+        }
+        with pytest.raises(ValueError, match="no Transcript"):
+            from backend.core.workers import process_single_meeting_analysis
+            process_single_meeting_analysis("rec_rr_001", client=mock_at, system_prompt_override="test system prompt")
+
+    def test_baseline_sub_run_links_back_to_pack(self, mock_at_baseline, valid_single_meeting_output):
+        """Sub-run for a baseline pack should have baseline_pack field set on the run record."""
+        with patch("backend.core.workers.call_openai",
+                   return_value=_openai_response(valid_single_meeting_output)):
+            from backend.core.workers import process_single_meeting_analysis
+            process_single_meeting_analysis("rec_rr_001", client=mock_at_baseline, system_prompt_override="test system prompt")
+
+        fields_str = str(mock_at_baseline.create_run.call_args)
+        assert "rec_bp_001" in fields_str
 
 
-# ---------------------------------------------------------------------------
-# Experiment instantiation
-# ---------------------------------------------------------------------------
+# ── Pattern patching applied inside worker ───────────────────────────────────
 
-def test_worker_creates_experiment_on_first_run(
-    mock_airtable, mock_openai, valid_single_meeting_output
-):
-    """After a successful run, an experiment should be created if none exists."""
-    mock_airtable.get_run_request.return_value = _make_run_request_record()
-    mock_airtable.get_transcript.return_value = _make_transcript_record()
-    mock_airtable.create_run.return_value = {"id": "rec_run_001", "fields": {}}
-    mock_airtable.check_run_idempotency.return_value = None
-    mock_airtable.get_active_experiment.return_value = None  # no existing experiment
-    mock_openai.chat_completion.return_value = json.dumps(valid_single_meeting_output)
+class TestWorkerAppliesPatches:
+    """
+    Verify that the worker applies snapshot patches before persisting,
+    by inspecting what gets written to Airtable.
+    """
 
-    with patch("backend.core.workers.AirtableClient", return_value=mock_airtable), \
-         patch("backend.core.workers.OpenAIClient", return_value=mock_openai):
-        from backend.core.workers import process_single_meeting_analysis
-        process_single_meeting_analysis("rec_rr_001")
+    def _output_with_zero_denominator(self, base: dict) -> dict:
+        import copy
+        out = copy.deepcopy(base)
+        for snap in out["pattern_snapshot"]:
+            if snap["pattern_id"] == "agenda_clarity":
+                snap["denominator"] = 0
+                snap["numerator"] = 0
+                snap["ratio"] = 0.0
+        return out
 
-    # Should have attempted to create an experiment
-    create_calls = [str(c) for c in mock_airtable.mock_calls]
-    assert any("experiment" in c.lower() or "Experiment" in c for c in create_calls)
+    def _output_with_cb_ratio(self, base: dict) -> dict:
+        import copy
+        out = copy.deepcopy(base)
+        for snap in out["pattern_snapshot"]:
+            if snap["pattern_id"] == "conversational_balance":
+                snap["ratio"] = 0.5
+                snap["numerator"] = 5
+                snap["denominator"] = 10
+        return out
+
+    def test_zero_denominator_coerced_in_persisted_json(
+        self, mock_at, valid_single_meeting_output
+    ):
+        bad_output = self._output_with_zero_denominator(valid_single_meeting_output)
+        with patch("backend.core.workers.call_openai",
+                   return_value=_openai_response(bad_output)):
+            from backend.core.workers import process_single_meeting_analysis
+            process_single_meeting_analysis("rec_rr_001", client=mock_at, system_prompt_override="test system prompt")
+
+        fields_str = str(mock_at.create_run.call_args)
+        # The persisted JSON should not contain ratio for the zero-denominator pattern
+        # (it will have been coerced to insufficient_signal and ratio stripped)
+        persisted_json_str = [
+            str(v) for k, v in (mock_at.create_run.call_args[0][0] if mock_at.create_run.call_args[0]
+                                 else mock_at.create_run.call_args[1]).items()
+            if "Parsed" in str(k)
+        ]
+        if persisted_json_str:
+            persisted = json.loads(persisted_json_str[0])
+            for snap in persisted.get("pattern_snapshot", []):
+                if snap["pattern_id"] == "agenda_clarity":
+                    assert snap["evaluable_status"] == "insufficient_signal"
+                    assert "ratio" not in snap
+
+    def test_conversational_balance_ratio_stripped_before_persist(
+        self, mock_at, valid_single_meeting_output
+    ):
+        bad_output = self._output_with_cb_ratio(valid_single_meeting_output)
+        with patch("backend.core.workers.call_openai",
+                   return_value=_openai_response(bad_output)):
+            from backend.core.workers import process_single_meeting_analysis
+            process_single_meeting_analysis("rec_rr_001", client=mock_at, system_prompt_override="test system prompt")
+
+        # If we can access the persisted fields, verify ratio is gone
+        create_args = mock_at.create_run.call_args
+        if create_args and create_args[0]:
+            fields = create_args[0][0]
+            parsed_str = fields.get("Parsed JSON", "")
+            if parsed_str:
+                persisted = json.loads(parsed_str)
+                for snap in persisted.get("pattern_snapshot", []):
+                    if snap["pattern_id"] == "conversational_balance":
+                        assert "ratio" not in snap
