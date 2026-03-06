@@ -33,6 +33,8 @@ def _make_user(role: str = "coachee"):
         role=role,
         coach_id=None,
         airtable_user_record_id="rec_user_001",
+        oauth_provider="google",
+        oauth_sub="google-sub-001",
     )
 
 
@@ -91,8 +93,7 @@ def test_coach_can_access_coach_routes(client, app):
     from backend.api.dependencies import get_current_user
     app.dependency_overrides[get_current_user] = lambda: coach
     try:
-        with patch("backend.core.airtable_client.AirtableClient") as MockAT:
-            MockAT.return_value.list_coachees.return_value = []
+        with patch("backend.api.routes_coach.list_coachees_for_coach", return_value=[]):
             resp = client.get("/api/coach/coachees")
     finally:
         app.dependency_overrides.clear()
@@ -115,8 +116,7 @@ def test_admin_can_access_admin_routes(client, app):
     from backend.api.dependencies import get_current_user
     app.dependency_overrides[get_current_user] = lambda: admin
     try:
-        with patch("backend.core.airtable_client.AirtableClient") as MockAT:
-            MockAT.return_value.list_all_users.return_value = []
+        with patch("backend.api.routes_admin.list_all_users", return_value=[]):
             resp = client.get("/api/admin/users")
     finally:
         app.dependency_overrides.clear()
@@ -183,11 +183,10 @@ def test_coachee_can_create_baseline_pack(client, app):
     from backend.api.dependencies import get_current_user
     app.dependency_overrides[get_current_user] = lambda: user
     try:
-        with patch("backend.core.airtable_client.AirtableClient") as MockAT, \
-             patch("backend.queue.tasks.enqueue_single_meeting"):
+        with patch("backend.api.routes_coachee.AirtableClient") as MockAT:
             at = MagicMock()
             MockAT.return_value = at
-            at.create_baseline_pack.return_value = {
+            at.create_record.return_value = {
                 "id": "rec_bp_001",
                 "fields": {"Baseline Pack ID": "BP-000001"},
             }
