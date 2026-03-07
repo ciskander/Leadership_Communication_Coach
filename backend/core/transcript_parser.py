@@ -28,7 +28,7 @@ _HTML_TAG_RE = re.compile(r"<[^>]+>")
 _VOICE_TAG_RE = re.compile(r"<v ([^>]+)>")  # <v Speaker Name>
 _TIMESTAMP_INLINE_RE = re.compile(r"\b\d{1,2}:\d{2}(:\d{2})?(\.\d+)?\b")
 _HEADER_LINE_RE = re.compile(
-    r"^(Meeting\s*#|Meeting\s*Type|Leader|Participants|Date|Location|Duration)\s*:",
+    r"^(Meeting(\s*(#|Type|Name|Title))?|Leader|Participants|Date|Location|Duration|Agenda|Subject|Topic|Project)\s*:",
     re.IGNORECASE,
 )
 
@@ -323,7 +323,7 @@ def _parse_txt_format_b(lines: list[str]) -> list[Turn]:
             i += 1
             continue
         m = _FMT_B_SPEAKER_TS_RE.match(line)
-        if m:
+        if m and not _HEADER_LINE_RE.match(line):
             speaker = _clean_speaker(m.group(1))
             i += 1
             text_lines = []
@@ -358,8 +358,8 @@ def _parse_txt_format_d(lines: list[str]) -> list[Turn]:
         if len(block) >= 2:
             speaker = _clean_speaker(block[0])
             text = " ".join(block[1:])
-            # Heuristic: first line should look like a name (no colon, < 50 chars)
-            if len(speaker) < 50 and ":" not in speaker:
+            # Heuristic: first line should look like a name (no colon, < 50 chars, not a header)
+            if len(speaker) < 50 and ":" not in speaker and not _HEADER_LINE_RE.match(block[0] + ":"):
                 raw.append((speaker, text))
     if len(raw) < 2:
         return []
@@ -375,7 +375,7 @@ def _parse_txt_format_e(lines: list[str]) -> list[Turn]:
     while i < len(lines):
         line = lines[i].strip()
         m = _FMT_E_RE.match(line)
-        if m:
+        if m and not _HEADER_LINE_RE.match(line):
             speaker = _clean_speaker(m.group(1))
             i += 1
             text_lines = []
