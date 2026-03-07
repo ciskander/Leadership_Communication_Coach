@@ -259,7 +259,7 @@ def _persist_run_fields(
     fields: dict = {
         F_RUN_TRANSCRIPT: [transcript_record_id],
         F_RUN_MODEL_NAME: model_name,
-        F_RUN_REQUEST_PAYLOAD: request_payload,
+        F_RUN_REQUEST_PAYLOAD: request_payload[:100_000],  # Airtable long text limit safety
         F_RUN_RAW_OUTPUT: raw_output[:100_000],  # Airtable long text limit safety
         F_RUN_PARSE_OK: parse_ok,
         F_RUN_SCHEMA_OK: schema_ok,

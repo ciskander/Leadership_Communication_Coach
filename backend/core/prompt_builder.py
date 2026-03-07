@@ -15,6 +15,17 @@ from .models import MemoryBlock, ParsedTranscript, PromptPayload
 
 logger = logging.getLogger(__name__)
 
+# Appended to every user message to reinforce rules the model tends to violate.
+_HARD_REMINDERS = """
+
+Hard reminders:
+- JSON only; no prose/markdown.
+- evaluation_summary: Every one of the 10 pattern_ids must appear in EXACTLY ONE of patterns_evaluated, patterns_insufficient_signal, or patterns_not_evaluable. No pattern may be omitted — including conversational_balance.
+- pattern_snapshot must include all 10 pattern IDs in required order.
+- conversational_balance requires balance_assessment and no numeric fields.
+- evidence_spans turn_start_id/turn_end_id must be integers.
+- focus length=1, micro_experiment length=1."""
+
 
 def _generate_analysis_id() -> str:
     """Generate a date-stamped analysis ID (A-YYMMDD format)."""
@@ -86,6 +97,7 @@ def build_single_meeting_prompt(
         "Analyze and return ONLY one JSON object conforming to mvp.v0.2.1.\n\n"
         "INPUT_PAYLOAD\n"
         + json.dumps(input_payload, ensure_ascii=False, indent=2)
+        + _HARD_REMINDERS
     )
 
     return PromptPayload(
@@ -181,6 +193,7 @@ def build_baseline_pack_prompt(
         "Analyze and return ONLY one JSON object conforming to mvp.v0.2.1.\n\n"
         "INPUT_PAYLOAD\n"
         + json.dumps(input_payload, ensure_ascii=False, indent=2)
+        + _HARD_REMINDERS
     )
 
     return PromptPayload(
