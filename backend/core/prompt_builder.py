@@ -25,7 +25,9 @@ Hard reminders:
 - conversational_balance requires balance_assessment and no numeric fields.
 - evidence_spans turn_start_id/turn_end_id must be integers.
 - focus length=1, micro_experiment length=1.
-- focus[0] MUST include a "suggested_rewrite" field: a concrete, reworded version of what the speaker said in the evidence span, demonstrating the coaching advice applied. Write it in the speaker's natural voice, 1-3 sentences."""
+- focus[0] MUST include ALL evidence spans where the pattern opportunity was missed, not just one.
+- focus[0] MUST include a "suggested_rewrite" field: a concrete, reworded version of what the speaker said in the evidence span, demonstrating the coaching advice applied. Write it in the speaker's natural voice, 1-3 sentences.
+- focus[0] MUST include a "rewrite_for_span_id" field set to the evidence_span_id that the suggested_rewrite directly rewrites. The rewrite must match the excerpt in that specific span."""
 
 
 def _generate_analysis_id() -> str:

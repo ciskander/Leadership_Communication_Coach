@@ -805,6 +805,10 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 1000
+        },
+        "rewrite_for_span_id": {
+          "type": "string",
+          "pattern": "^ES-[0-9]{3}$"
         }
       }
     },

@@ -71,6 +71,16 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
                     </blockquote>
                   </div>
                 )}
+                {(focus.additional_quotes ?? []).length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                      Other moments where this came up
+                    </p>
+                    {focus.additional_quotes!.map((q, i) => (
+                      <EvidenceQuote key={i} quote={q} />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

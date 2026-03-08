@@ -23,6 +23,8 @@ export interface CoachingItem {
   message: string;
   quotes: QuoteObject[];
   suggested_rewrite?: string | null;
+  rewrite_for_span_id?: string | null;
+  additional_quotes?: QuoteObject[];
 }
 
 export interface MicroExperiment {

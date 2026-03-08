@@ -57,6 +57,8 @@ class CoachingItemWithQuotes(BaseModel):
     message: str
     quotes: list[QuoteObject] = Field(default_factory=list)
     suggested_rewrite: Optional[str] = None
+    rewrite_for_span_id: Optional[str] = None
+    additional_quotes: list[QuoteObject] = Field(default_factory=list)
 
 
 class MicroExperimentWithQuotes(BaseModel):
