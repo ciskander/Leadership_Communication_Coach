@@ -237,6 +237,12 @@ The CSB is an independent, non-regulatory, federal agency that investigates majo
 The purpose of today's meeting is to provide an opportunity for the Board to discuss ongoing investigation and organizational activities, including the status of the CSB's Action Plan, and a very brief discussion about deployment.
 Manny Ehrlich: Good afternoon. Thank you for coming. I'm Manny Ehrlich. I am the senior member on the Board with 13 months now. I'm also the senior member chronologically. I'm not sure what one has to do with the other, but it's been an interesting year for me, 13 months.
 As some of you know, I spent 50 years in the chemical industry, which isn't bad for a guy that's 35 years old, and I think we've made some progress, and taking what we've learned on a number of these incidents back to folks in the field and hopefully they'll have some benefit in terms of not having the same types of incidents occur again.
+I'd like to think of us as being like the smallest, most powerful agency officials, the smallest budget with the biggest reach. In the words of Margaret Mead: "Never underestimate the power of a small group of committed people to change the world."
+Among the participants in the formal presentation were: the Torrance Refinery Action Alliance and United Steelworkers.
+Just a couple of other brief observations: one is that the refinery is in the process of sale.
+We consider numerous factors when deploying, including: the number of injuries and fatalities.
+M: Yes.
+Rick Engler: Thank you. On February 18, 2015, an explosion occurred in the electrostatic precipitator at the ExxonMobil refinery in Southern California.
 """
 
 
@@ -268,6 +274,27 @@ def test_header_lines_not_extracted_as_speakers():
     assert "date" not in labels_lower
     assert "call title" not in labels_lower
     assert "time/time zone" not in labels_lower
+
+
+def test_sentence_fragments_not_extracted_as_speakers():
+    """Mid-sentence colons should not create false speaker labels."""
+    result = parse_transcript(
+        TXT_LONG_TURNS_WITH_HEADER.encode("utf-8"), "transcript.txt", "test"
+    )
+    labels_lower = [s.lower() for s in result.speaker_labels]
+    # These are sentence fragments that contain colons, not speaker names
+    for bad in [
+        "biggest reach. in the words of margaret mead",
+        "among the participants in the formal presentation were",
+        "just a couple of other brief observations",
+        "we consider numerous factors when deploying, including",
+    ]:
+        assert bad not in labels_lower, f"False speaker label detected: {bad}"
+    # Real speakers should still be present
+    assert any("rick" in s for s in labels_lower)
+    assert any("manny" in s for s in labels_lower)
+    # Single-letter labels like "M" are acceptable (unidentified speaker)
+    assert any(s == "m" for s in labels_lower)
 
 
 def test_turn_ids_always_start_at_1():

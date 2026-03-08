@@ -71,6 +71,46 @@ def _clean_speaker(label: str) -> str:
     return label.strip()
 
 
+# Abbreviated titles that legitimately end with a period
+_TITLE_ABBREV_RE = re.compile(
+    r"\b(Mr|Mrs|Ms|Dr|Jr|Sr|St|Prof|Rev|Gen|Gov|Rep|Sen|Sgt|Cpl|Capt|Col|Lt|Cmdr)\.$",
+    re.IGNORECASE,
+)
+# Common lowercase words allowed in names (particles / prefixes)
+_NAME_PARTICLES = frozenset({
+    "de", "del", "della", "van", "von", "der", "den", "al", "el", "la", "le", "di", "du", "da",
+})
+
+
+def _is_plausible_speaker(label: str) -> bool:
+    """Reject labels that look like sentence fragments rather than names.
+
+    Speaker labels are typically 1–4 words (occasionally 5 with titles),
+    contain no sentence punctuation, and are mostly capitalised.
+    """
+    words = label.split()
+    if not words:
+        return False
+    # Too many words for a person's name / role label
+    if len(words) > 5:
+        return False
+    # Sentence-ending punctuation (periods not after known title abbreviations)
+    if "." in label and not _TITLE_ABBREV_RE.search(label):
+        return False
+    # Commas indicate sentence fragments, not names
+    if "," in label:
+        return False
+    # If multiple words, the majority should be capitalised (proper noun)
+    if len(words) > 1:
+        non_cap = sum(
+            1 for w in words
+            if w[0].islower() and w.lower() not in _NAME_PARTICLES
+        )
+        if non_cap > len(words) // 2:
+            return False
+    return True
+
+
 def _dedupe_speakers(speakers: list[str]) -> list[str]:
     """Case-insensitive deduplicate preserving first-seen casing."""
     seen: dict[str, str] = {}
@@ -261,11 +301,16 @@ _FMT_E_RE = re.compile(r"^([A-Za-z][^:]{0,60})\s*\(\d{1,2}:\d{2}")  # "Speaker (
 
 
 def _fmt_a_line_count(lines: list[str]) -> int:
-    """Count non-header lines that match Format A pattern."""
-    return sum(
-        1 for l in lines
-        if l.strip() and _FMT_A_RE.search(l) and not _HEADER_LINE_RE.match(l.strip())
-    )
+    """Count non-header lines that match Format A with a plausible speaker."""
+    count = 0
+    for l in lines:
+        l = l.strip()
+        if not l:
+            continue
+        m = _FMT_A_RE.match(l)
+        if m and not _HEADER_LINE_RE.match(l) and _is_plausible_speaker(m.group(1).strip()):
+            count += 1
+    return count
 
 
 def _parse_txt(text: str) -> list[Turn]:
@@ -307,7 +352,7 @@ def _parse_txt_format_a(lines: list[str]) -> list[Turn]:
         if not line or _BOILERPLATE_RE.search(line):
             continue
         m = _FMT_A_RE.match(line)
-        if m and not _HEADER_LINE_RE.match(line):
+        if m and not _HEADER_LINE_RE.match(line) and _is_plausible_speaker(m.group(1).strip()):
             if current_speaker and current_text:
                 raw.append((current_speaker, " ".join(current_text)))
             current_speaker = _clean_speaker(m.group(1))
