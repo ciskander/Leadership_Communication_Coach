@@ -155,6 +155,18 @@ def _build_run_response(run_record: dict) -> RunStatusResponse:
             _links = fields.get("Active Experiment", [])
             if _links:
                 active_exp["experiment_record_id"] = _links[0]
+
+        # Resolve detection evidence spans into quotes for the frontend
+        detection = exp_tracking.get("detection_in_this_meeting")
+        if isinstance(detection, dict):
+            det_quotes = _resolve_quotes(
+                detection.get("evidence_span_ids", []),
+                spans_by_id,
+                transcript_id,
+                meeting_id,
+            )
+            detection["quotes"] = [q.model_dump() for q in det_quotes]
+
     resp.experiment_tracking = exp_tracking
 
     return resp

@@ -131,6 +131,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
   const attempt = detection?.attempt as string | null;
   const countAttempts = detection?.count_attempts as number | null;
+  const detectionQuotes = (detection?.quotes as Array<{ quote_text: string; speaker_label?: string }>) ?? [];
   const expRecordId = activeExp
     ? (run.experiment_tracking as Record<string, unknown> & { _record_id?: string })?._record_id ?? null
     : null;
@@ -283,6 +284,27 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
           {attempt !== 'no' && (
             <p className="text-sm text-stone-600 leading-relaxed">{attemptConfig.desc}</p>
+          )}
+
+          {/* Evidence quotes from the transcript */}
+          {attempt !== 'no' && detectionQuotes.length > 0 && (
+            <div className="space-y-2 pt-1">
+              {detectionQuotes.map((q, i) => (
+                <blockquote
+                  key={i}
+                  className="border-l-2 border-current opacity-60 pl-3 py-1"
+                >
+                  <p className="text-xs leading-relaxed italic">
+                    &ldquo;{q.quote_text}&rdquo;
+                  </p>
+                  {q.speaker_label && (
+                    <p className="text-xs mt-0.5 font-medium not-italic">
+                      — {q.speaker_label}
+                    </p>
+                  )}
+                </blockquote>
+              ))}
+            </div>
           )}
 
           {/* Missed detection prompt */}
