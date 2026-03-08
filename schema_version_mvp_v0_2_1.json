@@ -1068,7 +1068,7 @@
         "excerpt": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 1200
+          "maxLength": 2000
         }
       }
     }
