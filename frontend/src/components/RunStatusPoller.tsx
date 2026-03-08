@@ -6,6 +6,7 @@ import { useRunPoller } from '@/hooks/useRunPoller';
 import { CoachingCard } from './CoachingCard';
 import { PatternSnapshot } from './PatternSnapshot';
 import { ExperimentTracker } from './ExperimentTracker';
+import { EvidenceQuote } from './EvidenceQuote';
 import { api } from '@/lib/api';
 import type { Experiment, ActiveExperiment } from '@/lib/types';
 import Link from 'next/link';
@@ -246,7 +247,6 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         ? {
             icon: '✦',
             bgColor: 'bg-emerald-50',
-            borderColor: 'border-emerald-200',
             labelColor: 'text-emerald-800',
             label: 'Nicely done!',
             desc: `The model detected ${countAttempts ?? 'multiple'} clear attempt${(countAttempts ?? 0) !== 1 ? 's' : ''} at your experiment in this meeting. Keep it up.`,
@@ -255,7 +255,6 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         ? {
             icon: '◎',
             bgColor: 'bg-amber-50',
-            borderColor: 'border-amber-200',
             labelColor: 'text-amber-800',
             label: 'Partial attempt detected',
             desc: `You made a partial attempt at your experiment${countAttempts ? ` — ${countAttempts} instance${countAttempts !== 1 ? 's' : ''} noted` : ''}. You're on the right track.`,
@@ -263,7 +262,6 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         : {
             icon: '◈',
             bgColor: 'bg-stone-50',
-            borderColor: 'border-stone-200',
             labelColor: 'text-stone-700',
             label: 'No attempt detected',
             desc: null,
@@ -272,78 +270,66 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
     return (
       <div className="space-y-4">
         {/* Detection banner */}
-        <section
-          className={`rounded-2xl border p-5 space-y-3 ${attemptConfig.bgColor} ${attemptConfig.borderColor}`}
-        >
-          <div className="flex items-center gap-2">
+        <section className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+          <div className={`flex items-center gap-2.5 px-5 py-3.5 border-b border-stone-100 ${attemptConfig.bgColor}`}>
             <span className="text-base">{attemptConfig.icon}</span>
-            <p className={`text-sm font-semibold ${attemptConfig.labelColor}`}>
+            <h3 className={`text-sm font-semibold ${attemptConfig.labelColor}`}>
               Experiment: {attemptConfig.label}
-            </p>
+            </h3>
           </div>
 
-          {attempt !== 'no' && (
-            <p className="text-sm text-stone-600 leading-relaxed">{attemptConfig.desc}</p>
-          )}
+          <div className="px-5 py-4 space-y-2">
+            {attempt !== 'no' && (
+              <p className="text-sm text-stone-700 leading-relaxed">{attemptConfig.desc}</p>
+            )}
 
-          {/* Evidence quotes from the transcript */}
-          {attempt !== 'no' && detectionQuotes.length > 0 && (
-            <div className="space-y-2 pt-1">
-              {detectionQuotes.map((q, i) => (
-                <blockquote
-                  key={i}
-                  className="border-l-2 border-current opacity-60 pl-3 py-1"
-                >
-                  <p className="text-xs leading-relaxed italic">
-                    &ldquo;{q.quote_text}&rdquo;
-                  </p>
-                  {q.speaker_label && (
-                    <p className="text-xs mt-0.5 font-medium not-italic">
-                      — {q.speaker_label}
-                    </p>
-                  )}
-                </blockquote>
-              ))}
-            </div>
-          )}
-
-          {/* Missed detection prompt */}
-          {attempt === 'no' && confirmState === 'idle' && (
-            <div className="space-y-2">
-              <p className="text-sm text-stone-600 leading-relaxed">
-                The model didn't detect your experiment being tried in this meeting — but it's
-                possible we missed something. Did you attempt the experiment?
-              </p>
-              <div className="flex gap-2 pt-1">
-                <button
-                  onClick={() => handleConfirm(true)}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors"
-                >
-                  Yes, I tried it
-                </button>
-                <button
-                  onClick={() => handleConfirm(false)}
-                  className="px-4 py-2 bg-white border border-stone-300 text-stone-700 rounded-xl text-xs font-semibold hover:bg-stone-50 transition-colors"
-                >
-                  Not this time
-                </button>
+            {/* Evidence quotes from the transcript */}
+            {attempt !== 'no' && detectionQuotes.length > 0 && (
+              <div className="space-y-2">
+                {detectionQuotes.map((q, i) => (
+                  <EvidenceQuote key={i} quote={q} />
+                ))}
               </div>
-            </div>
-          )}
+            )}
 
-          {attempt === 'no' && confirmState === 'loading' && (
-            <p className="text-xs text-stone-400">Saving…</p>
-          )}
+            {/* Missed detection prompt */}
+            {attempt === 'no' && confirmState === 'idle' && (
+              <div className="space-y-2">
+                <p className="text-sm text-stone-700 leading-relaxed">
+                  The model didn&apos;t detect your experiment being tried in this meeting — but
+                  it&apos;s possible we missed something. Did you attempt the experiment?
+                </p>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={() => handleConfirm(true)}
+                    className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors"
+                  >
+                    Yes, I tried it
+                  </button>
+                  <button
+                    onClick={() => handleConfirm(false)}
+                    className="px-4 py-2 bg-white border border-stone-300 text-stone-700 rounded-xl text-xs font-semibold hover:bg-stone-50 transition-colors"
+                  >
+                    Not this time
+                  </button>
+                </div>
+              </div>
+            )}
 
-          {attempt === 'no' && confirmState === 'done' && (
-            <p className="text-sm text-stone-600 leading-relaxed">
-              Got it — no worries. Just a gentle reminder to try again next time.
+            {attempt === 'no' && confirmState === 'loading' && (
+              <p className="text-xs text-stone-400">Saving…</p>
+            )}
+
+            {attempt === 'no' && confirmState === 'done' && (
+              <p className="text-sm text-stone-700 leading-relaxed">
+                Got it — no worries. Just a gentle reminder to try again next time.
+              </p>
+            )}
+
+            <p className="text-xs text-stone-400">
+              Experiment {activeExp?.experiment_id as string}
             </p>
-          )}
-
-          <p className="text-xs text-stone-400">
-            Experiment {activeExp?.experiment_id as string}
-          </p>
+          </div>
         </section>
 
         {/* Full experiment tracker */}
