@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import pytest
 
+from unittest.mock import patch
+
 from backend.core.transcript_parser import parse_transcript, TranscriptParseError
 from backend.core.models import ParsedTranscript
 
@@ -295,6 +297,36 @@ def test_sentence_fragments_not_extracted_as_speakers():
     assert any("manny" in s for s in labels_lower)
     # Single-letter labels like "M" are acceptable (unidentified speaker)
     assert any(s == "m" for s in labels_lower)
+
+
+def test_truncation_never_returns_empty_turns():
+    """When a single turn exceeds TRANSCRIPT_MAX_WORDS, truncation should
+    trim the turn's text rather than returning an empty list."""
+    # Build a transcript with a single massive turn (15,000 words)
+    big_speech = " ".join(["word"] * 15_000)
+    txt = f"Alice: {big_speech}\n"
+    with patch("backend.core.transcript_parser.TRANSCRIPT_MAX_WORDS", 10_000):
+        result = parse_transcript(txt.encode("utf-8"), "test.txt", "test")
+    assert len(result.turns) >= 1, "Truncation must not produce empty turns"
+    assert result.turns[0].speaker_label == "Alice"
+    assert result.metadata.word_count <= 10_000
+    assert result.metadata.truncated is True
+
+
+def test_truncation_preserves_multiple_speakers():
+    """Truncation should keep as many whole turns as fit, not just the first."""
+    # 5 speakers, each with 1,500 words → 7,500 total
+    speakers = ["Alice", "Bob", "Carol", "Dave", "Eve"]
+    lines = []
+    for name in speakers:
+        speech = " ".join(["word"] * 1_500)
+        lines.append(f"{name}: {speech}")
+    txt = "\n".join(lines)
+    with patch("backend.core.transcript_parser.TRANSCRIPT_MAX_WORDS", 5_000):
+        result = parse_transcript(txt.encode("utf-8"), "test.txt", "test")
+    # Should fit at least 3 speakers (3 * 1500 = 4500 < 5000)
+    assert len(result.turns) >= 3
+    assert result.metadata.truncated is True
 
 
 def test_turn_ids_always_start_at_1():

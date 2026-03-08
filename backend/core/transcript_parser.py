@@ -160,12 +160,31 @@ def _word_count(turns: list[Turn]) -> int:
 
 
 def _truncate_at_word_boundary(turns: list[Turn], max_words: int) -> list[Turn]:
-    """Drop whole turns once cumulative word count exceeds max_words."""
-    result = []
+    """Truncate turns so cumulative word count stays within max_words.
+
+    Whole turns are dropped once the budget is exceeded, but the first turn
+    is always included (its text is trimmed to max_words if necessary) so
+    that truncation never returns an empty list.
+    """
+    if not turns:
+        return []
+
+    result: list[Turn] = []
     total = 0
     for turn in turns:
-        wc = len(turn.text.split())
+        words = turn.text.split()
+        wc = len(words)
         if total + wc > max_words:
+            if not result:
+                # First turn exceeds budget — trim its text to fit.
+                trimmed_text = " ".join(words[:max_words])
+                result.append(Turn(
+                    turn_id=turn.turn_id,
+                    speaker_label=turn.speaker_label,
+                    text=trimmed_text,
+                    speaker_role_hint=turn.speaker_role_hint,
+                ))
+                total = max_words
             break
         result.append(turn)
         total += wc

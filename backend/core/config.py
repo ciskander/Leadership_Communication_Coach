@@ -32,7 +32,7 @@ RETRY_BASE_DELAY: float = 1.0       # seconds
 RETRY_MAX_DELAY: float = 30.0
 
 # ── Transcript limits ─────────────────────────────────────────────────────────
-TRANSCRIPT_MAX_WORDS: int = 10_000
+TRANSCRIPT_MAX_WORDS: int = 50_000
 TRANSCRIPT_MIN_CHARS: int = 50
 
 # ── Airtable table names ──────────────────────────────────────────────────────
