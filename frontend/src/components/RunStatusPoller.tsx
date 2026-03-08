@@ -6,7 +6,6 @@ import { useRunPoller } from '@/hooks/useRunPoller';
 import { CoachingCard } from './CoachingCard';
 import { PatternSnapshot } from './PatternSnapshot';
 import { ExperimentTracker } from './ExperimentTracker';
-import { EvidenceQuote } from './EvidenceQuote';
 import { api } from '@/lib/api';
 import type { Experiment, ActiveExperiment } from '@/lib/types';
 import Link from 'next/link';
@@ -287,7 +286,17 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
             {attempt !== 'no' && detectionQuotes.length > 0 && (
               <div className="space-y-2">
                 {detectionQuotes.map((q, i) => (
-                  <EvidenceQuote key={i} quote={q} />
+                  <blockquote
+                    key={i}
+                    className="border-l-4 border-indigo-300 pl-4 py-1 my-2 bg-indigo-50 rounded-r-md"
+                  >
+                    <p className="text-sm text-gray-700 italic">
+                      &ldquo;{q.quote_text}&rdquo;
+                    </p>
+                    {q.speaker_label && (
+                      <p className="text-xs text-gray-500 mt-1">— {q.speaker_label}</p>
+                    )}
+                  </blockquote>
                 ))}
               </div>
             )}
