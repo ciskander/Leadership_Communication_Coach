@@ -28,7 +28,9 @@ _HTML_TAG_RE = re.compile(r"<[^>]+>")
 _VOICE_TAG_RE = re.compile(r"<v ([^>]+)>")  # <v Speaker Name>
 _TIMESTAMP_INLINE_RE = re.compile(r"\b\d{1,2}:\d{2}(:\d{2})?(\.\d+)?\b")
 _HEADER_LINE_RE = re.compile(
-    r"^(Meeting(\s*(#|Type|Name|Title))?|Leader|Participants|Date|Location|Duration|Agenda|Subject|Topic|Project)\s*:",
+    r"^(Meeting(\s*(#|Type|Name|Title))?|Leader|Participants|Date|Location|Duration|Agenda|Subject|Topic|Project"
+    r"|Customer|Call\s*Title|Time(\s*/\s*Time\s*Zone)?|Time\s*Zone|Company|Attendees|Facilitator"
+    r"|Prepared\s*by|Recorded\s*by|Type|Title|Reference|Notes)\s*:",
     re.IGNORECASE,
 )
 
@@ -258,11 +260,23 @@ _FMT_B_SPEAKER_TS_RE = re.compile(r"^([A-Za-z][^:]{0,60})\s{2,}\d{1,2}:\d{2}")  
 _FMT_E_RE = re.compile(r"^([A-Za-z][^:]{0,60})\s*\(\d{1,2}:\d{2}")  # "Speaker (HH:MM):"
 
 
+def _fmt_a_line_count(lines: list[str]) -> int:
+    """Count non-header lines that match Format A pattern."""
+    return sum(
+        1 for l in lines
+        if l.strip() and _FMT_A_RE.search(l) and not _HEADER_LINE_RE.match(l.strip())
+    )
+
+
 def _parse_txt(text: str) -> list[Turn]:
     lines = text.splitlines()
 
     # Try Format A: "Speaker: text"
-    if _match_rate(lines, _FMT_A_RE) > 0.5:
+    # Use both match rate and absolute count — long multi-line turns
+    # dilute the rate even though the format is clearly "Speaker: text".
+    fmt_a_rate = _match_rate(lines, _FMT_A_RE)
+    fmt_a_count = _fmt_a_line_count(lines)
+    if fmt_a_rate > 0.5 or (fmt_a_count >= 4 and fmt_a_rate > 0.05):
         return _parse_txt_format_a(lines)
 
     # Try Format E: "Speaker (timestamp):\ntext"

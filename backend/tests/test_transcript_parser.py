@@ -217,6 +217,59 @@ def test_speaker_deduplication():
     assert lower_labels.count("alice") == 1
 
 
+TXT_LONG_TURNS_WITH_HEADER = """\
+Final Transcript
+Customer: US Chemical Safety Board
+Call Title: CSB Business Meeting
+Date: January 20, 2016
+Time/Time Zone: 1:01 pm Eastern Time
+SPEAKERS
+Hillary Cohen
+Vanessa Allen Sutherland
+Manny Ehrlich
+PRESENTATION
+Operator: Welcome to the CSB Business Meeting. My name is Paulette, and I will be your operator for today's call. At this time, all participants are in a listen-only mode. Later, we will conduct a question-and-answer session. Please note that this conference is being recorded.
+I will now turn the call over to Hillary Cohen, Communications Manager. Ms. Cohen, you may begin.
+Hillary Cohen: Thank you. Good afternoon, everyone. Welcome to our first public business meeting for this calendar year. Leading today's meeting is going to be our Chairperson, Vanessa Allen Sutherland, and she has opening remarks. She'll take us through the agenda and we'll go to public comment near the end of the meeting. If you have any trouble hearing on the line, please let us know, as we will try to speak up. Thank you.
+Vanessa Allen Sutherland: Thanks, Hillary. Today, we are meeting in open session, as required by the Government in the Sunshine Act, to discuss operations and activities of the CSB. As Hillary mentioned, I'm Vanessa Allen Sutherland, the Chairperson of the Board. Joining me today are Members, Manny Ehrlich, Kristen Kulinowski, and Rick Engler. Also joining as our acting general counsel, Kara Wenzel, and members of the staff. Thank you to everyone who's participating by phone, as well.
+We will have public comment at the end, and we'll make sure that as you're listening on the phone, we give you instructions as to how to participate remotely.
+The CSB is an independent, non-regulatory, federal agency that investigates major chemical accidents at fixed facilities. The investigations examine all aspects of chemical accidents, including physical causes related to equipment design, as well as inadequacies in regulations, industry standards, and safety management systems. Ultimately, we issue safety recommendations, which are designed to prevent similar incidents or accidents in the future.
+The purpose of today's meeting is to provide an opportunity for the Board to discuss ongoing investigation and organizational activities, including the status of the CSB's Action Plan, and a very brief discussion about deployment.
+Manny Ehrlich: Good afternoon. Thank you for coming. I'm Manny Ehrlich. I am the senior member on the Board with 13 months now. I'm also the senior member chronologically. I'm not sure what one has to do with the other, but it's been an interesting year for me, 13 months.
+As some of you know, I spent 50 years in the chemical industry, which isn't bad for a guy that's 35 years old, and I think we've made some progress, and taking what we've learned on a number of these incidents back to folks in the field and hopefully they'll have some benefit in terms of not having the same types of incidents occur again.
+"""
+
+
+def test_txt_long_turns_with_header():
+    """Transcript with long multi-line turns and a metadata header should
+    still detect Format A speakers (not collapse to Unknown)."""
+    result = parse_transcript(
+        TXT_LONG_TURNS_WITH_HEADER.encode("utf-8"), "transcript.txt", "test"
+    )
+    labels_lower = [s.lower() for s in result.speaker_labels]
+    assert "unknown" not in labels_lower, (
+        f"Expected real speaker names, got: {result.speaker_labels}"
+    )
+    assert any("hillary" in s for s in labels_lower)
+    assert any("vanessa" in s for s in labels_lower)
+    assert any("manny" in s for s in labels_lower)
+    assert any("operator" in s for s in labels_lower)
+    assert len(result.turns) >= 4
+
+
+def test_header_lines_not_extracted_as_speakers():
+    """Header lines like 'Customer: ...' and 'Date: ...' should not appear
+    as speaker labels."""
+    result = parse_transcript(
+        TXT_LONG_TURNS_WITH_HEADER.encode("utf-8"), "transcript.txt", "test"
+    )
+    labels_lower = [s.lower() for s in result.speaker_labels]
+    assert "customer" not in labels_lower
+    assert "date" not in labels_lower
+    assert "call title" not in labels_lower
+    assert "time/time zone" not in labels_lower
+
+
 def test_turn_ids_always_start_at_1():
     for content, fname in [
         (VTT_VOICE_TAG, "test.vtt"),
