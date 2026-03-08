@@ -46,12 +46,33 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
             <span className="text-base">◎</span>
             <h3 className="text-sm font-semibold text-amber-800">Area to focus on</h3>
           </div>
-          <div className="px-5 py-4 space-y-2">
+          <div className="px-5 py-4 space-y-3">
             <PatternLabel id={focus.pattern_id} />
             <p className="text-sm text-stone-700 leading-relaxed">{focus.message}</p>
-            {(focus.quotes ?? []).map((q, i) => (
-              <EvidenceQuote key={i} quote={q} />
-            ))}
+            {(focus.quotes ?? []).length > 0 && (
+              <div className="space-y-3 mt-2">
+                <div>
+                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                    For example, in this meeting you said
+                  </p>
+                  {focus.quotes.map((q, i) => (
+                    <EvidenceQuote key={i} quote={q} />
+                  ))}
+                </div>
+                {focus.suggested_rewrite && (
+                  <div>
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                      Next time, try something like this
+                    </p>
+                    <blockquote className="border-l-4 border-emerald-300 pl-4 py-1 my-2 bg-emerald-50 rounded-r-md">
+                      <p className="text-sm text-stone-700 italic">
+                        &ldquo;{focus.suggested_rewrite}&rdquo;
+                      </p>
+                    </blockquote>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </section>
       )}

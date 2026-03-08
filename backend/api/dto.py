@@ -56,6 +56,7 @@ class CoachingItemWithQuotes(BaseModel):
     pattern_id: str
     message: str
     quotes: list[QuoteObject] = Field(default_factory=list)
+    suggested_rewrite: Optional[str] = None
 
 
 class MicroExperimentWithQuotes(BaseModel):

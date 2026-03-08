@@ -22,6 +22,7 @@ export interface CoachingItem {
   pattern_id: string;
   message: string;
   quotes: QuoteObject[];
+  suggested_rewrite?: string | null;
 }
 
 export interface MicroExperiment {

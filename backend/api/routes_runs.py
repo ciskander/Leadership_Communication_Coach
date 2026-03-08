@@ -123,6 +123,7 @@ def _build_run_response(run_record: dict) -> RunStatusResponse:
             pattern_id=f.get("pattern_id", ""),
             message=f.get("message", ""),
             quotes=quotes,
+            suggested_rewrite=f.get("suggested_rewrite"),
         )
 
     micro_exp: Optional[MicroExperimentWithQuotes] = None

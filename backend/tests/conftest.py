@@ -177,6 +177,7 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
                 "pattern_id": "decision_closure",
                 "message": "Try ending each decision moment with an explicit verbal closure.",
                 "evidence_span_ids": ["ES-006"],
+                "suggested_rewrite": "So to confirm, Sarah owns the vendor shortlist and will circulate it by Thursday. Does everyone agree?",
             }
         ],
         "micro_experiment": [

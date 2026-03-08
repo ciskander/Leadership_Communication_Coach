@@ -24,7 +24,8 @@ Hard reminders:
 - pattern_snapshot must include all 10 pattern IDs in required order.
 - conversational_balance requires balance_assessment and no numeric fields.
 - evidence_spans turn_start_id/turn_end_id must be integers.
-- focus length=1, micro_experiment length=1."""
+- focus length=1, micro_experiment length=1.
+- focus[0] MUST include a "suggested_rewrite" field: a concrete, reworded version of what the speaker said in the evidence span, demonstrating the coaching advice applied. Write it in the speaker's natural voice, 1-3 sentences."""
 
 
 def _generate_analysis_id() -> str:
