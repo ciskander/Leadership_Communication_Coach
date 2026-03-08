@@ -22,7 +22,7 @@ from .errors import error_response
 
 router = APIRouter()
 
-_QUOTE_MAX_CHARS = 500
+_QUOTE_MAX_CHARS = 2000
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
