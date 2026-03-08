@@ -145,6 +145,44 @@ Let's start with the agenda.
 I have a quick question first.
 """
 
+TXT_BRACKETED_TIMESTAMP = """\
+Meeting:  LongBeachCC_08092022
+Duration: 334 minutes
+======================================================================
+[00:00:00] spk_0: So But now
+[00:00:04] spk_0: Councilman Sabina
+[00:00:06] spk_1: I'm here
+[00:00:07] spk_0: Councilwoman Mango
+[00:00:09] spk_2: Here
+[00:00:10] spk_0: Councilwoman Sarah Present Councilmember Karenga Present Councilman Austin
+[00:00:16] spk_1: Here
+[00:00:17] spk_0: Vice Mayor Richardson
+[00:00:18] spk_3: President
+[00:00:20] spk_0: Eric Garcia We have a quorum
+[00:00:22] spk_4: Thank you And I'm going to ask Councilman Mongo to lead us in the pledge in a moment of silence
+[00:00:29] spk_2: Thank you
+"""
+
+
+def test_txt_bracketed_timestamp_format():
+    """Transcripts with [HH:MM:SS] speaker: text lines should be parsed correctly."""
+    result = parse_transcript(
+        TXT_BRACKETED_TIMESTAMP.encode("utf-8"), "transcript.txt", "test"
+    )
+    labels_lower = [s.lower() for s in result.speaker_labels]
+    assert "unknown" not in labels_lower, (
+        f"Expected speaker labels, got: {result.speaker_labels}"
+    )
+    assert "spk_0" in labels_lower
+    assert "spk_1" in labels_lower
+    assert "spk_2" in labels_lower
+    assert "spk_3" in labels_lower
+    assert "spk_4" in labels_lower
+    assert len(result.turns) >= 5  # consecutive spk_0 turns get merged
+    # Header lines should not appear as speakers
+    assert "meeting" not in labels_lower
+    assert "duration" not in labels_lower
+
 
 def test_txt_speaker_colon_format():
     result = parse_transcript(TXT_SPEAKER_COLON.encode("utf-8"), "test.txt", "test")

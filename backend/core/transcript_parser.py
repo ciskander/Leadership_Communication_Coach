@@ -30,7 +30,7 @@ _TIMESTAMP_INLINE_RE = re.compile(r"\b\d{1,2}:\d{2}(:\d{2})?(\.\d+)?\b")
 _HEADER_LINE_RE = re.compile(
     r"^(Meeting(\s*(#|Type|Name|Title))?|Leader|Participants|Date|Location|Duration|Agenda|Subject|Topic|Project"
     r"|Customer|Call\s*Title|Time(\s*/\s*Time\s*Zone)?|Time\s*Zone|Company|Attendees|Facilitator"
-    r"|Prepared\s*by|Recorded\s*by|Type|Title|Reference|Notes)\s*:",
+    r"|Prepared\s*by|Recorded\s*by|Type|Title|Reference|Notes|Duration)\s*:",
     re.IGNORECASE,
 )
 
@@ -316,7 +316,12 @@ def _match_rate(lines: list[str], pattern: re.Pattern) -> float:
 # Sub-format patterns
 _FMT_A_RE = re.compile(r"^([A-Za-z][^:]{0,60}):\s+\S")  # "Speaker: text"
 _FMT_B_SPEAKER_TS_RE = re.compile(r"^([A-Za-z][^:]{0,60})\s{2,}\d{1,2}:\d{2}")  # "Speaker  HH:MM"
+_FMT_C_RE = re.compile(                                    # "[HH:MM:SS] speaker: text"
+    r"^\[\d{1,2}:\d{2}(?::\d{2})?\]\s*([^:]{1,60}):\s*(.*)"
+)
 _FMT_E_RE = re.compile(r"^([A-Za-z][^:]{0,60})\s*\(\d{1,2}:\d{2}")  # "Speaker (HH:MM):"
+# Separator / decoration lines to skip
+_SEPARATOR_RE = re.compile(r"^[=\-_*]{3,}$")
 
 
 def _fmt_a_line_count(lines: list[str]) -> int:
@@ -334,6 +339,11 @@ def _fmt_a_line_count(lines: list[str]) -> int:
 
 def _parse_txt(text: str) -> list[Turn]:
     lines = text.splitlines()
+
+    # Try Format C: "[HH:MM:SS] speaker: text" (bracketed timestamp prefix)
+    # Check this early since it's unambiguous and won't false-positive.
+    if _match_rate(lines, _FMT_C_RE) > 0.3:
+        return _parse_txt_format_c(lines)
 
     # Try Format A: "Speaker: text"
     # Use both match rate and absolute count — long multi-line turns
@@ -359,6 +369,27 @@ def _parse_txt(text: str) -> list[Turn]:
     # Fallback: single turn
     full = " ".join(l for l in lines if l.strip())
     return [Turn(turn_id=1, speaker_label="Unknown", text=full)]
+
+
+def _parse_txt_format_c(lines: list[str]) -> list[Turn]:
+    """'[HH:MM:SS] speaker: text' — bracketed timestamp prefix per line."""
+    raw: list[tuple[str, str]] = []
+    for line in lines:
+        line = line.strip()
+        if not line or _BOILERPLATE_RE.search(line):
+            continue
+        if _SEPARATOR_RE.match(line):
+            continue
+        m = _FMT_C_RE.match(line)
+        if m:
+            speaker = _clean_speaker(m.group(1))
+            text = m.group(2).strip()
+            if speaker and text:
+                raw.append((speaker, text))
+        # Skip non-matching lines (headers, separators, etc.)
+    raw = _normalize_speaker_map(raw)
+    raw = _merge_consecutive(raw)
+    return _to_turn_objects(raw)
 
 
 def _parse_txt_format_a(lines: list[str]) -> list[Turn]:
