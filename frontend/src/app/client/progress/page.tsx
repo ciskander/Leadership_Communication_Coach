@@ -125,26 +125,60 @@ interface ChartPoint {
   [patternId: string]: string | number | boolean | null;
 }
 
+/** Raw data key for a pattern (faded dots). */
+const rawKey = (pid: string) => `${pid}_raw`;
+
 function buildChartData(
   history: RunHistoryPoint[],
-  visiblePatterns: string[]
+  visiblePatterns: string[],
+  windowSize: number,
 ): ChartPoint[] {
-  return history.map((run) => {
+  // Pre-extract per-run data for each visible pattern
+  const runData = history.map((run) => {
+    const map: Record<string, { num: number; den: number }> = {};
+    for (const p of run.patterns) {
+      if (visiblePatterns.includes(p.pattern_id)) {
+        const den = p.opportunity_count;
+        const num = Math.round(p.ratio * den);
+        map[p.pattern_id] = { num, den };
+      }
+    }
+    return map;
+  });
+
+  return history.map((run, idx) => {
     const point: ChartPoint = {
       date: run.meeting_date ?? '',
       label: run.meeting_date ? fmtDate(run.meeting_date) : 'Unknown',
       isBaseline: run.is_baseline,
     };
-    for (const p of run.patterns) {
-      if (visiblePatterns.includes(p.pattern_id)) {
-        point[p.pattern_id] = Math.round(p.ratio * 100);
+
+    for (const pid of visiblePatterns) {
+      // Raw value for this meeting
+      const cur = runData[idx][pid];
+      if (cur) {
+        point[rawKey(pid)] = cur.den > 0 ? Math.round((cur.num / cur.den) * 100) : null;
       }
+
+      // Rolling cumulative ratio over the trailing window
+      let totalNum = 0;
+      let totalDen = 0;
+      const start = Math.max(0, idx - windowSize + 1);
+      for (let j = start; j <= idx; j++) {
+        const d = runData[j][pid];
+        if (d) {
+          totalNum += d.num;
+          totalDen += d.den;
+        }
+      }
+      point[pid] = totalDen > 0 ? Math.round((totalNum / totalDen) * 100) : null;
     }
+
     return point;
   });
 }
 
-function PatternTrendsChart({ history }: { history: RunHistoryPoint[] }) {
+function PatternTrendsChart({ history, trendWindowSize = 3 }: { history: RunHistoryPoint[]; trendWindowSize?: number }) {
   const [showAll, setShowAll] = useState(false);
 
   // Count post-baseline meetings — count non-baseline runs directly rather than
@@ -164,21 +198,33 @@ function PatternTrendsChart({ history }: { history: RunHistoryPoint[] }) {
   const topPatterns = allPatterns.slice(0, 5);
   const visiblePatterns = showAll ? allPatterns : topPatterns;
 
-  const chartData = buildChartData(history, visiblePatterns);
+  const chartData = buildChartData(history, visiblePatterns, trendWindowSize);
   const baselinePoint = chartData.find((p) => p.isBaseline);
 
-  // Custom tooltip
+  // Custom tooltip — show trend line values; raw dots are hidden from tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
+    // Only show trend lines (not raw dot series)
+    const trendEntries = payload.filter((e: any) => !e.dataKey.endsWith('_raw'));
+    if (!trendEntries.length) return null;
     return (
-      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm min-w-[160px]">
+      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm min-w-[200px]">
         <p className="font-semibold text-gray-700 mb-1">{label}</p>
-        {payload.map((entry: any) => (
-          <div key={entry.dataKey} className="flex justify-between gap-4">
-            <span style={{ color: entry.color }}>{PATTERN_LABELS[entry.dataKey] ?? entry.dataKey}</span>
-            <span className="font-medium">{entry.value}%</span>
-          </div>
-        ))}
+        {trendEntries.map((entry: any) => {
+          const rawEntry = payload.find((e: any) => e.dataKey === rawKey(entry.dataKey));
+          const rawVal = rawEntry?.value;
+          return (
+            <div key={entry.dataKey} className="flex justify-between gap-4">
+              <span style={{ color: entry.color }}>{PATTERN_LABELS[entry.dataKey] ?? entry.dataKey}</span>
+              <span className="font-medium">
+                {entry.value != null ? `${entry.value}%` : '—'}
+                {rawVal != null && rawVal !== entry.value && (
+                  <span className="text-gray-400 font-normal ml-1">({rawVal}%)</span>
+                )}
+              </span>
+            </div>
+          );
+        })}
       </div>
     );
   };
@@ -231,18 +277,34 @@ function PatternTrendsChart({ history }: { history: RunHistoryPoint[] }) {
                 axisLine={false}
               />
               <Tooltip content={<CustomTooltip />} />
-              {visiblePatterns.map((pid, i) => (
-                <Line
-                  key={pid}
-                  type="monotone"
-                  dataKey={pid}
-                  stroke={LINE_COLORS[i % LINE_COLORS.length]}
-                  strokeWidth={2}
-                  dot={{ r: 3, fill: LINE_COLORS[i % LINE_COLORS.length] }}
-                  activeDot={{ r: 5 }}
-                  connectNulls
-                />
-              ))}
+              {visiblePatterns.map((pid, i) => {
+                const color = LINE_COLORS[i % LINE_COLORS.length];
+                return [
+                  /* Faded raw dots — no connecting line */
+                  <Line
+                    key={`${pid}_raw`}
+                    type="monotone"
+                    dataKey={rawKey(pid)}
+                    stroke="none"
+                    dot={{ r: 2.5, fill: color, opacity: 0.3 }}
+                    activeDot={false}
+                    connectNulls={false}
+                    legendType="none"
+                    isAnimationActive={false}
+                  />,
+                  /* Bold trend line */
+                  <Line
+                    key={pid}
+                    type="monotone"
+                    dataKey={pid}
+                    stroke={color}
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 5, fill: color }}
+                    connectNulls
+                  />,
+                ];
+              })}
               {/* Baseline marker */}
               {baselinePoint && visiblePatterns[0] && (
                 <ReferenceDot
@@ -439,7 +501,7 @@ export default function ProgressPage() {
           {/* Pattern Trends */}
           <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-5">Pattern Trends</h2>
-            <PatternTrendsChart history={data.pattern_history} />
+            <PatternTrendsChart history={data.pattern_history} trendWindowSize={data.trend_window_size} />
           </section>
 
           {/* Past Experiments */}
