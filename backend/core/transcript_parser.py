@@ -17,6 +17,9 @@ from .models import ParsedTranscript, TranscriptMetadata, Turn
 
 logger = logging.getLogger(__name__)
 
+# Type alias for raw parsed turns: (speaker, text, start_time_sec)
+RawTurn = tuple[str, str, Optional[float]]
+
 # Boilerplate patterns to strip
 _BOILERPLATE_RE = re.compile(
     r"(Transcribed by Otter\.ai|DISCLAIMER:|This transcript was produced|"
@@ -121,36 +124,48 @@ def _dedupe_speakers(speakers: list[str]) -> list[str]:
     return list(seen.values())
 
 
-def _normalize_speaker_map(turns: list[tuple[str, str]]) -> list[tuple[str, str]]:
+def _parse_timecode(tc: str) -> float:
+    """Convert a timecode string (HH:MM:SS.mmm or HH:MM:SS,mmm) to seconds."""
+    tc = tc.strip().replace(",", ".")
+    parts = tc.split(":")
+    if len(parts) == 3:
+        return int(parts[0]) * 3600 + int(parts[1]) * 60 + float(parts[2])
+    if len(parts) == 2:
+        return int(parts[0]) * 60 + float(parts[1])
+    return float(parts[0])
+
+
+def _normalize_speaker_map(turns: list[RawTurn]) -> list[RawTurn]:
     """
     Normalise speaker labels across all turns (case-insensitive dedup).
     Returns turns with unified speaker labels.
     """
     canon: dict[str, str] = {}
-    for speaker, _ in turns:
+    for speaker, _, _ts in turns:
         key = speaker.lower()
         if key not in canon:
             canon[key] = speaker
-    return [(canon[speaker.lower()], text) for speaker, text in turns]
+    return [(canon[speaker.lower()], text, ts) for speaker, text, ts in turns]
 
 
-def _merge_consecutive(turns: list[tuple[str, str]]) -> list[tuple[str, str]]:
-    """Merge consecutive turns from the same speaker."""
+def _merge_consecutive(turns: list[RawTurn]) -> list[RawTurn]:
+    """Merge consecutive turns from the same speaker, keeping earliest timestamp."""
     if not turns:
         return []
-    merged: list[tuple[str, str]] = [turns[0]]
-    for speaker, text in turns[1:]:
+    merged: list[RawTurn] = [turns[0]]
+    for speaker, text, ts in turns[1:]:
         if speaker.lower() == merged[-1][0].lower():
-            merged[-1] = (merged[-1][0], merged[-1][1] + " " + text)
+            merged[-1] = (merged[-1][0], merged[-1][1] + " " + text, merged[-1][2])
         else:
-            merged.append((speaker, text))
+            merged.append((speaker, text, ts))
     return merged
 
 
-def _to_turn_objects(raw: list[tuple[str, str]]) -> list[Turn]:
+def _to_turn_objects(raw: list[RawTurn]) -> list[Turn]:
     return [
-        Turn(turn_id=i + 1, speaker_label=speaker, text=text.strip())
-        for i, (speaker, text) in enumerate(raw)
+        Turn(turn_id=i + 1, speaker_label=speaker, text=text.strip(),
+             start_time_sec=ts)
+        for i, (speaker, text, ts) in enumerate(raw)
         if text.strip()
     ]
 
@@ -193,13 +208,16 @@ def _truncate_at_word_boundary(turns: list[Turn], max_words: int) -> list[Turn]:
 
 # ── VTT Parser ────────────────────────────────────────────────────────────────
 
+_TIMECODE_START_RE = re.compile(r"(\d{2}:\d{2}:\d{2}[.,]\d{3})\s*-->")
+
+
 def _parse_vtt(text: str) -> list[Turn]:
     """
     Parse WebVTT content.
     Handles: voice tags <v Speaker>, "Speaker: text", no-attribution.
     """
     lines = text.splitlines()
-    raw_turns: list[tuple[str, str]] = []
+    raw_turns: list[RawTurn] = []
 
     # Skip WEBVTT header line
     start = 0
@@ -221,6 +239,11 @@ def _parse_vtt(text: str) -> list[Turn]:
 
         # Timecode line
         if _TIMECODE_RE.search(line):
+            # Extract start time from the timecode
+            tc_match = _TIMECODE_START_RE.search(line)
+            cue_start: Optional[float] = None
+            if tc_match:
+                cue_start = _parse_timecode(tc_match.group(1))
             i += 1
             # Collect cue payload lines
             payload_lines: list[str] = []
@@ -228,7 +251,7 @@ def _parse_vtt(text: str) -> list[Turn]:
                 payload_lines.append(lines[i])
                 i += 1
             if payload_lines:
-                _process_vtt_cue(payload_lines, raw_turns)
+                _process_vtt_cue(payload_lines, raw_turns, cue_start)
             continue
 
         i += 1
@@ -238,7 +261,11 @@ def _parse_vtt(text: str) -> list[Turn]:
     return _to_turn_objects(raw_turns)
 
 
-def _process_vtt_cue(payload_lines: list[str], raw_turns: list[tuple[str, str]]) -> None:
+def _process_vtt_cue(
+    payload_lines: list[str],
+    raw_turns: list[RawTurn],
+    cue_start: Optional[float] = None,
+) -> None:
     for line in payload_lines:
         # Style A: <v Speaker Name>text
         voice_match = _VOICE_TAG_RE.match(line)
@@ -246,7 +273,7 @@ def _process_vtt_cue(payload_lines: list[str], raw_turns: list[tuple[str, str]])
             speaker = _clean_speaker(voice_match.group(1))
             text = _strip_html(line[voice_match.end():])
             if text:
-                raw_turns.append((speaker, text))
+                raw_turns.append((speaker, text, cue_start))
             continue
 
         # Strip remaining HTML tags
@@ -260,11 +287,11 @@ def _process_vtt_cue(payload_lines: list[str], raw_turns: list[tuple[str, str]])
             speaker = _clean_speaker(parts[0])
             text = parts[1].strip()
             if speaker and text:
-                raw_turns.append((speaker, text))
+                raw_turns.append((speaker, text, cue_start))
                 continue
 
         # Style C: no attribution
-        raw_turns.append(("Unknown", clean))
+        raw_turns.append(("Unknown", clean, cue_start))
 
 
 # ── SRT Parser ────────────────────────────────────────────────────────────────
@@ -272,7 +299,7 @@ def _process_vtt_cue(payload_lines: list[str], raw_turns: list[tuple[str, str]])
 def _parse_srt(text: str) -> list[Turn]:
     """Parse SRT subtitle format."""
     lines = text.splitlines()
-    raw_turns: list[tuple[str, str]] = []
+    raw_turns: list[RawTurn] = []
     i = 0
     while i < len(lines):
         line = lines[i].strip()
@@ -280,7 +307,11 @@ def _parse_srt(text: str) -> list[Turn]:
         if _SRT_INDEX_RE.match(line):
             i += 1
             # Timecode
+            cue_start: Optional[float] = None
             if i < len(lines) and _TIMECODE_RE.search(lines[i]):
+                tc_match = _TIMECODE_START_RE.search(lines[i])
+                if tc_match:
+                    cue_start = _parse_timecode(tc_match.group(1))
                 i += 1
             payload_lines = []
             while i < len(lines) and lines[i].strip():
@@ -292,9 +323,9 @@ def _parse_srt(text: str) -> list[Turn]:
                     continue
                 if ": " in clean:
                     parts = clean.split(": ", 1)
-                    raw_turns.append((_clean_speaker(parts[0]), parts[1].strip()))
+                    raw_turns.append((_clean_speaker(parts[0]), parts[1].strip(), cue_start))
                 else:
-                    raw_turns.append(("Unknown", clean))
+                    raw_turns.append(("Unknown", clean, cue_start))
             continue
         i += 1
 
@@ -368,12 +399,15 @@ def _parse_txt(text: str) -> list[Turn]:
 
     # Fallback: single turn
     full = " ".join(l for l in lines if l.strip())
-    return [Turn(turn_id=1, speaker_label="Unknown", text=full)]
+    return [Turn(turn_id=1, speaker_label="Unknown", text=full, start_time_sec=None)]
+
+
+_FMT_C_TS_RE = re.compile(r"^\[(\d{1,2}:\d{2}(?::\d{2})?)\]")
 
 
 def _parse_txt_format_c(lines: list[str]) -> list[Turn]:
     """'[HH:MM:SS] speaker: text' — bracketed timestamp prefix per line."""
-    raw: list[tuple[str, str]] = []
+    raw: list[RawTurn] = []
     for line in lines:
         line = line.strip()
         if not line or _BOILERPLATE_RE.search(line):
@@ -384,8 +418,15 @@ def _parse_txt_format_c(lines: list[str]) -> list[Turn]:
         if m:
             speaker = _clean_speaker(m.group(1))
             text = m.group(2).strip()
+            ts: Optional[float] = None
+            ts_m = _FMT_C_TS_RE.match(line)
+            if ts_m:
+                try:
+                    ts = _parse_timecode(ts_m.group(1))
+                except (ValueError, IndexError):
+                    pass
             if speaker and text:
-                raw.append((speaker, text))
+                raw.append((speaker, text, ts))
         # Skip non-matching lines (headers, separators, etc.)
     raw = _normalize_speaker_map(raw)
     raw = _merge_consecutive(raw)
@@ -393,7 +434,7 @@ def _parse_txt_format_c(lines: list[str]) -> list[Turn]:
 
 
 def _parse_txt_format_a(lines: list[str]) -> list[Turn]:
-    raw: list[tuple[str, str]] = []
+    raw: list[RawTurn] = []
     current_speaker: Optional[str] = None
     current_text: list[str] = []
 
@@ -404,7 +445,7 @@ def _parse_txt_format_a(lines: list[str]) -> list[Turn]:
         m = _FMT_A_RE.match(line)
         if m and not _HEADER_LINE_RE.match(line) and _is_plausible_speaker(m.group(1).strip()):
             if current_speaker and current_text:
-                raw.append((current_speaker, " ".join(current_text)))
+                raw.append((current_speaker, " ".join(current_text), None))
             current_speaker = _clean_speaker(m.group(1))
             colon_pos = line.index(":", len(m.group(1)) - 1)
             rest = line[colon_pos + 1:].strip()
@@ -415,16 +456,19 @@ def _parse_txt_format_a(lines: list[str]) -> list[Turn]:
             # else drop orphaned lines
 
     if current_speaker and current_text:
-        raw.append((current_speaker, " ".join(current_text)))
+        raw.append((current_speaker, " ".join(current_text), None))
 
     raw = _normalize_speaker_map(raw)
     raw = _merge_consecutive(raw)
     return _to_turn_objects(raw)
 
 
+_FMT_B_TS_RE = re.compile(r"\s{2,}(\d{1,2}:\d{2}(?::\d{2})?)")
+
+
 def _parse_txt_format_b(lines: list[str]) -> list[Turn]:
     """Otter.ai: 'Speaker  HH:MM\ntext' blocks."""
-    raw: list[tuple[str, str]] = []
+    raw: list[RawTurn] = []
     i = 0
     while i < len(lines):
         line = lines[i].strip()
@@ -434,13 +478,20 @@ def _parse_txt_format_b(lines: list[str]) -> list[Turn]:
         m = _FMT_B_SPEAKER_TS_RE.match(line)
         if m and not _HEADER_LINE_RE.match(line):
             speaker = _clean_speaker(m.group(1))
+            ts: Optional[float] = None
+            ts_m = _FMT_B_TS_RE.search(line)
+            if ts_m:
+                try:
+                    ts = _parse_timecode(ts_m.group(1))
+                except (ValueError, IndexError):
+                    pass
             i += 1
             text_lines = []
             while i < len(lines) and lines[i].strip() and not _FMT_B_SPEAKER_TS_RE.match(lines[i]):
                 text_lines.append(lines[i].strip())
                 i += 1
             if text_lines:
-                raw.append((speaker, " ".join(text_lines)))
+                raw.append((speaker, " ".join(text_lines), ts))
         else:
             i += 1
     raw = _normalize_speaker_map(raw)
@@ -450,7 +501,7 @@ def _parse_txt_format_b(lines: list[str]) -> list[Turn]:
 
 def _parse_txt_format_d(lines: list[str]) -> list[Turn]:
     """'Speaker\ntext\n\n' blocks separated by blank lines."""
-    raw: list[tuple[str, str]] = []
+    raw: list[RawTurn] = []
     blocks: list[list[str]] = []
     current_block: list[str] = []
     for line in lines:
@@ -469,7 +520,7 @@ def _parse_txt_format_d(lines: list[str]) -> list[Turn]:
             text = " ".join(block[1:])
             # Heuristic: first line should look like a name (no colon, < 50 chars, not a header)
             if len(speaker) < 50 and ":" not in speaker and not _HEADER_LINE_RE.match(block[0] + ":"):
-                raw.append((speaker, text))
+                raw.append((speaker, text, None))
     if len(raw) < 2:
         return []
     raw = _normalize_speaker_map(raw)
@@ -477,22 +528,32 @@ def _parse_txt_format_d(lines: list[str]) -> list[Turn]:
     return _to_turn_objects(raw)
 
 
+_FMT_E_TS_RE = re.compile(r"\((\d{1,2}:\d{2}(?::\d{2})?)\)")
+
+
 def _parse_txt_format_e(lines: list[str]) -> list[Turn]:
     """'Speaker (HH:MM):\ntext' blocks."""
-    raw: list[tuple[str, str]] = []
+    raw: list[RawTurn] = []
     i = 0
     while i < len(lines):
         line = lines[i].strip()
         m = _FMT_E_RE.match(line)
         if m and not _HEADER_LINE_RE.match(line):
             speaker = _clean_speaker(m.group(1))
+            ts: Optional[float] = None
+            ts_m = _FMT_E_TS_RE.search(line)
+            if ts_m:
+                try:
+                    ts = _parse_timecode(ts_m.group(1))
+                except (ValueError, IndexError):
+                    pass
             i += 1
             text_lines = []
             while i < len(lines) and lines[i].strip() and not _FMT_E_RE.match(lines[i]):
                 text_lines.append(lines[i].strip())
                 i += 1
             if text_lines:
-                raw.append((speaker, " ".join(text_lines)))
+                raw.append((speaker, " ".join(text_lines), ts))
         else:
             i += 1
     raw = _normalize_speaker_map(raw)
@@ -590,7 +651,7 @@ def parse_transcript(
         detected_format = "txt"
 
     if not turns:
-        turns = [Turn(turn_id=1, speaker_label="Unknown", text=raw_text.strip()[:5000])]
+        turns = [Turn(turn_id=1, speaker_label="Unknown", text=raw_text.strip()[:5000], start_time_sec=None)]
 
     # ── Word count / truncation ──
     wc = _word_count(turns)
