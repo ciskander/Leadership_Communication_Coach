@@ -179,6 +179,7 @@ F_CFG_SYSTEM_PROMPT = "System Prompt"
 F_CFG_TAXONOMY_COMPACT = "Taxonomy Compact Block"
 F_CFG_SCHEMA_VERSION = "Schema Version"
 F_CFG_MAX_OUTPUT_TOKENS = "Max Output Tokens"
+F_CFG_TREND_WINDOW_SIZE = "Trend Window Size"
 
 
 # ── Retry decorator ───────────────────────────────────────────────────────────

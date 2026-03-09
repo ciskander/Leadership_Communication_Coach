@@ -252,4 +252,5 @@ export interface PastExperiment {
 export interface ClientProgress {
   pattern_history: RunHistoryPoint[];
   past_experiments: PastExperiment[];
+  trend_window_size: number;
 }

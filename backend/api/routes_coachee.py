@@ -781,9 +781,22 @@ async def client_progress(
     # Most recent first (by ended_at)
     past_experiments.sort(key=lambda x: (x["ended_at"] or ""), reverse=True)
 
+    # ── Read trend window size from config ─────────────────────────────────
+    from ..core.airtable_client import F_CFG_TREND_WINDOW_SIZE
+    trend_window_size = 3  # default
+    try:
+        active_cfg = at_client.get_active_config()
+        if active_cfg:
+            cfg_val = active_cfg.get("fields", {}).get(F_CFG_TREND_WINDOW_SIZE)
+            if cfg_val is not None:
+                trend_window_size = max(1, int(cfg_val))
+    except Exception as e:
+        logger.warning("client_progress: could not read trend window size: %s", e)
+
     return ClientProgressResponse(
         pattern_history=pattern_history,
         past_experiments=past_experiments,
+        trend_window_size=trend_window_size,
     )
 
 

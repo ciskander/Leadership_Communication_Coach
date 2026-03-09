@@ -262,3 +262,4 @@ class PastExperiment(BaseModel):
 class ClientProgressResponse(BaseModel):
     pattern_history: list[RunHistoryPoint]
     past_experiments: list[PastExperiment]
+    trend_window_size: int = 3
