@@ -83,8 +83,12 @@ For evaluable numeric patterns where numerator == denominator (100%):
 - suggested_rewrite and rewrite_for_span_id should be omitted (or null). The evidence_span_ids already show what the speaker did well.
 - coaching_note should be omitted (or null).
 
+For conversational_balance where balance_assessment is balanced:
+- notes: 1-2 sentence positive observation about why the conversation was well balanced, referencing specific participants or meeting segments as relevant. Write as constructive coaching, not technical analysis.
+- coaching_note, suggested_rewrite, and rewrite_for_span_id should be omitted.
+
 For conversational_balance where balance_assessment is over_indexed or under_indexed:
-- coaching_note: 1-2 sentence coaching observation. No rewrite needed.
+- coaching_note: 1-3 sentence coaching observation explaining what made the conversation imbalanced and what would improve balance, referencing specific participants or meeting segments. Write as constructive coaching, not technical analysis. No rewrite needed.
 - suggested_rewrite and rewrite_for_span_id should be omitted.
 
 For insufficient_signal or not_evaluable patterns:
@@ -205,6 +209,7 @@ FINAL SILENT SELF-CHECK
 14) suggested_rewrite is a plausible rewrite of the excerpt in the span identified by rewrite_for_span_id, not a different moment.
 15) For each pattern_snapshot item where numerator < denominator, coaching_note and suggested_rewrite are present.
 15b) For each evaluable numeric pattern_snapshot item where numerator > 0, notes is present (1-2 sentence positive observation).
+15c) For conversational_balance with balance_assessment=balanced, notes is present (1-2 sentence positive observation).
 16) For each pattern_snapshot item where numerator == denominator, coaching_note, suggested_rewrite, and rewrite_for_span_id are omitted or null.
 17) If experiment detection attempt=partial, coaching_note, suggested_rewrite, and rewrite_for_span_id are all present and non-null.
 18) If experiment detection attempt=yes or attempt=no, coaching_note, suggested_rewrite, and rewrite_for_span_id are null.
