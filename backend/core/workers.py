@@ -1303,23 +1303,12 @@ def _build_memory_for_user(
 
 
 def _load_system_prompt_from_config(client: AirtableClient, config_links: list[str]) -> str:
-    if config_links:
-        try:
-            cfg = client.get_record("config", config_links[0])
-            sp = _extract_fields(cfg).get("System Prompt")
-            if sp:
-                return sp
-        except Exception:
-            pass
-    # Fallback: try active config from Airtable
-    try:
-        cfg = client.get_active_config()
-        if cfg:
-            sp = cfg.get("fields", {}).get("System Prompt")
-            if sp:
-                return sp
-    except Exception:
-        pass
+    """Load system prompt from the repo file (single source of truth).
+
+    The client and config_links parameters are kept for backwards
+    compatibility but are no longer used — the prompt is always read
+    from system_prompt_v0_2_1.txt in the repo root.
+    """
     return load_system_prompt()
 
 
