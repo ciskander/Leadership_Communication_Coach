@@ -21,6 +21,31 @@ const PATTERN_LABELS: Record<string, string> = {
   conversational_balance: 'Conversational Balance',
 };
 
+const BALANCE_COLORS: Record<string, { bg: string; dot: string }> = {
+  balanced: { bg: 'bg-emerald-50', dot: 'bg-emerald-500' },
+  over_indexed: { bg: 'bg-rose-50', dot: 'bg-rose-400' },
+  under_indexed: { bg: 'bg-amber-50', dot: 'bg-amber-400' },
+  unclear: { bg: 'bg-gray-50', dot: 'bg-gray-400' },
+};
+
+const BALANCE_LABELS: Record<string, string> = {
+  balanced: 'Balanced',
+  over_indexed: 'Over-indexed',
+  under_indexed: 'Under-indexed',
+  unclear: 'Unclear',
+};
+
+function BalanceBadge({ assessment }: { assessment: string }) {
+  const colors = BALANCE_COLORS[assessment] ?? BALANCE_COLORS.unclear;
+  const label = BALANCE_LABELS[assessment] ?? assessment;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium text-gray-700 ${colors.bg}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${colors.dot}`} />
+      {label}
+    </span>
+  );
+}
+
 function RatioBar({ ratio }: { ratio: number }) {
   const pct = Math.round(ratio * 100);
   const color =
@@ -41,10 +66,14 @@ function RatioBar({ ratio }: { ratio: number }) {
 function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
   const [expanded, setExpanded] = useState(false);
 
+  const isConversationalBalance = pattern.pattern_id === 'conversational_balance';
   const hasQuotes = pattern.quotes.length > 0;
   const hasCoaching = !!pattern.coaching_note;
   const hasNotes = !!pattern.notes;
-  const isExpandable = hasQuotes || hasCoaching || hasNotes;
+  const isBalanced = pattern.balance_assessment === 'balanced';
+  const isExpandable = isConversationalBalance
+    ? (isBalanced ? hasNotes : hasCoaching)
+    : (hasQuotes || hasCoaching || hasNotes);
 
   // Determine if this pattern has missed opportunities
   const hasMissedOpportunities =
@@ -64,11 +93,6 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
     hasMissedOpportunities &&
     pattern.numerator != null &&
     pattern.numerator > 0;
-
-  const isImbalanced =
-    pattern.evaluable_status === 'evaluable' &&
-    pattern.balance_assessment &&
-    pattern.balance_assessment !== 'balanced';
 
   // Split quotes into success vs needs-improvement using rewrite_for_span_id.
   // Only split when we have a rewrite target to distinguish them.
@@ -106,9 +130,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
         {pattern.evaluable_status === 'evaluable' && pattern.ratio != null ? (
           <RatioBar ratio={pattern.ratio} />
         ) : pattern.evaluable_status === 'evaluable' && pattern.balance_assessment ? (
-          <span className="text-xs text-gray-600 capitalize">
-            {pattern.balance_assessment.replace('_', ' ')}
-          </span>
+          <BalanceBadge assessment={pattern.balance_assessment} />
         ) : (
           <span className="text-xs text-gray-400 capitalize">
             {pattern.evaluable_status === 'insufficient_signal'
@@ -227,8 +249,31 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
             </>
           )}
 
-          {/* ── Zero score, imbalanced, or non-numeric ── */}
-          {!isPerfectScore && !isMixedScore && (
+          {/* ── Conversational balance: summary blurb, no individual quotes ── */}
+          {isConversationalBalance && isBalanced && hasNotes && (
+            <div>
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                What you did well
+              </p>
+              <p className="text-sm text-stone-700 leading-relaxed">
+                {pattern.notes}
+              </p>
+            </div>
+          )}
+
+          {isConversationalBalance && !isBalanced && hasCoaching && (
+            <div>
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                Observation
+              </p>
+              <p className="text-sm text-stone-700 leading-relaxed">
+                {pattern.coaching_note}
+              </p>
+            </div>
+          )}
+
+          {/* ── Zero score or non-numeric (excluding conversational balance) ── */}
+          {!isConversationalBalance && !isPerfectScore && !isMixedScore && (
             <>
               {hasQuotes && (
                 <div>
