@@ -58,9 +58,9 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
     })
     .slice(0, 10);
 
-  const totalAttempted = experiment.attempt_count ?? 0;
   const successCount = events.filter((e) => e.attempt === 'yes').length;
   const partialCount = events.filter((e) => e.attempt === 'partial').length;
+  const totalAttempted = successCount + partialCount;
   const meetingsAnalysed = events.length;
 
   async function handleComplete() {
