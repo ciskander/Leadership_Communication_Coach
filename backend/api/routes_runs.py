@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends
 
 from ..auth.models import UserAuth
 from ..core.airtable_client import AirtableClient
+from ..core.transcript_parser import parse_transcript
 from .dependencies import get_current_user
 from .dto import (
     CoachingItemWithQuotes,
@@ -27,11 +28,49 @@ _QUOTE_MAX_CHARS = 2000
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+def _format_timestamp(seconds: float) -> str:
+    """Format seconds as M:SS or H:MM:SS for display."""
+    total = int(seconds)
+    h, remainder = divmod(total, 3600)
+    m, s = divmod(remainder, 60)
+    if h > 0:
+        return f"{h}:{m:02d}:{s:02d}"
+    return f"{m}:{s:02d}"
+
+
+def _build_turn_timestamps(
+    at_client: AirtableClient,
+    transcript_record_id: Optional[str],
+) -> dict[int, Optional[float]]:
+    """Parse the transcript and return a {turn_id: start_time_sec} lookup."""
+    if not transcript_record_id:
+        return {}
+    try:
+        tr_record = at_client.get_transcript(transcript_record_id)
+        tr_fields = tr_record.get("fields", {})
+        transcript_text = (
+            tr_fields.get("Transcript (extracted)")
+            or tr_fields.get("Raw Transcript Text")
+            or ""
+        )
+        if not transcript_text:
+            return {}
+        parsed = parse_transcript(
+            data=transcript_text.encode("utf-8"),
+            filename="transcript.txt",
+            source_id=tr_fields.get("Transcript ID") or transcript_record_id,
+        )
+        return {t.turn_id: t.start_time_sec for t in parsed.turns}
+    except Exception:
+        return {}
+
+
 def _resolve_quotes(
     evidence_span_ids: list[str],
     spans_by_id: dict[str, dict],
     transcript_id: Optional[str],
     meeting_id: Optional[str],
+    turn_timestamps: Optional[dict[int, Optional[float]]] = None,
 ) -> list[QuoteObject]:
     quotes: list[QuoteObject] = []
     for es_id in evidence_span_ids:
@@ -39,6 +78,14 @@ def _resolve_quotes(
         if not span:
             continue
         excerpt = (span.get("excerpt") or "")[:_QUOTE_MAX_CHARS]
+        # Look up timestamp from parsed transcript turns
+        start_ts: Optional[str] = None
+        if turn_timestamps:
+            turn_id = span.get("turn_start_id")
+            if isinstance(turn_id, int):
+                sec = turn_timestamps.get(turn_id)
+                if sec is not None:
+                    start_ts = _format_timestamp(sec)
         quotes.append(
             QuoteObject(
                 speaker_label=span.get("speaker_role"),
@@ -46,12 +93,13 @@ def _resolve_quotes(
                 meeting_id=span.get("meeting_id") or meeting_id,
                 transcript_id=transcript_id,
                 span_id=es_id,
+                start_timestamp=start_ts,
             )
         )
     return quotes
 
 
-def _build_run_response(run_record: dict) -> RunStatusResponse:
+def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = None) -> RunStatusResponse:
     fields = run_record.get("fields", {})
     run_id = run_record["id"]
 
@@ -100,12 +148,15 @@ def _build_run_response(run_record: dict) -> RunStatusResponse:
     transcript_id = transcript_links[0] if isinstance(transcript_links, list) and transcript_links else None
     meeting_id = parsed_json.get("context", {}).get("meeting_id")
 
+    # Build turn timestamp lookup for evidence quote display
+    turn_timestamps = _build_turn_timestamps(at_client, transcript_id) if at_client else {}
+
     # Coaching output with resolved quotes
     coaching = parsed_json.get("coaching_output", {})
 
     strengths: list[CoachingItemWithQuotes] = []
     for s in coaching.get("strengths", []):
-        quotes = _resolve_quotes(s.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id)
+        quotes = _resolve_quotes(s.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_timestamps)
         strengths.append(
             CoachingItemWithQuotes(
                 pattern_id=s.get("pattern_id", ""),
@@ -130,8 +181,8 @@ def _build_run_response(run_record: dict) -> RunStatusResponse:
             primary_ids = all_es_ids[:1]
             additional_ids = all_es_ids[1:]
 
-        primary_quotes = _resolve_quotes(primary_ids, spans_by_id, transcript_id, meeting_id)
-        additional_quotes = _resolve_quotes(additional_ids, spans_by_id, transcript_id, meeting_id)
+        primary_quotes = _resolve_quotes(primary_ids, spans_by_id, transcript_id, meeting_id, turn_timestamps)
+        additional_quotes = _resolve_quotes(additional_ids, spans_by_id, transcript_id, meeting_id, turn_timestamps)
 
         focus = CoachingItemWithQuotes(
             pattern_id=f.get("pattern_id", ""),
@@ -146,7 +197,7 @@ def _build_run_response(run_record: dict) -> RunStatusResponse:
     micro_list = coaching.get("micro_experiment", [])
     if micro_list:
         m = micro_list[0]
-        quotes = _resolve_quotes(m.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id)
+        quotes = _resolve_quotes(m.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_timestamps)
         micro_exp = MicroExperimentWithQuotes(
             experiment_id=m.get("experiment_id", ""),
             title=m.get("title", ""),
@@ -181,6 +232,7 @@ def _build_run_response(run_record: dict) -> RunStatusResponse:
                 spans_by_id,
                 transcript_id,
                 meeting_id,
+                turn_timestamps,
             )
             detection["quotes"] = [q.model_dump() for q in det_quotes]
 
@@ -210,7 +262,7 @@ async def get_run(
         if coachee_id != user.airtable_user_record_id:
             return error_response("FORBIDDEN", "You do not have access to this run.", 403)
 
-    return _build_run_response(run_record)
+    return _build_run_response(run_record, at_client)
 
 
 @router.get("/api/run_requests/{rr_id}", response_model=RunRequestStatusResponse)

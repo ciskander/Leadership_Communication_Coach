@@ -16,6 +16,7 @@ export interface QuoteObject {
   meeting_id: string | null;
   transcript_id: string | null;
   span_id: string | null;
+  start_timestamp: string | null;
 }
 
 export interface CoachingItem {

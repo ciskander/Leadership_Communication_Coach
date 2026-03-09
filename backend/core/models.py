@@ -18,6 +18,7 @@ class Turn(BaseModel):
     speaker_label: str
     text: str
     speaker_role_hint: Optional[str] = None
+    start_time_sec: Optional[float] = None
 
 
 class TranscriptMetadata(BaseModel):

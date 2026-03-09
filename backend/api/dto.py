@@ -50,6 +50,7 @@ class QuoteObject(BaseModel):
     meeting_id: Optional[str]
     transcript_id: Optional[str]
     span_id: Optional[str]
+    start_timestamp: Optional[str] = None
 
 
 class CoachingItemWithQuotes(BaseModel):
