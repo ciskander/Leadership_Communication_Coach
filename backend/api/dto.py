@@ -163,6 +163,7 @@ class ExperimentResponse(BaseModel):
     status: str
     created_at: Optional[str]
     attempt_count: Optional[int] = None
+    meeting_count: Optional[int] = None
     started_at: Optional[str] = None
     ended_at: Optional[str] = None
 
@@ -257,6 +258,7 @@ class PastExperiment(BaseModel):
     started_at: Optional[str]
     ended_at: Optional[str]
     attempt_count: Optional[int]
+    meeting_count: Optional[int] = None
 
 
 class ClientProgressResponse(BaseModel):

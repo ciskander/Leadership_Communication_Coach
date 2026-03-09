@@ -411,14 +411,18 @@ class AirtableClient:
         attempt: str,
         attempt_date: Optional[str],
     ) -> dict:
-        """Update last attempt fields and increment attempt count."""
-        # Read current count first
-        exp_rec = self.get_experiment(experiment_record_id)
-        current_count = exp_rec.get("fields", {}).get(F_EXP_ATTEMPT_COUNT) or 0
+        """Update last attempt fields and increment attempt count.
+
+        Only 'yes' and 'partial' attempts are counted; 'no' updates the
+        last-attempt metadata but does not bump the counter.
+        """
         fields: dict = {
             F_EXP_LAST_ATTEMPT_MODEL: attempt,
-            F_EXP_ATTEMPT_COUNT: current_count + 1,
         }
+        if attempt in ("yes", "partial"):
+            exp_rec = self.get_experiment(experiment_record_id)
+            current_count = exp_rec.get("fields", {}).get(F_EXP_ATTEMPT_COUNT) or 0
+            fields[F_EXP_ATTEMPT_COUNT] = current_count + 1
         if attempt_date:
             fields[F_EXP_LAST_ATTEMPT_DATE] = attempt_date
         return self.update_experiment(experiment_record_id, fields)
@@ -465,6 +469,17 @@ class AirtableClient:
         formula = f"{{{F_EE_IDEMPOTENCY_KEY}}} = '{key}'"
         records = self.search_records(AT_TABLE_EXPERIMENT_EVENTS, formula, max_records=1)
         return records[0] if records else None
+
+    def count_experiment_meetings(self, experiment_record_id: str) -> int:
+        """Count distinct meetings (transcripts) that have experiment events."""
+        formula = f"FIND('{experiment_record_id}', ARRAYJOIN({{{F_EE_EXPERIMENT}}}))"
+        records = self.search_records(AT_TABLE_EXPERIMENT_EVENTS, formula, max_records=200)
+        transcript_ids: set[str] = set()
+        for rec in records:
+            # Transcript is a linked-record field → list of record IDs
+            for tid in rec.get("fields", {}).get(F_EE_TRANSCRIPT) or []:
+                transcript_ids.add(tid)
+        return len(transcript_ids)
 
     # ── Users ─────────────────────────────────────────────────────────────────
 

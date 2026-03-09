@@ -97,6 +97,7 @@ export interface Experiment {
   status: 'proposed' | 'active' | 'completed' | 'abandoned';
   created_at: string | null;
   attempt_count: number | null;
+  meeting_count: number | null;
   started_at: string | null;
   ended_at: string | null;
 }
@@ -247,6 +248,7 @@ export interface PastExperiment {
   started_at: string | null;
   ended_at: string | null;
   attempt_count: number | null;
+  meeting_count: number | null;
 }
 
 export interface ClientProgress {
