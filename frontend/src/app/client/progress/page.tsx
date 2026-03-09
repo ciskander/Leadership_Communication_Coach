@@ -437,7 +437,9 @@ function PastExperimentCard({ exp }: { exp: PastExperiment }) {
           {exp.attempt_count != null && (
             <div>
               <span className="text-xs text-gray-500 uppercase tracking-wide">Attempts</span>
-              <p className="font-medium text-gray-800 mt-0.5">{exp.attempt_count}</p>
+              <p className="font-medium text-gray-800 mt-0.5">
+                {exp.attempt_count}{exp.meeting_count != null && exp.meeting_count > 0 ? ` across ${exp.meeting_count} meeting${exp.meeting_count !== 1 ? 's' : ''}` : ''}
+              </p>
             </div>
           )}
           <div>

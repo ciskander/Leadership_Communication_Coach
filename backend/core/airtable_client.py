@@ -470,6 +470,17 @@ class AirtableClient:
         records = self.search_records(AT_TABLE_EXPERIMENT_EVENTS, formula, max_records=1)
         return records[0] if records else None
 
+    def count_experiment_meetings(self, experiment_record_id: str) -> int:
+        """Count distinct meetings (transcripts) that have experiment events."""
+        formula = f"FIND('{experiment_record_id}', ARRAYJOIN({{{F_EE_EXPERIMENT}}}))"
+        records = self.search_records(AT_TABLE_EXPERIMENT_EVENTS, formula, max_records=200)
+        transcript_ids: set[str] = set()
+        for rec in records:
+            # Transcript is a linked-record field → list of record IDs
+            for tid in rec.get("fields", {}).get(F_EE_TRANSCRIPT) or []:
+                transcript_ids.add(tid)
+        return len(transcript_ids)
+
     # ── Users ─────────────────────────────────────────────────────────────────
 
     def get_user(self, record_id: str) -> dict:

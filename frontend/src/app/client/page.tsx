@@ -511,7 +511,7 @@ export default function ClientDashboard() {
                 <p className="text-sm font-semibold text-stone-800 leading-snug">{experiment.title}</p>
                 {experiment.attempt_count != null && experiment.attempt_count > 0 && (
                   <p className="text-xs text-emerald-700 font-medium">
-                    {experiment.attempt_count} meeting{experiment.attempt_count !== 1 ? 's' : ''} attempted
+                    {experiment.attempt_count} attempt{experiment.attempt_count !== 1 ? 's' : ''}{experiment.meeting_count != null && experiment.meeting_count > 0 ? ` across ${experiment.meeting_count} meeting${experiment.meeting_count !== 1 ? 's' : ''}` : ''}
                   </p>
                 )}
               </div>

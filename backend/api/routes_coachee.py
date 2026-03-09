@@ -61,8 +61,14 @@ class HumanConfirmBody(BaseModel):
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def _build_experiment_response(exp_rec: dict) -> ExperimentResponse:
+def _build_experiment_response(exp_rec: dict, at_client: Optional[AirtableClient] = None) -> ExperimentResponse:
     ef = exp_rec.get("fields", {})
+    meeting_count = None
+    if at_client is not None:
+        try:
+            meeting_count = at_client.count_experiment_meetings(exp_rec["id"])
+        except Exception:
+            logger.warning("Could not count meetings for experiment %s", exp_rec["id"])
     return ExperimentResponse(
         experiment_record_id=exp_rec["id"],
         experiment_id=ef.get("Experiment ID", ""),
@@ -73,6 +79,7 @@ def _build_experiment_response(exp_rec: dict) -> ExperimentResponse:
         status=ef.get("Status", ""),
         created_at=exp_rec.get("createdTime"),
         attempt_count=ef.get("Attempt Count (model)"),
+        meeting_count=meeting_count,
         started_at=ef.get("Started At"),
         ended_at=ef.get("Ended At"),
     )
@@ -550,7 +557,7 @@ async def client_summary(
             ae_links = u_fields.get("Active Experiment", [])
             if ae_links:
                 exp_rec = at_client.get_experiment(ae_links[0])
-                active_exp_resp = _build_experiment_response(exp_rec)
+                active_exp_resp = _build_experiment_response(exp_rec, at_client)
 
             # Proposed experiments (max 3)
             proposed_records = at_client.get_proposed_experiments_for_user(
@@ -641,7 +648,7 @@ async def active_experiment(
             return ActiveExperimentResponse(experiment=None)
 
         exp_rec = at_client.get_experiment(ae_links[0])
-        exp_resp = _build_experiment_response(exp_rec)
+        exp_resp = _build_experiment_response(exp_rec, at_client)
 
         # Recent events
         exp_primary_id = exp_rec.get("fields", {}).get("Experiment ID", "")
@@ -776,6 +783,7 @@ async def client_progress(
             "started_at": ef.get("Started At"),
             "ended_at": ef.get("Ended At"),
             "attempt_count": ef.get("Attempt Count (model)"),
+            "meeting_count": at_client.count_experiment_meetings(exp_rec["id"]),
         })
 
     # Most recent first (by ended_at)
