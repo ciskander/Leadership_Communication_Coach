@@ -118,12 +118,28 @@ def _build_run_response(run_record: dict) -> RunStatusResponse:
     focus_list = coaching.get("focus", [])
     if focus_list:
         f = focus_list[0]
-        quotes = _resolve_quotes(f.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id)
+        rewrite_span_id = f.get("rewrite_for_span_id")
+        all_es_ids = f.get("evidence_span_ids", [])
+
+        # Split: primary quote (the one the rewrite applies to) vs additional
+        if rewrite_span_id and rewrite_span_id in all_es_ids:
+            primary_ids = [rewrite_span_id]
+            additional_ids = [eid for eid in all_es_ids if eid != rewrite_span_id]
+        else:
+            # Fallback: first span is primary, rest are additional
+            primary_ids = all_es_ids[:1]
+            additional_ids = all_es_ids[1:]
+
+        primary_quotes = _resolve_quotes(primary_ids, spans_by_id, transcript_id, meeting_id)
+        additional_quotes = _resolve_quotes(additional_ids, spans_by_id, transcript_id, meeting_id)
+
         focus = CoachingItemWithQuotes(
             pattern_id=f.get("pattern_id", ""),
             message=f.get("message", ""),
-            quotes=quotes,
+            quotes=primary_quotes,
             suggested_rewrite=f.get("suggested_rewrite"),
+            rewrite_for_span_id=rewrite_span_id,
+            additional_quotes=additional_quotes,
         )
 
     micro_exp: Optional[MicroExperimentWithQuotes] = None

@@ -345,6 +345,25 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
                         f"evidence_span_id {es_id} not found in evidence_spans.",
                     ))
 
+    # rewrite_for_span_id must reference one of the focus item's own evidence_span_ids
+    if focus:
+        f = focus[0]
+        rewrite_span = f.get("rewrite_for_span_id")
+        if f.get("suggested_rewrite") and not rewrite_span:
+            issues.append(_err(
+                "REWRITE_SPAN_MISSING",
+                "coaching_output.focus[0].rewrite_for_span_id",
+                "focus item with suggested_rewrite must include rewrite_for_span_id.",
+            ))
+        elif rewrite_span:
+            focus_es_ids = set(f.get("evidence_span_ids", []))
+            if rewrite_span not in focus_es_ids:
+                issues.append(_err(
+                    "REWRITE_SPAN_NOT_IN_FOCUS",
+                    "coaching_output.focus[0].rewrite_for_span_id",
+                    f"rewrite_for_span_id '{rewrite_span}' is not in focus evidence_span_ids.",
+                ))
+
     # ── 3f. Experiment tracking conditional rules ─────────────────────────────
     active_exp = experiment_tracking.get("active_experiment", {}) or {}
     detection = experiment_tracking.get("detection_in_this_meeting")
