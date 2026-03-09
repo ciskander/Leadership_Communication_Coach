@@ -411,14 +411,18 @@ class AirtableClient:
         attempt: str,
         attempt_date: Optional[str],
     ) -> dict:
-        """Update last attempt fields and increment attempt count."""
-        # Read current count first
-        exp_rec = self.get_experiment(experiment_record_id)
-        current_count = exp_rec.get("fields", {}).get(F_EXP_ATTEMPT_COUNT) or 0
+        """Update last attempt fields and increment attempt count.
+
+        Only 'yes' and 'partial' attempts are counted; 'no' updates the
+        last-attempt metadata but does not bump the counter.
+        """
         fields: dict = {
             F_EXP_LAST_ATTEMPT_MODEL: attempt,
-            F_EXP_ATTEMPT_COUNT: current_count + 1,
         }
+        if attempt in ("yes", "partial"):
+            exp_rec = self.get_experiment(experiment_record_id)
+            current_count = exp_rec.get("fields", {}).get(F_EXP_ATTEMPT_COUNT) or 0
+            fields[F_EXP_ATTEMPT_COUNT] = current_count + 1
         if attempt_date:
             fields[F_EXP_LAST_ATTEMPT_DATE] = attempt_date
         return self.update_experiment(experiment_record_id, fields)
