@@ -15,7 +15,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  ReferenceDot,
+  ReferenceLine,
 } from 'recharts';
 
 // ─── Pattern explanations ─────────────────────────────────────────────────────
@@ -256,11 +256,6 @@ function PatternTrendsChart({ history, trendWindowSize = 3 }: { history: RunHist
       {/* Chart */}
       {showLineChart ? (
         <>
-          {postBaselineCount < history.length && (
-            <p className="text-xs text-gray-400 mb-2">
-              ● Baseline anchor shown as dashed line marker
-            </p>
-          )}
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -305,13 +300,13 @@ function PatternTrendsChart({ history, trendWindowSize = 3 }: { history: RunHist
                   />,
                 ];
               })}
-              {/* Baseline marker */}
-              {baselinePoint && visiblePatterns[0] && (
-                <ReferenceDot
+              {/* Vertical dashed line separating baseline from post-baseline */}
+              {baselinePoint && (
+                <ReferenceLine
                   x={baselinePoint.label}
-                  y={Number(baselinePoint[visiblePatterns[0]]) || 0}
-                  r={0}
-                  label={{ value: 'Baseline', position: 'top', fontSize: 10, fill: '#6b7280' }}
+                  stroke="#9ca3af"
+                  strokeDasharray="4 4"
+                  label={{ value: 'Baseline', position: 'insideTopRight', fontSize: 10, fill: '#6b7280' }}
                 />
               )}
             </LineChart>
