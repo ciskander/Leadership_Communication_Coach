@@ -15,7 +15,9 @@ from ..core.transcript_parser import parse_transcript
 from .dependencies import get_current_user
 from .dto import (
     CoachingItemWithQuotes,
+    ExperimentDetectionWithQuotes,
     MicroExperimentWithQuotes,
+    PatternSnapshotItem,
     QuoteObject,
     RunRequestStatusResponse,
     RunStatusResponse,
@@ -250,21 +252,43 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
     resp.strengths = strengths
     resp.focus = focus
     resp.micro_experiment = micro_exp
-    resp.pattern_snapshot = parsed_json.get("pattern_snapshot")
+
+    # ── Pattern snapshot with per-pattern quotes and coaching ──────────────
+    raw_snapshot = parsed_json.get("pattern_snapshot") or []
+    snapshot_items: list[PatternSnapshotItem] = []
+    for ps in raw_snapshot:
+        ps_quotes = _resolve_quotes(
+            ps.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_map
+        )
+        snapshot_items.append(PatternSnapshotItem(
+            pattern_id=ps.get("pattern_id", ""),
+            tier=ps.get("tier"),
+            evaluable_status=ps.get("evaluable_status", "not_evaluable"),
+            numerator=ps.get("numerator"),
+            denominator=ps.get("denominator"),
+            ratio=ps.get("ratio"),
+            balance_assessment=ps.get("balance_assessment"),
+            notes=ps.get("notes"),
+            quotes=ps_quotes,
+            coaching_note=ps.get("coaching_note"),
+            suggested_rewrite=ps.get("suggested_rewrite"),
+            rewrite_for_span_id=ps.get("rewrite_for_span_id"),
+        ))
+    resp.pattern_snapshot = snapshot_items if snapshot_items else None
+
     resp.evaluation_summary = parsed_json.get("evaluation_summary")
-    # Inject experiment_record_id into active_experiment so the frontend
-    # can call lifecycle endpoints without a separate lookup
+
+    # ── Experiment tracking ────────────────────────────────────────────────
     exp_tracking = parsed_json.get("experiment_tracking")
     if exp_tracking:
         active_exp = exp_tracking.get("active_experiment") or {}
         exp_id_str = active_exp.get("experiment_id")
         if exp_id_str and exp_id_str != "EXP-000000":
-            # Use the Active Experiment link stored directly on the run record
             _links = fields.get("Active Experiment", [])
             if _links:
                 active_exp["experiment_record_id"] = _links[0]
 
-        # Resolve detection evidence spans into quotes for the frontend
+        # Build typed experiment detection with quotes and coaching
         detection = exp_tracking.get("detection_in_this_meeting")
         if isinstance(detection, dict):
             det_quotes = _resolve_quotes(
@@ -274,6 +298,16 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
                 meeting_id,
                 turn_map,
             )
+            resp.experiment_detection = ExperimentDetectionWithQuotes(
+                experiment_id=detection.get("experiment_id", ""),
+                attempt=detection.get("attempt", "no"),
+                count_attempts=detection.get("count_attempts", 0),
+                quotes=det_quotes,
+                coaching_note=detection.get("coaching_note"),
+                suggested_rewrite=detection.get("suggested_rewrite"),
+                rewrite_for_span_id=detection.get("rewrite_for_span_id"),
+            )
+            # Keep raw quotes on the dict for backwards compat
             detection["quotes"] = [q.model_dump() for q in det_quotes]
 
     resp.experiment_tracking = exp_tracking

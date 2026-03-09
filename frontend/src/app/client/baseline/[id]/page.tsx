@@ -4,23 +4,12 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import type { BaselinePack, BaselinePackMeeting, CoachingItem, Experiment, ActiveExperiment } from '@/lib/types';
+import type { BaselinePack, BaselinePackMeeting, CoachingItem, Experiment, ActiveExperiment, PatternSnapshotItem } from '@/lib/types';
 import { CoachingCard } from '@/components/CoachingCard';
 import { PatternSnapshot } from '@/components/PatternSnapshot';
 import { ExperimentTracker } from '@/components/ExperimentTracker';
 
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
-
-// PatternItem shape expected by PatternSnapshot component
-type PatternSnapshotItem = {
-  pattern_id: string;
-  evaluable_status: string;
-  numerator?: number;
-  denominator?: number;
-  ratio?: number;
-  balance_assessment?: string;
-  tier?: number;
-};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -215,7 +204,7 @@ function SubRunPatternSnapshot({ patterns }: { patterns: Record<string, unknown>
         Pattern scores
       </p>
       <div className="opacity-80">
-        <PatternSnapshot patterns={patterns as PatternSnapshotItem[]} />
+        <PatternSnapshot patterns={patterns as unknown as PatternSnapshotItem[]} />
       </div>
     </div>
   );
@@ -436,7 +425,7 @@ export default function BaselineDetailPage() {
               <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
                 Your communication baseline
               </h2>
-              <PatternSnapshot patterns={pack.pattern_snapshot as PatternSnapshotItem[]} />
+              <PatternSnapshot patterns={pack.pattern_snapshot as unknown as PatternSnapshotItem[]} />
             </section>
           )}
 
