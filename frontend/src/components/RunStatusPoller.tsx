@@ -27,10 +27,10 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
   const [acceptLoading, setAcceptLoading] = useState(false);
   const [activeExpData, setActiveExpData] = useState<ActiveExperiment | null>(null);
 
-  // When the run completes without an active experiment, fetch any proposed
-  // experiments so the user can accept inline without going back to the dashboard.
-  // When it completes WITH an active experiment, fetch the full experiment + events
-  // so we can render ExperimentTracker inline.
+  // When the run completes, populate experiment data for inline rendering.
+  // Prefer the experiment detail embedded in the run response (avoids a
+  // separate API call that can silently fail). Fall back to the dedicated
+  // endpoint only when the run response doesn't include the detail.
   useEffect(() => {
     if (run?.status === 'complete' && run?.gate1_pass === true) {
       const activeExpStatus = (
@@ -41,7 +41,14 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         api.getProposedExperiments()
           .then(setProposedExperiments)
           .catch(() => {});
+      } else if (run.active_experiment_detail) {
+        // Use experiment data embedded in the run response
+        setActiveExpData({
+          experiment: run.active_experiment_detail,
+          recent_events: run.active_experiment_events ?? [],
+        });
       } else {
+        // Fallback: fetch from the dedicated endpoint
         api.getActiveExperiment()
           .then(setActiveExpData)
           .catch(() => {});

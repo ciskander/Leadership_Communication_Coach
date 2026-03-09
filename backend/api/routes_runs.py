@@ -16,6 +16,7 @@ from .dependencies import get_current_user
 from .dto import (
     CoachingItemWithQuotes,
     ExperimentDetectionWithQuotes,
+    ExperimentResponse,
     MicroExperimentWithQuotes,
     PatternSnapshotItem,
     QuoteObject,
@@ -311,6 +312,46 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
             detection["quotes"] = [q.model_dump() for q in det_quotes]
 
     resp.experiment_tracking = exp_tracking
+
+    # ── Fetch full experiment detail + events for inline rendering ─────────
+    if at_client and exp_tracking:
+        active_exp = exp_tracking.get("active_experiment") or {}
+        exp_record_id = active_exp.get("experiment_record_id")
+        if exp_record_id and active_exp.get("status") == "active":
+            try:
+                exp_rec = at_client.get_experiment(exp_record_id)
+                ef = exp_rec.get("fields", {})
+                resp.active_experiment_detail = ExperimentResponse(
+                    experiment_record_id=exp_rec["id"],
+                    experiment_id=ef.get("Experiment ID", ""),
+                    title=ef.get("Title", ""),
+                    instruction=ef.get("Instructions") or ef.get("Instruction", ""),
+                    success_marker=ef.get("Success Marker") or ef.get("Success Criteria", ""),
+                    pattern_id=ef.get("Pattern ID", ""),
+                    status=ef.get("Status", ""),
+                    created_at=exp_rec.get("createdTime"),
+                    attempt_count=ef.get("Attempt Count (model)"),
+                    started_at=ef.get("Started At"),
+                    ended_at=ef.get("Ended At"),
+                )
+                exp_primary_id = ef.get("Experiment ID", "")
+                if exp_primary_id:
+                    events_formula = f"FIND('{exp_primary_id}', ARRAYJOIN({{Experiment}}))"
+                    event_records = at_client.search_records(
+                        "experiment_events", events_formula, max_records=10,
+                    )
+                    resp.active_experiment_events = [
+                        {
+                            "event_id": er["id"],
+                            "attempt": er.get("fields", {}).get("Attempt Enum"),
+                            "meeting_date": er.get("fields", {}).get("Meeting Date"),
+                            "human_confirmed": er.get("fields", {}).get("User Confirmation"),
+                            "notes": er.get("fields", {}).get("Notes"),
+                        }
+                        for er in event_records
+                    ]
+            except Exception:
+                pass  # Non-fatal — frontend falls back to separate API call
 
     return resp
 
