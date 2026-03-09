@@ -135,9 +135,9 @@ def call_openai(
 
 
 def load_system_prompt(path: Optional[str] = None) -> str:
-    """Load the system prompt from file or use the built-in path."""
+    """Load the system prompt from the repo file (single source of truth)."""
     from pathlib import Path as P
-    default_path = P(__file__).parent.parent.parent / "System_Prompt.txt"
+    default_path = P(__file__).parent.parent.parent / "system_prompt_v0_2_1.txt"
     p = P(path) if path else default_path
     if p.exists():
         return p.read_text(encoding="utf-8").strip()
