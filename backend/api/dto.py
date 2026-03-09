@@ -112,6 +112,8 @@ class RunStatusResponse(BaseModel):
     evaluation_summary: Optional[dict] = None
     experiment_tracking: Optional[dict] = None
     experiment_detection: Optional[ExperimentDetectionWithQuotes] = None
+    active_experiment_detail: Optional[ExperimentResponse] = None
+    active_experiment_events: list[dict] = Field(default_factory=list)
 
 
 # ── Run Request status (lightweight poll) ─────────────────────────────────────
