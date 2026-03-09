@@ -505,6 +505,18 @@
         "opportunity_events_counted": {
           "type": "integer",
           "minimum": 0
+        },
+        "coaching_note": {
+          "type": ["string", "null"],
+          "maxLength": 800
+        },
+        "suggested_rewrite": {
+          "type": ["string", "null"],
+          "maxLength": 1000
+        },
+        "rewrite_for_span_id": {
+          "type": ["string", "null"],
+          "pattern": "^ES-[0-9]{3}$"
         }
       },
       "additionalProperties": false
@@ -948,6 +960,18 @@
             "pattern": "^ES-[0-9]{3}$"
           },
           "uniqueItems": true
+        },
+        "coaching_note": {
+          "type": ["string", "null"],
+          "maxLength": 800
+        },
+        "suggested_rewrite": {
+          "type": ["string", "null"],
+          "maxLength": 1000
+        },
+        "rewrite_for_span_id": {
+          "type": ["string", "null"],
+          "pattern": "^ES-[0-9]{3}$"
         }
       }
     },
