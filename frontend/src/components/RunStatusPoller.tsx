@@ -7,7 +7,8 @@ import { CoachingCard } from './CoachingCard';
 import { PatternSnapshot } from './PatternSnapshot';
 import { ExperimentTracker } from './ExperimentTracker';
 import { api } from '@/lib/api';
-import type { Experiment, ActiveExperiment } from '@/lib/types';
+import type { Experiment, ActiveExperiment, PatternSnapshotItem } from '@/lib/types';
+import { EvidenceQuote } from './EvidenceQuote';
 import Link from 'next/link';
 
 interface RunStatusPollerProps {
@@ -123,15 +124,15 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
   // ── Parse experiment tracking ────────────────────────────────────────────────
   const et = run.experiment_tracking as Record<string, unknown> | null;
   const activeExp = et?.active_experiment as Record<string, unknown> | null;
-  const detection = et?.detection_in_this_meeting as Record<string, unknown> | null;
+  const detection = run.experiment_detection;
 
 	const hasActiveExp =
 	  !!activeExp &&
 	  activeExp.status === 'active';
 
-  const attempt = detection?.attempt as string | null;
-  const countAttempts = detection?.count_attempts as number | null;
-  const detectionQuotes = (detection?.quotes as Array<{ quote_text: string; speaker_label?: string }>) ?? [];
+  const attempt = detection?.attempt ?? null;
+  const countAttempts = detection?.count_attempts ?? null;
+  const detectionQuotes = detection?.quotes ?? [];
   const expRecordId = activeExp
     ? (run.experiment_tracking as Record<string, unknown> & { _record_id?: string })?._record_id ?? null
     : null;
@@ -284,20 +285,40 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
             {/* Evidence quotes from the transcript */}
             {attempt !== 'no' && detectionQuotes.length > 0 && (
-              <div className="space-y-2">
-                {detectionQuotes.map((q, i) => (
-                  <blockquote
-                    key={i}
-                    className="border-l-4 border-indigo-300 pl-4 py-1 my-2 bg-indigo-50 rounded-r-md"
-                  >
-                    <p className="text-sm text-gray-700 italic">
-                      &ldquo;{q.quote_text}&rdquo;
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                    {attempt === 'yes' ? 'From the transcript' : 'What you said'}
+                  </p>
+                  {detectionQuotes.map((q, i) => (
+                    <EvidenceQuote key={i} quote={q} />
+                  ))}
+                </div>
+
+                {/* Coaching for partial attempts */}
+                {attempt === 'partial' && detection?.coaching_note && (
+                  <div>
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                      What worked and what was missing
                     </p>
-                    {q.speaker_label && (
-                      <p className="text-xs text-gray-500 mt-1">— {q.speaker_label}</p>
-                    )}
-                  </blockquote>
-                ))}
+                    <p className="text-sm text-stone-700 leading-relaxed">
+                      {detection.coaching_note}
+                    </p>
+                  </div>
+                )}
+
+                {attempt === 'partial' && detection?.suggested_rewrite && (
+                  <div>
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                      Next time, try something like
+                    </p>
+                    <blockquote className="border-l-4 border-emerald-300 pl-4 py-1 my-2 bg-emerald-50 rounded-r-md">
+                      <p className="text-sm text-stone-700 italic">
+                        &ldquo;{detection.suggested_rewrite}&rdquo;
+                      </p>
+                    </blockquote>
+                  </div>
+                )}
               </div>
             )}
 
@@ -401,7 +422,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
             Pattern snapshot
           </p>
-          <PatternSnapshot patterns={run.pattern_snapshot as never} />
+          <PatternSnapshot patterns={run.pattern_snapshot} />
         </section>
       )}
     </div>

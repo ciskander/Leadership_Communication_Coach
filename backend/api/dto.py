@@ -71,6 +71,32 @@ class MicroExperimentWithQuotes(BaseModel):
     quotes: list[QuoteObject] = Field(default_factory=list)
 
 
+class ExperimentDetectionWithQuotes(BaseModel):
+    experiment_id: str
+    attempt: str                         # yes | partial | no
+    count_attempts: int = 0
+    quotes: list[QuoteObject] = Field(default_factory=list)
+    coaching_note: Optional[str] = None
+    suggested_rewrite: Optional[str] = None
+    rewrite_for_span_id: Optional[str] = None
+
+
+class PatternSnapshotItem(BaseModel):
+    pattern_id: str
+    tier: Optional[int] = None
+    evaluable_status: str
+    numerator: Optional[int] = None
+    denominator: Optional[int] = None
+    ratio: Optional[float] = None
+    balance_assessment: Optional[str] = None
+    notes: Optional[str] = None
+    # Per-pattern coaching (populated when missed opportunities exist)
+    quotes: list[QuoteObject] = Field(default_factory=list)
+    coaching_note: Optional[str] = None
+    suggested_rewrite: Optional[str] = None
+    rewrite_for_span_id: Optional[str] = None
+
+
 class RunStatusResponse(BaseModel):
     run_id: str
     status: str                         # queued | running | complete | error
@@ -82,9 +108,10 @@ class RunStatusResponse(BaseModel):
     strengths: list[CoachingItemWithQuotes] = Field(default_factory=list)
     focus: Optional[CoachingItemWithQuotes] = None
     micro_experiment: Optional[MicroExperimentWithQuotes] = None
-    pattern_snapshot: Optional[list[dict]] = None
+    pattern_snapshot: Optional[list[PatternSnapshotItem]] = None
     evaluation_summary: Optional[dict] = None
     experiment_tracking: Optional[dict] = None
+    experiment_detection: Optional[ExperimentDetectionWithQuotes] = None
 
 
 # ── Run Request status (lightweight poll) ─────────────────────────────────────

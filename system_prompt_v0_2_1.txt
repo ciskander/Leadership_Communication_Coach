@@ -68,7 +68,23 @@ Each item requires:
 pattern_id, tier(1|2), evaluable_status(evaluable|insufficient_signal|not_evaluable), denominator_rule_id, min_required_threshold, evidence_span_ids
 
 Optional:
-opportunity_count, notes
+opportunity_count, notes, coaching_note, suggested_rewrite, rewrite_for_span_id
+
+PATTERN-LEVEL COACHING (per-pattern drill-down)
+For each evaluable numeric pattern where numerator < denominator (i.e. at least one opportunity was missed):
+- coaching_note: 1-2 sentence coaching observation explaining what the speaker missed and why it matters. Direct and specific.
+- suggested_rewrite: a concrete, reworded version of what the speaker said at the missed opportunity, demonstrating the pattern applied. Write it in the speaker's natural voice, 1-3 sentences.
+- rewrite_for_span_id: the evidence_span_id whose excerpt the suggested_rewrite directly rewrites. This span ID MUST appear in the pattern's evidence_span_ids.
+
+For evaluable numeric patterns where numerator == denominator (100%):
+- coaching_note, suggested_rewrite, rewrite_for_span_id should be omitted (or null). The evidence_span_ids already show what the speaker did well.
+
+For conversational_balance where balance_assessment is over_indexed or under_indexed:
+- coaching_note: 1-2 sentence coaching observation. No rewrite needed.
+- suggested_rewrite and rewrite_for_span_id should be omitted.
+
+For insufficient_signal or not_evaluable patterns:
+- coaching_note, suggested_rewrite, rewrite_for_span_id should be omitted.
 
 Numeric evaluable patterns (all except conversational_balance):
 - evaluable_status must be "evaluable"
@@ -100,9 +116,12 @@ EXPERIMENT TRACKING
 active_experiment = {experiment_id,status}
 status enum: none|proposed|active|completed|abandoned
 
-detection_in_this_meeting = null OR {experiment_id,attempt,count_attempts,evidence_span_ids}
+detection_in_this_meeting = null OR {experiment_id,attempt,count_attempts,evidence_span_ids,coaching_note,suggested_rewrite,rewrite_for_span_id}
 attempt enum: no|partial|yes
 count_attempts integer >=0
+coaching_note: string or null
+suggested_rewrite: string or null
+rewrite_for_span_id: string or null
 
 Conditional:
 - If analysis_type=single_meeting and status in proposed|active, detection_in_this_meeting must be: {experiment_id, attempt, count_attempts, evidence_span_ids} where attempt is one of: yes; partial; no
@@ -111,9 +130,12 @@ EXPERIMENT DETECTION RULES
 - If memory.active_experiment is non-null and status=active, you MUST evaluate whether the target speaker attempted the experiment in this meeting.
 - Read the experiment instruction and success_marker from memory.active_experiment carefully.
 - Search the transcript for moments where the target speaker's behaviour matches the experiment instruction.
-- If you find clear evidence of the behaviour: set attempt=yes, count_attempts=number of distinct instances observed, evidence_span_ids=relevant span IDs.
-- If you find partial evidence (behaviour attempted but incomplete or inconsistent): set attempt=partial, count_attempts=number of partial instances, evidence_span_ids=relevant span IDs.
-- If no evidence found: set attempt=no, count_attempts=0, evidence_span_ids=[].
+- If you find clear evidence of the behaviour: set attempt=yes, count_attempts=number of distinct instances observed, evidence_span_ids=relevant span IDs, coaching_note=null, suggested_rewrite=null, rewrite_for_span_id=null (the quotes speak for themselves).
+- If you find partial evidence (behaviour attempted but incomplete or inconsistent): set attempt=partial, count_attempts=number of partial instances, evidence_span_ids=relevant span IDs. Also set:
+  - coaching_note: 1-2 sentences explaining what the speaker did well in the attempt and why it was only partial (what was missing or incomplete).
+  - suggested_rewrite: a concrete reworded version of what the speaker said, demonstrating a complete attempt of the experiment. Write it in the speaker's natural voice, 1-3 sentences.
+  - rewrite_for_span_id: the evidence_span_id whose excerpt the suggested_rewrite rewrites. Must appear in the detection's evidence_span_ids.
+- If no evidence found: set attempt=no, count_attempts=0, evidence_span_ids=[], coaching_note=null, suggested_rewrite=null, rewrite_for_span_id=null.
 - detection_in_this_meeting must NEVER be null for a single_meeting analysis with an active experiment.
 - Do NOT use coaching_output.strengths as a substitute for experiment detection. Both must be populated independently when the experiment behaviour is observed.
 
@@ -177,5 +199,9 @@ FINAL SILENT SELF-CHECK
 12) Scan all string values for any unescaped "; if found, replace them with ' before output.
 13) focus[0] has rewrite_for_span_id that matches one of its evidence_span_ids.
 14) suggested_rewrite is a plausible rewrite of the excerpt in the span identified by rewrite_for_span_id, not a different moment.
+15) For each pattern_snapshot item where numerator < denominator, coaching_note and suggested_rewrite are present.
+16) For each pattern_snapshot item where numerator == denominator, coaching_note, suggested_rewrite, and rewrite_for_span_id are omitted or null.
+17) If experiment detection attempt=partial, coaching_note, suggested_rewrite, and rewrite_for_span_id are all present and non-null.
+18) If experiment detection attempt=yes or attempt=no, coaching_note, suggested_rewrite, and rewrite_for_span_id are null.
 
 Return JSON only.

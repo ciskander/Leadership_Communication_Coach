@@ -37,6 +37,31 @@ export interface MicroExperiment {
   quotes: QuoteObject[];
 }
 
+export interface ExperimentDetection {
+  experiment_id: string;
+  attempt: 'yes' | 'partial' | 'no';
+  count_attempts: number;
+  quotes: QuoteObject[];
+  coaching_note: string | null;
+  suggested_rewrite: string | null;
+  rewrite_for_span_id: string | null;
+}
+
+export interface PatternSnapshotItem {
+  pattern_id: string;
+  tier: number | null;
+  evaluable_status: string;
+  numerator?: number;
+  denominator?: number;
+  ratio?: number;
+  balance_assessment?: string;
+  notes?: string;
+  quotes: QuoteObject[];
+  coaching_note?: string | null;
+  suggested_rewrite?: string | null;
+  rewrite_for_span_id?: string | null;
+}
+
 export interface RunStatus {
   run_id: string;
   status: 'queued' | 'running' | 'complete' | 'error';
@@ -47,9 +72,10 @@ export interface RunStatus {
   strengths: CoachingItem[];
   focus: CoachingItem | null;
   micro_experiment: MicroExperiment | null;
-  pattern_snapshot: Record<string, unknown>[] | null;
+  pattern_snapshot: PatternSnapshotItem[] | null;
   evaluation_summary: Record<string, unknown> | null;
   experiment_tracking: Record<string, unknown> | null;
+  experiment_detection: ExperimentDetection | null;
 }
 
 export interface RunRequestStatus {
