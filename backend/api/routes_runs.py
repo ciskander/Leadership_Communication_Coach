@@ -38,13 +38,13 @@ def _format_timestamp(seconds: float) -> str:
     return f"{m}:{s:02d}"
 
 
-def _build_turn_timestamps(
+def _build_turn_lookups(
     at_client: AirtableClient,
     transcript_record_id: Optional[str],
-) -> dict[int, Optional[float]]:
-    """Parse the transcript and return a {turn_id: start_time_sec} lookup."""
+) -> tuple[dict[int, Optional[float]], dict[int, str]]:
+    """Parse the transcript and return ({turn_id: start_time_sec}, {turn_id: speaker_label})."""
     if not transcript_record_id:
-        return {}
+        return {}, {}
     try:
         tr_record = at_client.get_transcript(transcript_record_id)
         tr_fields = tr_record.get("fields", {})
@@ -54,15 +54,17 @@ def _build_turn_timestamps(
             or ""
         )
         if not transcript_text:
-            return {}
+            return {}, {}
         parsed = parse_transcript(
             data=transcript_text.encode("utf-8"),
             filename="transcript.txt",
             source_id=tr_fields.get("Transcript ID") or transcript_record_id,
         )
-        return {t.turn_id: t.start_time_sec for t in parsed.turns}
+        timestamps = {t.turn_id: t.start_time_sec for t in parsed.turns}
+        speakers = {t.turn_id: t.speaker_label for t in parsed.turns}
+        return timestamps, speakers
     except Exception:
-        return {}
+        return {}, {}
 
 
 def _resolve_quotes(
@@ -71,6 +73,7 @@ def _resolve_quotes(
     transcript_id: Optional[str],
     meeting_id: Optional[str],
     turn_timestamps: Optional[dict[int, Optional[float]]] = None,
+    turn_speakers: Optional[dict[int, str]] = None,
 ) -> list[QuoteObject]:
     quotes: list[QuoteObject] = []
     for es_id in evidence_span_ids:
@@ -78,17 +81,29 @@ def _resolve_quotes(
         if not span:
             continue
         excerpt = (span.get("excerpt") or "")[:_QUOTE_MAX_CHARS]
+        turn_start = span.get("turn_start_id")
         # Look up timestamp from parsed transcript turns
         start_ts: Optional[str] = None
-        if turn_timestamps:
-            turn_id = span.get("turn_start_id")
-            if isinstance(turn_id, int):
-                sec = turn_timestamps.get(turn_id)
-                if sec is not None:
-                    start_ts = _format_timestamp(sec)
+        if turn_timestamps and isinstance(turn_start, int):
+            sec = turn_timestamps.get(turn_start)
+            if sec is not None:
+                start_ts = _format_timestamp(sec)
+        # Only include speaker label when the span covers turns from
+        # different speakers — the coachee already knows who they are.
+        speaker_label: Optional[str] = None
+        if turn_speakers:
+            turn_end = span.get("turn_end_id")
+            if isinstance(turn_start, int) and isinstance(turn_end, int):
+                span_speakers = {
+                    turn_speakers[tid]
+                    for tid in range(turn_start, turn_end + 1)
+                    if tid in turn_speakers
+                }
+                if len(span_speakers) > 1:
+                    speaker_label = span.get("speaker_role")
         quotes.append(
             QuoteObject(
-                speaker_label=span.get("speaker_role"),
+                speaker_label=speaker_label,
                 quote_text=excerpt,
                 meeting_id=span.get("meeting_id") or meeting_id,
                 transcript_id=transcript_id,
@@ -148,15 +163,15 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
     transcript_id = transcript_links[0] if isinstance(transcript_links, list) and transcript_links else None
     meeting_id = parsed_json.get("context", {}).get("meeting_id")
 
-    # Build turn timestamp lookup for evidence quote display
-    turn_timestamps = _build_turn_timestamps(at_client, transcript_id) if at_client else {}
+    # Build turn lookups for timestamp display and multi-speaker detection
+    turn_timestamps, turn_speakers = _build_turn_lookups(at_client, transcript_id) if at_client else ({}, {})
 
     # Coaching output with resolved quotes
     coaching = parsed_json.get("coaching_output", {})
 
     strengths: list[CoachingItemWithQuotes] = []
     for s in coaching.get("strengths", []):
-        quotes = _resolve_quotes(s.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_timestamps)
+        quotes = _resolve_quotes(s.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_timestamps, turn_speakers)
         strengths.append(
             CoachingItemWithQuotes(
                 pattern_id=s.get("pattern_id", ""),
@@ -181,8 +196,8 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
             primary_ids = all_es_ids[:1]
             additional_ids = all_es_ids[1:]
 
-        primary_quotes = _resolve_quotes(primary_ids, spans_by_id, transcript_id, meeting_id, turn_timestamps)
-        additional_quotes = _resolve_quotes(additional_ids, spans_by_id, transcript_id, meeting_id, turn_timestamps)
+        primary_quotes = _resolve_quotes(primary_ids, spans_by_id, transcript_id, meeting_id, turn_timestamps, turn_speakers)
+        additional_quotes = _resolve_quotes(additional_ids, spans_by_id, transcript_id, meeting_id, turn_timestamps, turn_speakers)
 
         focus = CoachingItemWithQuotes(
             pattern_id=f.get("pattern_id", ""),
@@ -197,7 +212,7 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
     micro_list = coaching.get("micro_experiment", [])
     if micro_list:
         m = micro_list[0]
-        quotes = _resolve_quotes(m.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_timestamps)
+        quotes = _resolve_quotes(m.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_timestamps, turn_speakers)
         micro_exp = MicroExperimentWithQuotes(
             experiment_id=m.get("experiment_id", ""),
             title=m.get("title", ""),
@@ -233,6 +248,7 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
                 transcript_id,
                 meeting_id,
                 turn_timestamps,
+                turn_speakers,
             )
             detection["quotes"] = [q.model_dump() for q in det_quotes]
 
