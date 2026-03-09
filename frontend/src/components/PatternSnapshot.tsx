@@ -66,8 +66,9 @@ function RatioBar({ ratio }: { ratio: number }) {
 function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
   const [expanded, setExpanded] = useState(false);
 
+  const quotes = pattern.quotes ?? [];
   const isConversationalBalance = pattern.pattern_id === 'conversational_balance';
-  const hasQuotes = pattern.quotes.length > 0;
+  const hasQuotes = quotes.length > 0;
   const hasCoaching = !!pattern.coaching_note;
   const hasNotes = !!pattern.notes;
   const isBalanced = pattern.balance_assessment === 'balanced';
@@ -99,11 +100,11 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
   const rewriteSpanId = pattern.rewrite_for_span_id;
   const canSplitQuotes = isMixedScore && !!rewriteSpanId;
   const successQuotes = canSplitQuotes
-    ? pattern.quotes.filter((q) => q.span_id !== rewriteSpanId)
-    : (isPerfectScore ? pattern.quotes : []);
+    ? quotes.filter((q) => q.span_id !== rewriteSpanId)
+    : (isPerfectScore ? quotes : []);
   const improvementQuotes = canSplitQuotes
-    ? pattern.quotes.filter((q) => q.span_id === rewriteSpanId)
-    : (isPerfectScore ? [] : pattern.quotes);
+    ? quotes.filter((q) => q.span_id === rewriteSpanId)
+    : (isPerfectScore ? [] : quotes);
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
@@ -154,7 +155,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                   {pattern.notes}
                 </p>
               )}
-              {pattern.quotes.map((q, i) => (
+              {quotes.map((q, i) => (
                 <EvidenceQuote key={i} quote={q} />
               ))}
             </div>
@@ -225,7 +226,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                 <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
                   Where you can improve
                 </p>
-                {pattern.quotes.map((q, i) => (
+                {quotes.map((q, i) => (
                   <EvidenceQuote key={i} quote={q} />
                 ))}
                 {hasCoaching && (
@@ -280,7 +281,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                   <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
                     Where you can improve
                   </p>
-                  {pattern.quotes.map((q, i) => (
+                  {quotes.map((q, i) => (
                     <EvidenceQuote key={i} quote={q} />
                   ))}
                 </div>
