@@ -52,10 +52,31 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
     pattern.denominator != null &&
     pattern.numerator < pattern.denominator;
 
+  const isPerfectScore =
+    pattern.evaluable_status === 'evaluable' &&
+    pattern.numerator != null &&
+    pattern.denominator != null &&
+    pattern.numerator === pattern.denominator &&
+    pattern.numerator > 0;
+
+  const isMixedScore =
+    hasMissedOpportunities &&
+    pattern.numerator != null &&
+    pattern.numerator > 0;
+
   const isImbalanced =
     pattern.evaluable_status === 'evaluable' &&
     pattern.balance_assessment &&
     pattern.balance_assessment !== 'balanced';
+
+  // Split quotes into success vs needs-improvement using rewrite_for_span_id
+  const rewriteSpanId = pattern.rewrite_for_span_id;
+  const successQuotes = rewriteSpanId
+    ? pattern.quotes.filter((q) => q.span_id !== rewriteSpanId)
+    : (isPerfectScore ? pattern.quotes : []);
+  const improvementQuotes = rewriteSpanId
+    ? pattern.quotes.filter((q) => q.span_id === rewriteSpanId)
+    : (isPerfectScore ? [] : pattern.quotes);
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
@@ -96,43 +117,106 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
 
       {expanded && (
         <div className="border-t border-gray-100 px-3 pb-3 pt-2 space-y-3">
-          {/* Evidence quotes */}
-          {hasQuotes && (
+
+          {/* ── Perfect score: positive explainer + all quotes ── */}
+          {isPerfectScore && hasQuotes && (
             <div>
               <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                {hasMissedOpportunities || isImbalanced ? 'Evidence from this meeting' : 'What you did well'}
+                What you did well
               </p>
+              {hasCoaching && (
+                <p className="text-sm text-stone-700 leading-relaxed mb-2">
+                  {pattern.coaching_note}
+                </p>
+              )}
               {pattern.quotes.map((q, i) => (
                 <EvidenceQuote key={i} quote={q} />
               ))}
             </div>
           )}
 
-          {/* Coaching note */}
-          {hasCoaching && (
-            <div>
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                Coaching note
-              </p>
-              <p className="text-sm text-stone-700 leading-relaxed">
-                {pattern.coaching_note}
-              </p>
-            </div>
+          {/* ── Mixed score: split into success + improvement sections ── */}
+          {isMixedScore && (
+            <>
+              {successQuotes.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                    What you did well
+                  </p>
+                  {successQuotes.map((q, i) => (
+                    <EvidenceQuote key={i} quote={q} />
+                  ))}
+                </div>
+              )}
+
+              <div>
+                <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                  Where you can improve
+                </p>
+                {hasCoaching && (
+                  <p className="text-sm text-stone-700 leading-relaxed mb-2">
+                    {pattern.coaching_note}
+                  </p>
+                )}
+                {improvementQuotes.map((q, i) => (
+                  <EvidenceQuote key={i} quote={q} />
+                ))}
+                {pattern.suggested_rewrite && (
+                  <div className="mt-2">
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                      Next time, try something like
+                    </p>
+                    <blockquote className="border-l-4 border-emerald-300 pl-4 py-1 my-2 bg-emerald-50 rounded-r-md">
+                      <p className="text-sm text-stone-700 italic">
+                        &ldquo;{pattern.suggested_rewrite}&rdquo;
+                      </p>
+                    </blockquote>
+                  </div>
+                )}
+              </div>
+            </>
           )}
 
-          {/* Suggested rewrite */}
-          {pattern.suggested_rewrite && (
-            <div>
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                Next time, try something like
-              </p>
-              <blockquote className="border-l-4 border-emerald-300 pl-4 py-1 my-2 bg-emerald-50 rounded-r-md">
-                <p className="text-sm text-stone-700 italic">
-                  &ldquo;{pattern.suggested_rewrite}&rdquo;
-                </p>
-              </blockquote>
-            </div>
+          {/* ── Zero score or imbalanced: original layout ── */}
+          {!isPerfectScore && !isMixedScore && (
+            <>
+              {hasQuotes && (
+                <div>
+                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                    Evidence from this meeting
+                  </p>
+                  {pattern.quotes.map((q, i) => (
+                    <EvidenceQuote key={i} quote={q} />
+                  ))}
+                </div>
+              )}
+
+              {hasCoaching && (
+                <div>
+                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                    Coaching note
+                  </p>
+                  <p className="text-sm text-stone-700 leading-relaxed">
+                    {pattern.coaching_note}
+                  </p>
+                </div>
+              )}
+
+              {pattern.suggested_rewrite && (
+                <div>
+                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                    Next time, try something like
+                  </p>
+                  <blockquote className="border-l-4 border-emerald-300 pl-4 py-1 my-2 bg-emerald-50 rounded-r-md">
+                    <p className="text-sm text-stone-700 italic">
+                      &ldquo;{pattern.suggested_rewrite}&rdquo;
+                    </p>
+                  </blockquote>
+                </div>
+              )}
+            </>
           )}
+
         </div>
       )}
     </div>
