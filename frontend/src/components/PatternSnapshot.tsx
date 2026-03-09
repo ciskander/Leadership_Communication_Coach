@@ -43,7 +43,8 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
 
   const hasQuotes = pattern.quotes.length > 0;
   const hasCoaching = !!pattern.coaching_note;
-  const isExpandable = hasQuotes || hasCoaching;
+  const hasNotes = !!pattern.notes;
+  const isExpandable = hasQuotes || hasCoaching || hasNotes;
 
   // Determine if this pattern has missed opportunities
   const hasMissedOpportunities =
@@ -69,12 +70,14 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
     pattern.balance_assessment &&
     pattern.balance_assessment !== 'balanced';
 
-  // Split quotes into success vs needs-improvement using rewrite_for_span_id
+  // Split quotes into success vs needs-improvement using rewrite_for_span_id.
+  // Only split when we have a rewrite target to distinguish them.
   const rewriteSpanId = pattern.rewrite_for_span_id;
-  const successQuotes = rewriteSpanId
+  const canSplitQuotes = isMixedScore && !!rewriteSpanId;
+  const successQuotes = canSplitQuotes
     ? pattern.quotes.filter((q) => q.span_id !== rewriteSpanId)
     : (isPerfectScore ? pattern.quotes : []);
-  const improvementQuotes = rewriteSpanId
+  const improvementQuotes = canSplitQuotes
     ? pattern.quotes.filter((q) => q.span_id === rewriteSpanId)
     : (isPerfectScore ? [] : pattern.quotes);
 
@@ -119,14 +122,14 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
         <div className="border-t border-gray-100 px-3 pb-3 pt-2 space-y-3">
 
           {/* ── Perfect score: positive explainer + all quotes ── */}
-          {isPerfectScore && hasQuotes && (
+          {isPerfectScore && (hasQuotes || hasNotes) && (
             <div>
               <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
                 What you did well
               </p>
-              {hasCoaching && (
+              {hasNotes && (
                 <p className="text-sm text-stone-700 leading-relaxed mb-2">
-                  {pattern.coaching_note}
+                  {pattern.notes}
                 </p>
               )}
               {pattern.quotes.map((q, i) => (
@@ -135,14 +138,19 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
             </div>
           )}
 
-          {/* ── Mixed score: split into success + improvement sections ── */}
-          {isMixedScore && (
+          {/* ── Mixed score with splittable quotes ── */}
+          {isMixedScore && canSplitQuotes && (
             <>
-              {successQuotes.length > 0 && (
+              {(successQuotes.length > 0 || hasNotes) && (
                 <div>
                   <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
                     What you did well
                   </p>
+                  {hasNotes && (
+                    <p className="text-sm text-stone-700 leading-relaxed mb-2">
+                      {pattern.notes}
+                    </p>
+                  )}
                   {successQuotes.map((q, i) => (
                     <EvidenceQuote key={i} quote={q} />
                   ))}
@@ -153,14 +161,14 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                 <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
                   Where you can improve
                 </p>
-                {hasCoaching && (
-                  <p className="text-sm text-stone-700 leading-relaxed mb-2">
-                    {pattern.coaching_note}
-                  </p>
-                )}
                 {improvementQuotes.map((q, i) => (
                   <EvidenceQuote key={i} quote={q} />
                 ))}
+                {hasCoaching && (
+                  <p className="text-sm text-stone-700 leading-relaxed">
+                    {pattern.coaching_note}
+                  </p>
+                )}
                 {pattern.suggested_rewrite && (
                   <div className="mt-2">
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
@@ -177,13 +185,55 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
             </>
           )}
 
-          {/* ── Zero score or imbalanced: original layout ── */}
+          {/* ── Mixed score without rewrite target (can't split) ── */}
+          {isMixedScore && !canSplitQuotes && (
+            <>
+              {hasNotes && (
+                <div>
+                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                    What you did well
+                  </p>
+                  <p className="text-sm text-stone-700 leading-relaxed">
+                    {pattern.notes}
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                  Where you can improve
+                </p>
+                {pattern.quotes.map((q, i) => (
+                  <EvidenceQuote key={i} quote={q} />
+                ))}
+                {hasCoaching && (
+                  <p className="text-sm text-stone-700 leading-relaxed">
+                    {pattern.coaching_note}
+                  </p>
+                )}
+                {pattern.suggested_rewrite && (
+                  <div className="mt-2">
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                      Next time, try something like
+                    </p>
+                    <blockquote className="border-l-4 border-emerald-300 pl-4 py-1 my-2 bg-emerald-50 rounded-r-md">
+                      <p className="text-sm text-stone-700 italic">
+                        &ldquo;{pattern.suggested_rewrite}&rdquo;
+                      </p>
+                    </blockquote>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* ── Zero score, imbalanced, or non-numeric ── */}
           {!isPerfectScore && !isMixedScore && (
             <>
               {hasQuotes && (
                 <div>
                   <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                    Evidence from this meeting
+                    Where you can improve
                   </p>
                   {pattern.quotes.map((q, i) => (
                     <EvidenceQuote key={i} quote={q} />
