@@ -71,11 +71,10 @@ def call_openai(
     effective_model = model or OPENAI_MODEL_DEFAULT
     effective_max_tokens = max_tokens or OPENAI_MAX_TOKENS
 
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "developer", "content": developer_message},
-        {"role": "user", "content": user_message},
-    ]
+    messages = [{"role": "system", "content": system_prompt}]
+    if developer_message:
+        messages.append({"role": "developer", "content": developer_message})
+    messages.append({"role": "user", "content": user_message})
 
     last_exc: Optional[Exception] = None
     for attempt in range(RETRY_ATTEMPTS):
@@ -87,8 +86,14 @@ def call_openai(
                 max_completion_tokens=effective_max_tokens,
                 response_format={"type": "json_object"},
             )
-            raw_text = response.choices[0].message.content or ""
+            choice = response.choices[0]
+            raw_text = choice.message.content or ""
             usage = response.usage
+
+            if not raw_text.strip():
+                raise ValueError(
+                    f"OpenAI returned empty response content (finish_reason={choice.finish_reason})"
+                )
 
             import json
             parsed = json.loads(raw_text)
