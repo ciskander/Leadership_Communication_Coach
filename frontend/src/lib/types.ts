@@ -76,6 +76,7 @@ export interface RunStatus {
   evaluation_summary: Record<string, unknown> | null;
   experiment_tracking: Record<string, unknown> | null;
   experiment_detection: ExperimentDetection | null;
+  human_confirmation: 'confirmed_attempt' | 'confirmed_no_attempt' | null;
   active_experiment_detail: Experiment | null;
   active_experiment_events: Record<string, unknown>[];
 }

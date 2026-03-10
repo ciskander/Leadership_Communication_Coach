@@ -21,11 +21,20 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
   const router = useRouter();
 
   const [confirmState, setConfirmState] = useState<'idle' | 'loading' | 'done'>('idle');
+  const [confirmedValue, setConfirmedValue] = useState<boolean | null>(null);
   const [completeState, setCompleteState] = useState<'idle' | 'loading' | 'done'>('idle');
   const [proposedExperiments, setProposedExperiments] = useState<Experiment[]>([]);
   const [acceptedExpId, setAcceptedExpId] = useState<string | null>(null);
   const [acceptLoading, setAcceptLoading] = useState(false);
   const [activeExpData, setActiveExpData] = useState<ActiveExperiment | null>(null);
+
+  // Restore human confirmation state from the backend (survives refresh).
+  useEffect(() => {
+    if (run?.human_confirmation) {
+      setConfirmState('done');
+      setConfirmedValue(run.human_confirmation === 'confirmed_attempt');
+    }
+  }, [run?.human_confirmation]);
 
   // When the run completes, populate experiment data for inline rendering.
   // Prefer the experiment detail embedded in the run response (avoids a
@@ -149,10 +158,8 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
   async function handleConfirm(confirmed: boolean) {
     if (!activeExp || confirmState !== 'idle') return;
     setConfirmState('loading');
+    setConfirmedValue(confirmed);
     try {
-      // We need the experiment_record_id — it comes via the active_experiment
-      // on the run's experiment_tracking. We store it in the run's
-      // active experiment info if available, otherwise fall through gracefully.
       const expId = (activeExp as Record<string, unknown>).experiment_record_id as string | undefined;
       if (expId) {
         await api.confirmExperimentAttempt(expId, runId, confirmed);
@@ -359,7 +366,9 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
             {attempt === 'no' && confirmState === 'done' && (
               <p className="text-sm text-stone-700 leading-relaxed">
-                Got it — no worries. Just a gentle reminder to try again next time.
+                {confirmedValue
+                  ? 'Thanks for letting us know! We\u2019ve recorded your attempt — the model doesn\u2019t always catch everything.'
+                  : 'Got it — no worries. Just a gentle reminder to try again next time.'}
               </p>
             )}
 

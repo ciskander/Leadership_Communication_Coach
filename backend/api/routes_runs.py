@@ -355,6 +355,18 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
             except Exception:
                 pass  # Non-fatal — frontend falls back to separate API call
 
+        # Look up whether the user already submitted a human confirmation for
+        # this run, so the frontend can restore the override state on refresh.
+        exp_id_for_idem = (exp_tracking.get("active_experiment") or {}).get("experiment_id")
+        if at_client and exp_id_for_idem:
+            idem_key = f"human:{run_id}:{exp_id_for_idem}"
+            try:
+                existing = at_client.find_experiment_event_by_idempotency_key(idem_key)
+                if existing:
+                    resp.human_confirmation = existing.get("fields", {}).get("User Confirmation")
+            except Exception:
+                pass
+
     return resp
 
 
