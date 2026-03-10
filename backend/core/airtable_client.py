@@ -477,10 +477,9 @@ class AirtableClient:
 
     def resume_experiment(self, experiment_record_id: str, user_record_id: str) -> dict:
         """Resume a parked experiment — sets it back to active."""
-        from datetime import datetime, timezone
         self.update_experiment(experiment_record_id, {
             F_EXP_STATUS: "active",
-            F_EXP_ENDED_AT: "",  # Clear ended_at
+            F_EXP_ENDED_AT: None,  # Clear ended_at
         })
         self.set_active_experiment_for_user(user_record_id, experiment_record_id)
         return self.get_experiment(experiment_record_id)

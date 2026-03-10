@@ -130,6 +130,7 @@ export interface ClientSummary {
   user: User;
   active_experiment: Experiment | null;
   proposed_experiments: Experiment[];
+  parked_experiment_count: number;
   baseline_pack_status: string | null;
   baseline_pack_id: string | null;
   recent_runs: Record<string, unknown>[];

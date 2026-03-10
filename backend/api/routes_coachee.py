@@ -695,6 +695,7 @@ async def client_summary(
 
     active_exp_resp: Optional[ExperimentResponse] = None
     proposed_exps: list[ExperimentResponse] = []
+    parked_count: int = 0
     bp_status: Optional[str] = None
     bp_id: Optional[str] = None
     recent_runs: list[dict] = []
@@ -715,6 +716,10 @@ async def client_summary(
                 user.airtable_user_record_id, max_records=3
             )
             proposed_exps = [_build_experiment_response(r) for r in proposed_records]
+
+            # Parked experiments count
+            parked_records = at_client.get_parked_experiments_for_user(user.airtable_user_record_id)
+            parked_count = len(parked_records)
 
             # Baseline pack status
             bp_links = u_fields.get("Active Baseline Pack", [])
@@ -778,6 +783,7 @@ async def client_summary(
         ),
         active_experiment=active_exp_resp,
         proposed_experiments=proposed_exps,
+        parked_experiment_count=parked_count,
         baseline_pack_status=bp_status,
         baseline_pack_id=bp_id,
         recent_runs=recent_runs,

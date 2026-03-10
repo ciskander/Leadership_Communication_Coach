@@ -457,11 +457,17 @@ export default function ExperimentPage() {
                 </>
               )}
 
-              {/* No proposals yet but parked exist — only show when not already in showMore */}
+              {/* No proposals yet but parked exist — show parked + polling hint */}
               {allProposed.length === 0 && parkedExperiments.length > 0 && !showMore && (
                 <>
+                  {isPolling && (
+                    <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex items-center gap-3 mb-3">
+                      <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-blue-500 flex-shrink-0" />
+                      <p className="text-xs text-blue-700">New suggestions arriving shortly…</p>
+                    </div>
+                  )}
                   <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
-                    Resume a parked experiment
+                    {isPolling ? 'Or resume a parked experiment' : 'Resume a parked experiment'}
                   </h2>
                   <div className="space-y-3">
                     {parkedExperiments.map((exp) => (
@@ -476,7 +482,7 @@ export default function ExperimentPage() {
                 </>
               )}
             </section>
-          ) : !showCapScreen && !overallLoading && !isPolling ? (
+          ) : !showCapScreen && !overallLoading && !isPolling && !hasOptions ? (
             <div className="bg-white rounded-2xl border border-dashed border-stone-300 p-12 text-center space-y-4">
               <div className="text-4xl">◈</div>
               <p className="text-stone-600 font-medium">No active experiment</p>
