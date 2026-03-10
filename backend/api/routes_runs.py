@@ -321,6 +321,7 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
             try:
                 exp_rec = at_client.get_experiment(exp_record_id)
                 ef = exp_rec.get("fields", {})
+                attempt_count, meeting_count = at_client.count_experiment_attempts_and_meetings(exp_rec["id"])
                 resp.active_experiment_detail = ExperimentResponse(
                     experiment_record_id=exp_rec["id"],
                     experiment_id=ef.get("Experiment ID", ""),
@@ -330,7 +331,8 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
                     pattern_id=ef.get("Pattern ID", ""),
                     status=ef.get("Status", ""),
                     created_at=exp_rec.get("createdTime"),
-                    attempt_count=ef.get("Attempt Count (model)"),
+                    attempt_count=attempt_count,
+                    meeting_count=meeting_count,
                     started_at=ef.get("Started At"),
                     ended_at=ef.get("Ended At"),
                 )

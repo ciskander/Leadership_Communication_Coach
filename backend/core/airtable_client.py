@@ -470,16 +470,22 @@ class AirtableClient:
         records = self.search_records(AT_TABLE_EXPERIMENT_EVENTS, formula, max_records=1)
         return records[0] if records else None
 
-    def count_experiment_meetings(self, experiment_record_id: str) -> int:
-        """Count distinct meetings (transcripts) that have experiment events."""
+    def count_experiment_attempts_and_meetings(self, experiment_record_id: str) -> tuple[int, int]:
+        """Count attempts (yes/partial) and distinct meetings from experiment events.
+
+        Returns (attempt_count, meeting_count).
+        """
         formula = f"FIND('{experiment_record_id}', ARRAYJOIN({{{F_EE_EXPERIMENT}}}))"
         records = self.search_records(AT_TABLE_EXPERIMENT_EVENTS, formula, max_records=200)
+        attempt_count = 0
         transcript_ids: set[str] = set()
         for rec in records:
-            # Transcript is a linked-record field → list of record IDs
+            attempt_enum = rec.get("fields", {}).get(F_EE_ATTEMPT_ENUM)
+            if attempt_enum in ("yes", "partial"):
+                attempt_count += 1
             for tid in rec.get("fields", {}).get(F_EE_TRANSCRIPT) or []:
                 transcript_ids.add(tid)
-        return len(transcript_ids)
+        return attempt_count, len(transcript_ids)
 
     # ── Users ─────────────────────────────────────────────────────────────────
 
