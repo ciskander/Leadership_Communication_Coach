@@ -12,14 +12,14 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: '/client',            label: 'Home',            icon: '⌂',  roles: ['coachee'] },
-  { href: '/client/baseline',   label: 'Baseline Pack',   icon: '◎',  roles: ['coachee'] },
-  { href: '/client/analyze',    label: 'Analyze Meeting', icon: '⊕',  roles: ['coachee'] },
-  { href: '/client/experiment', label: 'My Experiment',   icon: '◈',  roles: ['coachee'] },
-  { href: '/client/progress',   label: 'Progress',        icon: '◱',  roles: ['coachee'] },
-  { href: '/coach',             label: 'My Coachees',     icon: '◫',  roles: ['coach'] },
-  { href: '/coach/analyze',     label: 'Run Analysis',    icon: '⊕',  roles: ['coach'] },
-  { href: '/admin',             label: 'Users',           icon: '◫',  roles: ['admin'] },
+  { href: '/client',            label: 'Home',            icon: '🏠',  roles: ['coachee'] },
+  { href: '/client/baseline',   label: 'Baseline Pack',   icon: '📚',  roles: ['coachee'] },
+  { href: '/client/analyze',    label: 'Analyze Meeting', icon: '✨',  roles: ['coachee'] },
+  { href: '/client/experiment', label: 'My Experiment',   icon: '🧪',  roles: ['coachee'] },
+  { href: '/client/progress',   label: 'Progress',        icon: '📈',  roles: ['coachee'] },
+  { href: '/coach',             label: 'My Coachees',     icon: '🧑‍🎓',  roles: ['coach'] },
+  { href: '/coach/analyze',     label: 'Run Analysis',    icon: '✨',  roles: ['coach'] },
+  { href: '/admin',             label: 'Users',           icon: '👥',  roles: ['admin'] },
 ];
 
 const roleColors: Record<string, { dot: string; label: string }> = {
