@@ -62,7 +62,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
                 {focus.suggested_rewrite && (
                   <div>
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                      Next time, try something like this
+                      Next time, try something like
                     </p>
                     <blockquote className="border-l-4 border-emerald-300 pl-4 py-1 my-2 bg-emerald-50 rounded-r-md">
                       <p className="text-sm text-stone-700 italic">
