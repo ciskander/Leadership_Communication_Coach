@@ -450,15 +450,62 @@ class AirtableClient:
         return self.get_experiment(experiment_record_id)
 
     def abandon_experiment(self, experiment_record_id: str, user_record_id: str) -> dict:
-        """Mark experiment abandoned, clear user's active experiment."""
+        """Mark experiment permanently abandoned (frees a parked slot)."""
         from datetime import datetime, timezone
         ended_at = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         self.update_experiment(experiment_record_id, {
             F_EXP_STATUS: "abandoned",
             F_EXP_ENDED_AT: ended_at,
         })
+        # Clear user's active experiment only if this was the active one
+        user_rec = self.get_user(user_record_id)
+        ae_links = user_rec.get("fields", {}).get(F_USER_ACTIVE_EXPERIMENT, [])
+        if experiment_record_id in ae_links:
+            self.update_user(user_record_id, {F_USER_ACTIVE_EXPERIMENT: []})
+        return self.get_experiment(experiment_record_id)
+
+    def park_experiment(self, experiment_record_id: str, user_record_id: str) -> dict:
+        """Park an active experiment for later — reversible."""
+        from datetime import datetime, timezone
+        ended_at = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        self.update_experiment(experiment_record_id, {
+            F_EXP_STATUS: "parked",
+            F_EXP_ENDED_AT: ended_at,
+        })
         self.update_user(user_record_id, {F_USER_ACTIVE_EXPERIMENT: []})
         return self.get_experiment(experiment_record_id)
+
+    def resume_experiment(self, experiment_record_id: str, user_record_id: str) -> dict:
+        """Resume a parked experiment — sets it back to active."""
+        from datetime import datetime, timezone
+        self.update_experiment(experiment_record_id, {
+            F_EXP_STATUS: "active",
+            F_EXP_ENDED_AT: "",  # Clear ended_at
+        })
+        self.set_active_experiment_for_user(user_record_id, experiment_record_id)
+        return self.get_experiment(experiment_record_id)
+
+    def get_parked_experiments_for_user(self, user_record_id: str) -> list[dict]:
+        """Return parked experiments for a user, most recently parked first."""
+        user_rec = self.get_record(AT_TABLE_USERS, user_record_id)
+        user_primary_id = user_rec.get("fields", {}).get(F_USER_USER_ID, "")
+        if not user_primary_id:
+            return []
+        formula = (
+            f"AND("
+            f"FIND('{user_primary_id}', ARRAYJOIN({{User}})), "
+            f"{{{F_EXP_STATUS}}} = 'parked'"
+            f")"
+        )
+        return self.search_records(
+            AT_TABLE_EXPERIMENTS,
+            formula,
+            max_records=3,
+        )
+
+    def delete_experiment(self, record_id: str) -> dict:
+        """Delete an experiment record (used to clean up unselected proposals)."""
+        return self.delete_record(AT_TABLE_EXPERIMENTS, record_id)
 
     # ── Experiment Events ─────────────────────────────────────────────────────
 

@@ -22,8 +22,9 @@ from .dto import (
     ClientSummaryResponse,
     CoacheeListItem,
     ExperimentActionResponse,
+    ExperimentOptionsResponse,
     ExperimentResponse,
-    ClientProgressResponse,    
+    ClientProgressResponse,
     HumanConfirmResponse,
     MeResponse,
     SingleMeetingEnqueueResponse,
@@ -348,6 +349,16 @@ async def accept_experiment(
     at_client.accept_experiment(experiment_record_id, user.airtable_user_record_id)
     logger.info("User %s accepted experiment %s", user.airtable_user_record_id, experiment_record_id)
 
+    # Clean up other proposed experiments (user chose this one)
+    try:
+        remaining_proposed = at_client.get_proposed_experiments_for_user(user.airtable_user_record_id)
+        for p in remaining_proposed:
+            if p["id"] != experiment_record_id:
+                at_client.delete_experiment(p["id"])
+                logger.info("Cleaned up proposed experiment %s after accept", p["id"])
+    except Exception as e:
+        logger.warning("Could not clean up proposed experiments after accept: %s", e)
+
     return ExperimentActionResponse(
         experiment_record_id=experiment_record_id,
         status="active",
@@ -396,19 +407,19 @@ async def complete_experiment(
     return ExperimentActionResponse(
         experiment_record_id=experiment_record_id,
         status="completed",
-        message="Great work completing the experiment. Choose your next one when you're ready.",
+        message="Great work completing the experiment. Choose your next one when you\u2019re ready.",
     )
 
 
 @router.post(
-    "/api/client/experiments/{experiment_record_id}/abandon",
+    "/api/client/experiments/{experiment_record_id}/park",
     response_model=ExperimentActionResponse,
 )
-async def abandon_experiment(
+async def park_experiment(
     experiment_record_id: str,
     user: UserAuth = Depends(get_current_user),
 ):
-    """Abandon an active experiment."""
+    """Park an active experiment for later. Counts toward the 3-parked cap."""
     if not user.airtable_user_record_id:
         return error_response("FORBIDDEN", "No Airtable user record.", 403)
 
@@ -425,12 +436,21 @@ async def abandon_experiment(
         return error_response("FORBIDDEN", "Experiment does not belong to this user.", 403)
 
     if ef.get("Status") not in ("active", "proposed"):
-        return error_response("INVALID_STATE", f"Experiment cannot be abandoned from state: {ef.get('Status')}.", 400)
+        return error_response("INVALID_STATE", f"Experiment cannot be parked from state: {ef.get('Status')}.", 400)
 
-    at_client.abandon_experiment(experiment_record_id, user.airtable_user_record_id)
-    logger.info("User %s abandoned experiment %s", user.airtable_user_record_id, experiment_record_id)
+    # Check parked cap (max 3)
+    parked = at_client.get_parked_experiments_for_user(user.airtable_user_record_id)
+    if len(parked) >= 3:
+        return error_response(
+            "PARK_CAP_REACHED",
+            "You already have 3 parked experiments. Resume or discard one before parking another.",
+            400,
+        )
 
-    # Fire-and-forget: generate next experiment suggestion in the background
+    at_client.park_experiment(experiment_record_id, user.airtable_user_record_id)
+    logger.info("User %s parked experiment %s", user.airtable_user_record_id, experiment_record_id)
+
+    # Fire-and-forget: generate next experiment suggestions in the background
     if user.airtable_user_record_id:
         try:
             enqueue_next_experiment_suggestion.delay(user.airtable_user_record_id)
@@ -440,8 +460,138 @@ async def abandon_experiment(
 
     return ExperimentActionResponse(
         experiment_record_id=experiment_record_id,
+        status="parked",
+        message="Experiment parked. You can resume it anytime.",
+    )
+
+
+# Keep old endpoint as alias for backwards compatibility
+@router.post(
+    "/api/client/experiments/{experiment_record_id}/abandon",
+    response_model=ExperimentActionResponse,
+)
+async def abandon_experiment_legacy(
+    experiment_record_id: str,
+    user: UserAuth = Depends(get_current_user),
+):
+    """Legacy alias — redirects to park."""
+    return await park_experiment(experiment_record_id, user)
+
+
+@router.post(
+    "/api/client/experiments/{experiment_record_id}/resume",
+    response_model=ExperimentActionResponse,
+)
+async def resume_experiment(
+    experiment_record_id: str,
+    user: UserAuth = Depends(get_current_user),
+):
+    """Resume a parked experiment."""
+    if not user.airtable_user_record_id:
+        return error_response("FORBIDDEN", "No Airtable user record.", 403)
+
+    at_client = AirtableClient()
+
+    try:
+        exp_rec = at_client.get_experiment(experiment_record_id)
+    except Exception:
+        return error_response("NOT_FOUND", "Experiment not found.", 404)
+
+    ef = exp_rec.get("fields", {})
+    user_links = ef.get("User", [])
+    if user.airtable_user_record_id not in user_links:
+        return error_response("FORBIDDEN", "Experiment does not belong to this user.", 403)
+
+    if ef.get("Status") != "parked":
+        return error_response("INVALID_STATE", f"Only parked experiments can be resumed (current: {ef.get('Status')}).", 400)
+
+    # Must not have an active experiment already
+    user_rec = at_client.get_user(user.airtable_user_record_id)
+    existing_active = user_rec.get("fields", {}).get("Active Experiment", [])
+    if existing_active:
+        return error_response("CONFLICT", "You already have an active experiment. Complete or park it first.", 409)
+
+    at_client.resume_experiment(experiment_record_id, user.airtable_user_record_id)
+    logger.info("User %s resumed experiment %s", user.airtable_user_record_id, experiment_record_id)
+
+    # Clean up any pending proposed experiments since user chose to resume
+    try:
+        proposed = at_client.get_proposed_experiments_for_user(user.airtable_user_record_id)
+        for p in proposed:
+            at_client.delete_experiment(p["id"])
+            logger.info("Cleaned up proposed experiment %s after resume", p["id"])
+    except Exception as e:
+        logger.warning("Could not clean up proposed experiments after resume: %s", e)
+
+    return ExperimentActionResponse(
+        experiment_record_id=experiment_record_id,
+        status="active",
+        message="Experiment resumed. Welcome back!",
+    )
+
+
+@router.post(
+    "/api/client/experiments/{experiment_record_id}/discard",
+    response_model=ExperimentActionResponse,
+)
+async def discard_experiment(
+    experiment_record_id: str,
+    user: UserAuth = Depends(get_current_user),
+):
+    """Permanently abandon a parked experiment, freeing a slot."""
+    if not user.airtable_user_record_id:
+        return error_response("FORBIDDEN", "No Airtable user record.", 403)
+
+    at_client = AirtableClient()
+
+    try:
+        exp_rec = at_client.get_experiment(experiment_record_id)
+    except Exception:
+        return error_response("NOT_FOUND", "Experiment not found.", 404)
+
+    ef = exp_rec.get("fields", {})
+    user_links = ef.get("User", [])
+    if user.airtable_user_record_id not in user_links:
+        return error_response("FORBIDDEN", "Experiment does not belong to this user.", 403)
+
+    if ef.get("Status") != "parked":
+        return error_response("INVALID_STATE", f"Only parked experiments can be discarded (current: {ef.get('Status')}).", 400)
+
+    at_client.abandon_experiment(experiment_record_id, user.airtable_user_record_id)
+    logger.info("User %s discarded (abandoned) parked experiment %s", user.airtable_user_record_id, experiment_record_id)
+
+    return ExperimentActionResponse(
+        experiment_record_id=experiment_record_id,
         status="abandoned",
-        message="Experiment abandoned.",
+        message="Experiment discarded.",
+    )
+
+
+@router.get(
+    "/api/client/experiments/options",
+    response_model=ExperimentOptionsResponse,
+)
+async def get_experiment_options(
+    user: UserAuth = Depends(get_current_user),
+):
+    """Return all proposed and parked experiments for the selection screen."""
+    if not user.airtable_user_record_id:
+        return ExperimentOptionsResponse()
+
+    at_client = AirtableClient()
+
+    proposed_records = at_client.get_proposed_experiments_for_user(
+        user.airtable_user_record_id, max_records=3
+    )
+    proposed = [_build_experiment_response(r) for r in proposed_records]
+
+    parked_records = at_client.get_parked_experiments_for_user(user.airtable_user_record_id)
+    parked = [_build_experiment_response(r, at_client) for r in parked_records]
+
+    return ExperimentOptionsResponse(
+        proposed=proposed,
+        parked=parked,
+        at_park_cap=len(parked) >= 3,
     )
 
 
@@ -764,7 +914,7 @@ async def client_progress(
     exp_formula = (
         f"AND("
         f"FIND('{user_primary_id}', ARRAYJOIN({{User}})), "
-        f"OR({{Status}} = 'completed', {{Status}} = 'abandoned')"
+        f"OR({{Status}} = 'completed', {{Status}} = 'abandoned', {{Status}} = 'parked')"
         f")"
     )
     try:

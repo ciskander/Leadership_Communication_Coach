@@ -54,6 +54,7 @@ import type {
   ActiveExperiment,
   Experiment,
   ExperimentActionResponse,
+  ExperimentOptions,
   HumanConfirmResponse,
   CoacheeListItem,
   CoacheeSummary,
@@ -182,10 +183,29 @@ export const api = {
       method: 'POST',
     });
   },
-  abandonExperiment(experimentRecordId: string): Promise<ExperimentActionResponse> {
-    return request(`/api/client/experiments/${experimentRecordId}/abandon`, {
+  parkExperiment(experimentRecordId: string): Promise<ExperimentActionResponse> {
+    return request(`/api/client/experiments/${experimentRecordId}/park`, {
       method: 'POST',
     });
+  },
+  resumeExperiment(experimentRecordId: string): Promise<ExperimentActionResponse> {
+    return request(`/api/client/experiments/${experimentRecordId}/resume`, {
+      method: 'POST',
+    });
+  },
+  discardExperiment(experimentRecordId: string): Promise<ExperimentActionResponse> {
+    return request(`/api/client/experiments/${experimentRecordId}/discard`, {
+      method: 'POST',
+    });
+  },
+  abandonExperiment(experimentRecordId: string): Promise<ExperimentActionResponse> {
+    // Legacy alias — calls park endpoint
+    return request(`/api/client/experiments/${experimentRecordId}/park`, {
+      method: 'POST',
+    });
+  },
+  getExperimentOptions(): Promise<ExperimentOptions> {
+    return request('/api/client/experiments/options');
   },
 
   // Human confirmation of experiment attempt

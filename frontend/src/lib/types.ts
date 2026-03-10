@@ -95,7 +95,7 @@ export interface Experiment {
   instruction: string;
   success_marker: string;
   pattern_id: string;
-  status: 'proposed' | 'active' | 'completed' | 'abandoned';
+  status: 'proposed' | 'active' | 'completed' | 'abandoned' | 'parked';
   created_at: string | null;
   attempt_count: number | null;
   meeting_count: number | null;
@@ -118,6 +118,12 @@ export interface HumanConfirmResponse {
 export interface ActiveExperiment {
   experiment: Experiment | null;
   recent_events: Record<string, unknown>[];
+}
+
+export interface ExperimentOptions {
+  proposed: Experiment[];
+  parked: Experiment[];
+  at_park_cap: boolean;
 }
 
 export interface ClientSummary {

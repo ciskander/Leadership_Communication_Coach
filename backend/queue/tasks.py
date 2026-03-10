@@ -117,12 +117,12 @@ def enqueue_baseline_pack_build(self, baseline_pack_id: str) -> str:
 )
 def enqueue_next_experiment_suggestion(self, user_record_id: str) -> Optional[str]:
     """
-    Generate and propose a next micro-experiment for a user after they
-    complete or abandon their current experiment.
+    Generate and propose next micro-experiments for a user after they
+    complete or park their current experiment.
 
     Returns:
-        Airtable experiment record ID, or None if skipped (e.g. user already
-        has a proposed experiment in the queue).
+        First Airtable experiment record ID, or None if skipped (e.g. user
+        already has proposed experiments in the queue or is at the parked cap).
     """
     from ..core.workers import process_next_experiment_suggestion
 

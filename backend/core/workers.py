@@ -1009,26 +1009,39 @@ def create_attempt_event_from_run(
 
 # ── Worker 5: process_next_experiment_suggestion ──────────────────────────────
 
+_VALID_PATTERNS = {
+    'agenda_clarity', 'objective_signaling', 'turn_allocation',
+    'facilitative_inclusion', 'decision_closure', 'owner_timeframe_specification',
+    'summary_checkback', 'question_quality', 'listener_response_quality',
+    'conversational_balance',
+}
+
+MAX_PARKED = 3
+
+
 def process_next_experiment_suggestion(
     user_record_id: str,
     client: Optional[AirtableClient] = None,
 ) -> Optional[str]:
     """
-    Generate and propose a next micro-experiment for a user after they
-    complete or abandon their current experiment.
+    Generate and propose up to 3 micro-experiments for a user after they
+    complete or park their current experiment.
 
-    - Aggregates pattern scores from the user's last 5 eligible runs.
-    - Avoids repeating the pattern_id of the most recent past experiment.
+    - If user has 3 parked experiments (cap), skip generation entirely.
+    - Otherwise, generate enough proposals so that
+      (new proposals + parked count) = 3 total options.
+    - Avoids repeating pattern_ids of parked experiments or the most recent
+      completed/abandoned experiment.
     - Avoids reusing any past experiment title.
-    - Creates a proposed experiment record linked to the user (no run link).
+    - Creates proposed experiment records linked to the user.
 
     Returns:
-        Experiment record ID, or None if skipped.
+        First experiment record ID created, or None if skipped.
     """
     if client is None:
         client = AirtableClient()
 
-    # 0. Idempotency: skip if the user already has a proposed experiment queued
+    # 0. Idempotency: skip if the user already has proposed experiments queued
     existing_proposed = client.get_proposed_experiments_for_user(user_record_id, max_records=1)
     if existing_proposed:
         logger.info(
@@ -1036,6 +1049,18 @@ def process_next_experiment_suggestion(
             user_record_id,
         )
         return None
+
+    # 0b. Check parked experiments — if at cap, skip generation
+    parked_records = client.get_parked_experiments_for_user(user_record_id)
+    parked_count = len(parked_records)
+    if parked_count >= MAX_PARKED:
+        logger.info(
+            "process_next_experiment_suggestion: user %s at parked cap (%d) — skipping generation",
+            user_record_id, parked_count,
+        )
+        return None
+
+    num_to_generate = MAX_PARKED - parked_count  # 1, 2, or 3
 
     # 1. Fetch up to 5 recent Gate1-passing runs for this user
     runs_formula = (
@@ -1062,14 +1087,14 @@ def process_next_experiment_suggestion(
         )
         return None
 
-    # 2. Fetch past experiments (completed + abandoned), most recent first
+    # 2. Fetch past experiments (completed + abandoned + parked), most recent first
     user_rec = client.get_user(user_record_id)
     user_primary_id = _extract_fields(user_rec).get("User ID", "")
 
     past_exp_formula = (
         f"AND("
         f"FIND('{user_primary_id}', ARRAYJOIN({{User}})), "
-        f"OR({{Status}} = 'completed', {{Status}} = 'abandoned')"
+        f"OR({{Status}} = 'completed', {{Status}} = 'abandoned', {{Status}} = 'parked')"
         f")"
     )
     past_exp_records = client.search_records("experiments", past_exp_formula, max_records=20)
@@ -1087,6 +1112,13 @@ def process_next_experiment_suggestion(
             for r in past_exp_records
             if _extract_fields(r).get(F_EXP_TITLE)
         ]
+
+    # Collect pattern_ids of currently parked experiments — don't propose duplicates
+    parked_pattern_ids: set[str] = set()
+    for pr in parked_records:
+        pid = _extract_fields(pr).get(F_EXP_PATTERN_ID)
+        if pid:
+            parked_pattern_ids.add(pid)
 
     # 3. Aggregate pattern scores across eligible runs
     pattern_scores: dict[str, list[float]] = {}
@@ -1113,16 +1145,23 @@ def process_next_experiment_suggestion(
     }
     sorted_patterns = sorted(avg_scores.items(), key=lambda x: x[1])
 
-    # 4. Build slim prompt
+    # 4. Build prompt asking for multiple experiments
     pattern_lines = "\n".join(
         f"  {pid}: {score:.2f}" for pid, score in sorted_patterns
     ) or "  (no evaluable patterns available)"
 
-    avoid_pattern_note = (
-        f"\nDo NOT propose an experiment for pattern_id '{recent_pattern_id}' — "
-        f"it was the focus of their most recent experiment."
-        if recent_pattern_id else ""
-    )
+    # Build exclusion notes
+    exclude_pattern_ids = set(parked_pattern_ids)
+    if recent_pattern_id:
+        exclude_pattern_ids.add(recent_pattern_id)
+
+    avoid_patterns_note = ""
+    if exclude_pattern_ids:
+        avoid_patterns_note = (
+            "\nDo NOT propose experiments for these pattern_ids (already in use or recently worked on):\n"
+            + "\n".join(f"  - {pid}" for pid in sorted(exclude_pattern_ids))
+        )
+
     avoid_titles_note = (
         "\nDo NOT reuse any of these past experiment titles:\n"
         + "\n".join(f"  - {t}" for t in past_titles[:10])
@@ -1130,19 +1169,20 @@ def process_next_experiment_suggestion(
     )
 
     user_message = (
-        f"Propose a next micro-experiment for a leadership coaching participant.\n\n"
+        f"Propose {num_to_generate} micro-experiment(s) for a leadership coaching participant.\n\n"
         f"Their role: {target_role}\n\n"
         f"Pattern scores (ratio 0-1, lower = more room to grow, based on recent meetings):\n"
         f"{pattern_lines}\n"
-        f"{avoid_pattern_note}"
+        f"{avoid_patterns_note}"
         f"{avoid_titles_note}\n\n"
-        f"Choose the weakest pattern that is not excluded above. "
-        f"Propose a specific, actionable micro-experiment targeting it.\n\n"
-        f"Return ONLY a JSON object with exactly these fields:\n"
+        f"Pick the {num_to_generate} weakest patterns that are not excluded above. "
+        f"Each experiment MUST target a DIFFERENT pattern_id.\n"
+        f"Propose specific, actionable micro-experiments targeting them.\n\n"
+        f"Return ONLY a JSON array of {num_to_generate} objects, each with exactly these fields:\n"
         f'{{"experiment_id": "EXP-XXXXXX", "title": "...", "instruction": "...", '
         f'"success_marker": "...", "pattern_id": "..."}}\n\n'
         f"Rules:\n"
-        f"- experiment_id: must match ^EXP-[0-9]{{6}}$ (use 6 random digits)\n"
+        f"- experiment_id: must match ^EXP-[0-9]{{6}}$ (use 6 random digits, each experiment gets a unique ID)\n"
         f"- title: max 140 characters\n"
         f"- instruction: max 600 characters, a concrete behavioural instruction "
         f"the person can act on in their next meeting\n"
@@ -1151,12 +1191,13 @@ def process_next_experiment_suggestion(
         f"turn_allocation, facilitative_inclusion, decision_closure, "
         f"owner_timeframe_specification, summary_checkback, question_quality, "
         f"listener_response_quality, conversational_balance\n"
-        f"- Never include literal double quotes inside string values"
+        f"- Never include literal double quotes inside string values\n"
+        f"- Order by pattern weakness (weakest first)"
     )
 
     slim_system_prompt = (
         "You are a leadership coaching assistant. "
-        "Return ONLY one valid JSON object. "
+        "Return ONLY a valid JSON array of experiment objects. "
         "No prose, markdown, code fences, or comments. "
         "Never include literal double quotes inside string values — "
         "use single quotes if quoting is needed."
@@ -1178,7 +1219,7 @@ def process_next_experiment_suggestion(
             developer_message="",
             user_message=user_message,
             model=model_name,
-            max_tokens=600,
+            max_tokens=600 * num_to_generate,
         )
     except Exception as exc:
         logger.error("process_next_experiment_suggestion: OpenAI call failed: %s", exc)
@@ -1194,7 +1235,7 @@ def process_next_experiment_suggestion(
         raw = raw.strip()
 
     try:
-        micro = json.loads(raw)
+        parsed_response = json.loads(raw)
     except Exception as exc:
         logger.error(
             "process_next_experiment_suggestion: JSON parse failed: %s | raw: %.500s",
@@ -1202,44 +1243,59 @@ def process_next_experiment_suggestion(
         )
         return None
 
-    # 8. Validate required fields and pattern_id
-    _VALID_PATTERNS = {
-        'agenda_clarity', 'objective_signaling', 'turn_allocation',
-        'facilitative_inclusion', 'decision_closure', 'owner_timeframe_specification',
-        'summary_checkback', 'question_quality', 'listener_response_quality',
-        'conversational_balance',
-    }
+    # Normalise: if a single object was returned, wrap in a list
+    if isinstance(parsed_response, dict):
+        parsed_response = [parsed_response]
+
+    if not isinstance(parsed_response, list):
+        logger.error("process_next_experiment_suggestion: unexpected response type: %s", type(parsed_response))
+        return None
+
+    # 8. Validate and create experiment records
     required_keys = {"experiment_id", "title", "instruction", "success_marker", "pattern_id"}
-    missing = required_keys - micro.keys()
-    if missing:
-        logger.error("process_next_experiment_suggestion: missing fields %s", missing)
-        return None
-    if micro.get("pattern_id") not in _VALID_PATTERNS:
-        logger.error(
-            "process_next_experiment_suggestion: invalid pattern_id '%s'",
-            micro.get("pattern_id"),
+    first_record_id: Optional[str] = None
+    seen_patterns: set[str] = set()
+
+    for micro in parsed_response[:num_to_generate]:
+        missing = required_keys - micro.keys()
+        if missing:
+            logger.warning("process_next_experiment_suggestion: skipping proposal with missing fields %s", missing)
+            continue
+        if micro.get("pattern_id") not in _VALID_PATTERNS:
+            logger.warning(
+                "process_next_experiment_suggestion: skipping invalid pattern_id '%s'",
+                micro.get("pattern_id"),
+            )
+            continue
+        # Enforce distinct patterns
+        if micro["pattern_id"] in seen_patterns:
+            logger.warning("process_next_experiment_suggestion: skipping duplicate pattern_id '%s'", micro["pattern_id"])
+            continue
+        seen_patterns.add(micro["pattern_id"])
+
+        # 9. Create proposed experiment record
+        exp_fields: dict = {
+            F_EXP_TITLE: micro["title"][:140],
+            F_EXP_INSTRUCTIONS: micro["instruction"][:600],
+            F_EXP_SUCCESS_CRITERIA: micro["success_marker"][:300],
+            F_EXP_SUCCESS_MARKER: micro["success_marker"][:300],
+            F_EXP_PATTERN_ID: micro["pattern_id"],
+            F_EXP_STATUS: "proposed",
+            F_EXP_USER: [user_record_id],
+        }
+
+        exp_record = client.create_experiment(exp_fields)
+        exp_record_id = exp_record["id"]
+
+        if first_record_id is None:
+            first_record_id = exp_record_id
+
+        logger.info(
+            "process_next_experiment_suggestion: proposed experiment %s for user %s (pattern: %s)",
+            exp_record_id, user_record_id, micro["pattern_id"],
         )
-        return None
 
-    # 9. Create proposed experiment record (linked to user only, no run link)
-    exp_fields: dict = {
-        F_EXP_TITLE: micro["title"][:140],
-        F_EXP_INSTRUCTIONS: micro["instruction"][:600],
-        F_EXP_SUCCESS_CRITERIA: micro["success_marker"][:300],
-        F_EXP_SUCCESS_MARKER: micro["success_marker"][:300],
-        F_EXP_PATTERN_ID: micro["pattern_id"],
-        F_EXP_STATUS: "proposed",
-        F_EXP_USER: [user_record_id],
-    }
-
-    exp_record = client.create_experiment(exp_fields)
-    exp_record_id = exp_record["id"]
-
-    logger.info(
-        "process_next_experiment_suggestion: proposed experiment %s for user %s (pattern: %s)",
-        exp_record_id, user_record_id, micro["pattern_id"],
-    )
-    return exp_record_id
+    return first_record_id
 
 
 # ── Private helpers ───────────────────────────────────────────────────────────
