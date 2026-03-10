@@ -217,6 +217,7 @@ class ClientSummaryResponse(BaseModel):
     user: MeResponse
     active_experiment: Optional[ExperimentResponse] = None
     proposed_experiments: list[ExperimentResponse] = Field(default_factory=list)
+    parked_experiment_count: int = 0
     baseline_pack_status: Optional[str] = None
     baseline_pack_id: Optional[str] = None
     recent_runs: list[dict] = Field(default_factory=list)

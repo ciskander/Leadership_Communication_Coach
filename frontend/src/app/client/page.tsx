@@ -403,12 +403,14 @@ export default function ClientDashboard() {
   const bpStatus = summary?.baseline_pack_status ?? 'none';
   const experiment = summary?.active_experiment;
   const proposedExperiments = summary?.proposed_experiments ?? [];
+  const parkedCount = summary?.parked_experiment_count ?? 0;
   const firstName = summary?.user.display_name?.split(' ')[0] ?? null;
 
   const hasBaseline = bpStatus === 'baseline_ready' || bpStatus === 'completed';
   const isBuilding = bpStatus === 'intake' || bpStatus === 'building';
   const hasExperiment = !!experiment && experiment.status === 'active';
   const hasRuns = (summary?.recent_runs.length ?? 0) > 0;
+  const hasExperimentOptions = proposedExperiments.length > 0 || parkedCount > 0;
 
   const step1Done = hasBaseline;
   const step2Done = hasRuns;
@@ -469,7 +471,15 @@ export default function ClientDashboard() {
             <p className="text-sm text-amber-700 font-medium">Building your baseline… check back in a few minutes.</p>
           </div>
         )}
-        {hasBaseline && !hasExperiment && proposedExperiments.length === 0 && (
+        {hasBaseline && !hasExperiment && hasExperimentOptions && (
+          <div className="mt-4 pt-4 border-t border-stone-100 flex items-center justify-between">
+            <p className="text-sm text-stone-600">You have experiment options waiting — pick one to get started.</p>
+            <Link href="/client/experiment" className="text-sm px-4 py-1.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors whitespace-nowrap">
+              Choose experiment →
+            </Link>
+          </div>
+        )}
+        {hasBaseline && !hasExperiment && !hasExperimentOptions && (
           <div className="mt-4 pt-4 border-t border-stone-100 flex items-center justify-between">
             <p className="text-sm text-stone-600">Baseline ready! Analyze a meeting to receive your first experiment suggestion.</p>
             <Link href="/client/analyze" className="text-sm px-4 py-1.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors whitespace-nowrap">
@@ -519,8 +529,13 @@ export default function ClientDashboard() {
                 Track progress →
               </Link>
             </>
-          ) : proposedExperiments.length > 0 ? (
-            <p className="text-xs text-stone-500 leading-relaxed">You have experiment suggestions waiting below — accept one to get started.</p>
+          ) : hasExperimentOptions ? (
+            <p className="text-xs text-stone-500 leading-relaxed">
+              You have experiment options waiting.{' '}
+              <Link href="/client/experiment" className="text-emerald-700 font-semibold hover:text-emerald-800">
+                Choose one →
+              </Link>
+            </p>
           ) : (
             <p className="text-xs text-stone-500 leading-relaxed">Complete an analysis to receive your first personalised experiment.</p>
           )}
