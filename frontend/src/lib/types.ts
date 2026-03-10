@@ -7,6 +7,7 @@ export interface User {
   role: 'coach' | 'coachee' | 'admin';
   coach_id: string | null;
   airtable_user_record_id: string | null;
+  profile_photo_url: string | null;
   last_login: string | null;
 }
 

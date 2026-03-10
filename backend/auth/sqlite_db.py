@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS users_auth (
     oauth_provider   TEXT NOT NULL,
     oauth_sub        TEXT NOT NULL,
     airtable_user_record_id TEXT,
+    profile_photo_url TEXT,
     created_at       TIMESTAMPTZ DEFAULT NOW(),
     last_login       TIMESTAMPTZ
 );
@@ -48,6 +49,10 @@ CREATE TABLE IF NOT EXISTS invite_tokens (
 );
 """
 
+_MIGRATIONS = [
+    "ALTER TABLE users_auth ADD COLUMN IF NOT EXISTS profile_photo_url TEXT;",
+]
+
 _INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);",
     "CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);",
@@ -63,6 +68,8 @@ def init_db() -> None:
             cur.execute(_CREATE_USERS_AUTH)
             cur.execute(_CREATE_SESSIONS)
             cur.execute(_CREATE_INVITE_TOKENS)
+            for mig in _MIGRATIONS:
+                cur.execute(mig)
             for idx in _INDEXES:
                 cur.execute(idx)
         conn.commit()

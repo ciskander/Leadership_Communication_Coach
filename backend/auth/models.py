@@ -19,6 +19,7 @@ class UserAuth:
     display_name: Optional[str] = None
     coach_id: Optional[str] = None
     airtable_user_record_id: Optional[str] = None
+    profile_photo_url: Optional[str] = None
     created_at: Optional[datetime] = None
     last_login: Optional[datetime] = None
 
@@ -33,6 +34,7 @@ class UserAuth:
             display_name=row["display_name"],
             coach_id=row["coach_id"],
             airtable_user_record_id=row["airtable_user_record_id"],
+            profile_photo_url=row.get("profile_photo_url"),
             created_at=row["created_at"],
             last_login=row["last_login"],
         )

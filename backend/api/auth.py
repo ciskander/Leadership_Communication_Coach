@@ -52,7 +52,8 @@ def resolve_session(signed_token: str) -> Optional[UserAuth]:
                 """
                 SELECT s.session_id, s.user_id, u.id, u.email, u.display_name,
                        u.role, u.oauth_provider, u.oauth_sub, u.coach_id,
-                       u.airtable_user_record_id, u.created_at, u.last_login
+                       u.airtable_user_record_id, u.profile_photo_url,
+                       u.created_at, u.last_login
                 FROM sessions s
                 JOIN users_auth u ON u.id = s.user_id
                 WHERE s.session_id = %s AND s.expires_at > %s
@@ -125,6 +126,7 @@ def create_user(
     oauth_sub: str,
     coach_id: Optional[str] = None,
     airtable_user_record_id: Optional[str] = None,
+    profile_photo_url: Optional[str] = None,
 ) -> UserAuth:
     user_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
@@ -134,13 +136,15 @@ def create_user(
                 """
                 INSERT INTO users_auth
                   (id, email, display_name, role, oauth_provider, oauth_sub,
-                   coach_id, airtable_user_record_id, created_at, last_login)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                   coach_id, airtable_user_record_id, profile_photo_url,
+                   created_at, last_login)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     user_id, email.lower(), display_name, role,
                     oauth_provider, oauth_sub,
-                    coach_id, airtable_user_record_id, now, now,
+                    coach_id, airtable_user_record_id, profile_photo_url,
+                    now, now,
                 ),
             )
         conn.commit()
@@ -153,6 +157,16 @@ def update_last_login(user_id: str) -> None:
             cur.execute(
                 "UPDATE users_auth SET last_login = %s WHERE id = %s",
                 (datetime.now(timezone.utc).isoformat(), user_id),
+            )
+        conn.commit()
+
+
+def update_profile_photo_url(user_id: str, photo_url: Optional[str]) -> None:
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE users_auth SET profile_photo_url = %s WHERE id = %s",
+                (photo_url, user_id),
             )
         conn.commit()
 
@@ -220,6 +234,7 @@ def _user_from_row(row) -> UserAuth:
         display_name=row["display_name"],
         coach_id=row["coach_id"],
         airtable_user_record_id=row["airtable_user_record_id"],
+        profile_photo_url=row.get("profile_photo_url"),
         created_at=row["created_at"],
         last_login=row["last_login"],
     )

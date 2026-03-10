@@ -29,9 +29,18 @@ export function Navbar() {
         {user && (
           <>
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                <span className="text-xs font-semibold text-emerald-700">{initials}</span>
-              </div>
+              {user.profile_photo_url ? (
+                <img
+                  src={user.profile_photo_url}
+                  alt={user.display_name ?? user.email}
+                  className="w-8 h-8 rounded-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <span className="text-xs font-semibold text-emerald-700">{initials}</span>
+                </div>
+              )}
               <div className="hidden sm:block text-right">
                 <p className="text-sm font-medium text-stone-800 leading-tight">
                   {user.display_name ?? user.email}

@@ -18,6 +18,7 @@ class MeResponse(BaseModel):
     role: str
     coach_id: Optional[str]
     airtable_user_record_id: Optional[str]
+    profile_photo_url: Optional[str] = None
     last_login: Optional[datetime]
 
 

@@ -25,6 +25,7 @@ from .auth import (
     landing_url_for,
     update_last_login,
     update_airtable_record_id,
+    update_profile_photo_url,
 )
 from .dependencies import get_current_user
 from .dto import InviteResponse, MeResponse
@@ -112,6 +113,7 @@ async def callback(request: Request):
     email: str = (user_info.get("email") or "").lower()
     sub: str = user_info.get("sub", "")
     display_name: Optional[str] = user_info.get("name")
+    picture: Optional[str] = user_info.get("picture")
 
     # Parse state for invite_token
     raw_state = request.query_params.get("state", "")
@@ -126,6 +128,8 @@ async def callback(request: Request):
     existing = get_user_by_oauth("google", sub)
     if existing:
         update_last_login(existing.id)
+        if picture:
+            update_profile_photo_url(existing.id, picture)
         _sync_airtable_user(existing)
         signed = create_session(existing.id)
         resp = RedirectResponse(url=_FRONTEND_BASE + landing_url_for(existing.role))
@@ -153,6 +157,7 @@ async def callback(request: Request):
             oauth_provider="google",
             oauth_sub=sub,
             coach_id=token_data["coach_id"],
+            profile_photo_url=picture,
         )
         consume_invite_token(invite_token, new_user.id)
         _sync_airtable_user(new_user)
@@ -169,6 +174,7 @@ async def callback(request: Request):
             role="coach",
             oauth_provider="google",
             oauth_sub=sub,
+            profile_photo_url=picture,
         )
         _sync_airtable_user(new_user)
         signed = create_session(new_user.id)
@@ -200,6 +206,7 @@ async def me(user: UserAuth = Depends(get_current_user)):
         role=user.role,
         coach_id=user.coach_id,
         airtable_user_record_id=user.airtable_user_record_id,
+        profile_photo_url=user.profile_photo_url,
         last_login=user.last_login,
     )
 
