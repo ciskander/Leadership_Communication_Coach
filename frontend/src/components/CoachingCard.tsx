@@ -22,7 +22,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
       {strengths.length > 0 && (
         <section className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
           <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-stone-100 bg-emerald-50">
-            <span className="text-base">✦</span>
+            <span className="text-base">🎯</span>
             <h3 className="text-sm font-semibold text-emerald-800">What you do well</h3>
           </div>
           <div className="divide-y divide-stone-100">
@@ -43,7 +43,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
       {focus && (
         <section className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
           <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-stone-100 bg-amber-50">
-            <span className="text-base">◎</span>
+            <span className="text-base">👀</span>
             <h3 className="text-sm font-semibold text-amber-800">Area to focus on</h3>
           </div>
           <div className="px-5 py-4 space-y-3">
@@ -91,7 +91,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
       {microExperiment && (
         <section className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
           <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-stone-100 bg-violet-50">
-            <span className="text-base">◈</span>
+            <span className="text-base">🧪</span>
             <h3 className="text-sm font-semibold text-violet-800">Your experiment</h3>
           </div>
           <div className="px-5 py-4 space-y-4">

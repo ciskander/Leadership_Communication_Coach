@@ -484,7 +484,7 @@ export default function ExperimentPage() {
             </section>
           ) : !showCapScreen && !overallLoading && !isPolling && !hasOptions ? (
             <div className="bg-white rounded-2xl border border-dashed border-stone-300 p-12 text-center space-y-4">
-              <div className="text-4xl">◈</div>
+              <div className="text-4xl">🧪</div>
               <p className="text-stone-600 font-medium">No active experiment</p>
               <p className="text-sm text-stone-400 max-w-xs mx-auto leading-relaxed">
                 Complete a baseline pack or single-meeting analysis to receive your first personalised experiment.

@@ -494,7 +494,7 @@ export default function ClientDashboard() {
         <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-lg">◎</span>
+              <span className="text-lg">📚</span>
               <h2 className="font-semibold text-stone-800 text-sm">Baseline Pack</h2>
             </div>
             <BaselineBadge status={bpStatus} />
@@ -511,7 +511,7 @@ export default function ClientDashboard() {
 
         <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
           <div className="flex items-center gap-2">
-            <span className="text-lg">◈</span>
+            <span className="text-lg">🧪</span>
             <h2 className="font-semibold text-stone-800 text-sm">Active Experiment</h2>
           </div>
           {experiment ? (
@@ -560,11 +560,11 @@ export default function ClientDashboard() {
       {/* Quick actions */}
       <div className="flex gap-3">
         <Link href="/client/analyze" className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm">
-          <span>⊕</span> Analyze a Meeting
+          <span>✨</span> Analyze a Meeting
         </Link>
         {bpStatus === 'none' && (
           <Link href="/client/baseline/new" className="flex items-center gap-2 px-5 py-2.5 bg-white border border-stone-300 text-stone-700 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors">
-            <span>◎</span> Create Baseline
+            <span>📚</span> Create Baseline
           </Link>
         )}
       </div>
