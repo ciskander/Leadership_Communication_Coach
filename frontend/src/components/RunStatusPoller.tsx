@@ -273,6 +273,14 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
             label: 'Partial attempt detected',
             desc: `You made a partial attempt at your experiment${countAttempts ? ` — ${countAttempts} instance${countAttempts !== 1 ? 's' : ''} noted` : ''}. You're on the right track.`,
           }
+        : confirmState === 'done' && confirmedValue
+        ? {
+            icon: '◈',
+            bgColor: 'bg-emerald-50',
+            labelColor: 'text-emerald-800',
+            label: 'User confirmed attempt',
+            desc: null,
+          }
         : {
             icon: '◈',
             bgColor: 'bg-stone-50',
@@ -379,6 +387,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         </section>
 
         {/* Full experiment tracker */}
+        <h2 className="text-base font-semibold text-stone-800 mt-2">Current Experiment</h2>
         {activeExpData?.experiment ? (
           <ExperimentTracker
             experiment={activeExpData.experiment}
