@@ -21,6 +21,8 @@ interface ExperimentTrackerProps {
   events: Event[];
   onUpdate?: () => void;
   onComplete?: () => void;
+  onPark?: () => void;
+  /** @deprecated Use onPark instead */
   onAbandon?: () => void;
 }
 
@@ -40,11 +42,12 @@ const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string }>
   proposed:  { bg: 'bg-violet-100',  text: 'text-violet-700',  label: 'Proposed' },
   active:    { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Active' },
   completed: { bg: 'bg-stone-100',   text: 'text-stone-600',   label: 'Completed' },
+  parked:    { bg: 'bg-amber-100',   text: 'text-amber-700',   label: 'Parked' },
   abandoned: { bg: 'bg-rose-100',    text: 'text-rose-700',    label: 'Abandoned' },
 };
 
-export function ExperimentTracker({ experiment, events, onUpdate, onComplete, onAbandon }: ExperimentTrackerProps) {
-  const [actionState, setActionState] = useState<'idle' | 'confirm-abandon' | 'loading'>('idle');
+export function ExperimentTracker({ experiment, events, onUpdate, onComplete, onPark, onAbandon }: ExperimentTrackerProps) {
+  const [actionState, setActionState] = useState<'idle' | 'confirm-park' | 'loading'>('idle');
 
   const isActive = experiment.status === 'active';
   const statusCfg = STATUS_CONFIG[experiment.status] ?? STATUS_CONFIG.active;
@@ -74,12 +77,12 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
     }
   }
 
-  async function handleAbandon() {
+  async function handlePark() {
     if (actionState !== 'loading') {
       setActionState('loading');
       try {
-        await api.abandonExperiment(experiment.experiment_record_id);
-        onAbandon ? onAbandon() : onUpdate?.();
+        await api.parkExperiment(experiment.experiment_record_id);
+        (onPark ?? onAbandon) ? (onPark ?? onAbandon)!() : onUpdate?.();
       } catch {
         setActionState('idle');
       }
@@ -241,18 +244,18 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
         {/* Actions */}
         {isActive && (
           <div className="pt-1 space-y-2">
-            {actionState === 'confirm-abandon' ? (
-              <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 space-y-3">
-                <p className="text-sm font-medium text-rose-800">Abandon this experiment?</p>
-                <p className="text-xs text-rose-700 leading-relaxed">
-                  It will be removed from your active experiments. Any progress recorded so far will be saved.
+            {actionState === 'confirm-park' ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+                <p className="text-sm font-medium text-amber-800">Park this experiment for now?</p>
+                <p className="text-xs text-amber-700 leading-relaxed">
+                  It will be saved and you can resume it later. Any progress recorded so far will be kept.
                 </p>
                 <div className="flex gap-2">
                   <button
-                    onClick={handleAbandon}
-                    className="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-semibold hover:bg-rose-700 transition-colors"
+                    onClick={handlePark}
+                    className="px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-semibold hover:bg-amber-700 transition-colors"
                   >
-                    Yes, abandon it
+                    Yes, park it
                   </button>
                   <button
                     onClick={() => setActionState('idle')}
@@ -272,11 +275,11 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
                   {actionState === 'loading' ? 'Saving…' : 'Mark complete ✓'}
                 </button>
                 <button
-                  onClick={() => setActionState('confirm-abandon')}
+                  onClick={() => setActionState('confirm-park')}
                   disabled={actionState === 'loading'}
                   className="px-4 py-2.5 bg-white border border-stone-300 text-stone-600 rounded-xl text-sm font-medium hover:bg-stone-50 disabled:opacity-50 transition-colors"
                 >
-                  Abandon experiment
+                  Park for now
                 </button>
               </div>
             )}

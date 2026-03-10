@@ -390,7 +390,9 @@ function PastExperimentCard({ exp }: { exp: PastExperiment }) {
   const statusColor =
     exp.status === 'completed'
       ? 'bg-green-100 text-green-700'
-      : 'bg-amber-100 text-amber-700';
+      : exp.status === 'parked'
+        ? 'bg-amber-100 text-amber-700'
+        : 'bg-rose-100 text-rose-700';
 
   const dateRange =
     exp.started_at || exp.ended_at
@@ -406,7 +408,7 @@ function PastExperimentCard({ exp }: { exp: PastExperiment }) {
       >
         <div className="flex items-center gap-3 min-w-0">
           <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${statusColor}`}>
-            {exp.status === 'completed' ? 'Completed' : 'Abandoned'}
+            {exp.status === 'completed' ? 'Completed' : exp.status === 'parked' ? 'Parked' : 'Abandoned'}
           </span>
           <span className="font-medium text-gray-800 truncate">{exp.title}</span>
         </div>
@@ -505,7 +507,7 @@ export default function ProgressPage() {
           <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-5">Past Experiments</h2>
             {data.past_experiments.length === 0 ? (
-              <p className="text-gray-400 text-sm">No completed or abandoned experiments yet.</p>
+              <p className="text-gray-400 text-sm">No completed, parked, or abandoned experiments yet.</p>
             ) : (
               <div className="space-y-3">
                 {data.past_experiments.map((exp) => (

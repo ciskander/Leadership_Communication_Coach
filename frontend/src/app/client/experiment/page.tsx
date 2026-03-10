@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { useActiveExperiment } from '@/hooks/useActiveExperiment';
 import { useProposedPoller } from '@/hooks/useProposedPoller';
 import { ExperimentTracker } from '@/components/ExperimentTracker';
-import type { Experiment } from '@/lib/types';
+import type { Experiment, ExperimentOptions } from '@/lib/types';
 
 function PatternLabel({ id }: { id: string }) {
   return (
@@ -16,12 +16,31 @@ function PatternLabel({ id }: { id: string }) {
   );
 }
 
+function timeAgo(dateStr: string | null): string {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const days = Math.floor(diff / 86_400_000);
+  if (days < 1) return 'today';
+  if (days === 1) return '1 day ago';
+  if (days < 7) return `${days} days ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks === 1) return '1 week ago';
+  if (weeks < 5) return `${weeks} weeks ago`;
+  const months = Math.floor(days / 30);
+  if (months === 1) return '1 month ago';
+  return `${months} months ago`;
+}
+
+// ── Proposed Experiment Card ──────────────────────────────────────────────────
+
 function ProposedExperimentCard({
   experiment,
   onAccepted,
+  compact = false,
 }: {
   experiment: Experiment;
   onAccepted: () => void;
+  compact?: boolean;
 }) {
   const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -45,6 +64,90 @@ function ProposedExperimentCard({
         <PatternLabel id={experiment.pattern_id} />
         <p className="text-sm font-semibold text-stone-900 leading-snug">{experiment.title}</p>
       </div>
+      {!compact && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="bg-stone-50 rounded-xl p-3">
+            <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">What to do</p>
+            <p className="text-xs text-stone-600 leading-relaxed">{experiment.instruction}</p>
+          </div>
+          <div className="bg-stone-50 rounded-xl p-3">
+            <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Success looks like</p>
+            <p className="text-xs text-stone-600 leading-relaxed">{experiment.success_marker}</p>
+          </div>
+        </div>
+      )}
+      {errorMsg && <p className="text-xs text-rose-600">{errorMsg}</p>}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={handleAccept}
+          disabled={state === 'loading'}
+          className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
+        >
+          {state === 'loading' ? 'Accepting…' : 'Accept experiment'}
+        </button>
+        <span className="text-xs text-stone-400 ml-auto">{experiment.experiment_id}</span>
+      </div>
+    </div>
+  );
+}
+
+// ── Parked Experiment Card ────────────────────────────────────────────────────
+
+function ParkedExperimentCard({
+  experiment,
+  onResumed,
+  onDiscarded,
+}: {
+  experiment: Experiment;
+  onResumed: () => void;
+  onDiscarded: () => void;
+}) {
+  const [state, setState] = useState<'idle' | 'loading' | 'confirm-discard'>('idle');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  async function handleResume() {
+    if (state === 'loading') return;
+    setState('loading');
+    setErrorMsg(null);
+    try {
+      await api.resumeExperiment(experiment.experiment_record_id);
+      onResumed();
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong.');
+      setState('idle');
+    }
+  }
+
+  async function handleDiscard() {
+    setState('loading');
+    setErrorMsg(null);
+    try {
+      await api.discardExperiment(experiment.experiment_record_id);
+      onDiscarded();
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong.');
+      setState('idle');
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-amber-200 p-5 space-y-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+              Parked
+            </span>
+            {experiment.ended_at && (
+              <span className="text-xs text-stone-400">
+                {timeAgo(experiment.ended_at)}
+              </span>
+            )}
+          </div>
+          <PatternLabel id={experiment.pattern_id} />
+          <p className="text-sm font-semibold text-stone-900 leading-snug">{experiment.title}</p>
+        </div>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="bg-stone-50 rounded-xl p-3">
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">What to do</p>
@@ -56,74 +159,123 @@ function ProposedExperimentCard({
         </div>
       </div>
       {errorMsg && <p className="text-xs text-rose-600">{errorMsg}</p>}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={handleAccept}
-          disabled={state === 'loading'}
-          className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
-        >
-          {state === 'loading' ? 'Accepting…' : 'Accept experiment'}
-        </button>
-        <Link
-          href="/client"
-          className="text-xs text-stone-500 hover:text-stone-700 transition-colors"
-        >
-          Decide later
-        </Link>
-        <span className="text-xs text-stone-400 ml-auto">{experiment.experiment_id}</span>
-      </div>
+
+      {state === 'confirm-discard' ? (
+        <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 space-y-2">
+          <p className="text-xs text-rose-700">Permanently discard this experiment? This cannot be undone.</p>
+          <div className="flex gap-2">
+            <button
+              onClick={handleDiscard}
+              className="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-semibold hover:bg-rose-700 transition-colors"
+            >
+              Discard
+            </button>
+            <button
+              onClick={() => setState('idle')}
+              className="px-3 py-1.5 bg-white border border-stone-300 text-stone-600 rounded-lg text-xs font-semibold hover:bg-stone-50 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleResume}
+            disabled={state === 'loading'}
+            className="px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-semibold hover:bg-amber-700 transition-colors disabled:opacity-60"
+          >
+            {state === 'loading' ? 'Resuming…' : 'Resume experiment'}
+          </button>
+          <button
+            onClick={() => setState('confirm-discard')}
+            disabled={state === 'loading'}
+            className="text-xs text-stone-400 hover:text-rose-600 transition-colors"
+          >
+            Discard
+          </button>
+          <span className="text-xs text-stone-400 ml-auto">{experiment.experiment_id}</span>
+        </div>
+      )}
     </div>
   );
 }
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function ExperimentPage() {
   const { data, loading, error, refetch } = useActiveExperiment();
   const { proposed, pollState, startPolling, reset: resetPoller } = useProposedPoller();
 
-  // Seed proposed list from a one-shot fetch on mount (for pre-existing proposals)
-  const [seedProposed, setSeedProposed] = useState<Experiment[]>([]);
+  // Seed proposed + parked lists from a one-shot fetch on mount
+  const [options, setOptions] = useState<ExperimentOptions | null>(null);
   const [seedLoading, setSeedLoading] = useState(true);
-  const [lastAction, setLastAction] = useState<'completed' | 'abandoned' | null>(null);
+  const [lastAction, setLastAction] = useState<'completed' | 'parked' | null>(null);
+  const [showMore, setShowMore] = useState(false);
+
+  function fetchOptions() {
+    api.getExperimentOptions()
+      .then(setOptions)
+      .catch(() => setOptions(null))
+      .finally(() => setSeedLoading(false));
+  }
 
   useEffect(() => {
-    api.getProposedExperiments()
-      .then(setSeedProposed)
-      .catch(() => setSeedProposed([]))
-      .finally(() => setSeedLoading(false));
+    fetchOptions();
   }, []);
 
-  // Merge seed + poller results, deduplicated by record ID
+  // Merge seed + poller proposed results, deduplicated by record ID
   const allProposed = (() => {
     const map = new Map<string, Experiment>();
-    for (const exp of seedProposed) map.set(exp.experiment_record_id, exp);
+    for (const exp of options?.proposed ?? []) map.set(exp.experiment_record_id, exp);
     for (const exp of proposed) map.set(exp.experiment_record_id, exp);
     return Array.from(map.values());
   })();
 
+  const parkedExperiments = options?.parked ?? [];
+  const atParkCap = options?.at_park_cap ?? false;
   const isPolling = pollState === 'polling';
+
+  // The top recommendation is the first proposed experiment
+  const topRecommendation = allProposed[0] ?? null;
+  const otherProposed = allProposed.slice(1);
 
   function handleComplete() {
     setLastAction('completed');
+    setShowMore(false);
     resetPoller();
     refetch(false);
     startPolling();
+    fetchOptions();
   }
 
-  function handleAbandon() {
-    setLastAction('abandoned');
+  function handlePark() {
+    setLastAction('parked');
+    setShowMore(false);
     resetPoller();
     refetch(false);
     startPolling();
+    fetchOptions();
   }
 
   function handleAccepted() {
     setLastAction(null);
+    setShowMore(false);
     resetPoller();
     refetch();
-    // Re-seed proposed list after accepting
-    api.getProposedExperiments()
-      .then(setSeedProposed)
-      .catch(() => setSeedProposed([]));
+    fetchOptions();
+  }
+
+  function handleResumed() {
+    setLastAction(null);
+    setShowMore(false);
+    resetPoller();
+    refetch();
+    fetchOptions();
+  }
+
+  function handleDiscarded() {
+    fetchOptions();
   }
 
   if (loading) {
@@ -156,17 +308,24 @@ export default function ExperimentPage() {
       );
     }
     return (
-      <div className="bg-stone-50 border border-stone-200 rounded-2xl px-5 py-4 flex items-center gap-3">
-        <span className="text-xl">→</span>
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 flex items-center gap-3">
+        <span className="text-xl">⏸</span>
         <div>
-          <p className="text-sm font-semibold text-stone-700">Experiment abandoned.</p>
-          <p className="text-xs text-stone-500 mt-0.5">No problem — pick a new direction below.</p>
+          <p className="text-sm font-semibold text-amber-800">Experiment parked.</p>
+          <p className="text-xs text-amber-700 mt-0.5">You can resume it anytime. Pick your next focus below.</p>
         </div>
       </div>
     );
   }
 
   const overallLoading = seedLoading && !lastAction;
+
+  // At park cap — only show parked experiments, no new proposals
+  const showCapScreen = atParkCap && !hasActive;
+  // Has options to show (either proposed or parked)
+  const hasOptions = allProposed.length > 0 || parkedExperiments.length > 0;
+  // Show "See more options" button when there are more options beyond the top recommendation
+  const hasMoreOptions = otherProposed.length > 0 || parkedExperiments.length > 0;
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 py-2">
@@ -182,7 +341,7 @@ export default function ExperimentPage() {
           experiment={experiment}
           events={events as Record<string, unknown>[]}
           onComplete={handleComplete}
-          onAbandon={handleAbandon}
+          onPark={handlePark}
         />
       ) : (
         <>
@@ -196,27 +355,128 @@ export default function ExperimentPage() {
             </div>
           )}
 
-          {!overallLoading && allProposed.length > 0 ? (
+          {/* Park cap screen — user must resume or discard a parked experiment */}
+          {showCapScreen && parkedExperiments.length > 0 && (
             <section>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
-                  {lastAction ? 'Choose your next experiment' : 'Suggested Experiments'}
-                </h2>
-                <span className="text-xs text-stone-400">
-                  {allProposed.length} suggestion{allProposed.length !== 1 ? 's' : ''}
-                </span>
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 mb-4">
+                <p className="text-sm font-medium text-amber-800">
+                  You have {parkedExperiments.length} parked experiment{parkedExperiments.length !== 1 ? 's' : ''} (the maximum).
+                </p>
+                <p className="text-xs text-amber-700 mt-1">
+                  Resume one to continue, or discard one to free up space for new suggestions.
+                </p>
               </div>
               <div className="space-y-3">
-                {allProposed.map((exp) => (
-                  <ProposedExperimentCard
+                {parkedExperiments.map((exp) => (
+                  <ParkedExperimentCard
                     key={exp.experiment_record_id}
                     experiment={exp}
-                    onAccepted={handleAccepted}
+                    onResumed={handleResumed}
+                    onDiscarded={handleDiscarded}
                   />
                 ))}
               </div>
             </section>
-          ) : !overallLoading && !isPolling ? (
+          )}
+
+          {/* Normal flow: top recommendation + see more options */}
+          {!showCapScreen && !overallLoading && hasOptions ? (
+            <section>
+              {/* Top recommendation */}
+              {topRecommendation && !showMore && (
+                <>
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+                      {lastAction ? 'Recommended next experiment' : 'Suggested Experiment'}
+                    </h2>
+                  </div>
+                  <ProposedExperimentCard
+                    experiment={topRecommendation}
+                    onAccepted={handleAccepted}
+                  />
+                  {hasMoreOptions && (
+                    <button
+                      onClick={() => setShowMore(true)}
+                      className="mt-3 w-full py-2.5 bg-stone-50 border border-stone-200 text-stone-600 rounded-xl text-sm font-medium hover:bg-stone-100 transition-colors"
+                    >
+                      See more options
+                    </button>
+                  )}
+                </>
+              )}
+
+              {/* Expanded: all options (proposed + parked) */}
+              {showMore && (
+                <>
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+                      Choose your next experiment
+                    </h2>
+                    <button
+                      onClick={() => setShowMore(false)}
+                      className="text-xs text-stone-500 hover:text-stone-700 transition-colors"
+                    >
+                      Back to recommendation
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {/* All proposed experiments */}
+                    {allProposed.map((exp, i) => (
+                      <div key={exp.experiment_record_id}>
+                        {i === 0 && (
+                          <p className="text-xs text-emerald-600 font-medium mb-1.5">Top pick</p>
+                        )}
+                        <ProposedExperimentCard
+                          experiment={exp}
+                          onAccepted={handleAccepted}
+                          compact={i > 0}
+                        />
+                      </div>
+                    ))}
+
+                    {/* Parked experiments section */}
+                    {parkedExperiments.length > 0 && (
+                      <>
+                        <div className="pt-2">
+                          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
+                            Previously parked
+                          </p>
+                        </div>
+                        {parkedExperiments.map((exp) => (
+                          <ParkedExperimentCard
+                            key={exp.experiment_record_id}
+                            experiment={exp}
+                            onResumed={handleResumed}
+                            onDiscarded={handleDiscarded}
+                          />
+                        ))}
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* No proposals yet but parked exist — only show when not already in showMore */}
+              {allProposed.length === 0 && parkedExperiments.length > 0 && !showMore && (
+                <>
+                  <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
+                    Resume a parked experiment
+                  </h2>
+                  <div className="space-y-3">
+                    {parkedExperiments.map((exp) => (
+                      <ParkedExperimentCard
+                        key={exp.experiment_record_id}
+                        experiment={exp}
+                        onResumed={handleResumed}
+                        onDiscarded={handleDiscarded}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </section>
+          ) : !showCapScreen && !overallLoading && !isPolling ? (
             <div className="bg-white rounded-2xl border border-dashed border-stone-300 p-12 text-center space-y-4">
               <div className="text-4xl">◈</div>
               <p className="text-stone-600 font-medium">No active experiment</p>

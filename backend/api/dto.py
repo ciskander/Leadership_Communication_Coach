@@ -187,6 +187,13 @@ class HumanConfirmResponse(BaseModel):
     confirmed: bool
 
 
+class ExperimentOptionsResponse(BaseModel):
+    """Combined proposed + parked experiments for the selection screen."""
+    proposed: list[ExperimentResponse] = Field(default_factory=list)
+    parked: list[ExperimentResponse] = Field(default_factory=list)
+    at_park_cap: bool = False
+
+
 # ── Coach ─────────────────────────────────────────────────────────────────────
 
 class CoacheeListItem(BaseModel):
