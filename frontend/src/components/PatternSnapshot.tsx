@@ -184,13 +184,18 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                 <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
                   Where you can improve
                 </p>
-                {improvementQuotes.map((q, i) => (
-                  <EvidenceQuote key={i} quote={q} />
-                ))}
                 {hasCoaching && (
-                  <p className="text-sm text-stone-700 leading-relaxed">
+                  <p className="text-sm text-stone-700 leading-relaxed mb-2">
                     {pattern.coaching_note}
                   </p>
+                )}
+                {improvementQuotes.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                      For example, in this meeting you said
+                    </p>
+                    <EvidenceQuote quote={improvementQuotes[0]} />
+                  </div>
                 )}
                 {pattern.suggested_rewrite && (
                   <div className="mt-2">
@@ -202,6 +207,16 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                         &ldquo;{pattern.suggested_rewrite}&rdquo;
                       </p>
                     </blockquote>
+                  </div>
+                )}
+                {improvementQuotes.length > 1 && (
+                  <div className="mt-2">
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                      Other moments where this came up
+                    </p>
+                    {improvementQuotes.slice(1).map((q, i) => (
+                      <EvidenceQuote key={i} quote={q} />
+                    ))}
                   </div>
                 )}
               </div>
@@ -226,13 +241,18 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                 <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
                   Where you can improve
                 </p>
-                {quotes.map((q, i) => (
-                  <EvidenceQuote key={i} quote={q} />
-                ))}
                 {hasCoaching && (
-                  <p className="text-sm text-stone-700 leading-relaxed">
+                  <p className="text-sm text-stone-700 leading-relaxed mb-2">
                     {pattern.coaching_note}
                   </p>
+                )}
+                {hasQuotes && (
+                  <div>
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                      For example, in this meeting you said
+                    </p>
+                    <EvidenceQuote quote={quotes[0]} />
+                  </div>
                 )}
                 {pattern.suggested_rewrite && (
                   <div className="mt-2">
@@ -244,6 +264,16 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                         &ldquo;{pattern.suggested_rewrite}&rdquo;
                       </p>
                     </blockquote>
+                  </div>
+                )}
+                {quotes.length > 1 && (
+                  <div className="mt-2">
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                      Other moments where this came up
+                    </p>
+                    {quotes.slice(1).map((q, i) => (
+                      <EvidenceQuote key={i} quote={q} />
+                    ))}
                   </div>
                 )}
               </div>
@@ -276,40 +306,46 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
           {/* ── Zero score or non-numeric (excluding conversational balance) ── */}
           {!isConversationalBalance && !isPerfectScore && !isMixedScore && (
             <>
-              {hasQuotes && (
-                <div>
-                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                    Where you can improve
-                  </p>
-                  {quotes.map((q, i) => (
-                    <EvidenceQuote key={i} quote={q} />
-                  ))}
-                </div>
-              )}
-
-              {hasCoaching && (
-                <div>
-                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                    Coaching note
-                  </p>
-                  <p className="text-sm text-stone-700 leading-relaxed">
+              <div>
+                <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                  Where you can improve
+                </p>
+                {hasCoaching && (
+                  <p className="text-sm text-stone-700 leading-relaxed mb-2">
                     {pattern.coaching_note}
                   </p>
-                </div>
-              )}
-
-              {pattern.suggested_rewrite && (
-                <div>
-                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                    Next time, try something like
-                  </p>
-                  <blockquote className="border-l-4 border-emerald-300 pl-4 py-1 my-2 bg-emerald-50 rounded-r-md">
-                    <p className="text-sm text-stone-700 italic">
-                      &ldquo;{pattern.suggested_rewrite}&rdquo;
+                )}
+                {hasQuotes && (
+                  <div>
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                      For example, in this meeting you said
                     </p>
-                  </blockquote>
-                </div>
-              )}
+                    <EvidenceQuote quote={quotes[0]} />
+                  </div>
+                )}
+                {pattern.suggested_rewrite && (
+                  <div className="mt-2">
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                      Next time, try something like
+                    </p>
+                    <blockquote className="border-l-4 border-emerald-300 pl-4 py-1 my-2 bg-emerald-50 rounded-r-md">
+                      <p className="text-sm text-stone-700 italic">
+                        &ldquo;{pattern.suggested_rewrite}&rdquo;
+                      </p>
+                    </blockquote>
+                  </div>
+                )}
+                {quotes.length > 1 && (
+                  <div className="mt-2">
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                      Other moments where this came up
+                    </p>
+                    {quotes.slice(1).map((q, i) => (
+                      <EvidenceQuote key={i} quote={q} />
+                    ))}
+                  </div>
+                )}
+              </div>
             </>
           )}
 
