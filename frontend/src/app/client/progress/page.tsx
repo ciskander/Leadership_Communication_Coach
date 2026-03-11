@@ -527,7 +527,7 @@ function PastExperimentCard({
                     axisLine={false}
                   />
                   <Tooltip
-                    formatter={(v: number | null) => [v != null ? `${v}%` : '—', PATTERN_LABELS[pid] ?? pid]}
+                    formatter={(v: any) => [v != null ? `${v}%` : '—', PATTERN_LABELS[pid] ?? pid]}
                     labelStyle={{ fontSize: 11 }}
                   />
                   <Line
