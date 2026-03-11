@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { api } from '@/lib/api';
 import type { ClientProgress, RunHistoryPoint, PastExperiment } from '@/lib/types';
+import { useActiveExperiment } from '@/hooks/useActiveExperiment';
 import {
   LineChart,
   Line,
@@ -178,8 +179,17 @@ function buildChartData(
   });
 }
 
-function PatternTrendsChart({ history, trendWindowSize = 3 }: { history: RunHistoryPoint[]; trendWindowSize?: number }) {
+function PatternTrendsChart({
+  history,
+  trendWindowSize = 3,
+  experimentPatternId,
+}: {
+  history: RunHistoryPoint[];
+  trendWindowSize?: number;
+  experimentPatternId?: string | null;
+}) {
   const [showAll, setShowAll] = useState(false);
+  const [experimentOnly, setExperimentOnly] = useState(false);
 
   // Count post-baseline meetings — count non-baseline runs directly rather than
   // relying on sort position, so a missing/failed baseline run can't inflate the count.
@@ -196,7 +206,20 @@ function PatternTrendsChart({ history, trendWindowSize = 3 }: { history: RunHist
   }
   const allPatterns = Object.keys(oppCounts).sort((a, b) => oppCounts[b] - oppCounts[a]);
   const topPatterns = allPatterns.slice(0, 5);
-  const visiblePatterns = showAll ? allPatterns : topPatterns;
+
+  // Ensure experiment pattern is always included in the visible set
+  const hasExpPattern = experimentPatternId && allPatterns.includes(experimentPatternId);
+  let visiblePatterns: string[];
+  if (experimentOnly && hasExpPattern) {
+    visiblePatterns = [experimentPatternId];
+  } else if (showAll) {
+    visiblePatterns = allPatterns;
+  } else {
+    visiblePatterns = topPatterns;
+    if (hasExpPattern && !topPatterns.includes(experimentPatternId)) {
+      visiblePatterns = [...topPatterns, experimentPatternId];
+    }
+  }
 
   const chartData = buildChartData(history, visiblePatterns, trendWindowSize);
   const baselinePoint = chartData.find((p) => p.isBaseline);
@@ -241,17 +264,39 @@ function PatternTrendsChart({ history, trendWindowSize = 3 }: { history: RunHist
     <div>
       {/* Pattern legend with ⓘ */}
       <div className="flex flex-wrap gap-3 mb-4">
-        {visiblePatterns.map((pid, i) => (
-          <span key={pid} className="flex items-center text-sm text-gray-700">
-            <span
-              className="inline-block w-3 h-3 rounded-full mr-1.5 flex-shrink-0"
-              style={{ background: LINE_COLORS[i % LINE_COLORS.length] }}
-            />
-            {PATTERN_LABELS[pid] ?? pid}
-            <InfoPopover patternId={pid} />
-          </span>
-        ))}
+        {visiblePatterns.map((pid, i) => {
+          const isExp = pid === experimentPatternId;
+          return (
+            <span key={pid} className={`flex items-center text-sm ${isExp ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
+              <span
+                className={`inline-block rounded-full mr-1.5 flex-shrink-0 ${isExp ? 'w-3.5 h-3.5 ring-2 ring-offset-1 ring-current' : 'w-3 h-3'}`}
+                style={{ background: LINE_COLORS[i % LINE_COLORS.length] }}
+              />
+              {PATTERN_LABELS[pid] ?? pid}
+              {isExp && (
+                <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full leading-none">
+                  Experiment
+                </span>
+              )}
+              <InfoPopover patternId={pid} />
+            </span>
+          );
+        })}
       </div>
+
+      {/* Experiment filter toggle */}
+      {hasExpPattern && (
+        <button
+          onClick={() => { setExperimentOnly((v) => !v); setShowAll(false); }}
+          className={`mb-4 text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${
+            experimentOnly
+              ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+              : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+          }`}
+        >
+          {experimentOnly ? 'Show all patterns' : `Focus: ${PATTERN_LABELS[experimentPatternId] ?? experimentPatternId}`}
+        </button>
+      )}
 
       {/* Chart */}
       {showLineChart ? (
@@ -274,6 +319,7 @@ function PatternTrendsChart({ history, trendWindowSize = 3 }: { history: RunHist
               <Tooltip content={<CustomTooltip />} />
               {visiblePatterns.map((pid, i) => {
                 const color = LINE_COLORS[i % LINE_COLORS.length];
+                const isExp = pid === experimentPatternId;
                 return [
                   /* Faded raw dots — no connecting line */
                   <Line
@@ -281,21 +327,21 @@ function PatternTrendsChart({ history, trendWindowSize = 3 }: { history: RunHist
                     type="monotone"
                     dataKey={rawKey(pid)}
                     stroke="none"
-                    dot={{ r: 2.5, fill: color, opacity: 0.3 }}
+                    dot={{ r: isExp ? 3.5 : 2.5, fill: color, opacity: isExp ? 0.5 : 0.3 }}
                     activeDot={false}
                     connectNulls={false}
                     legendType="none"
                     isAnimationActive={false}
                   />,
-                  /* Bold trend line */
+                  /* Bold trend line — thicker for experiment pattern */
                   <Line
                     key={pid}
                     type="monotone"
                     dataKey={pid}
                     stroke={color}
-                    strokeWidth={2}
+                    strokeWidth={isExp ? 3.5 : 2}
                     dot={false}
-                    activeDot={{ r: 5, fill: color }}
+                    activeDot={{ r: isExp ? 7 : 5, fill: color }}
                     connectNulls
                   />,
                 ];
@@ -357,9 +403,19 @@ function PatternTrendsChart({ history, trendWindowSize = 3 }: { history: RunHist
                       cursor={{ fill: '#f9fafb' }}
                     />
                     <Bar dataKey="score" radius={[4, 4, 0, 0]} maxBarSize={48}>
-                      {barData.map((entry, index) => (
-                        <Cell key={entry.pid} fill={LINE_COLORS[visiblePatterns.indexOf(entry.pid) % LINE_COLORS.length]} />
-                      ))}
+                      {barData.map((entry) => {
+                        const isExp = entry.pid === experimentPatternId;
+                        const color = LINE_COLORS[visiblePatterns.indexOf(entry.pid) % LINE_COLORS.length];
+                        return (
+                          <Cell
+                            key={entry.pid}
+                            fill={color}
+                            stroke={isExp ? color : undefined}
+                            strokeWidth={isExp ? 2 : 0}
+                            opacity={isExp ? 1 : 0.75}
+                          />
+                        );
+                      })}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -370,7 +426,7 @@ function PatternTrendsChart({ history, trendWindowSize = 3 }: { history: RunHist
       )}
 
       {/* Show all toggle */}
-      {allPatterns.length > 5 && (
+      {allPatterns.length > 5 && !experimentOnly && (
         <button
           onClick={() => setShowAll((v) => !v)}
           className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
@@ -460,6 +516,9 @@ export default function ProgressPage() {
   const [data, setData] = useState<ClientProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { data: activeExp } = useActiveExperiment();
+
+  const experimentPatternId = activeExp?.experiment?.pattern_id ?? null;
 
   useEffect(() => {
     api
@@ -500,7 +559,7 @@ export default function ProgressPage() {
           {/* Pattern Trends */}
           <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-5">Pattern Trends</h2>
-            <PatternTrendsChart history={data.pattern_history} trendWindowSize={data.trend_window_size} />
+            <PatternTrendsChart history={data.pattern_history} trendWindowSize={data.trend_window_size} experimentPatternId={experimentPatternId} />
           </section>
 
           {/* Past Experiments */}
