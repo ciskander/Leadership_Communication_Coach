@@ -96,13 +96,13 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
       return (
         <div className="bg-blue-50 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
           <p className="text-sm text-blue-700">
-            Analyse your next meeting to start tracking this experiment.
+            Analyze your next meeting to start tracking this experiment.
           </p>
           <Link
             href="/client/analyze"
             className="shrink-0 text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
           >
-            ✨ Analyse meeting
+            ✨ Analyze Meeting
           </Link>
         </div>
       );
@@ -117,7 +117,7 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
             href="/client/analyze"
             className="shrink-0 text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
           >
-            ✨ Analyse meeting
+            ✨ Analyze Meeting
           </Link>
         </div>
       );
@@ -125,13 +125,13 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
     return (
       <div className="flex items-center justify-between gap-4">
         <p className="text-xs text-stone-400">
-          {totalAttempted} attempt{totalAttempted !== 1 ? 's' : ''} detected across {meetingsAnalysed} meeting{meetingsAnalysed !== 1 ? 's' : ''} analysed.
+          {totalAttempted} attempt{totalAttempted !== 1 ? 's' : ''} detected across {meetingsAnalysed} meeting{meetingsAnalysed !== 1 ? 's' : ''} analyzed.
         </p>
         <Link
           href="/client/analyze"
-          className="shrink-0 text-xs px-3 py-1.5 bg-stone-100 text-stone-700 rounded-lg font-semibold hover:bg-stone-200 transition-colors"
+          className="shrink-0 text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
         >
-          ✨ Analyse meeting
+          ✨ Analyze Meeting
         </Link>
       </div>
     );

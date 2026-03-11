@@ -262,7 +262,7 @@ export default function AnalyzePage() {
             Starting analysis…
           </span>
         ) : (
-          '✨ Analyse Meeting →'
+          '✨ Analyze Meeting →'
         )}
       </button>
     </div>

@@ -483,7 +483,7 @@ export default function ClientDashboard() {
           <div className="mt-4 pt-4 border-t border-stone-100 flex items-center justify-between">
             <p className="text-sm text-stone-600">Baseline ready! Analyze a meeting to receive your first experiment suggestion.</p>
             <Link href="/client/analyze" className="text-sm px-4 py-1.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors whitespace-nowrap">
-              ✨ Analyze meeting →
+              ✨ Analyze Meeting →
             </Link>
           </div>
         )}
@@ -499,7 +499,7 @@ export default function ClientDashboard() {
             </div>
             <BaselineBadge status={bpStatus} />
           </div>
-          {bpStatus === 'none' && <p className="text-xs text-stone-500 leading-relaxed">Analyse 3 past meetings to unlock personalised coaching patterns.</p>}
+          {bpStatus === 'none' && <p className="text-xs text-stone-500 leading-relaxed">Analyze 3 past meetings to unlock personalised coaching patterns.</p>}
           {hasBaseline && <p className="text-xs text-emerald-700 font-medium">✓ Your communication patterns have been mapped.</p>}
           {isBuilding && <p className="text-xs text-amber-600">Analysis in progress…</p>}
           {bpStatus === 'none' && (
@@ -560,7 +560,7 @@ export default function ClientDashboard() {
       {/* Quick actions */}
       <div className="flex gap-3">
         <Link href="/client/analyze" className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
-          <span>✨</span> Analyze a Meeting
+          <span>✨</span> Analyze Meeting
         </Link>
         {bpStatus === 'none' && (
           <Link href="/client/baseline/new" className="flex items-center gap-2 px-5 py-2.5 bg-white border border-stone-300 text-stone-700 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors">

@@ -232,7 +232,7 @@ function PatternTrendsChart({ history, trendWindowSize = 3 }: { history: RunHist
   if (history.length === 0) {
     return (
       <div className="flex items-center justify-center h-48 text-gray-400 text-sm">
-        No run data yet. Analyse a meeting to see your trends.
+        No run data yet. Analyze a meeting to see your trends.
       </div>
     );
   }
