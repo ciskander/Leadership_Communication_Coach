@@ -268,28 +268,6 @@ function PatternTrendsChart({
 
   return (
     <div>
-      {/* Pattern legend with ⓘ */}
-      <div className="flex flex-wrap gap-3 mb-4">
-        {visiblePatterns.map((pid) => {
-          const isExp = pid === experimentPatternId;
-          return (
-            <span key={pid} className={`flex items-center text-sm ${isExp ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
-              <span
-                className={`inline-block rounded-full mr-1.5 flex-shrink-0 ${isExp ? 'w-3.5 h-3.5 ring-2 ring-offset-1 ring-current' : 'w-3 h-3'}`}
-                style={{ background: patternColor(pid) }}
-              />
-              {PATTERN_LABELS[pid] ?? pid}
-              {isExp && (
-                <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full leading-none">
-                  Experiment
-                </span>
-              )}
-              <InfoPopover patternId={pid} />
-            </span>
-          );
-        })}
-      </div>
-
       {/* Chart */}
       {showLineChart ? (
         <>
@@ -417,6 +395,27 @@ function PatternTrendsChart({
         </>
       )}
 
+      {/* Pattern legend with ⓘ */}
+      <div className="flex flex-wrap gap-3 mt-4">
+        {visiblePatterns.map((pid) => {
+          const isExp = pid === experimentPatternId;
+          return (
+            <span key={pid} className={`flex items-center text-sm ${isExp ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
+              <span
+                className={`inline-block rounded-full mr-1.5 flex-shrink-0 ${isExp ? 'w-3.5 h-3.5 ring-2 ring-offset-1 ring-current' : 'w-3 h-3'}`}
+                style={{ background: patternColor(pid) }}
+              />
+              {PATTERN_LABELS[pid] ?? pid}
+              {isExp && (
+                <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full leading-none">
+                  Experiment
+                </span>
+              )}
+              <InfoPopover patternId={pid} />
+            </span>
+          );
+        })}
+      </div>
     </div>
   );
 }
