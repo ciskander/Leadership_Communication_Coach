@@ -6,14 +6,9 @@ import { api } from '@/lib/api';
 import { TranscriptUploadPanel } from '@/components/TranscriptUpload';
 import { SpeakerChips } from '@/components/SpeakerChips';
 import type { CoacheeListItem, TargetRole } from '@/lib/types';
+import { STRINGS } from '@/config/strings';
 
-const ROLE_OPTIONS = [
-  { value: 'chair',        label: 'Chair / Facilitator' },
-  { value: 'presenter',    label: 'Presenter' },
-  { value: 'participant',  label: 'Participant' },
-  { value: 'manager_1to1', label: '1:1 Manager' },
-  { value: 'report_1to1',  label: '1:1 Report' },
-];
+const ROLE_OPTIONS = STRINGS.roleOptions;
 
 export default function CoachAnalyzePage() {
   const router = useRouter();
@@ -72,7 +67,7 @@ export default function CoachAnalyzePage() {
         pollRunRequest(result.run_request_id);
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to enqueue');
+      setError(e instanceof Error ? e.message : STRINGS.analyzePage.failedToEnqueue);
       setSubmitting(false);
     }
   };
@@ -88,17 +83,17 @@ export default function CoachAnalyzePage() {
           return;
         }
         if (status.status === 'error') {
-          setError('Analysis failed to start.');
+          setError(STRINGS.analyzePage.analysisFailedToStart);
           setSubmitting(false);
           return;
         }
         if (count < 30) setTimeout(poll, 2000);
         else {
-          setError('Timed out waiting for analysis to start.');
+          setError(STRINGS.analyzePage.timedOutWaiting);
           setSubmitting(false);
         }
       } catch {
-        setError('Failed to poll status.');
+        setError(STRINGS.analyzePage.failedToPollStatus);
         setSubmitting(false);
       }
     };
@@ -108,16 +103,16 @@ export default function CoachAnalyzePage() {
   return (
     <div className="max-w-xl mx-auto space-y-6 py-2">
       <div>
-        <h1 className="text-2xl font-bold text-stone-900">Run Analysis</h1>
+        <h1 className="text-2xl font-bold text-stone-900">{STRINGS.coachAnalyze.heading}</h1>
         <p className="text-sm text-stone-500 mt-1">
-          Upload a transcript and run coaching analysis for one of your coachees.
+          {STRINGS.coachAnalyze.subtitle}
         </p>
       </div>
 
       {/* Step 1 — Select coachee */}
       <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
         <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
-          Step 1 — Select Coachee
+          {STRINGS.coachAnalyze.step1}
         </p>
         {loadingCoachees ? (
           <div className="h-8 flex items-center">
@@ -125,9 +120,9 @@ export default function CoachAnalyzePage() {
           </div>
         ) : coachees.length === 0 ? (
           <p className="text-sm text-stone-500">
-            No coachees yet.{' '}
+            {STRINGS.coachAnalyze.noCoachees}{' '}
             <a href="/coach" className="text-emerald-600 underline">
-              Invite one first.
+              {STRINGS.coachAnalyze.inviteFirst}
             </a>
           </p>
         ) : (
@@ -151,7 +146,7 @@ export default function CoachAnalyzePage() {
                 />
                 <div>
                   <p className="text-sm font-medium text-stone-800">
-                    {c.display_name ?? 'Unnamed'}
+                    {c.display_name ?? STRINGS.coachDashboard.unnamed}
                   </p>
                   <p className="text-xs text-stone-400">{c.email}</p>
                 </div>
@@ -165,7 +160,7 @@ export default function CoachAnalyzePage() {
       {selectedCoacheeId && (
         <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
-            Step 2 — Upload Transcript
+            {STRINGS.coachAnalyze.step2}
           </p>
           <TranscriptUploadPanel onUploaded={handleUploaded} />
         </div>
@@ -175,12 +170,12 @@ export default function CoachAnalyzePage() {
       {transcriptId && (
         <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
-            Step 3 — Configure Analysis
+            {STRINGS.coachAnalyze.step3}
           </p>
 
           {speakerLabels.length > 0 ? (
             <div>
-              <p className="text-xs text-stone-500 mb-1.5">Target speaker</p>
+              <p className="text-xs text-stone-500 mb-1.5">{STRINGS.coachAnalyze.targetSpeaker}</p>
               <SpeakerChips
                 speakers={speakerLabels}
                 selected={speakerLabel}
@@ -189,36 +184,36 @@ export default function CoachAnalyzePage() {
             </div>
           ) : (
             <div>
-              <label className="text-xs text-stone-500">Speaker label</label>
+              <label className="text-xs text-stone-500">{STRINGS.analyzePage.speakerLabel}</label>
               <input
                 type="text"
                 value={speakerLabel ?? ''}
                 onChange={(e) => setSpeakerLabel(e.target.value || null)}
-                placeholder="e.g. SPEAKER_00"
+                placeholder={STRINGS.analyzePage.speakerLabelPlaceholder}
                 className="mt-1 w-full border border-stone-300 rounded-lg px-3 py-2 text-sm"
               />
             </div>
           )}
 
           <div>
-            <label className="text-xs text-stone-500">Speaker's full name</label>
+            <label className="text-xs text-stone-500">{STRINGS.coachAnalyze.speakersFullName}</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Sarah Johnson"
+              placeholder={STRINGS.analyzePage.fullNamePlaceholder}
               className="mt-1 w-full border border-stone-300 rounded-lg px-3 py-2 text-sm"
             />
           </div>
 
           <div>
-            <label className="text-xs text-stone-500">Target role</label>
+            <label className="text-xs text-stone-500">{STRINGS.coachAnalyze.targetRole}</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as TargetRole)}
               className="mt-1 w-full border border-stone-300 rounded-lg px-3 py-2 text-sm"
             >
-              <option value="">Select role…</option>
+              <option value="">{STRINGS.analyzePage.selectRole}</option>
               {ROLE_OPTIONS.map((r) => (
                 <option key={r.value} value={r.value}>{r.label}</option>
               ))}
@@ -226,8 +221,8 @@ export default function CoachAnalyzePage() {
           </div>
 
           {speakerLabel && name && role
-            ? <p className="text-xs text-emerald-600 font-medium">✓ Ready to analyse</p>
-            : <p className="text-xs text-amber-600">Complete the fields above to continue</p>
+            ? <p className="text-xs text-emerald-600 font-medium">{STRINGS.coachAnalyze.readyToAnalyse}</p>
+            : <p className="text-xs text-amber-600">{STRINGS.coachAnalyze.completeFieldsAbove}</p>
           }
         </div>
       )}
@@ -239,7 +234,7 @@ export default function CoachAnalyzePage() {
         disabled={!ready || submitting}
         className="w-full py-3 bg-emerald-600 text-white rounded-xl font-medium text-sm hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
       >
-        {submitting ? 'Running analysis…' : 'Run Analysis'}
+        {submitting ? STRINGS.coachAnalyze.runningAnalysis : STRINGS.coachAnalyze.runAnalysis}
       </button>
     </div>
   );

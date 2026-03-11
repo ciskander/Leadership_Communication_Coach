@@ -3,17 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { STRINGS } from '@/config/strings';
 import { TranscriptUploadPanel } from '@/components/TranscriptUpload';
 import { SpeakerChips } from '@/components/SpeakerChips';
 import type { TargetRole } from '@/lib/types';
 
-const ROLE_OPTIONS = [
-  { value: 'chair',        label: 'Chair / Facilitator' },
-  { value: 'presenter',    label: 'Presenter' },
-  { value: 'participant',  label: 'Participant' },
-  { value: 'manager_1to1', label: '1:1 Manager' },
-  { value: 'report_1to1',  label: '1:1 Report' },
-];
+const ROLE_OPTIONS = STRINGS.roleOptions;
 
 function getFirstName(displayName: string): string {
   return displayName.trim().split(/\s+/)[0].toLowerCase();
@@ -102,7 +97,7 @@ export default function AnalyzePage() {
         pollRunRequest(result.run_request_id);
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to enqueue');
+      setError(e instanceof Error ? e.message : STRINGS.analyzePage.failedToEnqueue);
       setSubmitting(false);
     }
   };
@@ -118,17 +113,17 @@ export default function AnalyzePage() {
           return;
         }
         if (status.status === 'error') {
-          setError('Analysis failed to start.');
+          setError(STRINGS.analyzePage.analysisFailedToStart);
           setSubmitting(false);
           return;
         }
         if (count < 30) setTimeout(poll, 2000);
         else {
-          setError('Timed out waiting for analysis to start.');
+          setError(STRINGS.analyzePage.timedOutWaiting);
           setSubmitting(false);
         }
       } catch {
-        setError('Failed to poll status.');
+        setError(STRINGS.analyzePage.failedToPollStatus);
         setSubmitting(false);
       }
     };
@@ -140,9 +135,9 @@ export default function AnalyzePage() {
   return (
     <div className="max-w-xl mx-auto space-y-5 py-2">
       <div>
-        <h1 className="text-2xl font-bold text-stone-900">Analyze a Meeting</h1>
+        <h1 className="text-2xl font-bold text-stone-900">{STRINGS.analyzePage.heading}</h1>
         <p className="text-sm text-stone-500 mt-1">
-          Upload a transcript to receive personalised coaching feedback.
+          {STRINGS.analyzePage.subtitle}
         </p>
       </div>
 
@@ -153,7 +148,7 @@ export default function AnalyzePage() {
           }`}>
             {step > 1 ? '✓' : '1'}
           </div>
-          <p className="text-sm font-semibold text-stone-800">Upload transcript</p>
+          <p className="text-sm font-semibold text-stone-800">{STRINGS.analyzePage.step1}</p>
         </div>
         <TranscriptUploadPanel onUploaded={handleUploaded} withMetadata={true} />
       </div>
@@ -166,12 +161,12 @@ export default function AnalyzePage() {
             }`}>
               {step > 2 ? '✓' : '2'}
             </div>
-            <p className="text-sm font-semibold text-stone-800">Configure analysis</p>
+            <p className="text-sm font-semibold text-stone-800">{STRINGS.analyzePage.step2}</p>
           </div>
 
           {needsSpeakerPick ? (
 			  <div className="space-y-3">
-				<p className="text-xs text-stone-500 font-medium">Which speaker are you?</p>
+				<p className="text-xs text-stone-500 font-medium">{STRINGS.analyzePage.whichSpeaker}</p>
 				<div className="grid grid-cols-1 gap-2">
 				  {speakerLabels.map((label) => {
 					const quotes = speakerPreviews[label] ?? [];
@@ -200,7 +195,7 @@ export default function AnalyzePage() {
 			  </div>
 			) : speakerLabels.length > 0 ? (
 			  <div>
-				<p className="text-xs text-stone-500 mb-2">Who are we analysing?</p>
+				<p className="text-xs text-stone-500 mb-2">{STRINGS.analyzePage.whoAreWeAnalysing}</p>
 				<SpeakerChips
 				  speakers={speakerLabels}
 				  selected={speakerLabel}
@@ -209,36 +204,36 @@ export default function AnalyzePage() {
 			  </div>
 			) : (
 			  <div>
-				<label className="text-xs text-stone-500">Speaker label</label>
+				<label className="text-xs text-stone-500">{STRINGS.analyzePage.speakerLabel}</label>
 				<input
 				  type="text"
 				  value={speakerLabel ?? ''}
 				  onChange={(e) => setSpeakerLabel(e.target.value || null)}
-				  placeholder="e.g. SPEAKER_00"
+				  placeholder={STRINGS.analyzePage.speakerLabelPlaceholder}
 				  className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
 				/>
 			  </div>
 		    )}
 
           <div>
-            <label className="text-xs text-stone-500">Their full name</label>
+            <label className="text-xs text-stone-500">{STRINGS.analyzePage.fullName}</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Sarah Johnson"
+              placeholder={STRINGS.analyzePage.fullNamePlaceholder}
               className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
             />
           </div>
 
           <div>
-            <label className="text-xs text-stone-500">Their role in this meeting</label>
+            <label className="text-xs text-stone-500">{STRINGS.analyzePage.roleInMeeting}</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as TargetRole)}
               className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
             >
-              <option value="">Select role…</option>
+              <option value="">{STRINGS.analyzePage.selectRole}</option>
               {ROLE_OPTIONS.map((r) => (
                 <option key={r.value} value={r.value}>{r.label}</option>
               ))}
@@ -259,10 +254,10 @@ export default function AnalyzePage() {
         {submitting ? (
           <span className="flex items-center justify-center gap-2">
             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            Starting analysis…
+            {STRINGS.analyzePage.startingAnalysis}
           </span>
         ) : (
-          '✨ Analyze Meeting →'
+          STRINGS.analyzePage.submitBtn
         )}
       </button>
     </div>

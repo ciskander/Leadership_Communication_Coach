@@ -1,5 +1,6 @@
 'use client';
 
+import { STRINGS } from '@/config/strings';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
@@ -26,7 +27,7 @@ function ProposedExperimentRow({ experiment }: { experiment: Experiment }) {
           </p>
         </div>
         <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-violet-100 text-violet-700 whitespace-nowrap shrink-0">
-          Proposed
+          {STRINGS.experimentStatus.proposed}
         </span>
       </div>
       <p className="text-xs text-stone-500 leading-relaxed line-clamp-2">
@@ -54,7 +55,7 @@ export default function CoacheeDetailPage() {
     );
   }
 
-  if (!data) return <p className="text-sm text-gray-500">Coachee not found.</p>;
+  if (!data) return <p className="text-sm text-gray-500">{STRINGS.coacheeDetail.coacheeNotFound}</p>;
 
   const proposedExperiments = data.proposed_experiments ?? [];
 
@@ -71,7 +72,7 @@ export default function CoacheeDetailPage() {
       {data.active_experiment ? (
         <section>
           <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
-            Active Experiment
+            {STRINGS.coacheeDetail.activeExperiment}
           </h2>
           <ExperimentTracker
             experiment={data.active_experiment}
@@ -81,10 +82,10 @@ export default function CoacheeDetailPage() {
       ) : (
         <section>
           <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
-            Active Experiment
+            {STRINGS.coacheeDetail.activeExperiment}
           </h2>
           <div className="bg-white border border-gray-200 rounded-lg px-4 py-3">
-            <p className="text-sm text-gray-400">No active experiment.</p>
+            <p className="text-sm text-gray-400">{STRINGS.coacheeDetail.noActiveExperiment}</p>
           </div>
         </section>
       )}
@@ -94,10 +95,10 @@ export default function CoacheeDetailPage() {
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-              Suggested Experiments
+              {STRINGS.coacheeDetail.suggestedExperiments}
             </h2>
             <span className="text-xs text-stone-400">
-              {proposedExperiments.length} in queue
+              {STRINGS.coacheeDetail.inQueue(proposedExperiments.length)}
             </span>
           </div>
           <div className="space-y-2">
@@ -106,7 +107,7 @@ export default function CoacheeDetailPage() {
             ))}
           </div>
           <p className="text-xs text-stone-400 mt-2">
-            The coachee can accept one of these from their dashboard when ready.
+            {STRINGS.coacheeDetail.coacheeCanAccept}
           </p>
         </section>
       )}
@@ -115,11 +116,11 @@ export default function CoacheeDetailPage() {
       {data.active_baseline_pack && (
         <section>
           <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
-            Baseline Pack
+            {STRINGS.coacheeDetail.baselinePack}
           </h2>
           <div className="bg-white border border-gray-200 rounded-lg px-4 py-3">
             <p className="text-sm text-gray-700 capitalize">
-              Status:{' '}
+              {STRINGS.coacheeDetail.status}:{' '}
               {(data.active_baseline_pack as Record<string, unknown>).status as string}
             </p>
           </div>
@@ -130,7 +131,7 @@ export default function CoacheeDetailPage() {
       {data.recent_runs.length > 0 && (
         <section>
           <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
-            Recent Runs
+            {STRINGS.coacheeDetail.recentRuns}
           </h2>
           <ul className="space-y-2">
             {data.recent_runs.map((run: Record<string, unknown>, i) => (
@@ -141,7 +142,7 @@ export default function CoacheeDetailPage() {
                 >
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-800">
-                      {(run.meeting_type as string) ?? 'Meeting'}
+                      {(run.meeting_type as string) ?? STRINGS.common.meeting}
                     </span>
                     <span className="text-xs text-gray-400">
                       {run.created_at

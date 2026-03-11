@@ -1,3 +1,5 @@
+import { STRINGS } from '@/config/strings';
+
 export function ClearVoiceLogo({ className = '' }: { className?: string }) {
   return (
     <svg
@@ -5,7 +7,7 @@ export function ClearVoiceLogo({ className = '' }: { className?: string }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
-      aria-label="ClearVoice Leadership Communication Coaching"
+      aria-label={STRINGS.brand.logoAriaLabel}
     >
       <defs>
         {/* Bubble gradient: teal left → blue right */}
@@ -54,7 +56,7 @@ export function ClearVoiceLogo({ className = '' }: { className?: string }) {
         fill="#1a6fc4"
         letterSpacing="-0.5"
       >
-        Clear
+        {STRINGS.brand.wordmarkLeft}
       </text>
 
       {/* ── Wordmark: "Voice" in green ── */}
@@ -67,7 +69,7 @@ export function ClearVoiceLogo({ className = '' }: { className?: string }) {
         fill="#4ab53e"
         letterSpacing="-0.5"
       >
-        Voice
+        {STRINGS.brand.wordmarkRight}
       </text>
 
       {/* ── Subtitle ── */}
@@ -80,7 +82,7 @@ export function ClearVoiceLogo({ className = '' }: { className?: string }) {
         fill="#888888"
         letterSpacing="1.8"
       >
-        LEADERSHIP COMMUNICATION COACHING
+        {STRINGS.brand.subtitle}
       </text>
     </svg>
   );

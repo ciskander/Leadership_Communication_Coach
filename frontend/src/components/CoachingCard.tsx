@@ -1,5 +1,6 @@
 import type { CoachingItem, MicroExperiment } from '@/lib/types';
 import { EvidenceQuote } from './EvidenceQuote';
+import { STRINGS } from '@/config/strings';
 
 interface CoachingCardProps {
   strengths: CoachingItem[];
@@ -23,7 +24,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
         <section className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
           <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-stone-100 bg-emerald-50">
             <span className="text-base">🎯</span>
-            <h3 className="text-sm font-semibold text-emerald-800">What you do well</h3>
+            <h3 className="text-sm font-semibold text-emerald-800">{STRINGS.coachingCard.strengthsHeading}</h3>
           </div>
           <div className="divide-y divide-stone-100">
             {strengths.map((s) => (
@@ -44,7 +45,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
         <section className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
           <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-stone-100 bg-amber-50">
             <span className="text-base">👀</span>
-            <h3 className="text-sm font-semibold text-amber-800">Area to focus on</h3>
+            <h3 className="text-sm font-semibold text-amber-800">{STRINGS.coachingCard.focusHeading}</h3>
           </div>
           <div className="px-5 py-4 space-y-3">
             <PatternLabel id={focus.pattern_id} />
@@ -53,7 +54,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
               <div className="space-y-3 mt-2">
                 <div>
                   <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                    For example, in this meeting you said
+                    {STRINGS.common.forExampleYouSaid}
                   </p>
                   {focus.quotes.map((q, i) => (
                     <EvidenceQuote key={i} quote={q} />
@@ -62,7 +63,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
                 {focus.suggested_rewrite && (
                   <div>
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                      Next time, try something like
+                      {STRINGS.common.nextTimeTry}
                     </p>
                     <blockquote className="border-l-4 border-emerald-300 pl-4 py-1 my-2 bg-emerald-50 rounded-r-md">
                       <p className="text-sm text-stone-700 italic">
@@ -74,7 +75,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
                 {(focus.additional_quotes ?? []).length > 0 && (
                   <div>
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                      Other moments where this came up
+                      {STRINGS.common.otherMoments}
                     </p>
                     {focus.additional_quotes!.map((q, i) => (
                       <EvidenceQuote key={i} quote={q} />
@@ -92,7 +93,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
         <section className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
           <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-stone-100 bg-violet-50">
             <span className="text-base">🧪</span>
-            <h3 className="text-sm font-semibold text-violet-800">Your experiment</h3>
+            <h3 className="text-sm font-semibold text-violet-800">{STRINGS.coachingCard.experimentHeading}</h3>
           </div>
           <div className="px-5 py-4 space-y-4">
             <div>
@@ -104,7 +105,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
             <div className="space-y-3">
               <div className="bg-stone-50 rounded-xl p-3.5">
                 <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                  What to do
+                  {STRINGS.common.whatToDo}
                 </p>
                 <p className="text-sm text-stone-700 leading-relaxed">
                   {microExperiment.instruction}
@@ -112,7 +113,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
               </div>
               <div className="bg-stone-50 rounded-xl p-3.5">
                 <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                  How you'll know it worked
+                  {STRINGS.common.howYoullKnowItWorked}
                 </p>
                 <p className="text-sm text-stone-700 leading-relaxed">
                   {microExperiment.success_marker}

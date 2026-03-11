@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { TranscriptUploadPanel } from '@/components/TranscriptUpload';
 import { SpeakerChips } from '@/components/SpeakerChips';
 import type { TranscriptListItem, TargetRole } from '@/lib/types';
+import { STRINGS } from '@/config/strings';
 
 interface TranscriptConfig {
   transcript_id: string;
@@ -15,13 +16,7 @@ interface TranscriptConfig {
   meeting_date: string | null;
 }
 
-const ROLE_OPTIONS = [
-  { value: 'chair',        label: 'Chair / Facilitator' },
-  { value: 'presenter',    label: 'Presenter' },
-  { value: 'participant',  label: 'Participant' },
-  { value: 'manager_1to1', label: '1:1 Manager' },
-  { value: 'report_1to1',  label: '1:1 Report' },
-];
+const ROLE_OPTIONS = STRINGS.roleOptions;
 
 function getFirstName(displayName: string): string {
   return displayName.trim().split(/\s+/)[0].toLowerCase();
@@ -139,7 +134,7 @@ function TranscriptSlot({
           }`}>
             {isComplete ? '✓' : index + 1}
           </div>
-          <p className="text-sm font-semibold text-stone-800">Meeting {index + 1}</p>
+          <p className="text-sm font-semibold text-stone-800">{STRINGS.baselineNew.meetingN(index + 1)}</p>
         </div>
         <div className="flex gap-0.5 bg-white rounded-lg p-0.5 border border-stone-200">
           {(['select', 'upload'] as const).map((m) => (
@@ -150,7 +145,7 @@ function TranscriptSlot({
                 mode === m ? 'bg-stone-900 text-white' : 'text-stone-500 hover:text-stone-700'
               }`}
             >
-              {m === 'select' ? 'Existing' : 'Upload new'}
+              {m === 'select' ? STRINGS.baselineNew.existing : STRINGS.baselineNew.uploadNew}
             </button>
           ))}
         </div>
@@ -171,9 +166,9 @@ function TranscriptSlot({
           <div className="max-h-44 overflow-y-auto rounded-xl border border-stone-100 divide-y divide-stone-50">
             {existingTranscripts.length === 0 ? (
               <p className="text-xs text-stone-400 text-center py-6">
-                No transcripts yet.{' '}
+                {STRINGS.baselineNew.noTranscripts}{' '}
                 <button className="text-emerald-600 underline" onClick={() => switchMode('upload')}>
-                  Upload one
+                  {STRINGS.baselineNew.uploadOne}
                 </button>
               </p>
             ) : (
@@ -193,7 +188,7 @@ function TranscriptSlot({
                     className="mt-0.5 accent-emerald-600"
                   />
                   <div className="min-w-0">
-                    <p className="text-sm text-stone-800 truncate font-medium">{t.title || 'Untitled'}</p>
+                    <p className="text-sm text-stone-800 truncate font-medium">{t.title || STRINGS.common.untitled}</p>
                     <p className="text-xs text-stone-400">
                       {[t.meeting_type, t.meeting_date].filter(Boolean).join(' · ')}
                     </p>
@@ -209,7 +204,7 @@ function TranscriptSlot({
           <div className="space-y-3 pt-1 border-t border-stone-100">
             {needsSpeakerPick ? (
               <div className="space-y-2">
-                <p className="text-xs text-stone-500 font-medium">Which speaker are you?</p>
+                <p className="text-xs text-stone-500 font-medium">{STRINGS.analyzePage.whichSpeaker}</p>
                 <div className="grid grid-cols-1 gap-2">
                   {speakerLabels.map((label) => {
                     const quotes = speakerPreviews[label] ?? [];
@@ -236,7 +231,7 @@ function TranscriptSlot({
               </div>
             ) : speakerLabels.length > 0 ? (
               <div>
-                <p className="text-xs text-stone-500 mb-2">Your speaker label in this transcript</p>
+                <p className="text-xs text-stone-500 mb-2">{STRINGS.baselineNew.yourSpeakerLabel}</p>
                 <SpeakerChips
                   speakers={speakerLabels}
                   selected={speakerLabel}
@@ -248,7 +243,7 @@ function TranscriptSlot({
               </div>
             ) : (
               <div>
-                <label className="text-xs text-stone-500">Speaker label</label>
+                <label className="text-xs text-stone-500">{STRINGS.analyzePage.speakerLabel}</label>
                 <input
                   type="text"
                   value={speakerLabel ?? ''}
@@ -257,14 +252,14 @@ function TranscriptSlot({
                     setSpeakerLabel(s);
                     notify(transcriptId, s, role, speakerLabels, meetingDate);
                   }}
-                  placeholder="e.g. SPEAKER_00"
+                  placeholder={STRINGS.analyzePage.speakerLabelPlaceholder}
                   className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-400"
                 />
               </div>
             )}
 
             <div>
-              <label className="text-xs text-stone-500">Meeting date</label>
+              <label className="text-xs text-stone-500">{STRINGS.transcriptUpload.meetingDate}</label>
               <input
                 type="date"
                 value={meetingDate ?? ''}
@@ -273,19 +268,19 @@ function TranscriptSlot({
               />
               {!meetingDate && (
                 <p className="text-xs text-amber-600 mt-1">
-                  ⚠ No date set — required for correct ordering in your progress chart.
+                  {STRINGS.baselineNew.noDateWarning}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="text-xs text-stone-500">Your role in this meeting</label>
+              <label className="text-xs text-stone-500">{STRINGS.baselineNew.yourRole}</label>
               <select
                 value={role}
                 onChange={(e) => setRoleField(e.target.value as TargetRole)}
                 className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-400"
               >
-                <option value="">Select…</option>
+                <option value="">{STRINGS.baselineNew.selectPlaceholder}</option>
                 {ROLE_OPTIONS.map((r) => (
                   <option key={r.value} value={r.value}>{r.label}</option>
                 ))}
@@ -368,25 +363,25 @@ export default function BaselineNewPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-5 py-2">
       <div>
-        <h1 className="text-2xl font-bold text-stone-900">Create Baseline Pack</h1>
+        <h1 className="text-2xl font-bold text-stone-900">{STRINGS.baselineNew.heading}</h1>
         <p className="text-sm text-stone-500 mt-1">
-          Select 3 past meeting transcripts to build your communication baseline.
+          {STRINGS.baselineNew.subtitle}
         </p>
       </div>
 
       {/* Speaker name — single field for all 3 transcripts */}
       <div className="bg-white rounded-2xl border border-stone-200 p-5">
         <label className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
-          Your full name
+          {STRINGS.baselineNew.yourFullName}
         </label>
         <p className="text-xs text-stone-400 mt-0.5 mb-2">
-          Used to identify you across all three transcripts.
+          {STRINGS.baselineNew.nameHint}
         </p>
         <input
           type="text"
           value={speakerName}
           onChange={(e) => setSpeakerName(e.target.value)}
-          placeholder="e.g. Sarah Johnson"
+          placeholder={STRINGS.baselineNew.namePlaceholder}
           className="w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
         />
       </div>
@@ -405,13 +400,13 @@ export default function BaselineNewPage() {
             />
           ))}
         </div>
-        <p className="text-xs text-stone-500 ml-1">{completedCount} of 3 meetings configured</p>
+        <p className="text-xs text-stone-500 ml-1">{STRINGS.baselineNew.meetingsConfigured(completedCount)}</p>
       </div>
 
       {loadingTranscripts ? (
         <div className="flex items-center gap-3 py-4">
           <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-stone-400">Loading your transcripts…</p>
+          <p className="text-sm text-stone-400">{STRINGS.baselineNew.loadingTranscripts}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -439,10 +434,10 @@ export default function BaselineNewPage() {
         {submitting ? (
           <span className="flex items-center justify-center gap-2">
             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            Building baseline…
+            {STRINGS.baselineNew.buildingBaseline}
           </span>
         ) : (
-          'Build Baseline Pack →'
+          STRINGS.baselineNew.buildBaselineBtn
         )}
       </button>
     </div>

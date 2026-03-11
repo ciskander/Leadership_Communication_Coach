@@ -3,36 +3,11 @@
 import { useState } from 'react';
 import type { PatternSnapshotItem } from '@/lib/types';
 import { EvidenceQuote } from './EvidenceQuote';
+import { STRINGS } from '@/config/strings';
 
 interface PatternSnapshotProps {
   patterns: PatternSnapshotItem[];
 }
-
-const PATTERN_LABELS: Record<string, string> = {
-  agenda_clarity: 'Agenda Clarity',
-  objective_signaling: 'Objective Signaling',
-  turn_allocation: 'Turn Allocation',
-  facilitative_inclusion: 'Facilitative Inclusion',
-  decision_closure: 'Decision Closure',
-  owner_timeframe_specification: 'Owner & Timeframe',
-  summary_checkback: 'Summary & Check-back',
-  question_quality: 'Question Quality',
-  listener_response_quality: 'Listener Response',
-  conversational_balance: 'Conversational Balance',
-};
-
-const PATTERN_ICONS: Record<string, string> = {
-  agenda_clarity: '📋',
-  objective_signaling: '🥅',
-  turn_allocation: '🔄',
-  facilitative_inclusion: '👨‍👩‍👧‍👦',
-  decision_closure: '🔒',
-  owner_timeframe_specification: '📅',
-  summary_checkback: '☑️',
-  question_quality: '❓',
-  listener_response_quality: '👂',
-  conversational_balance: '⚖️',
-};
 
 const BALANCE_COLORS: Record<string, { bg: string; dot: string }> = {
   balanced: { bg: 'bg-emerald-50', dot: 'bg-emerald-500' },
@@ -41,16 +16,9 @@ const BALANCE_COLORS: Record<string, { bg: string; dot: string }> = {
   unclear: { bg: 'bg-gray-50', dot: 'bg-gray-400' },
 };
 
-const BALANCE_LABELS: Record<string, string> = {
-  balanced: 'Balanced',
-  over_indexed: 'Over-indexed',
-  under_indexed: 'Under-indexed',
-  unclear: 'Unclear',
-};
-
 function BalanceBadge({ assessment }: { assessment: string }) {
   const colors = BALANCE_COLORS[assessment] ?? BALANCE_COLORS.unclear;
-  const label = BALANCE_LABELS[assessment] ?? assessment;
+  const label = STRINGS.balanceLabels[assessment] ?? assessment;
   return (
     <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium text-gray-700 ${colors.bg}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${colors.dot}`} />
@@ -128,10 +96,10 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
       >
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs font-medium text-gray-700">
-            {PATTERN_ICONS[pattern.pattern_id] && (
-              <span className="mr-1">{PATTERN_ICONS[pattern.pattern_id]}</span>
+            {STRINGS.patternIcons[pattern.pattern_id] && (
+              <span className="mr-1">{STRINGS.patternIcons[pattern.pattern_id]}</span>
             )}
-            {PATTERN_LABELS[pattern.pattern_id] ?? pattern.pattern_id}
+            {STRINGS.patternLabels[pattern.pattern_id] ?? pattern.pattern_id}
           </span>
           <div className="flex items-center gap-1.5">
             {pattern.tier && (
@@ -151,8 +119,8 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
         ) : (
           <span className="text-xs text-gray-400 capitalize">
             {pattern.evaluable_status === 'insufficient_signal'
-              ? 'Insufficient signal'
-              : 'Not evaluable'}
+              ? STRINGS.evaluableStatus.insufficient_signal
+              : STRINGS.evaluableStatus.not_evaluable}
           </span>
         )}
       </button>
@@ -164,7 +132,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
           {isPerfectScore && (hasQuotes || hasNotes) && (
             <div>
               <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                What you did well
+                {STRINGS.common.whatYouDidWell}
               </p>
               {hasNotes && (
                 <p className="text-sm text-stone-700 leading-relaxed mb-2">
@@ -183,7 +151,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
               {(successQuotes.length > 0 || hasNotes) && (
                 <div>
                   <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                    What you did well
+                    {STRINGS.common.whatYouDidWell}
                   </p>
                   {hasNotes && (
                     <p className="text-sm text-stone-700 leading-relaxed mb-2">
@@ -198,7 +166,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
 
               <div>
                 <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                  Where you can improve
+                  {STRINGS.common.whereYouCanImprove}
                 </p>
                 {hasCoaching && (
                   <p className="text-sm text-stone-700 leading-relaxed mb-2">
@@ -208,7 +176,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                 {improvementQuotes.length > 0 && (
                   <div>
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                      For example, in this meeting you said
+                      {STRINGS.common.forExampleYouSaid}
                     </p>
                     <EvidenceQuote quote={improvementQuotes[0]} />
                   </div>
@@ -216,7 +184,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                 {pattern.suggested_rewrite && (
                   <div className="mt-2">
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                      Next time, try something like
+                      {STRINGS.common.nextTimeTry}
                     </p>
                     <blockquote className="border-l-4 border-emerald-300 pl-4 py-1 my-2 bg-emerald-50 rounded-r-md">
                       <p className="text-sm text-stone-700 italic">
@@ -228,7 +196,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                 {improvementQuotes.length > 1 && (
                   <div className="mt-2">
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                      Other moments where this came up
+                      {STRINGS.common.otherMoments}
                     </p>
                     {improvementQuotes.slice(1).map((q, i) => (
                       <EvidenceQuote key={i} quote={q} />
@@ -245,7 +213,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
               {hasNotes && (
                 <div>
                   <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                    What you did well
+                    {STRINGS.common.whatYouDidWell}
                   </p>
                   <p className="text-sm text-stone-700 leading-relaxed">
                     {pattern.notes}
@@ -255,7 +223,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
 
               <div>
                 <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                  Where you can improve
+                  {STRINGS.common.whereYouCanImprove}
                 </p>
                 {hasCoaching && (
                   <p className="text-sm text-stone-700 leading-relaxed mb-2">
@@ -265,7 +233,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                 {hasQuotes && (
                   <div>
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                      For example, in this meeting you said
+                      {STRINGS.common.forExampleYouSaid}
                     </p>
                     <EvidenceQuote quote={quotes[0]} />
                   </div>
@@ -273,7 +241,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                 {pattern.suggested_rewrite && (
                   <div className="mt-2">
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                      Next time, try something like
+                      {STRINGS.common.nextTimeTry}
                     </p>
                     <blockquote className="border-l-4 border-emerald-300 pl-4 py-1 my-2 bg-emerald-50 rounded-r-md">
                       <p className="text-sm text-stone-700 italic">
@@ -285,7 +253,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                 {quotes.length > 1 && (
                   <div className="mt-2">
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                      Other moments where this came up
+                      {STRINGS.common.otherMoments}
                     </p>
                     {quotes.slice(1).map((q, i) => (
                       <EvidenceQuote key={i} quote={q} />
@@ -300,7 +268,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
           {isConversationalBalance && isBalanced && hasNotes && (
             <div>
               <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                What you did well
+                {STRINGS.common.whatYouDidWell}
               </p>
               <p className="text-sm text-stone-700 leading-relaxed">
                 {pattern.notes}
@@ -311,7 +279,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
           {isConversationalBalance && !isBalanced && hasCoaching && (
             <div>
               <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                Observation
+                {STRINGS.common.observation}
               </p>
               <p className="text-sm text-stone-700 leading-relaxed">
                 {pattern.coaching_note}
@@ -324,7 +292,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
             <>
               <div>
                 <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                  Where you can improve
+                  {STRINGS.common.whereYouCanImprove}
                 </p>
                 {hasCoaching && (
                   <p className="text-sm text-stone-700 leading-relaxed mb-2">
@@ -334,7 +302,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                 {hasQuotes && (
                   <div>
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                      For example, in this meeting you said
+                      {STRINGS.common.forExampleYouSaid}
                     </p>
                     <EvidenceQuote quote={quotes[0]} />
                   </div>
@@ -342,7 +310,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                 {pattern.suggested_rewrite && (
                   <div className="mt-2">
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                      Next time, try something like
+                      {STRINGS.common.nextTimeTry}
                     </p>
                     <blockquote className="border-l-4 border-emerald-300 pl-4 py-1 my-2 bg-emerald-50 rounded-r-md">
                       <p className="text-sm text-stone-700 italic">
@@ -354,7 +322,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                 {quotes.length > 1 && (
                   <div className="mt-2">
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                      Other moments where this came up
+                      {STRINGS.common.otherMoments}
                     </p>
                     {quotes.slice(1).map((q, i) => (
                       <EvidenceQuote key={i} quote={q} />

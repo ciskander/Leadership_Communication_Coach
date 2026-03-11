@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { STRINGS } from '@/config/strings';
 import type { ClientSummary, Experiment } from '@/lib/types';
 
 function getGreeting() {
   const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  return 'Good evening';
+  if (h < 12) return STRINGS.clientDashboard.greetingMorning;
+  if (h < 17) return STRINGS.clientDashboard.greetingAfternoon;
+  return STRINGS.clientDashboard.greetingEvening;
 }
 
 function JourneyStep({
@@ -89,11 +90,11 @@ function ProposedExperimentCard({
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="bg-stone-50 rounded-xl p-3">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">What to do</p>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.whatToDo}</p>
           <p className="text-xs text-stone-600 leading-relaxed">{experiment.instruction}</p>
         </div>
         <div className="bg-stone-50 rounded-xl p-3">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Success looks like</p>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.successLooksLike}</p>
           <p className="text-xs text-stone-600 leading-relaxed">{experiment.success_marker}</p>
         </div>
       </div>
@@ -107,11 +108,11 @@ function ProposedExperimentCard({
               disabled
               className="px-4 py-2 bg-stone-100 text-stone-400 rounded-xl text-xs font-semibold cursor-not-allowed"
             >
-              Accept
+              {STRINGS.clientDashboard.accept}
             </button>
             <div className="absolute bottom-full left-0 mb-1.5 hidden group-hover:block z-10">
               <div className="bg-stone-800 text-white text-xs rounded-lg px-3 py-1.5 whitespace-nowrap">
-                Complete your current experiment first
+                {STRINGS.clientDashboard.completeCurrentFirst}
               </div>
             </div>
           </div>
@@ -122,13 +123,13 @@ function ProposedExperimentCard({
               disabled={state === 'loading'}
               className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
             >
-              {state === 'loading' ? 'Accepting…' : 'Accept experiment'}
+              {state === 'loading' ? STRINGS.common.accepting : STRINGS.common.acceptExperiment}
             </button>
             <Link
               href="/client"
               className="text-xs text-stone-500 hover:text-stone-700 transition-colors"
             >
-              Decide later
+              {STRINGS.common.decideLater}
             </Link>
           </>
         )}
@@ -140,13 +141,7 @@ function ProposedExperimentCard({
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const ROLE_LABELS: Record<string, string> = {
-  chair: 'Chair',
-  presenter: 'Presenter',
-  participant: 'Participant',
-  manager_1to1: 'Manager (1:1)',
-  report_1to1: 'Report (1:1)',
-};
+const ROLE_LABELS = STRINGS.roles;
 
 function fmtDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '';
@@ -183,11 +178,10 @@ function ConfirmDeleteModal({
           </div>
           <div>
             <h3 className="font-semibold text-stone-900 text-sm">
-              Delete {count === 1 ? 'this meeting' : `${count} meetings`}?
+              {STRINGS.clientDashboard.deleteModalTitle(count)}
             </h3>
             <p className="text-xs text-stone-500 mt-1 leading-relaxed">
-              This will permanently delete the {count === 1 ? 'meeting' : 'meetings'} and{' '}
-              {count === 1 ? 'its' : 'their'} analysis results. This cannot be undone.
+              {STRINGS.clientDashboard.deleteModalDesc(count)}
             </p>
           </div>
         </div>
@@ -197,7 +191,7 @@ function ConfirmDeleteModal({
             disabled={deleting}
             className="px-4 py-2 text-xs font-semibold text-stone-600 bg-stone-100 rounded-xl hover:bg-stone-200 transition-colors disabled:opacity-50"
           >
-            Cancel
+            {STRINGS.common.cancel}
           </button>
           <button
             onClick={onConfirm}
@@ -210,7 +204,7 @@ function ConfirmDeleteModal({
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
               </svg>
             )}
-            {deleting ? 'Deleting…' : 'Delete'}
+            {deleting ? STRINGS.common.deleting : STRINGS.common.delete}
           </button>
         </div>
       </div>
@@ -248,7 +242,7 @@ function RecentRunCard({
             // Baseline packs: greyed-out, non-interactive checkbox
             <div
               className="w-4 h-4 rounded border border-stone-200 bg-stone-100"
-              title="Baseline Pack analyses cannot be deleted here"
+              title={STRINGS.clientDashboard.baselineCannotDeleteTooltip}
             />
           ) : (
             <div
@@ -273,12 +267,12 @@ function RecentRunCard({
 
       <div className="min-w-0 space-y-0.5">
         <p className="text-sm font-semibold text-stone-800 truncate">
-          {isBaseline ? 'Baseline Pack' : (title || 'Meeting Analysis')}
+          {isBaseline ? STRINGS.clientDashboard.baselinePackTitle : (title || STRINGS.common.meetingAnalysis)}
         </p>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-stone-400">
           {isBaseline ? (
             <span className="inline-flex items-center bg-blue-50 text-blue-600 text-xs px-1.5 py-0.5 rounded font-medium">
-              Baseline Pack
+              {STRINGS.clientDashboard.baselinePackTitle}
             </span>
           ) : (
             <>
@@ -439,51 +433,51 @@ export default function ClientDashboard() {
           {getGreeting()}{firstName ? `, ${firstName}` : ''} 👋
         </h1>
         <p className="text-stone-500 text-sm mt-1">
-          Your communication growth dashboard.
+          {STRINGS.clientDashboard.subtitle}
         </p>
       </div>
 
       {/* Journey tracker */}
       <div className="bg-white rounded-2xl border border-stone-200 p-5">
         <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-4">
-          Your Journey
+          {STRINGS.clientDashboard.yourJourney}
         </p>
         <div className="flex items-center">
-          <JourneyStep num={1} label="Baseline" done={step1Done} active={currentStep === 1} />
+          <JourneyStep num={1} label={STRINGS.clientDashboard.journeyBaseline} done={step1Done} active={currentStep === 1} />
           <JourneyConnector done={step1Done} />
-          <JourneyStep num={2} label="First Analysis" done={step2Done} active={currentStep === 2} />
+          <JourneyStep num={2} label={STRINGS.clientDashboard.journeyFirstAnalysis} done={step2Done} active={currentStep === 2} />
           <JourneyConnector done={step2Done} />
-          <JourneyStep num={3} label="Experiment" done={step3Done} active={currentStep === 3} />
+          <JourneyStep num={3} label={STRINGS.clientDashboard.journeyExperiment} done={step3Done} active={currentStep === 3} />
           <JourneyConnector done={step3Done} />
-          <JourneyStep num={4} label="Growth" done={false} active={false} />
+          <JourneyStep num={4} label={STRINGS.clientDashboard.journeyGrowth} done={false} active={false} />
         </div>
         {!hasBaseline && !isBuilding && (
           <div className="mt-4 pt-4 border-t border-stone-100 flex items-center justify-between">
-            <p className="text-sm text-stone-600">Start by building your baseline from 3 past meetings.</p>
+            <p className="text-sm text-stone-600">{STRINGS.clientDashboard.startBaseline}</p>
             <Link href="/client/baseline/new" className="text-sm px-4 py-1.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors whitespace-nowrap">
-              Get started →
+              {STRINGS.clientDashboard.getStarted}
             </Link>
           </div>
         )}
         {isBuilding && (
           <div className="mt-4 pt-4 border-t border-stone-100 flex items-center gap-3">
             <div className="w-4 h-4 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
-            <p className="text-sm text-amber-700 font-medium">Building your baseline… check back in a few minutes.</p>
+            <p className="text-sm text-amber-700 font-medium">{STRINGS.clientDashboard.buildingBaseline}</p>
           </div>
         )}
         {hasBaseline && !hasExperiment && hasExperimentOptions && (
           <div className="mt-4 pt-4 border-t border-stone-100 flex items-center justify-between">
-            <p className="text-sm text-stone-600">You have experiment options waiting — pick one to get started.</p>
+            <p className="text-sm text-stone-600">{STRINGS.clientDashboard.experimentOptionsWaiting}</p>
             <Link href="/client/experiment" className="text-sm px-4 py-1.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors whitespace-nowrap">
-              Choose experiment →
+              {STRINGS.clientDashboard.chooseExperiment}
             </Link>
           </div>
         )}
         {hasBaseline && !hasExperiment && !hasExperimentOptions && (
           <div className="mt-4 pt-4 border-t border-stone-100 flex items-center justify-between">
-            <p className="text-sm text-stone-600">Baseline ready! Analyze a meeting to receive your first experiment suggestion.</p>
+            <p className="text-sm text-stone-600">{STRINGS.clientDashboard.baselineReadyAnalyze}</p>
             <Link href="/client/analyze" className="text-sm px-4 py-1.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors whitespace-nowrap">
-              ✨ Analyze Meeting →
+              {STRINGS.clientDashboard.analyzeMeetingArrow}
             </Link>
           </div>
         )}
@@ -495,16 +489,16 @@ export default function ClientDashboard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-lg">📚</span>
-              <h2 className="font-semibold text-stone-800 text-sm">Baseline Pack</h2>
+              <h2 className="font-semibold text-stone-800 text-sm">{STRINGS.clientDashboard.baselinePackTitle}</h2>
             </div>
             <BaselineBadge status={bpStatus} />
           </div>
-          {bpStatus === 'none' && <p className="text-xs text-stone-500 leading-relaxed">Analyze 3 past meetings to unlock personalised coaching patterns.</p>}
-          {hasBaseline && <p className="text-xs text-emerald-700 font-medium">✓ Your communication patterns have been mapped.</p>}
-          {isBuilding && <p className="text-xs text-amber-600">Analysis in progress…</p>}
+          {bpStatus === 'none' && <p className="text-xs text-stone-500 leading-relaxed">{STRINGS.clientDashboard.baselinePackCta}</p>}
+          {hasBaseline && <p className="text-xs text-emerald-700 font-medium">{STRINGS.clientDashboard.baselinePackDone}</p>}
+          {isBuilding && <p className="text-xs text-amber-600">{STRINGS.clientDashboard.analysisInProgress}</p>}
           {bpStatus === 'none' && (
             <Link href="/client/baseline/new" className="inline-block text-xs px-3 py-1.5 bg-stone-900 text-white rounded-lg font-medium hover:bg-stone-700 transition-colors">
-              Create baseline
+              {STRINGS.clientDashboard.createBaseline}
             </Link>
           )}
         </div>
@@ -512,7 +506,7 @@ export default function ClientDashboard() {
         <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
           <div className="flex items-center gap-2">
             <span className="text-lg">🧪</span>
-            <h2 className="font-semibold text-stone-800 text-sm">Active Experiment</h2>
+            <h2 className="font-semibold text-stone-800 text-sm">{STRINGS.clientDashboard.activeExperimentTitle}</h2>
           </div>
           {experiment ? (
             <>
@@ -526,18 +520,18 @@ export default function ClientDashboard() {
                 )}
               </div>
               <Link href="/client/experiment" className="inline-block text-xs text-emerald-700 font-semibold hover:text-emerald-800">
-                Track progress →
+                {STRINGS.clientDashboard.trackProgress}
               </Link>
             </>
           ) : hasExperimentOptions ? (
             <p className="text-xs text-stone-500 leading-relaxed">
-              You have experiment options waiting.{' '}
+              {STRINGS.clientDashboard.experimentOptionsWaitingShort}{' '}
               <Link href="/client/experiment" className="text-emerald-700 font-semibold hover:text-emerald-800">
-                Choose one →
+                {STRINGS.clientDashboard.experimentOptionsChoose}
               </Link>
             </p>
           ) : (
-            <p className="text-xs text-stone-500 leading-relaxed">Complete an analysis to receive your first personalised experiment.</p>
+            <p className="text-xs text-stone-500 leading-relaxed">{STRINGS.clientDashboard.completeAnalysisForExperiment}</p>
           )}
         </div>
       </div>
@@ -546,8 +540,8 @@ export default function ClientDashboard() {
       {proposedExperiments.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Suggested Experiments</h2>
-            <span className="text-xs text-stone-400">{proposedExperiments.length} suggestion{proposedExperiments.length !== 1 ? 's' : ''}</span>
+            <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">{STRINGS.clientDashboard.suggestedExperiments}</h2>
+            <span className="text-xs text-stone-400">{STRINGS.clientDashboard.suggestions(proposedExperiments.length)}</span>
           </div>
           <div className="space-y-3">
             {proposedExperiments.map((exp) => (
@@ -560,11 +554,11 @@ export default function ClientDashboard() {
       {/* Quick actions */}
       <div className="flex gap-3">
         <Link href="/client/analyze" className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
-          <span>✨</span> Analyze Meeting
+          <span>✨</span> {STRINGS.clientDashboard.analyzeMeetingBtn}
         </Link>
         {bpStatus === 'none' && (
           <Link href="/client/baseline/new" className="flex items-center gap-2 px-5 py-2.5 bg-white border border-stone-300 text-stone-700 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors">
-            <span>📚</span> Create Baseline
+            <span>📚</span> {STRINGS.clientDashboard.createBaselineBtn}
           </Link>
         )}
       </div>
@@ -573,14 +567,14 @@ export default function ClientDashboard() {
       {summary && summary.recent_runs.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Recent Analyses</h2>
+            <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">{STRINGS.clientDashboard.recentAnalyses}</h2>
             <div className="flex items-center gap-2">
               {editMode && selected.size > 0 && (
                 <button
                   onClick={() => setShowConfirm(true)}
                   className="text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 px-3 py-1.5 rounded-lg transition-colors"
                 >
-                  Delete selected ({selected.size})
+                  {STRINGS.clientDashboard.deleteSelected(selected.size)}
                 </button>
               )}
               {deletableRunCount > 0 && (
@@ -588,7 +582,7 @@ export default function ClientDashboard() {
                   onClick={toggleEditMode}
                   className="text-xs font-medium text-stone-500 hover:text-stone-700 transition-colors"
                 >
-                  {editMode ? 'Done' : 'Edit'}
+                  {editMode ? STRINGS.clientDashboard.done : STRINGS.clientDashboard.edit}
                 </button>
               )}
             </div>
@@ -602,7 +596,7 @@ export default function ClientDashboard() {
 
           {editMode && (
             <p className="text-xs text-stone-400 mb-2">
-              Select meetings to delete. Baseline Pack analyses cannot be deleted here.
+              {STRINGS.clientDashboard.editModeHelp}
             </p>
           )}
 
@@ -628,14 +622,15 @@ export default function ClientDashboard() {
 }
 
 function BaselineBadge({ status }: { status: string }) {
-  const map: Record<string, { color: string; label: string }> = {
-    none:           { color: 'bg-stone-100 text-stone-500', label: 'Not started' },
-    intake:         { color: 'bg-blue-100 text-blue-700',   label: 'Uploading' },
-    building:       { color: 'bg-amber-100 text-amber-700', label: 'Building' },
-    baseline_ready: { color: 'bg-emerald-100 text-emerald-700', label: 'Ready' },
-    completed:      { color: 'bg-emerald-100 text-emerald-700', label: 'Ready' },
-    error:          { color: 'bg-rose-100 text-rose-700',   label: 'Error' },
+  const colorMap: Record<string, string> = {
+    none:           'bg-stone-100 text-stone-500',
+    intake:         'bg-blue-100 text-blue-700',
+    building:       'bg-amber-100 text-amber-700',
+    baseline_ready: 'bg-emerald-100 text-emerald-700',
+    completed:      'bg-emerald-100 text-emerald-700',
+    error:          'bg-rose-100 text-rose-700',
   };
-  const { color, label } = map[status] ?? map.none;
+  const color = colorMap[status] ?? colorMap.none;
+  const label = STRINGS.baselineStatus[status] ?? STRINGS.baselineStatus.none;
   return <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${color}`}>{label}</span>;
 }

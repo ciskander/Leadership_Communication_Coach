@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { api } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { STRINGS } from '@/config/strings';
 
 export function Navbar() {
   const { user } = useAuth();
@@ -22,7 +23,7 @@ export function Navbar() {
   return (
     <nav className="bg-white border-b border-stone-200 px-6 py-0 flex items-center justify-between h-14 sticky top-0 z-30">
 		<Link href="/">
-		  <Image src="/logo.png" alt="ClearVoice" height={36} width={180} priority />
+		  <Image src="/logo.png" alt={STRINGS.brand.logoAlt} height={36} width={180} priority />
 		</Link>
 
       <div className="flex items-center gap-3">
@@ -53,7 +54,7 @@ export function Navbar() {
               onClick={handleLogout}
               className="text-xs text-stone-400 hover:text-stone-600 transition-colors font-medium"
             >
-              Sign out
+              {STRINGS.app.signOut}
             </button>
           </>
         )}

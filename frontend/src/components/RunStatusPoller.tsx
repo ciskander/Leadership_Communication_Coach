@@ -10,6 +10,7 @@ import { api } from '@/lib/api';
 import type { Experiment, ActiveExperiment, PatternSnapshotItem } from '@/lib/types';
 import { EvidenceQuote } from './EvidenceQuote';
 import Link from 'next/link';
+import { STRINGS } from '@/config/strings';
 
 interface RunStatusPollerProps {
   runId: string;
@@ -75,9 +76,9 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         </div>
         <div className="text-center space-y-1">
           <p className="text-sm font-medium text-stone-700">
-            {pollCount > 20 ? 'Still working…' : 'Analysing your meeting'}
+            {pollCount > 20 ? STRINGS.runStatusPoller.stillWorking : STRINGS.runStatusPoller.analysing}
           </p>
-          <p className="text-xs text-stone-400">This usually takes 30–60 seconds</p>
+          <p className="text-xs text-stone-400">{STRINGS.runStatusPoller.usuallyTakes}</p>
         </div>
       </div>
     );
@@ -87,13 +88,13 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
     return (
       <div className="bg-white rounded-2xl border border-stone-200 p-8 text-center space-y-4">
         <div className="text-3xl">⏱</div>
-        <p className="text-sm font-medium text-stone-700">Taking longer than expected</p>
-        <p className="text-xs text-stone-400">The analysis is still running in the background.</p>
+        <p className="text-sm font-medium text-stone-700">{STRINGS.runStatusPoller.timeoutTitle}</p>
+        <p className="text-xs text-stone-400">{STRINGS.runStatusPoller.timeoutDesc}</p>
         <button
           onClick={retry}
           className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors"
         >
-          Check again
+          {STRINGS.runStatusPoller.checkAgain}
         </button>
       </div>
     );
@@ -103,15 +104,15 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
     return (
       <div className="bg-white rounded-2xl border border-rose-200 p-8 text-center space-y-4">
         <div className="text-3xl">⚠</div>
-        <p className="text-sm font-medium text-rose-700">Analysis failed</p>
+        <p className="text-sm font-medium text-rose-700">{STRINGS.runStatusPoller.errorTitle}</p>
         <p className="text-xs text-stone-400">
-          {run?.error ? JSON.stringify(run.error) : 'Something went wrong. Please try again.'}
+          {run?.error ? JSON.stringify(run.error) : STRINGS.runStatusPoller.errorFallback}
         </p>
         <button
           onClick={retry}
           className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors"
         >
-          Retry
+          {STRINGS.common.retry}
         </button>
       </div>
     );
@@ -122,16 +123,16 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
       <div className="bg-white rounded-2xl border border-amber-200 p-6 space-y-3">
         <div className="flex items-center gap-3">
           <span className="text-xl">⚠️</span>
-          <p className="text-sm font-semibold text-amber-800">Quality check didn't pass</p>
+          <p className="text-sm font-semibold text-amber-800">{STRINGS.runStatusPoller.qualityCheckFailed}</p>
         </div>
         <p className="text-sm text-stone-600 leading-relaxed">
-          The AI output didn't meet our quality requirements. This sometimes happens with shorter or unclear transcripts. Try re-running with a cleaner transcript.
+          {STRINGS.runStatusPoller.qualityCheckDesc}
         </p>
         <Link
           href="/client/analyze"
           className="inline-block text-sm px-4 py-2 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors"
         >
-          Try another transcript
+          {STRINGS.runStatusPoller.tryAnotherTranscript}
         </Link>
       </div>
     );
@@ -195,9 +196,9 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         <section className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 flex items-center gap-3">
           <span className="text-emerald-600 text-lg">✅</span>
           <div>
-            <p className="text-sm font-semibold text-emerald-800">Experiment accepted — good luck!</p>
+            <p className="text-sm font-semibold text-emerald-800">{STRINGS.runStatusPoller.experimentAccepted}</p>
             <Link href="/client" className="text-xs text-emerald-600 hover:text-emerald-800 underline">
-              View on dashboard →
+              {STRINGS.runStatusPoller.viewOnDashboard}
             </Link>
           </div>
         </section>
@@ -208,7 +209,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
       <section className="bg-violet-50 border border-violet-200 rounded-2xl p-5 space-y-3">
         <div className="flex items-center gap-2">
           <span className="text-base">🧪</span>
-          <p className="text-sm font-semibold text-violet-800">Your experiment is ready</p>
+          <p className="text-sm font-semibold text-violet-800">{STRINGS.runStatusPoller.experimentReady}</p>
         </div>
         <div className="space-y-1">
           <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
@@ -217,11 +218,11 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           <p className="text-sm font-semibold text-stone-900 leading-snug">{exp.title}</p>
         </div>
         <div className="bg-white rounded-xl p-3">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">What to do</p>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.whatToDo}</p>
           <p className="text-xs text-stone-600 leading-relaxed">{exp.instruction}</p>
         </div>
         <div className="bg-white rounded-xl p-3">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Success looks like</p>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.successLooksLike}</p>
           <p className="text-xs text-stone-600 leading-relaxed">{exp.success_marker}</p>
         </div>
         <div className="flex items-center gap-3 pt-1">
@@ -241,10 +242,10 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
             disabled={acceptLoading}
             className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
           >
-            {acceptLoading ? 'Accepting…' : 'Accept experiment'}
+            {acceptLoading ? STRINGS.common.accepting : STRINGS.common.acceptExperiment}
           </button>
           <Link href="/client" className="text-xs text-stone-500 hover:text-stone-700 transition-colors">
-            Decide later
+            {STRINGS.common.decideLater}
           </Link>
         </div>
       </section>
@@ -262,30 +263,30 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
             icon: '🎯',
             bgColor: 'bg-emerald-50',
             labelColor: 'text-emerald-800',
-            label: 'Nicely done!',
-            desc: `The model detected ${countAttempts ?? 'multiple'} clear attempt${(countAttempts ?? 0) !== 1 ? 's' : ''} at your experiment in this meeting. Keep it up.`,
+            label: STRINGS.runStatusPoller.nicelyDone,
+            desc: STRINGS.runStatusPoller.clearAttempts(countAttempts ?? 'multiple'),
           }
         : attempt === 'partial'
         ? {
             icon: '👀',
             bgColor: 'bg-amber-50',
             labelColor: 'text-amber-800',
-            label: 'Partial attempt detected',
-            desc: `You made a partial attempt at your experiment${countAttempts ? ` — ${countAttempts} instance${countAttempts !== 1 ? 's' : ''} noted` : ''}. You're on the right track.`,
+            label: STRINGS.runStatusPoller.partialAttemptDetected,
+            desc: STRINGS.runStatusPoller.partialAttemptDesc(countAttempts),
           }
         : confirmState === 'done' && confirmedValue
         ? {
             icon: '🧪',
             bgColor: 'bg-emerald-50',
             labelColor: 'text-emerald-800',
-            label: 'User confirmed attempt',
+            label: STRINGS.runStatusPoller.userConfirmedAttempt,
             desc: null,
           }
         : {
             icon: '🧪',
             bgColor: 'bg-stone-50',
             labelColor: 'text-stone-700',
-            label: 'No attempt detected',
+            label: STRINGS.runStatusPoller.noAttemptDetected,
             desc: null,
           };
 
@@ -310,7 +311,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
               <div className="space-y-3">
                 <div>
                   <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                    {attempt === 'yes' ? 'From the transcript' : 'What you said'}
+                    {attempt === 'yes' ? STRINGS.runStatusPoller.fromTranscript : STRINGS.runStatusPoller.whatYouSaid}
                   </p>
                   {detectionQuotes.map((q, i) => (
                     <EvidenceQuote key={i} quote={q} />
@@ -321,7 +322,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                 {attempt === 'partial' && detection?.coaching_note && (
                   <div>
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                      What worked and what was missing
+                      {STRINGS.runStatusPoller.whatWorkedMissing}
                     </p>
                     <p className="text-sm text-stone-700 leading-relaxed">
                       {detection.coaching_note}
@@ -332,7 +333,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                 {attempt === 'partial' && detection?.suggested_rewrite && (
                   <div>
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-                      Next time, try something like
+                      {STRINGS.common.nextTimeTry}
                     </p>
                     <blockquote className="border-l-4 border-emerald-300 pl-4 py-1 my-2 bg-emerald-50 rounded-r-md">
                       <p className="text-sm text-stone-700 italic">
@@ -348,35 +349,34 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
             {attempt === 'no' && confirmState === 'idle' && (
               <div className="space-y-2">
                 <p className="text-sm text-stone-700 leading-relaxed">
-                  The model didn&apos;t detect your experiment being tried in this meeting — but
-                  it&apos;s possible we missed something. Did you attempt the experiment?
+                  {STRINGS.runStatusPoller.missedDetectionPrompt}
                 </p>
                 <div className="flex gap-2 pt-1">
                   <button
                     onClick={() => handleConfirm(true)}
                     className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors"
                   >
-                    Yes, I tried it
+                    {STRINGS.runStatusPoller.yesITriedIt}
                   </button>
                   <button
                     onClick={() => handleConfirm(false)}
                     className="px-4 py-2 bg-white border border-stone-300 text-stone-700 rounded-xl text-xs font-semibold hover:bg-stone-50 transition-colors"
                   >
-                    Not this time
+                    {STRINGS.runStatusPoller.notThisTime}
                   </button>
                 </div>
               </div>
             )}
 
             {attempt === 'no' && confirmState === 'loading' && (
-              <p className="text-xs text-stone-400">Saving…</p>
+              <p className="text-xs text-stone-400">{STRINGS.common.saving}</p>
             )}
 
             {attempt === 'no' && confirmState === 'done' && (
               <p className="text-sm text-stone-700 leading-relaxed">
                 {confirmedValue
-                  ? 'Thanks for letting us know! We\u2019ve recorded your attempt — the model doesn\u2019t always catch everything.'
-                  : 'Got it — no worries. Just a gentle reminder to try again next time.'}
+                  ? STRINGS.runStatusPoller.confirmedYes
+                  : STRINGS.runStatusPoller.confirmedNo}
               </p>
             )}
 
@@ -387,7 +387,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         </section>
 
         {/* Full experiment tracker */}
-        <h2 className="text-base font-semibold text-stone-800 mt-2">Current Experiment</h2>
+        <h2 className="text-base font-semibold text-stone-800 mt-2">{STRINGS.runStatusPoller.currentExperiment}</h2>
         {activeExpData?.experiment ? (
           <ExperimentTracker
             experiment={activeExpData.experiment}
@@ -399,14 +399,14 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           // Fallback while data is loading or if fetch failed
           <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
             <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
-              Your experiment
+              {STRINGS.runStatusPoller.yourExperiment}
             </p>
             <div className="flex gap-3 flex-wrap">
               <Link
                 href="/client/experiment"
                 className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition-colors"
               >
-                View on My Experiment →
+                {STRINGS.runStatusPoller.viewOnMyExperiment}
               </Link>
             </div>
           </div>
@@ -421,8 +421,8 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
       <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-3.5 flex items-center gap-3">
         <span className="text-emerald-600 text-lg">✅</span>
         <div>
-          <p className="text-sm font-semibold text-emerald-800">Analysis complete</p>
-          <p className="text-xs text-emerald-600">Here's your personalised coaching feedback</p>
+          <p className="text-sm font-semibold text-emerald-800">{STRINGS.runStatusPoller.analysisComplete}</p>
+          <p className="text-xs text-emerald-600">{STRINGS.runStatusPoller.analysisFeedback}</p>
         </div>
       </div>
 
@@ -445,7 +445,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
       {run.pattern_snapshot && run.pattern_snapshot.length > 0 && (
         <section>
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
-            Pattern snapshot
+            {STRINGS.runStatusPoller.patternSnapshot}
           </p>
           <PatternSnapshot patterns={run.pattern_snapshot} />
         </section>

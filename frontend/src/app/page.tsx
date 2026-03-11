@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, ApiError } from '@/lib/api';
 import { getGoogleLoginUrl } from '@/lib/auth';
+import { STRINGS } from '@/config/strings';
 
 export default function RootPage() {
   const router = useRouter();
@@ -26,9 +27,9 @@ export default function RootPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white rounded-2xl shadow-lg p-10 max-w-sm w-full text-center space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Leadership Coach</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{STRINGS.app.loginHeading}</h1>
         <p className="text-gray-500 text-sm">
-          AI-powered communication coaching rooted in your actual meetings.
+          {STRINGS.app.loginSubheading}
         </p>
         <a
           href={getGoogleLoginUrl('/client')}
@@ -52,7 +53,7 @@ export default function RootPage() {
               d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"
             />
           </svg>
-          Continue with Google
+          {STRINGS.app.continueWithGoogle}
         </a>
       </div>
     </main>

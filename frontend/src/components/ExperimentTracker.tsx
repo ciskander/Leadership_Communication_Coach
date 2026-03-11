@@ -4,6 +4,7 @@ import type { Experiment } from '@/lib/types';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import Link from 'next/link';
+import { STRINGS } from '@/config/strings';
 
 interface Event {
   id?: string;
@@ -27,23 +28,23 @@ interface ExperimentTrackerProps {
 }
 
 const ATTEMPT_CONFIG: Record<string, { color: string; label: string; dot: string; bg: string }> = {
-  yes:     { color: 'text-emerald-700', label: 'Attempted',       dot: 'bg-emerald-500', bg: 'bg-emerald-50' },
-  partial: { color: 'text-amber-700',   label: 'Partial attempt', dot: 'bg-amber-400',   bg: 'bg-amber-50' },
-  no:      { color: 'text-stone-500',   label: 'Not attempted',   dot: 'bg-stone-300',   bg: 'bg-stone-50' },
+  yes:     { color: 'text-emerald-700', label: STRINGS.attemptLabels.yes,     dot: 'bg-emerald-500', bg: 'bg-emerald-50' },
+  partial: { color: 'text-amber-700',   label: STRINGS.attemptLabels.partial, dot: 'bg-amber-400',   bg: 'bg-amber-50' },
+  no:      { color: 'text-stone-500',   label: STRINGS.attemptLabels.no,      dot: 'bg-stone-300',   bg: 'bg-stone-50' },
 };
 
 // Human override pill — white background with coloured border to sit on top of the row background
 const HUMAN_PILL_CONFIG: Record<string, { label: string; color: string; border: string }> = {
-  confirmed_attempt:    { label: '↩ You confirmed', color: 'text-emerald-700', border: 'border-emerald-300' },
-  confirmed_no_attempt: { label: '↩ You said no',   color: 'text-stone-500',   border: 'border-stone-300' },
+  confirmed_attempt:    { label: STRINGS.humanConfirmation.confirmed_attempt, color: 'text-emerald-700', border: 'border-emerald-300' },
+  confirmed_no_attempt: { label: STRINGS.humanConfirmation.confirmed_no_attempt,   color: 'text-stone-500',   border: 'border-stone-300' },
 };
 
 const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
-  proposed:  { bg: 'bg-violet-100',  text: 'text-violet-700',  label: 'Proposed' },
-  active:    { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Active' },
-  completed: { bg: 'bg-stone-100',   text: 'text-stone-600',   label: 'Completed' },
-  parked:    { bg: 'bg-amber-100',   text: 'text-amber-700',   label: 'Parked' },
-  abandoned: { bg: 'bg-rose-100',    text: 'text-rose-700',    label: 'Abandoned' },
+  proposed:  { bg: 'bg-violet-100',  text: 'text-violet-700',  label: STRINGS.experimentStatus.proposed },
+  active:    { bg: 'bg-emerald-100', text: 'text-emerald-700', label: STRINGS.experimentStatus.active },
+  completed: { bg: 'bg-stone-100',   text: 'text-stone-600',   label: STRINGS.experimentStatus.completed },
+  parked:    { bg: 'bg-amber-100',   text: 'text-amber-700',   label: STRINGS.experimentStatus.parked },
+  abandoned: { bg: 'bg-rose-100',    text: 'text-rose-700',    label: STRINGS.experimentStatus.abandoned },
 };
 
 export function ExperimentTracker({ experiment, events, onUpdate, onComplete, onPark, onAbandon }: ExperimentTrackerProps) {
@@ -96,13 +97,13 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
       return (
         <div className="bg-blue-50 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
           <p className="text-sm text-blue-700">
-            Analyze your next meeting to start tracking this experiment.
+            {STRINGS.experimentTracker.analyzeToStart}
           </p>
           <Link
             href="/client/analyze"
             className="shrink-0 text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
           >
-            ✨ Analyze Meeting
+            {STRINGS.experimentTracker.analyzeMeeting}
           </Link>
         </div>
       );
@@ -111,13 +112,13 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
       return (
         <div className="bg-stone-50 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
           <p className="text-sm text-stone-600">
-            No attempts detected yet across {meetingsAnalysed} meeting{meetingsAnalysed !== 1 ? 's' : ''}. Keep going — it takes a few tries to build the habit.
+            {STRINGS.experimentTracker.noAttemptsYet(meetingsAnalysed)}
           </p>
           <Link
             href="/client/analyze"
             className="shrink-0 text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
           >
-            ✨ Analyze Meeting
+            {STRINGS.experimentTracker.analyzeMeeting}
           </Link>
         </div>
       );
@@ -125,13 +126,13 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
     return (
       <div className="flex items-center justify-between gap-4">
         <p className="text-xs text-stone-400">
-          {totalAttempted} attempt{totalAttempted !== 1 ? 's' : ''} detected across {meetingsAnalysed} meeting{meetingsAnalysed !== 1 ? 's' : ''} analyzed.
+          {STRINGS.experimentTracker.attemptsDetected(totalAttempted, meetingsAnalysed)}
         </p>
         <Link
           href="/client/analyze"
           className="shrink-0 text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
         >
-          ✨ Analyze Meeting
+          {STRINGS.experimentTracker.analyzeMeeting}
         </Link>
       </div>
     );
@@ -157,13 +158,13 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="bg-stone-50 rounded-xl p-3.5">
             <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-              What to do
+              {STRINGS.common.whatToDo}
             </p>
             <p className="text-sm text-stone-700 leading-relaxed">{experiment.instruction}</p>
           </div>
           <div className="bg-stone-50 rounded-xl p-3.5">
             <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
-              Success looks like
+              {STRINGS.common.successLooksLike}
             </p>
             <p className="text-sm text-stone-700 leading-relaxed">{experiment.success_marker}</p>
           </div>
@@ -174,15 +175,15 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
           <div className="grid grid-cols-3 gap-3 py-1">
             <div className="bg-emerald-50 rounded-xl p-3 text-center">
               <p className="text-2xl font-bold text-emerald-600">{successCount}</p>
-              <p className="text-xs text-stone-500 mt-0.5">Full attempts</p>
+              <p className="text-xs text-stone-500 mt-0.5">{STRINGS.experimentTracker.fullAttempts}</p>
             </div>
             <div className="bg-amber-50 rounded-xl p-3 text-center">
               <p className="text-2xl font-bold text-amber-500">{partialCount}</p>
-              <p className="text-xs text-stone-500 mt-0.5">Partial</p>
+              <p className="text-xs text-stone-500 mt-0.5">{STRINGS.experimentTracker.partial}</p>
             </div>
             <div className="bg-stone-50 rounded-xl p-3 text-center">
               <p className="text-2xl font-bold text-stone-400">{meetingsAnalysed}</p>
-              <p className="text-xs text-stone-500 mt-0.5">Meetings</p>
+              <p className="text-xs text-stone-500 mt-0.5">{STRINGS.experimentTracker.meetings}</p>
             </div>
           </div>
         )}
@@ -191,7 +192,7 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
         {sortedEvents.length > 0 && (
           <div>
             <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-2.5">
-              Attempt history
+              {STRINGS.experimentTracker.attemptHistory}
             </p>
             <ul className="space-y-1.5">
               {sortedEvents.map((ev, i) => {
@@ -217,7 +218,7 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
                     {humanCfg && (
                       <span
                         className={`text-xs font-medium px-2 py-0.5 rounded-full bg-white border ${humanCfg.border} ${humanCfg.color}`}
-                        title="Your confirmation"
+                        title={STRINGS.humanConfirmation.tooltip}
                       >
                         {humanCfg.label}
                       </span>
@@ -246,22 +247,22 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
           <div className="pt-1 space-y-2">
             {actionState === 'confirm-park' ? (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
-                <p className="text-sm font-medium text-amber-800">Park this experiment for now?</p>
+                <p className="text-sm font-medium text-amber-800">{STRINGS.experimentTracker.parkConfirmTitle}</p>
                 <p className="text-xs text-amber-700 leading-relaxed">
-                  It will be saved and you can resume it later. Any progress recorded so far will be kept.
+                  {STRINGS.experimentTracker.parkConfirmDesc}
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={handlePark}
                     className="px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-semibold hover:bg-amber-700 transition-colors"
                   >
-                    Yes, park it
+                    {STRINGS.experimentTracker.yesParkIt}
                   </button>
                   <button
                     onClick={() => setActionState('idle')}
                     className="px-4 py-2 bg-white border border-stone-300 text-stone-600 rounded-xl text-xs font-semibold hover:bg-stone-50 transition-colors"
                   >
-                    Keep going
+                    {STRINGS.experimentTracker.keepGoing}
                   </button>
                 </div>
               </div>
@@ -272,14 +273,14 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
                   disabled={actionState === 'loading'}
                   className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors"
                 >
-                  {actionState === 'loading' ? 'Saving…' : 'Mark complete ✓'}
+                  {actionState === 'loading' ? STRINGS.common.saving : STRINGS.experimentTracker.markComplete}
                 </button>
                 <button
                   onClick={() => setActionState('confirm-park')}
                   disabled={actionState === 'loading'}
                   className="px-4 py-2.5 bg-white border border-stone-300 text-stone-600 rounded-xl text-sm font-medium hover:bg-stone-50 disabled:opacity-50 transition-colors"
                 >
-                  ⏸ Park for now
+                  {STRINGS.experimentTracker.parkForNow}
                 </button>
               </div>
             )}

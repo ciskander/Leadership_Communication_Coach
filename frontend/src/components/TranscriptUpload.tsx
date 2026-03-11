@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { api } from '@/lib/api';
+import { STRINGS } from '@/config/strings';
 
 const MEETING_TYPE_OPTIONS = [
   'exec_staff',
@@ -106,10 +107,10 @@ export function TranscriptUploadPanel({ onUploaded, withMetadata = false }: Tran
           className="w-full border-2 border-dashed border-stone-300 rounded-xl py-7 text-sm text-stone-400 hover:border-emerald-400 hover:text-emerald-600 transition-colors disabled:opacity-50"
         >
           {uploading
-            ? 'Uploading…'
+            ? STRINGS.common.uploading
             : uploaded
-            ? '✓ File uploaded'
-            : 'Click to upload transcript (.vtt, .srt, .txt, .docx, .pdf)'}
+            ? STRINGS.transcriptUpload.fileUploaded
+            : STRINGS.transcriptUpload.clickToUpload}
         </button>
         {error && <p className="text-sm text-rose-600 mt-1">{error}</p>}
       </div>
@@ -131,47 +132,47 @@ export function TranscriptUploadPanel({ onUploaded, withMetadata = false }: Tran
               : 'border-stone-300 text-stone-400 hover:border-emerald-400 hover:text-emerald-600'
           }`}
         >
-          {selectedFile ? `📄 ${selectedFile.name}` : 'Click to select transcript (.vtt, .srt, .txt, .docx, .pdf)'}
+          {selectedFile ? `📄 ${selectedFile.name}` : STRINGS.transcriptUpload.clickToSelect}
         </button>
       ) : (
         <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
           <span className="text-emerald-600">✓</span>
-          <span className="text-sm text-emerald-700 font-medium">File uploaded successfully</span>
+          <span className="text-sm text-emerald-700 font-medium">{STRINGS.transcriptUpload.fileUploadedSuccess}</span>
         </div>
       )}
 
       {selectedFile && !uploaded && (
         <div className="space-y-3">
           <div>
-            <label className="text-xs text-stone-500">Meeting title</label>
+            <label className="text-xs text-stone-500">{STRINGS.transcriptUpload.meetingTitle}</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Q1 Planning Session"
+              placeholder={STRINGS.transcriptUpload.meetingTitlePlaceholder}
               className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
             />
           </div>
 
           <div>
-            <label className="text-xs text-stone-500">Meeting type</label>
+            <label className="text-xs text-stone-500">{STRINGS.transcriptUpload.meetingType}</label>
             <select
               value={meetingType}
               onChange={(e) => setMeetingType(e.target.value)}
               className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
             >
-              <option value="">Select type…</option>
+              <option value="">{STRINGS.transcriptUpload.selectType}</option>
               {MEETING_TYPE_OPTIONS.map((t) => (
                 <option key={t} value={t}>{t.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}</option>
               ))}
-              <option value="__custom__">Other (type below)</option>
+              <option value="__custom__">{STRINGS.transcriptUpload.otherTypeBelow}</option>
             </select>
             {meetingType === '__custom__' && (
               <input
                 type="text"
                 value={meetingTypeCustom}
                 onChange={(e) => setMeetingTypeCustom(e.target.value)}
-                placeholder="Enter meeting type"
+                placeholder={STRINGS.transcriptUpload.enterMeetingType}
                 className="mt-2 w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
               />
             )}
@@ -179,8 +180,8 @@ export function TranscriptUploadPanel({ onUploaded, withMetadata = false }: Tran
 
           <div>
             <label className="text-xs text-stone-500">
-              Meeting date
-              <span className="ml-1.5 text-stone-400 font-normal">(will be auto-detected if found in transcript)</span>
+              {STRINGS.transcriptUpload.meetingDate}
+              <span className="ml-1.5 text-stone-400 font-normal">{STRINGS.transcriptUpload.meetingDateAutodetect}</span>
             </label>
             <input
               type="date"
@@ -198,7 +199,7 @@ export function TranscriptUploadPanel({ onUploaded, withMetadata = false }: Tran
             disabled={uploading}
             className="w-full py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors"
           >
-            {uploading ? 'Uploading…' : 'Upload transcript'}
+            {uploading ? STRINGS.common.uploading : STRINGS.transcriptUpload.uploadTranscript}
           </button>
         </div>
       )}

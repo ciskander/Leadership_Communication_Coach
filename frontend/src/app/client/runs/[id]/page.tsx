@@ -5,17 +5,12 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { RunStatusPoller } from '@/components/RunStatusPoller';
 import { api } from '@/lib/api';
+import { STRINGS } from '@/config/strings';
 import type { RunMeta } from '@/lib/types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const ROLE_LABELS: Record<string, string> = {
-  chair: 'Chair',
-  presenter: 'Presenter',
-  participant: 'Participant',
-  manager_1to1: 'Manager (1:1)',
-  report_1to1: 'Report (1:1)',
-};
+const ROLE_LABELS = STRINGS.roles;
 
 function fmtDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '';
@@ -49,9 +44,9 @@ function ConfirmDeleteModal({
             </svg>
           </div>
           <div>
-            <h3 className="font-semibold text-stone-900 text-sm">Delete this meeting?</h3>
+            <h3 className="font-semibold text-stone-900 text-sm">{STRINGS.runResults.deleteModalTitle}</h3>
             <p className="text-xs text-stone-500 mt-1 leading-relaxed">
-              This will permanently delete the meeting and its analysis results. This cannot be undone.
+              {STRINGS.runResults.deleteModalDesc}
             </p>
           </div>
         </div>
@@ -61,7 +56,7 @@ function ConfirmDeleteModal({
             disabled={deleting}
             className="px-4 py-2 text-xs font-semibold text-stone-600 bg-stone-100 rounded-xl hover:bg-stone-200 transition-colors disabled:opacity-50"
           >
-            Cancel
+            {STRINGS.common.cancel}
           </button>
           <button
             onClick={onConfirm}
@@ -74,7 +69,7 @@ function ConfirmDeleteModal({
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
               </svg>
             )}
-            {deleting ? 'Deleting…' : 'Delete'}
+            {deleting ? STRINGS.common.deleting : STRINGS.common.delete}
           </button>
         </div>
       </div>
@@ -103,7 +98,7 @@ export default function RunResultsPage() {
       await api.deleteRun(id);
       router.push('/client');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Deletion failed. Please try again.';
+      const msg = err instanceof Error ? err.message : STRINGS.runResults.deletionFailed;
       setDeleteError(msg);
       setDeleting(false);
       setShowConfirm(false);
@@ -111,7 +106,7 @@ export default function RunResultsPage() {
   }
 
   const isBaseline = meta?.analysis_type === 'baseline_pack';
-  const pageTitle = isBaseline ? 'Baseline Pack Analysis' : 'Meeting Analysis';
+  const pageTitle = isBaseline ? STRINGS.common.baselinePackAnalysis : STRINGS.common.meetingAnalysis;
   const canDelete = meta !== null && !isBaseline;
 
   return (
@@ -164,7 +159,7 @@ export default function RunResultsPage() {
           href="/client"
           className="text-sm text-stone-500 hover:text-stone-700 transition-colors flex-shrink-0 mt-1"
         >
-          ← Dashboard
+          {STRINGS.nav.dashboard}
         </Link>
       </div>
 
@@ -181,7 +176,7 @@ export default function RunResultsPage() {
             onClick={() => setShowConfirm(true)}
             className="text-xs font-medium text-stone-400 hover:text-rose-600 transition-colors"
           >
-            Delete this meeting
+            {STRINGS.runResults.deleteThisMeeting}
           </button>
         </div>
       )}

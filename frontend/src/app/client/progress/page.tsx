@@ -18,44 +18,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
-
-// ─── Pattern explanations ─────────────────────────────────────────────────────
-
-const PATTERN_EXPLANATIONS: Record<string, string> = {
-  agenda_clarity:
-    'How consistently you open meetings with a clear agenda and stated objectives.',
-  objective_signaling:
-    "How often you make the meeting's purpose explicit when transitioning between topics.",
-  turn_allocation:
-    'How equitably you distribute speaking opportunities across participants.',
-  facilitative_inclusion:
-    'How actively you draw in quieter voices and prevent dominant speakers from taking over.',
-  decision_closure:
-    'How reliably you bring discussions to a clear decision with an owner before moving on.',
-  owner_timeframe_specification:
-    'How consistently action items are assigned with a named owner and a deadline.',
-  summary_checkback:
-    'How often you summarise key points and check for alignment before closing a topic.',
-  question_quality:
-    'How often your questions are tied to a specific decision or outcome rather than open-ended exploration.',
-  listener_response_quality:
-    'How well you acknowledge and build on what others have said before responding.',
-  conversational_balance:
-    'Whether speaking time is distributed appropriately given your role in the meeting.',
-};
-
-const PATTERN_LABELS: Record<string, string> = {
-  agenda_clarity: 'Agenda Clarity',
-  objective_signaling: 'Objective Signaling',
-  turn_allocation: 'Turn Allocation',
-  facilitative_inclusion: 'Facilitative Inclusion',
-  decision_closure: 'Decision Closure',
-  owner_timeframe_specification: 'Owner & Timeframe',
-  summary_checkback: 'Summary Checkback',
-  question_quality: 'Question Quality',
-  listener_response_quality: 'Listener Response',
-  conversational_balance: 'Conversational Balance',
-};
+import { STRINGS } from '@/config/strings';
 
 const LINE_COLORS = [
   '#2563eb', '#16a34a', '#dc2626', '#d97706', '#7c3aed',
@@ -95,7 +58,7 @@ function InfoPopover({ patternId }: { patternId: string }) {
       </button>
       {open && (
         <div className="absolute z-50 left-5 top-0 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm text-gray-700 leading-snug">
-          {PATTERN_EXPLANATIONS[patternId] ?? 'No explanation available.'}
+          {STRINGS.patternExplanations[patternId] ?? STRINGS.common.noExplanationAvailable}
         </div>
       )}
     </span>
@@ -249,7 +212,7 @@ function PatternTrendsChart({
           const rawVal = rawEntry?.value;
           return (
             <div key={entry.dataKey} className="flex justify-between gap-4">
-              <span style={{ color: entry.color }}>{PATTERN_LABELS[entry.dataKey] ?? entry.dataKey}</span>
+              <span style={{ color: entry.color }}>{STRINGS.patternLabels[entry.dataKey] ?? entry.dataKey}</span>
               <span className="font-medium">
                 {entry.value != null ? `${entry.value}%` : '—'}
                 {rawVal != null && rawVal !== entry.value && (
@@ -266,7 +229,7 @@ function PatternTrendsChart({
   if (history.length === 0) {
     return (
       <div className="flex items-center justify-center h-48 text-gray-400 text-sm">
-        No run data yet. Analyze a meeting to see your trends.
+        {STRINGS.progressPage.noRunData}
       </div>
     );
   }
@@ -328,7 +291,7 @@ function PatternTrendsChart({
                   x={baselinePoint.label}
                   stroke="#9ca3af"
                   strokeDasharray="4 4"
-                  label={{ value: 'Baseline', position: 'insideTopRight', fontSize: 10, fill: '#6b7280' }}
+                  label={{ value: STRINGS.progressPage.baseline, position: 'insideTopRight', fontSize: 10, fill: '#6b7280' }}
                 />
               )}
             </LineChart>
@@ -342,7 +305,7 @@ function PatternTrendsChart({
             const barData = visiblePatterns.map((pid) => {
               const p = latest.patterns.find((x) => x.pattern_id === pid);
               return {
-                name: PATTERN_LABELS[pid] ?? pid,
+                name: STRINGS.patternLabels[pid] ?? pid,
                 score: p ? Math.round(p.ratio * 100) : 0,
                 pid,
               };
@@ -354,7 +317,7 @@ function PatternTrendsChart({
                   <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                   </svg>
-                  {meetingsUntil} more meeting{meetingsUntil !== 1 ? 's' : ''} until trends appear
+                  {STRINGS.progressPage.meetingsUntilTrends(meetingsUntil)}
                 </div>
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={barData} margin={{ top: 4, right: 16, left: 0, bottom: 40 }}>
@@ -375,7 +338,7 @@ function PatternTrendsChart({
                       axisLine={false}
                     />
                     <Tooltip
-                      formatter={(v: number | undefined) => [`${v ?? 0}%`, 'Score']}
+                      formatter={(v: number | undefined) => [`${v ?? 0}%`, STRINGS.progressPage.score]}
                       cursor={{ fill: '#f9fafb' }}
                     />
                     <Bar dataKey="score" radius={[4, 4, 0, 0]} maxBarSize={48}>
@@ -411,10 +374,10 @@ function PatternTrendsChart({
                 className={`inline-block rounded-full mr-1.5 flex-shrink-0 ${isExp ? 'w-3.5 h-3.5 ring-2 ring-offset-1 ring-current' : 'w-3 h-3'}`}
                 style={{ background: patternColor(pid) }}
               />
-              {PATTERN_LABELS[pid] ?? pid}
+              {STRINGS.patternLabels[pid] ?? pid}
               {isExp && (
                 <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full leading-none">
-                  Experiment
+                  {STRINGS.progressPage.experimentBadge}
                 </span>
               )}
               <InfoPopover patternId={pid} />
@@ -472,7 +435,7 @@ function PastExperimentCard({
       >
         <div className="flex items-center gap-3 min-w-0">
           <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${statusColor}`}>
-            {exp.status === 'completed' ? 'Completed' : exp.status === 'parked' ? 'Parked' : 'Abandoned'}
+            {exp.status === 'completed' ? STRINGS.experimentStatus.completed : exp.status === 'parked' ? STRINGS.experimentStatus.parked : STRINGS.experimentStatus.abandoned}
           </span>
           <span className="font-medium text-gray-800 truncate">{exp.title}</span>
         </div>
@@ -489,28 +452,28 @@ function PastExperimentCard({
         <div className="px-5 py-4 bg-gray-50 border-t border-gray-200 space-y-4">
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <span className="text-xs text-gray-500 uppercase tracking-wide">Pattern</span>
+              <span className="text-xs text-gray-500 uppercase tracking-wide">{STRINGS.progressPage.pattern}</span>
               <p className="font-medium text-gray-800 mt-0.5 flex items-center">
-                {PATTERN_LABELS[pid] ?? pid}
+                {STRINGS.patternLabels[pid] ?? pid}
                 <InfoPopover patternId={pid} />
               </p>
             </div>
             {dateRange && (
               <div>
-                <span className="text-xs text-gray-500 uppercase tracking-wide">Date range</span>
+                <span className="text-xs text-gray-500 uppercase tracking-wide">{STRINGS.progressPage.dateRange}</span>
                 <p className="font-medium text-gray-800 mt-0.5">{dateRange}</p>
               </div>
             )}
             {exp.attempt_count != null && (
               <div>
-                <span className="text-xs text-gray-500 uppercase tracking-wide">Attempts</span>
+                <span className="text-xs text-gray-500 uppercase tracking-wide">{STRINGS.progressPage.attempts}</span>
                 <p className="font-medium text-gray-800 mt-0.5">
-                  {exp.attempt_count}{exp.meeting_count != null && exp.meeting_count > 0 ? ` across ${exp.meeting_count} meeting${exp.meeting_count !== 1 ? 's' : ''}` : ''}
+                  {STRINGS.progressPage.attemptsAcross(exp.attempt_count!, exp.meeting_count ?? 0)}
                 </p>
               </div>
             )}
             <div>
-              <span className="text-xs text-gray-500 uppercase tracking-wide">ID</span>
+              <span className="text-xs text-gray-500 uppercase tracking-wide">{STRINGS.progressPage.id}</span>
               <p className="font-mono text-xs text-gray-500 mt-0.5">{exp.experiment_id}</p>
             </div>
           </div>
@@ -519,7 +482,7 @@ function PastExperimentCard({
           {chartData.length >= 2 ? (
             <div>
               <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">
-                {PATTERN_LABELS[pid] ?? pid} during experiment
+                {STRINGS.progressPage.duringExperiment(STRINGS.patternLabels[pid] ?? pid)}
               </p>
               <ResponsiveContainer width="100%" height={160}>
                 <LineChart data={chartData} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
@@ -533,7 +496,7 @@ function PastExperimentCard({
                     axisLine={false}
                   />
                   <Tooltip
-                    formatter={(v: any) => [v != null ? `${v}%` : '—', PATTERN_LABELS[pid] ?? pid]}
+                    formatter={(v: any) => [v != null ? `${v}%` : '—', STRINGS.patternLabels[pid] ?? pid]}
                     labelStyle={{ fontSize: 11 }}
                   />
                   <Line
@@ -561,11 +524,11 @@ function PastExperimentCard({
           ) : chartData.length === 1 ? (
             <div>
               <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-                {PATTERN_LABELS[pid] ?? pid} during experiment
+                {STRINGS.progressPage.duringExperiment(STRINGS.patternLabels[pid] ?? pid)}
               </p>
               <p className="text-sm font-medium text-gray-800">
                 {chartData[0][pid] != null ? `${chartData[0][pid]}%` : '—'}
-                <span className="text-gray-400 font-normal ml-1">(1 meeting)</span>
+                <span className="text-gray-400 font-normal ml-1">{STRINGS.progressPage.oneMeeting}</span>
               </p>
             </div>
           ) : null}
@@ -591,7 +554,7 @@ export default function ProgressPage() {
     api
       .getClientProgress()
       .then(setData)
-      .catch((e) => setError(e?.message ?? 'Failed to load progress data.'))
+      .catch((e) => setError(e?.message ?? STRINGS.progressPage.errorFallback))
       .finally(() => setLoading(false));
   }, []);
 
@@ -599,18 +562,18 @@ export default function ProgressPage() {
   const effectiveViewMode = viewMode === 'focus' && !hasExpPattern ? 'top5' : viewMode;
 
   const viewOptions: { key: ViewMode; label: string; disabled?: boolean }[] = [
-    { key: 'focus', label: 'Focus Pattern Only', disabled: !hasExpPattern },
-    { key: 'top5', label: 'Top 5 Patterns' },
-    { key: 'all', label: 'All Patterns' },
+    { key: 'focus', label: STRINGS.progressPage.focusPatternOnly, disabled: !hasExpPattern },
+    { key: 'top5', label: STRINGS.progressPage.top5Patterns },
+    { key: 'all', label: STRINGS.progressPage.allPatterns },
   ];
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Your Progress</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{STRINGS.progressPage.heading}</h1>
         <p className="text-gray-500 mt-1 text-sm">
-          Pattern trends over time and your experiment history.
+          {STRINGS.progressPage.subtitle}
         </p>
       </div>
 
@@ -620,7 +583,7 @@ export default function ProgressPage() {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
           </svg>
-          Loading your progress…
+          {STRINGS.progressPage.loading}
         </div>
       )}
 
@@ -635,7 +598,7 @@ export default function ProgressPage() {
           {/* Pattern Trends */}
           <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-semibold text-gray-900">Pattern Trends</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{STRINGS.progressPage.patternTrends}</h2>
               <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
                 {viewOptions.map(({ key, label, disabled }) => (
                   <button
@@ -660,9 +623,9 @@ export default function ProgressPage() {
 
           {/* Past Experiments */}
           <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-5">Past Experiments</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-5">{STRINGS.progressPage.pastExperiments}</h2>
             {data.past_experiments.length === 0 ? (
-              <p className="text-gray-400 text-sm">No completed, parked, or abandoned experiments yet.</p>
+              <p className="text-gray-400 text-sm">{STRINGS.progressPage.noPastExperiments}</p>
             ) : (
               <div className="space-y-3">
                 {data.past_experiments.map((exp) => (

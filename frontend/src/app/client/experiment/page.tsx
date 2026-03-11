@@ -7,6 +7,7 @@ import { useActiveExperiment } from '@/hooks/useActiveExperiment';
 import { useProposedPoller } from '@/hooks/useProposedPoller';
 import { ExperimentTracker } from '@/components/ExperimentTracker';
 import type { Experiment, ExperimentOptions } from '@/lib/types';
+import { STRINGS } from '@/config/strings';
 
 function PatternLabel({ id }: { id: string }) {
   return (
@@ -67,11 +68,11 @@ function ProposedExperimentCard({
       {!compact && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div className="bg-stone-50 rounded-xl p-3">
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">What to do</p>
+            <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.whatToDo}</p>
             <p className="text-xs text-stone-600 leading-relaxed">{experiment.instruction}</p>
           </div>
           <div className="bg-stone-50 rounded-xl p-3">
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Success looks like</p>
+            <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.successLooksLike}</p>
             <p className="text-xs text-stone-600 leading-relaxed">{experiment.success_marker}</p>
           </div>
         </div>
@@ -83,7 +84,7 @@ function ProposedExperimentCard({
           disabled={state === 'loading'}
           className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
         >
-          {state === 'loading' ? 'Accepting…' : 'Accept experiment'}
+          {state === 'loading' ? STRINGS.common.accepting : STRINGS.common.acceptExperiment}
         </button>
         <span className="text-xs text-stone-400 ml-auto">{experiment.experiment_id}</span>
       </div>
@@ -136,7 +137,7 @@ function ParkedExperimentCard({
         <div className="space-y-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
-              Parked
+              {STRINGS.experimentPage.parked}
             </span>
             {experiment.ended_at && (
               <span className="text-xs text-stone-400">
@@ -150,11 +151,11 @@ function ParkedExperimentCard({
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="bg-stone-50 rounded-xl p-3">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">What to do</p>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.whatToDo}</p>
           <p className="text-xs text-stone-600 leading-relaxed">{experiment.instruction}</p>
         </div>
         <div className="bg-stone-50 rounded-xl p-3">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Success looks like</p>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.successLooksLike}</p>
           <p className="text-xs text-stone-600 leading-relaxed">{experiment.success_marker}</p>
         </div>
       </div>
@@ -162,19 +163,19 @@ function ParkedExperimentCard({
 
       {state === 'confirm-discard' ? (
         <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 space-y-2">
-          <p className="text-xs text-rose-700">Permanently discard this experiment? This cannot be undone.</p>
+          <p className="text-xs text-rose-700">{STRINGS.experimentPage.discardConfirm}</p>
           <div className="flex gap-2">
             <button
               onClick={handleDiscard}
               className="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-semibold hover:bg-rose-700 transition-colors"
             >
-              Discard
+              {STRINGS.experimentPage.discard}
             </button>
             <button
               onClick={() => setState('idle')}
               className="px-3 py-1.5 bg-white border border-stone-300 text-stone-600 rounded-lg text-xs font-semibold hover:bg-stone-50 transition-colors"
             >
-              Cancel
+              {STRINGS.common.cancel}
             </button>
           </div>
         </div>
@@ -185,14 +186,14 @@ function ParkedExperimentCard({
             disabled={state === 'loading'}
             className="px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-semibold hover:bg-amber-700 transition-colors disabled:opacity-60"
           >
-            {state === 'loading' ? 'Resuming…' : 'Resume experiment'}
+            {state === 'loading' ? STRINGS.experimentPage.resuming : STRINGS.experimentPage.resumeExperiment}
           </button>
           <button
             onClick={() => setState('confirm-discard')}
             disabled={state === 'loading'}
             className="text-xs text-stone-400 hover:text-rose-600 transition-colors"
           >
-            Discard
+            {STRINGS.experimentPage.discard}
           </button>
           <span className="text-xs text-stone-400 ml-auto">{experiment.experiment_id}</span>
         </div>
@@ -301,8 +302,8 @@ export default function ExperimentPage() {
         <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 flex items-center gap-3">
           <span className="text-xl">🎉</span>
           <div>
-            <p className="text-sm font-semibold text-emerald-800">Experiment complete — well done!</p>
-            <p className="text-xs text-emerald-700 mt-0.5">Ready for your next challenge? Pick one below.</p>
+            <p className="text-sm font-semibold text-emerald-800">{STRINGS.experimentPage.completeBanner}</p>
+            <p className="text-xs text-emerald-700 mt-0.5">{STRINGS.experimentPage.completeSubtext}</p>
           </div>
         </div>
       );
@@ -311,8 +312,8 @@ export default function ExperimentPage() {
       <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 flex items-center gap-3">
         <span className="text-xl">⏸</span>
         <div>
-          <p className="text-sm font-semibold text-amber-800">Experiment parked.</p>
-          <p className="text-xs text-amber-700 mt-0.5">You can resume it anytime. Pick your next focus below.</p>
+          <p className="text-sm font-semibold text-amber-800">{STRINGS.experimentPage.parkedBanner}</p>
+          <p className="text-xs text-amber-700 mt-0.5">{STRINGS.experimentPage.parkedSubtext}</p>
         </div>
       </div>
     );
@@ -330,9 +331,9 @@ export default function ExperimentPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-5 py-2">
       <div>
-        <h1 className="text-2xl font-bold text-stone-900">My Experiment</h1>
+        <h1 className="text-2xl font-bold text-stone-900">{STRINGS.experimentPage.heading}</h1>
         <p className="text-sm text-stone-500 mt-1">
-          Track your progress on your current communication experiment.
+          {STRINGS.experimentPage.subtitle}
         </p>
       </div>
 
@@ -351,7 +352,7 @@ export default function ExperimentPage() {
           {isPolling && (
             <div className="flex items-center gap-3 px-5 py-3 bg-blue-50 rounded-2xl border border-blue-100">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 flex-shrink-0" />
-              <p className="text-sm text-blue-700">Finding your next experiment…</p>
+              <p className="text-sm text-blue-700">{STRINGS.experimentPage.findingExperiment}</p>
             </div>
           )}
 
@@ -360,10 +361,10 @@ export default function ExperimentPage() {
             <section>
               <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 mb-4">
                 <p className="text-sm font-medium text-amber-800">
-                  You have {parkedExperiments.length} parked experiment{parkedExperiments.length !== 1 ? 's' : ''} (the maximum).
+                  {STRINGS.experimentPage.parkCapMessage(parkedExperiments.length)}
                 </p>
                 <p className="text-xs text-amber-700 mt-1">
-                  Resume one to continue, or discard one to free up space for new suggestions.
+                  {STRINGS.experimentPage.parkCapHint}
                 </p>
               </div>
               <div className="space-y-3">
@@ -387,7 +388,7 @@ export default function ExperimentPage() {
                 <>
                   <div className="flex items-center justify-between mb-3">
                     <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
-                      {lastAction ? 'Recommended next experiment' : 'Suggested Experiment'}
+                      {lastAction ? STRINGS.experimentPage.recommendedNext : STRINGS.experimentPage.suggestedExperiment}
                     </h2>
                   </div>
                   <ProposedExperimentCard
@@ -399,7 +400,7 @@ export default function ExperimentPage() {
                       onClick={() => setShowMore(true)}
                       className="mt-3 w-full py-2.5 bg-stone-50 border border-stone-200 text-stone-600 rounded-xl text-sm font-medium hover:bg-stone-100 transition-colors"
                     >
-                      See more options
+                      {STRINGS.experimentPage.seeMoreOptions}
                     </button>
                   )}
                 </>
@@ -410,13 +411,13 @@ export default function ExperimentPage() {
                 <>
                   <div className="flex items-center justify-between mb-3">
                     <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
-                      Choose your next experiment
+                      {STRINGS.experimentPage.chooseNext}
                     </h2>
                     <button
                       onClick={() => setShowMore(false)}
                       className="text-xs text-stone-500 hover:text-stone-700 transition-colors"
                     >
-                      Back to recommendation
+                      {STRINGS.experimentPage.backToRecommendation}
                     </button>
                   </div>
 
@@ -425,7 +426,7 @@ export default function ExperimentPage() {
                     {allProposed.map((exp, i) => (
                       <div key={exp.experiment_record_id}>
                         {i === 0 && (
-                          <p className="text-xs text-emerald-600 font-medium mb-1.5">Top pick</p>
+                          <p className="text-xs text-emerald-600 font-medium mb-1.5">{STRINGS.experimentPage.topPick}</p>
                         )}
                         <ProposedExperimentCard
                           experiment={exp}
@@ -440,7 +441,7 @@ export default function ExperimentPage() {
                       <>
                         <div className="pt-2">
                           <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
-                            Previously parked
+                            {STRINGS.experimentPage.previouslyParked}
                           </p>
                         </div>
                         {parkedExperiments.map((exp) => (
@@ -463,11 +464,11 @@ export default function ExperimentPage() {
                   {isPolling && (
                     <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex items-center gap-3 mb-3">
                       <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-blue-500 flex-shrink-0" />
-                      <p className="text-xs text-blue-700">New suggestions arriving shortly…</p>
+                      <p className="text-xs text-blue-700">{STRINGS.experimentPage.newSuggestionsArriving}</p>
                     </div>
                   )}
                   <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
-                    {isPolling ? 'Or resume a parked experiment' : 'Resume a parked experiment'}
+                    {isPolling ? STRINGS.experimentPage.orResumeParked : STRINGS.experimentPage.resumeParked}
                   </h2>
                   <div className="space-y-3">
                     {parkedExperiments.map((exp) => (
@@ -485,22 +486,22 @@ export default function ExperimentPage() {
           ) : !showCapScreen && !overallLoading && !isPolling && !hasOptions ? (
             <div className="bg-white rounded-2xl border border-dashed border-stone-300 p-12 text-center space-y-4">
               <div className="text-4xl">🧪</div>
-              <p className="text-stone-600 font-medium">No active experiment</p>
+              <p className="text-stone-600 font-medium">{STRINGS.experimentPage.noActiveExperiment}</p>
               <p className="text-sm text-stone-400 max-w-xs mx-auto leading-relaxed">
-                Complete a baseline pack or single-meeting analysis to receive your first personalised experiment.
+                {STRINGS.experimentPage.noActiveExperimentDesc}
               </p>
               <div className="flex gap-3 justify-center pt-2">
                 <Link
                   href="/client/analyze"
                   className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors"
                 >
-                  ✨ Analyze Meeting
+                  {STRINGS.experimentTracker.analyzeMeeting}
                 </Link>
                 <Link
                   href="/client/baseline/new"
                   className="px-5 py-2.5 bg-white border border-stone-300 text-stone-700 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors"
                 >
-                  Create baseline
+                  {STRINGS.clientDashboard.createBaseline}
                 </Link>
               </div>
             </div>

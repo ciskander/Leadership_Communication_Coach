@@ -1,0 +1,540 @@
+/**
+ * Centralised UI strings for the Leadership Communication Coach frontend.
+ *
+ * All user-visible text should live here so it can be customised without
+ * touching component code. Dynamic strings that depend on runtime values
+ * are expressed as functions.
+ */
+
+// ─── Shared / reusable ─────────────────────────────────────────────────────────
+
+export const STRINGS = {
+  // ── App-wide ────────────────────────────────────────────────────────────────
+  app: {
+    title: 'Leadership Coach',
+    description: 'AI-powered leadership communication coaching',
+    loginHeading: 'Leadership Coach',
+    loginSubheading: 'AI-powered communication coaching rooted in your actual meetings.',
+    continueWithGoogle: 'Continue with Google',
+    signOut: 'Sign out',
+    redirectingToSignIn: 'Redirecting to sign in…',
+  },
+
+  // ── Brand / logo ────────────────────────────────────────────────────────────
+  brand: {
+    logoAlt: 'ClearVoice',
+    logoAriaLabel: 'ClearVoice Leadership Communication Coaching',
+    wordmarkLeft: 'Clear',
+    wordmarkRight: 'Voice',
+    subtitle: 'LEADERSHIP COMMUNICATION COACHING',
+    sidebarHint: 'ClearVoice helps you become a more effective communicator, one meeting at a time.',
+  },
+
+  // ── Navigation ──────────────────────────────────────────────────────────────
+  nav: {
+    home: 'Home',
+    baselinePack: 'Baseline Pack',
+    analyzeMeeting: 'Analyze Meeting',
+    myExperiment: 'My Experiment',
+    progress: 'Progress',
+    myCoachees: 'My Coachees',
+    runAnalysis: 'Run Analysis',
+    users: 'Users',
+    dashboard: '← Dashboard',
+  },
+
+  // ── Common labels ───────────────────────────────────────────────────────────
+  common: {
+    whatToDo: 'What to do',
+    successLooksLike: 'Success looks like',
+    howYoullKnowItWorked: "How you'll know it worked",
+    forExampleYouSaid: 'For example, in this meeting you said',
+    nextTimeTry: 'Next time, try something like',
+    otherMoments: 'Other moments where this came up',
+    whatYouDidWell: 'What you did well',
+    whereYouCanImprove: 'Where you can improve',
+    observation: 'Observation',
+    cancel: 'Cancel',
+    delete: 'Delete',
+    deleting: 'Deleting…',
+    saving: 'Saving…',
+    uploading: 'Uploading…',
+    loading: 'Loading…',
+    retry: 'Retry',
+    decideLater: 'Decide later',
+    acceptExperiment: 'Accept experiment',
+    accepting: 'Accepting…',
+    meetingAnalysis: 'Meeting Analysis',
+    baselinePackAnalysis: 'Baseline Pack Analysis',
+    untitled: 'Untitled',
+    meeting: 'Meeting',
+    noExplanationAvailable: 'No explanation available.',
+  },
+
+  // ── Role labels (shared across multiple pages) ──────────────────────────────
+  roles: {
+    chair: 'Chair',
+    presenter: 'Presenter',
+    participant: 'Participant',
+    manager_1to1: 'Manager (1:1)',
+    report_1to1: 'Report (1:1)',
+  } as Record<string, string>,
+
+  // ── Role options (for dropdowns) ────────────────────────────────────────────
+  roleOptions: [
+    { value: 'chair', label: 'Chair / Facilitator' },
+    { value: 'presenter', label: 'Presenter' },
+    { value: 'participant', label: 'Participant' },
+    { value: 'manager_1to1', label: '1:1 Manager' },
+    { value: 'report_1to1', label: '1:1 Report' },
+  ],
+
+  // ── Pattern labels ──────────────────────────────────────────────────────────
+  patternLabels: {
+    agenda_clarity: 'Agenda Clarity',
+    objective_signaling: 'Objective Signaling',
+    turn_allocation: 'Turn Allocation',
+    facilitative_inclusion: 'Facilitative Inclusion',
+    decision_closure: 'Decision Closure',
+    owner_timeframe_specification: 'Owner & Timeframe',
+    summary_checkback: 'Summary & Check-back',
+    question_quality: 'Question Quality',
+    listener_response_quality: 'Listener Response',
+    conversational_balance: 'Conversational Balance',
+  } as Record<string, string>,
+
+  // ── Pattern explanations (used in progress page popovers) ───────────────────
+  patternExplanations: {
+    agenda_clarity:
+      'How consistently you open meetings with a clear agenda and stated objectives.',
+    objective_signaling:
+      "How often you make the meeting's purpose explicit when transitioning between topics.",
+    turn_allocation:
+      'How equitably you distribute speaking opportunities across participants.',
+    facilitative_inclusion:
+      'How actively you draw in quieter voices and prevent dominant speakers from taking over.',
+    decision_closure:
+      'How reliably you bring discussions to a clear decision with an owner before moving on.',
+    owner_timeframe_specification:
+      'How consistently action items are assigned with a named owner and a deadline.',
+    summary_checkback:
+      'How often you summarise key points and check for alignment before closing a topic.',
+    question_quality:
+      'How often your questions are tied to a specific decision or outcome rather than open-ended exploration.',
+    listener_response_quality:
+      'How well you acknowledge and build on what others have said before responding.',
+    conversational_balance:
+      'Whether speaking time is distributed appropriately given your role in the meeting.',
+  } as Record<string, string>,
+
+  // ── Pattern icons ───────────────────────────────────────────────────────────
+  patternIcons: {
+    agenda_clarity: '📋',
+    objective_signaling: '🥅',
+    turn_allocation: '🔄',
+    facilitative_inclusion: '👨‍👩‍👧‍👦',
+    decision_closure: '🔒',
+    owner_timeframe_specification: '📅',
+    summary_checkback: '☑️',
+    question_quality: '❓',
+    listener_response_quality: '👂',
+    conversational_balance: '⚖️',
+  } as Record<string, string>,
+
+  // ── Balance assessment labels ───────────────────────────────────────────────
+  balanceLabels: {
+    balanced: 'Balanced',
+    over_indexed: 'Over-indexed',
+    under_indexed: 'Under-indexed',
+    unclear: 'Unclear',
+  } as Record<string, string>,
+
+  // ── Evaluable status labels ─────────────────────────────────────────────────
+  evaluableStatus: {
+    insufficient_signal: 'Insufficient signal',
+    not_evaluable: 'Not evaluable',
+  } as Record<string, string>,
+
+  // ── Experiment status labels ────────────────────────────────────────────────
+  experimentStatus: {
+    proposed: 'Proposed',
+    active: 'Active',
+    completed: 'Completed',
+    parked: 'Parked',
+    abandoned: 'Abandoned',
+  } as Record<string, string>,
+
+  // ── Attempt status labels ───────────────────────────────────────────────────
+  attemptLabels: {
+    yes: 'Attempted',
+    partial: 'Partial attempt',
+    no: 'Not attempted',
+  } as Record<string, string>,
+
+  // ── Human confirmation labels ───────────────────────────────────────────────
+  humanConfirmation: {
+    confirmed_attempt: '↩ You confirmed',
+    confirmed_no_attempt: '↩ You said no',
+    tooltip: 'Your confirmation',
+  },
+
+  // ── Baseline badge labels ───────────────────────────────────────────────────
+  baselineStatus: {
+    none: 'Not started',
+    intake: 'Uploading',
+    building: 'Building',
+    baseline_ready: 'Ready',
+    completed: 'Ready',
+    error: 'Error',
+  } as Record<string, string>,
+
+  // ── Coaching card ───────────────────────────────────────────────────────────
+  coachingCard: {
+    strengthsHeading: 'What you do well',
+    focusHeading: 'Area to focus on',
+    experimentHeading: 'Your experiment',
+  },
+
+  // ── Transcript upload ───────────────────────────────────────────────────────
+  transcriptUpload: {
+    clickToUpload: 'Click to upload transcript (.vtt, .srt, .txt, .docx, .pdf)',
+    clickToSelect: 'Click to select transcript (.vtt, .srt, .txt, .docx, .pdf)',
+    fileUploaded: '✓ File uploaded',
+    fileUploadedSuccess: 'File uploaded successfully',
+    uploadTranscript: 'Upload transcript',
+    meetingTitle: 'Meeting title',
+    meetingTitlePlaceholder: 'e.g. Q1 Planning Session',
+    meetingType: 'Meeting type',
+    selectType: 'Select type…',
+    otherTypeBelow: 'Other (type below)',
+    enterMeetingType: 'Enter meeting type',
+    meetingDate: 'Meeting date',
+    meetingDateAutodetect: '(will be auto-detected if found in transcript)',
+  },
+
+  // ── Run status poller ───────────────────────────────────────────────────────
+  runStatusPoller: {
+    analysing: 'Analysing your meeting',
+    stillWorking: 'Still working…',
+    usuallyTakes: 'This usually takes 30–60 seconds',
+    timeoutTitle: 'Taking longer than expected',
+    timeoutDesc: 'The analysis is still running in the background.',
+    checkAgain: 'Check again',
+    errorTitle: 'Analysis failed',
+    errorFallback: 'Something went wrong. Please try again.',
+    qualityCheckFailed: "Quality check didn't pass",
+    qualityCheckDesc:
+      "The AI output didn't meet our quality requirements. This sometimes happens with shorter or unclear transcripts. Try re-running with a cleaner transcript.",
+    tryAnotherTranscript: 'Try another transcript',
+    analysisComplete: 'Analysis complete',
+    analysisFeedback: "Here's your personalised coaching feedback",
+    patternSnapshot: 'Pattern snapshot',
+    // Experiment tracking
+    experimentAccepted: 'Experiment accepted — good luck!',
+    viewOnDashboard: 'View on dashboard →',
+    experimentReady: 'Your experiment is ready',
+    fromTranscript: 'From the transcript',
+    whatYouSaid: 'What you said',
+    whatWorkedMissing: 'What worked and what was missing',
+    currentExperiment: 'Current Experiment',
+    yourExperiment: 'Your experiment',
+    viewOnMyExperiment: 'View on My Experiment →',
+    // Detection
+    nicelyDone: 'Nicely done!',
+    partialAttemptDetected: 'Partial attempt detected',
+    userConfirmedAttempt: 'User confirmed attempt',
+    noAttemptDetected: 'No attempt detected',
+    missedDetectionPrompt:
+      "The model didn\u2019t detect your experiment being tried in this meeting \u2014 but it\u2019s possible we missed something. Did you attempt the experiment?",
+    yesITriedIt: 'Yes, I tried it',
+    notThisTime: 'Not this time',
+    confirmedYes:
+      "Thanks for letting us know! We\u2019ve recorded your attempt \u2014 the model doesn\u2019t always catch everything.",
+    confirmedNo:
+      'Got it \u2014 no worries. Just a gentle reminder to try again next time.',
+    clearAttempts: (count: number | string) =>
+      `The model detected ${count ?? 'multiple'} clear attempt${(typeof count === 'number' && count !== 1) || count === 'multiple' ? 's' : ''} at your experiment in this meeting. Keep it up.`,
+    partialAttemptDesc: (count: number | null) =>
+      `You made a partial attempt at your experiment${count ? ` — ${count} instance${count !== 1 ? 's' : ''} noted` : ''}. You're on the right track.`,
+  },
+
+  // ── Experiment tracker ──────────────────────────────────────────────────────
+  experimentTracker: {
+    analyzeToStart: 'Analyze your next meeting to start tracking this experiment.',
+    analyzeMeeting: '✨ Analyze Meeting',
+    noAttemptsYet: (meetings: number) =>
+      `No attempts detected yet across ${meetings} meeting${meetings !== 1 ? 's' : ''}. Keep going — it takes a few tries to build the habit.`,
+    attemptsDetected: (attempts: number, meetings: number) =>
+      `${attempts} attempt${attempts !== 1 ? 's' : ''} detected across ${meetings} meeting${meetings !== 1 ? 's' : ''} analyzed.`,
+    fullAttempts: 'Full attempts',
+    partial: 'Partial',
+    meetings: 'Meetings',
+    attemptHistory: 'Attempt history',
+    parkConfirmTitle: 'Park this experiment for now?',
+    parkConfirmDesc:
+      'It will be saved and you can resume it later. Any progress recorded so far will be kept.',
+    yesParkIt: 'Yes, park it',
+    keepGoing: 'Keep going',
+    markComplete: 'Mark complete ✓',
+    parkForNow: '⏸ Park for now',
+  },
+
+  // ── Client dashboard (home) ─────────────────────────────────────────────────
+  clientDashboard: {
+    greetingMorning: 'Good morning',
+    greetingAfternoon: 'Good afternoon',
+    greetingEvening: 'Good evening',
+    subtitle: 'Your communication growth dashboard.',
+    yourJourney: 'Your Journey',
+    journeyBaseline: 'Baseline',
+    journeyFirstAnalysis: 'First Analysis',
+    journeyExperiment: 'Experiment',
+    journeyGrowth: 'Growth',
+    startBaseline: 'Start by building your baseline from 3 past meetings.',
+    getStarted: 'Get started →',
+    buildingBaseline: 'Building your baseline… check back in a few minutes.',
+    experimentOptionsWaiting: 'You have experiment options waiting — pick one to get started.',
+    chooseExperiment: 'Choose experiment →',
+    baselineReadyAnalyze: 'Baseline ready! Analyze a meeting to receive your first experiment suggestion.',
+    analyzeMeetingArrow: '✨ Analyze Meeting →',
+    baselinePackTitle: 'Baseline Pack',
+    baselinePackCta: 'Analyze 3 past meetings to unlock personalised coaching patterns.',
+    baselinePackDone: '✓ Your communication patterns have been mapped.',
+    analysisInProgress: 'Analysis in progress…',
+    createBaseline: 'Create baseline',
+    activeExperimentTitle: 'Active Experiment',
+    trackProgress: 'Track progress →',
+    experimentOptionsChoose: 'Choose one →',
+    experimentOptionsWaitingShort: 'You have experiment options waiting.',
+    completeAnalysisForExperiment: 'Complete an analysis to receive your first personalised experiment.',
+    suggestedExperiments: 'Suggested Experiments',
+    suggestions: (n: number) => `${n} suggestion${n !== 1 ? 's' : ''}`,
+    analyzeMeetingBtn: '✨ Analyze Meeting',
+    createBaselineBtn: '📚 Create Baseline',
+    recentAnalyses: 'Recent Analyses',
+    deleteSelected: (n: number) => `Delete selected (${n})`,
+    done: 'Done',
+    edit: 'Edit',
+    editModeHelp: 'Select meetings to delete. Baseline Pack analyses cannot be deleted here.',
+    baselineCannotDeleteTooltip: 'Baseline Pack analyses cannot be deleted here',
+    completeCurrentFirst: 'Complete your current experiment first',
+    accept: 'Accept',
+    deleteModalTitle: (count: number) => `Delete ${count === 1 ? 'this meeting' : `${count} meetings`}?`,
+    deleteModalDesc: (count: number) =>
+      `This will permanently delete the ${count === 1 ? 'meeting' : 'meetings'} and ${count === 1 ? 'its' : 'their'} analysis results. This cannot be undone.`,
+    attemptCount: (attempts: number, meetings?: number) => {
+      let s = `${attempts} attempt${attempts !== 1 ? 's' : ''}`;
+      if (meetings != null && meetings > 0) s += ` across ${meetings} meeting${meetings !== 1 ? 's' : ''}`;
+      return s;
+    },
+    deletionsFailed: (count: number) => `${count} deletion${count > 1 ? 's' : ''} failed. Please try again.`,
+  },
+
+  // ── Analyze page ────────────────────────────────────────────────────────────
+  analyzePage: {
+    heading: 'Analyze a Meeting',
+    subtitle: 'Upload a transcript to receive personalised coaching feedback.',
+    step1: 'Upload transcript',
+    step2: 'Configure analysis',
+    whichSpeaker: 'Which speaker are you?',
+    whoAreWeAnalysing: 'Who are we analysing?',
+    speakerLabel: 'Speaker label',
+    speakerLabelPlaceholder: 'e.g. SPEAKER_00',
+    fullName: 'Their full name',
+    fullNamePlaceholder: 'e.g. Sarah Johnson',
+    roleInMeeting: 'Their role in this meeting',
+    selectRole: 'Select role…',
+    submitBtn: '✨ Analyze Meeting →',
+    startingAnalysis: 'Starting analysis…',
+    // Errors
+    failedToEnqueue: 'Failed to enqueue',
+    analysisFailedToStart: 'Analysis failed to start.',
+    timedOutWaiting: 'Timed out waiting for analysis to start.',
+    failedToPollStatus: 'Failed to poll status.',
+  },
+
+  // ── Baseline new page ───────────────────────────────────────────────────────
+  baselineNew: {
+    heading: 'Create Baseline Pack',
+    subtitle: 'Select 3 past meeting transcripts to build your communication baseline.',
+    yourFullName: 'Your full name',
+    nameHint: 'Used to identify you across all three transcripts.',
+    namePlaceholder: 'e.g. Sarah Johnson',
+    meetingsConfigured: (n: number) => `${n} of 3 meetings configured`,
+    loadingTranscripts: 'Loading your transcripts…',
+    meetingN: (n: number) => `Meeting ${n}`,
+    existing: 'Existing',
+    uploadNew: 'Upload new',
+    noTranscripts: 'No transcripts yet.',
+    uploadOne: 'Upload one',
+    yourSpeakerLabel: 'Your speaker label in this transcript',
+    noDateWarning: '⚠ No date set — required for correct ordering in your progress chart.',
+    yourRole: 'Your role in this meeting',
+    selectPlaceholder: 'Select…',
+    buildingBaseline: 'Building baseline…',
+    buildBaselineBtn: 'Build Baseline Pack →',
+  },
+
+  // ── Baseline detail page ────────────────────────────────────────────────────
+  baselineDetail: {
+    heading: 'Baseline Pack',
+    notFound: 'Baseline pack not found.',
+    buildingTitle: 'Building your baseline…',
+    buildingDesc: 'This usually takes 2–5 minutes. This page will update automatically.',
+    timeoutTitle: 'Build is taking longer than expected',
+    errorTitle: 'Baseline build failed',
+    timeoutDesc: 'The analysis is still running in the background. Check back in a few minutes, or try creating a new baseline pack.',
+    errorDesc: 'Something went wrong during analysis. Please try creating a new baseline pack.',
+    tryAgain: 'Try again',
+    completeTitle: 'Baseline complete',
+    completeSubtitle: 'Your communication patterns have been mapped across 3 meetings',
+    yourBaseline: 'Your communication baseline',
+    meetingsInBaseline: 'Meetings in this baseline',
+    coachingOutput: 'Coaching output',
+    patternScores: 'Pattern scores',
+    expand: '▼ Expand',
+    collapse: '▲ Collapse',
+    noAnalysisData: 'Analysis data is not available for this meeting.',
+    notAnalysedYet: 'This meeting has not been analysed yet.',
+    experimentAccepted: 'Experiment accepted',
+    trackExperiment: 'Track progress on My Experiment →',
+    experimentReady: 'Your experiment is ready',
+    loadingExperiment: 'Loading your experiment…',
+  },
+
+  // ── Experiment page ─────────────────────────────────────────────────────────
+  experimentPage: {
+    heading: 'My Experiment',
+    subtitle: 'Track your progress on your current communication experiment.',
+    completeBanner: 'Experiment complete — well done!',
+    completeSubtext: 'Ready for your next challenge? Pick one below.',
+    parkedBanner: 'Experiment parked.',
+    parkedSubtext: 'You can resume it anytime. Pick your next focus below.',
+    findingExperiment: 'Finding your next experiment…',
+    parkCapMessage: (count: number) =>
+      `You have ${count} parked experiment${count !== 1 ? 's' : ''} (the maximum).`,
+    parkCapHint: 'Resume one to continue, or discard one to free up space for new suggestions.',
+    recommendedNext: 'Recommended next experiment',
+    suggestedExperiment: 'Suggested Experiment',
+    seeMoreOptions: 'See more options',
+    chooseNext: 'Choose your next experiment',
+    backToRecommendation: 'Back to recommendation',
+    topPick: 'Top pick',
+    previouslyParked: 'Previously parked',
+    newSuggestionsArriving: 'New suggestions arriving shortly…',
+    orResumeParked: 'Or resume a parked experiment',
+    resumeParked: 'Resume a parked experiment',
+    noActiveExperiment: 'No active experiment',
+    noActiveExperimentDesc: 'Complete a baseline pack or single-meeting analysis to receive your first personalised experiment.',
+    // Parked experiment card
+    parked: 'Parked',
+    resumeExperiment: 'Resume experiment',
+    resuming: 'Resuming…',
+    discard: 'Discard',
+    discardConfirm: 'Permanently discard this experiment? This cannot be undone.',
+  },
+
+  // ── Progress page ───────────────────────────────────────────────────────────
+  progressPage: {
+    heading: 'Your Progress',
+    subtitle: 'Pattern trends over time and your experiment history.',
+    loading: 'Loading your progress…',
+    errorFallback: 'Failed to load progress data.',
+    patternTrends: 'Pattern Trends',
+    focusPatternOnly: 'Focus Pattern Only',
+    top5Patterns: 'Top 5 Patterns',
+    allPatterns: 'All Patterns',
+    noRunData: 'No run data yet. Analyze a meeting to see your trends.',
+    meetingsUntilTrends: (n: number) =>
+      `${n} more meeting${n !== 1 ? 's' : ''} until trends appear`,
+    experimentBadge: 'Experiment',
+    baseline: 'Baseline',
+    score: 'Score',
+    pastExperiments: 'Past Experiments',
+    noPastExperiments: 'No completed, parked, or abandoned experiments yet.',
+    pattern: 'Pattern',
+    dateRange: 'Date range',
+    attempts: 'Attempts',
+    id: 'ID',
+    duringExperiment: (label: string) => `${label} during experiment`,
+    oneMeeting: '(1 meeting)',
+    attemptsAcross: (attempts: number, meetings: number) =>
+      `${attempts}${meetings > 0 ? ` across ${meetings} meeting${meetings !== 1 ? 's' : ''}` : ''}`,
+  },
+
+  // ── Run results page ────────────────────────────────────────────────────────
+  runResults: {
+    deleteThisMeeting: 'Delete this meeting',
+    deleteModalTitle: 'Delete this meeting?',
+    deleteModalDesc: 'This will permanently delete the meeting and its analysis results. This cannot be undone.',
+    deletionFailed: 'Deletion failed. Please try again.',
+  },
+
+  // ── Coach dashboard ─────────────────────────────────────────────────────────
+  coachDashboard: {
+    heading: 'My Coachees',
+    emptySubtitle: 'Add your first coachee to get started.',
+    subtitle: (n: number) => `${n} coachee${n !== 1 ? 's' : ''} in your programme.`,
+    addCoachee: 'Add Coachee',
+    noCoacheesTitle: 'No coachees yet',
+    noCoacheesDesc: 'Search for existing users or invite new ones.',
+    viewProfile: 'View profile',
+    // Modal
+    addCoacheeModalTitle: 'Add Coachee',
+    findExistingUser: 'Find Existing User',
+    inviteNewUser: 'Invite New User',
+    searchPlaceholder: 'Search by name or email…',
+    noUsersFound: 'No users found matching that search.',
+    searchFailed: 'Search failed. Please try again.',
+    failedToAssign: 'Failed to assign coachee.',
+    typeAtLeast2: 'Type at least 2 characters to search.',
+    inviteDesc: "Generate a single-use invite link to send to a new coachee. They'll be linked to your account when they sign up.",
+    generateInviteLink: 'Generate Invite Link',
+    generating: 'Generating…',
+    copied: '✓ Copied!',
+    copyLink: 'Copy Link',
+    new: 'New',
+    add: 'Add',
+    unnamed: 'Unnamed',
+  },
+
+  // ── Coach analyze page ──────────────────────────────────────────────────────
+  coachAnalyze: {
+    heading: 'Run Analysis',
+    subtitle: 'Upload a transcript and run coaching analysis for one of your coachees.',
+    step1: 'Step 1 — Select Coachee',
+    noCoachees: 'No coachees yet.',
+    inviteFirst: 'Invite one first.',
+    step2: 'Step 2 — Upload Transcript',
+    step3: 'Step 3 — Configure Analysis',
+    targetSpeaker: 'Target speaker',
+    speakersFullName: "Speaker's full name",
+    targetRole: 'Target role',
+    readyToAnalyse: '✓ Ready to analyse',
+    completeFieldsAbove: 'Complete the fields above to continue',
+    runningAnalysis: 'Running analysis…',
+    runAnalysis: 'Run Analysis',
+  },
+
+  // ── Coachee detail page ─────────────────────────────────────────────────────
+  coacheeDetail: {
+    activeExperiment: 'Active Experiment',
+    noActiveExperiment: 'No active experiment.',
+    suggestedExperiments: 'Suggested Experiments',
+    inQueue: (n: number) => `${n} in queue`,
+    coacheeCanAccept: 'The coachee can accept one of these from their dashboard when ready.',
+    baselinePack: 'Baseline Pack',
+    status: 'Status',
+    recentRuns: 'Recent Runs',
+    coacheeNotFound: 'Coachee not found.',
+  },
+
+  // ── Admin page ──────────────────────────────────────────────────────────────
+  admin: {
+    heading: 'User Management',
+    userColumn: 'User',
+    roleColumn: 'Role',
+    lastLoginColumn: 'Last Login',
+    promoteToCoach: 'Promote to Coach',
+  },
+} as const;

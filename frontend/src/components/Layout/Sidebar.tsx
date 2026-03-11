@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { STRINGS } from '@/config/strings';
 
 interface NavItem {
   href: string;
@@ -12,14 +13,14 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: '/client',            label: 'Home',            icon: '🏠',  roles: ['coachee'] },
-  { href: '/client/baseline',   label: 'Baseline Pack',   icon: '📚',  roles: ['coachee'] },
-  { href: '/client/analyze',    label: 'Analyze Meeting', icon: '✨',  roles: ['coachee'] },
-  { href: '/client/experiment', label: 'My Experiment',   icon: '🧪',  roles: ['coachee'] },
-  { href: '/client/progress',   label: 'Progress',        icon: '📈',  roles: ['coachee'] },
-  { href: '/coach',             label: 'My Coachees',     icon: '🧑‍🎓',  roles: ['coach'] },
-  { href: '/coach/analyze',     label: 'Run Analysis',    icon: '✨',  roles: ['coach'] },
-  { href: '/admin',             label: 'Users',           icon: '👥',  roles: ['admin'] },
+  { href: '/client',            label: STRINGS.nav.home,            icon: '🏠',  roles: ['coachee'] },
+  { href: '/client/baseline',   label: STRINGS.nav.baselinePack,   icon: '📚',  roles: ['coachee'] },
+  { href: '/client/analyze',    label: STRINGS.nav.analyzeMeeting, icon: '✨',  roles: ['coachee'] },
+  { href: '/client/experiment', label: STRINGS.nav.myExperiment,   icon: '🧪',  roles: ['coachee'] },
+  { href: '/client/progress',   label: STRINGS.nav.progress,        icon: '📈',  roles: ['coachee'] },
+  { href: '/coach',             label: STRINGS.nav.myCoachees,     icon: '🧑‍🎓',  roles: ['coach'] },
+  { href: '/coach/analyze',     label: STRINGS.nav.runAnalysis,    icon: '✨',  roles: ['coach'] },
+  { href: '/admin',             label: STRINGS.nav.users,           icon: '👥',  roles: ['admin'] },
 ];
 
 const roleColors: Record<string, { dot: string; label: string }> = {
@@ -77,7 +78,7 @@ export function Sidebar() {
       {/* Bottom hint */}
       <div className="px-4 py-5">
         <p className="text-xs text-stone-400 leading-relaxed">
-          ClearVoice helps you become a more effective communicator, one meeting at a time.
+          {STRINGS.brand.sidebarHint}
         </p>
       </div>
     </aside>

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import type { CoacheeListItem } from '@/lib/types';
+import { STRINGS } from '@/config/strings';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -37,9 +38,9 @@ function AddCoacheeModal({
     try {
       const data = await api.searchUsers(query);
       setResults(data);
-      if (data.length === 0) setSearchError('No users found matching that search.');
+      if (data.length === 0) setSearchError(STRINGS.coachDashboard.noUsersFound);
     } catch {
-      setSearchError('Search failed. Please try again.');
+      setSearchError(STRINGS.coachDashboard.searchFailed);
     } finally {
       setSearching(false);
     }
@@ -59,7 +60,7 @@ function AddCoacheeModal({
       onAdded(coachee);
       onClose();
     } catch {
-      setSearchError('Failed to assign coachee.');
+      setSearchError(STRINGS.coachDashboard.failedToAssign);
     } finally {
       setAssigning(null);
     }
@@ -89,7 +90,7 @@ function AddCoacheeModal({
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200">
-          <h2 className="font-semibold text-stone-800">Add Coachee</h2>
+          <h2 className="font-semibold text-stone-800">{STRINGS.coachDashboard.addCoacheeModalTitle}</h2>
           <button
             onClick={onClose}
             className="text-stone-400 hover:text-stone-600 transition-colors text-lg leading-none"
@@ -110,7 +111,7 @@ function AddCoacheeModal({
                   : 'text-stone-500 hover:text-stone-700'
               }`}
             >
-              {t === 'search' ? 'Find Existing User' : 'Invite New User'}
+              {t === 'search' ? STRINGS.coachDashboard.findExistingUser : STRINGS.coachDashboard.inviteNewUser}
             </button>
           ))}
         </div>
@@ -123,7 +124,7 @@ function AddCoacheeModal({
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search by name or email…"
+                  placeholder={STRINGS.coachDashboard.searchPlaceholder}
                   className="w-full border border-stone-300 rounded-xl px-4 py-2.5 text-sm pr-10 focus:outline-none focus:border-emerald-400"
                   autoFocus
                 />
@@ -145,7 +146,7 @@ function AddCoacheeModal({
                     >
                       <div>
                         <p className="text-sm font-medium text-stone-800">
-                          {r.display_name ?? 'Unnamed'}
+                          {r.display_name ?? STRINGS.coachDashboard.unnamed}
                         </p>
                         <p className="text-xs text-stone-400">{r.email}</p>
                       </div>
@@ -154,7 +155,7 @@ function AddCoacheeModal({
                         disabled={assigning === r.id}
                         className="text-xs px-3 py-1.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors"
                       >
-                        {assigning === r.id ? '…' : 'Add'}
+                        {assigning === r.id ? '…' : STRINGS.coachDashboard.add}
                       </button>
                     </li>
                   ))}
@@ -162,7 +163,7 @@ function AddCoacheeModal({
               )}
 
               {query.length > 0 && query.length < 2 && (
-                <p className="text-xs text-stone-400">Type at least 2 characters to search.</p>
+                <p className="text-xs text-stone-400">{STRINGS.coachDashboard.typeAtLeast2}</p>
               )}
             </>
           )}
@@ -170,7 +171,7 @@ function AddCoacheeModal({
           {tab === 'invite' && (
             <>
               <p className="text-sm text-stone-600">
-                Generate a single-use invite link to send to a new coachee. They'll be linked to your account when they sign up.
+                {STRINGS.coachDashboard.inviteDesc}
               </p>
 
               {!inviteUrl ? (
@@ -182,10 +183,10 @@ function AddCoacheeModal({
                   {inviting ? (
                     <span className="flex items-center justify-center gap-2">
                       <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Generating…
+                      {STRINGS.coachDashboard.generating}
                     </span>
                   ) : (
-                    'Generate Invite Link'
+                    STRINGS.coachDashboard.generateInviteLink
                   )}
                 </button>
               ) : (
@@ -198,13 +199,13 @@ function AddCoacheeModal({
                       onClick={handleCopy}
                       className="flex-1 py-2 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors"
                     >
-                      {copied ? '✓ Copied!' : 'Copy Link'}
+                      {copied ? STRINGS.coachDashboard.copied : STRINGS.coachDashboard.copyLink}
                     </button>
                     <button
                       onClick={() => setInviteUrl(null)}
                       className="px-4 py-2 border border-stone-300 text-stone-600 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors"
                     >
-                      New
+                      {STRINGS.coachDashboard.new}
                     </button>
                   </div>
                 </div>
@@ -266,18 +267,18 @@ export default function CoachDashboard() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">My Coachees</h1>
+          <h1 className="text-2xl font-bold text-stone-900">{STRINGS.coachDashboard.heading}</h1>
           <p className="text-stone-500 text-sm mt-1">
             {coachees.length === 0
-              ? 'Add your first coachee to get started.'
-              : `${coachees.length} coachee${coachees.length !== 1 ? 's' : ''} in your programme.`}
+              ? STRINGS.coachDashboard.emptySubtitle
+              : STRINGS.coachDashboard.subtitle(coachees.length)}
           </p>
         </div>
         <button
           onClick={() => setShowModal(true)}
           className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm"
         >
-          <span>+</span> Add Coachee
+          <span>+</span> {STRINGS.coachDashboard.addCoachee}
         </button>
       </div>
 
@@ -285,15 +286,15 @@ export default function CoachDashboard() {
       {coachees.length === 0 ? (
         <div className="bg-white rounded-2xl border border-dashed border-stone-300 p-12 text-center space-y-3">
           <div className="text-4xl">◫</div>
-          <p className="text-stone-600 font-medium">No coachees yet</p>
+          <p className="text-stone-600 font-medium">{STRINGS.coachDashboard.noCoacheesTitle}</p>
           <p className="text-sm text-stone-400">
-            Search for existing users or invite new ones.
+            {STRINGS.coachDashboard.noCoacheesDesc}
           </p>
           <button
             onClick={() => setShowModal(true)}
             className="mt-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors"
           >
-            Add Coachee
+            {STRINGS.coachDashboard.addCoachee}
           </button>
         </div>
       ) : (
@@ -314,13 +315,13 @@ export default function CoachDashboard() {
                 </div>
                 <div className="min-w-0">
                   <p className="font-semibold text-stone-800 text-sm truncate">
-                    {c.display_name ?? 'Unnamed'}
+                    {c.display_name ?? STRINGS.coachDashboard.unnamed}
                   </p>
                   <p className="text-xs text-stone-400 truncate">{c.email}</p>
                 </div>
               </div>
               <div className="flex items-center justify-between pt-2 border-t border-stone-100">
-                <span className="text-xs text-stone-400">View profile</span>
+                <span className="text-xs text-stone-400">{STRINGS.coachDashboard.viewProfile}</span>
                 <span className="text-emerald-500 group-hover:translate-x-0.5 transition-transform">→</span>
               </div>
             </Link>

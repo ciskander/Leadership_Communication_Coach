@@ -8,18 +8,13 @@ import type { BaselinePack, BaselinePackMeeting, CoachingItem, Experiment, Activ
 import { CoachingCard } from '@/components/CoachingCard';
 import { PatternSnapshot } from '@/components/PatternSnapshot';
 import { ExperimentTracker } from '@/components/ExperimentTracker';
+import { STRINGS } from '@/config/strings';
 
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const ROLE_LABELS: Record<string, string> = {
-  chair: 'Chair',
-  presenter: 'Presenter',
-  participant: 'Participant',
-  manager_1to1: 'Manager (1:1)',
-  report_1to1: 'Report (1:1)',
-};
+const ROLE_LABELS = STRINGS.roles;
 
 function fmtDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '';
@@ -47,7 +42,7 @@ function AcceptedExperimentPanel({ experiment }: { experiment: Experiment }) {
     <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 space-y-3">
       <div className="flex items-center gap-2">
         <span className="text-emerald-600">✦</span>
-        <span className="text-sm font-semibold text-emerald-800">Experiment accepted</span>
+        <span className="text-sm font-semibold text-emerald-800">{STRINGS.baselineDetail.experimentAccepted}</span>
       </div>
       <div className="space-y-1">
         <PatternLabel id={experiment.pattern_id} />
@@ -55,11 +50,11 @@ function AcceptedExperimentPanel({ experiment }: { experiment: Experiment }) {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="bg-white rounded-xl p-3 border border-emerald-100">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">What to do</p>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.whatToDo}</p>
           <p className="text-xs text-stone-600 leading-relaxed">{experiment.instruction}</p>
         </div>
         <div className="bg-white rounded-xl p-3 border border-emerald-100">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Success looks like</p>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.successLooksLike}</p>
           <p className="text-xs text-stone-600 leading-relaxed">{experiment.success_marker}</p>
         </div>
       </div>
@@ -67,7 +62,7 @@ function AcceptedExperimentPanel({ experiment }: { experiment: Experiment }) {
         href="/client/experiment"
         className="inline-flex items-center text-sm text-emerald-700 font-medium hover:text-emerald-900 transition-colors"
       >
-        Track progress on My Experiment →
+        {STRINGS.baselineDetail.trackExperiment}
       </Link>
     </div>
   );
@@ -106,11 +101,11 @@ function ProposedExperimentCard({
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="bg-stone-50 rounded-xl p-3">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">What to do</p>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.whatToDo}</p>
           <p className="text-xs text-stone-600 leading-relaxed">{experiment.instruction}</p>
         </div>
         <div className="bg-stone-50 rounded-xl p-3">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Success looks like</p>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.successLooksLike}</p>
           <p className="text-xs text-stone-600 leading-relaxed">{experiment.success_marker}</p>
         </div>
       </div>
@@ -121,13 +116,13 @@ function ProposedExperimentCard({
           disabled={state === 'loading'}
           className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
         >
-          {state === 'loading' ? 'Accepting…' : 'Accept experiment'}
+          {state === 'loading' ? STRINGS.common.accepting : STRINGS.common.acceptExperiment}
         </button>
         <Link
           href="/client"
           className="text-xs text-stone-500 hover:text-stone-700 transition-colors"
         >
-          Decide later
+          {STRINGS.common.decideLater}
         </Link>
         <span className="text-xs text-stone-400 ml-auto">{experiment.experiment_id}</span>
       </div>
@@ -157,7 +152,7 @@ function ExperimentSection() {
     return (
       <div className="flex items-center gap-2 py-2">
         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-stone-400 flex-shrink-0" />
-        <span className="text-xs text-stone-400">Loading your experiment…</span>
+        <span className="text-xs text-stone-400">{STRINGS.baselineDetail.loadingExperiment}</span>
       </div>
     );
   }
@@ -170,7 +165,7 @@ function ExperimentSection() {
     return (
       <section className="space-y-3">
         <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
-          Your experiment is ready
+          {STRINGS.baselineDetail.experimentReady}
         </h2>
         {proposed.map((exp) => (
           <ProposedExperimentCard
@@ -201,7 +196,7 @@ function SubRunPatternSnapshot({ patterns }: { patterns: Record<string, unknown>
   return (
     <div className="mt-1">
       <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-2">
-        Pattern scores
+        {STRINGS.baselineDetail.patternScores}
       </p>
       <div className="opacity-80">
         <PatternSnapshot patterns={patterns as unknown as PatternSnapshotItem[]} />
@@ -251,7 +246,7 @@ function MeetingAccordionCard({
           </div>
         </div>
         <span className="text-stone-400 flex-shrink-0 mt-0.5 text-xs font-medium">
-          {open ? '▲ Collapse' : '▼ Expand'}
+          {open ? STRINGS.baselineDetail.collapse : STRINGS.baselineDetail.expand}
         </span>
       </button>
 
@@ -263,7 +258,7 @@ function MeetingAccordionCard({
               {(meeting.sub_run_strengths?.length || meeting.sub_run_focus) && (
                 <div>
                   <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
-                    Coaching output
+                    {STRINGS.baselineDetail.coachingOutput}
                   </p>
                   <CoachingCard
                     strengths={(meeting.sub_run_strengths ?? []) as CoachingItem[]}
@@ -279,8 +274,8 @@ function MeetingAccordionCard({
           ) : (
             <p className="text-xs text-stone-400">
               {meeting.run_id
-                ? 'Analysis data is not available for this meeting.'
-                : 'This meeting has not been analysed yet.'}
+                ? STRINGS.baselineDetail.noAnalysisData
+                : STRINGS.baselineDetail.notAnalysedYet}
             </p>
           )}
         </div>
@@ -329,7 +324,7 @@ export default function BaselineDetailPage() {
   if (!pack) {
     return (
       <div className="max-w-xl mx-auto py-12 text-center">
-        <p className="text-sm text-stone-500">Baseline pack not found.</p>
+        <p className="text-sm text-stone-500">{STRINGS.baselineDetail.notFound}</p>
       </div>
     );
   }
@@ -344,12 +339,12 @@ export default function BaselineDetailPage() {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-stone-900">Baseline Pack</h1>
+        <h1 className="text-2xl font-bold text-stone-900">{STRINGS.baselineDetail.heading}</h1>
         <Link
           href="/client"
           className="text-sm text-stone-500 hover:text-stone-700 transition-colors"
         >
-          ← Dashboard
+          {STRINGS.nav.dashboard}
         </Link>
       </div>
 
@@ -361,8 +356,8 @@ export default function BaselineDetailPage() {
             <div className="absolute inset-0 w-14 h-14 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-stone-800">Building your baseline…</p>
-            <p className="text-xs text-stone-400 mt-1">This usually takes 2–5 minutes. This page will update automatically.</p>
+            <p className="text-sm font-semibold text-stone-800">{STRINGS.baselineDetail.buildingTitle}</p>
+            <p className="text-xs text-stone-400 mt-1">{STRINGS.baselineDetail.buildingDesc}</p>
           </div>
         </div>
       )}
@@ -371,12 +366,12 @@ export default function BaselineDetailPage() {
       {isError && (
         <div className="bg-white rounded-2xl border border-rose-200 p-6 space-y-3">
           <p className="text-sm font-semibold text-rose-700">
-            {timedOut ? 'Build is taking longer than expected' : 'Baseline build failed'}
+            {timedOut ? STRINGS.baselineDetail.timeoutTitle : STRINGS.baselineDetail.errorTitle}
           </p>
           <p className="text-sm text-stone-500">
             {timedOut
-              ? 'The analysis is still running in the background. Check back in a few minutes, or try creating a new baseline pack.'
-              : 'Something went wrong during analysis. Please try creating a new baseline pack.'}
+              ? STRINGS.baselineDetail.timeoutDesc
+              : STRINGS.baselineDetail.errorDesc}
           </p>
           <div className="flex gap-2">
             {timedOut && (
@@ -384,14 +379,14 @@ export default function BaselineDetailPage() {
                 onClick={() => { setTimedOut(false); fetchPack(); }}
                 className="inline-block text-sm px-4 py-2 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 transition-colors"
               >
-                Check again
+                {STRINGS.runStatusPoller.checkAgain}
               </button>
             )}
             <Link
               href="/client/baseline/new"
               className="inline-block text-sm px-4 py-2 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors"
             >
-              Try again
+              {STRINGS.baselineDetail.tryAgain}
             </Link>
           </div>
         </div>
@@ -404,8 +399,8 @@ export default function BaselineDetailPage() {
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-3.5 flex items-center gap-3">
             <span className="text-emerald-600 text-lg">✦</span>
             <div>
-              <p className="text-sm font-semibold text-emerald-800">Baseline complete</p>
-              <p className="text-xs text-emerald-600">Your communication patterns have been mapped across 3 meetings</p>
+              <p className="text-sm font-semibold text-emerald-800">{STRINGS.baselineDetail.completeTitle}</p>
+              <p className="text-xs text-emerald-600">{STRINGS.baselineDetail.completeSubtitle}</p>
             </div>
           </div>
 
@@ -423,7 +418,7 @@ export default function BaselineDetailPage() {
           {pack.pattern_snapshot && pack.pattern_snapshot.length > 0 && (
             <section>
               <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
-                Your communication baseline
+                {STRINGS.baselineDetail.yourBaseline}
               </h2>
               <PatternSnapshot patterns={pack.pattern_snapshot as unknown as PatternSnapshotItem[]} />
             </section>
@@ -433,7 +428,7 @@ export default function BaselineDetailPage() {
           {meetings.length > 0 && (
             <section>
               <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
-                Meetings in this baseline
+                {STRINGS.baselineDetail.meetingsInBaseline}
               </h2>
               <div className="space-y-2">
                 {meetings.map((meeting, i) => (
@@ -455,7 +450,7 @@ export default function BaselineDetailPage() {
               href="/client/analyze"
               className="inline-block px-5 py-3 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors"
             >
-              ✨ Analyze Meeting
+              {STRINGS.experimentTracker.analyzeMeeting}
             </Link>
           </div>
         </>
