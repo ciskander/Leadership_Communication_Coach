@@ -492,9 +492,9 @@ export default function ExperimentPage() {
               <div className="flex gap-3 justify-center pt-2">
                 <Link
                   href="/client/analyze"
-                  className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors"
+                  className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors"
                 >
-                  Analyse a meeting
+                  ✨ Analyse a meeting
                 </Link>
                 <Link
                   href="/client/baseline/new"

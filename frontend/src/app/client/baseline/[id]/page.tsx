@@ -455,7 +455,7 @@ export default function BaselineDetailPage() {
               href="/client/analyze"
               className="inline-block px-5 py-3 bg-white border border-stone-300 text-stone-700 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors"
             >
-              Analyse a meeting
+              ✨ Analyse a meeting
             </Link>
           </div>
         </>

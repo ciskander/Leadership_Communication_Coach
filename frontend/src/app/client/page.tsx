@@ -482,8 +482,8 @@ export default function ClientDashboard() {
         {hasBaseline && !hasExperiment && !hasExperimentOptions && (
           <div className="mt-4 pt-4 border-t border-stone-100 flex items-center justify-between">
             <p className="text-sm text-stone-600">Baseline ready! Analyze a meeting to receive your first experiment suggestion.</p>
-            <Link href="/client/analyze" className="text-sm px-4 py-1.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors whitespace-nowrap">
-              Analyze meeting →
+            <Link href="/client/analyze" className="text-sm px-4 py-1.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors whitespace-nowrap">
+              ✨ Analyze meeting →
             </Link>
           </div>
         )}
@@ -559,7 +559,7 @@ export default function ClientDashboard() {
 
       {/* Quick actions */}
       <div className="flex gap-3">
-        <Link href="/client/analyze" className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm">
+        <Link href="/client/analyze" className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
           <span>✨</span> Analyze a Meeting
         </Link>
         {bpStatus === 'none' && (

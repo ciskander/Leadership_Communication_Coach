@@ -102,7 +102,7 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
             href="/client/analyze"
             className="shrink-0 text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
           >
-            Analyse meeting
+            ✨ Analyse meeting
           </Link>
         </div>
       );
@@ -115,9 +115,9 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
           </p>
           <Link
             href="/client/analyze"
-            className="shrink-0 text-xs px-3 py-1.5 bg-stone-800 text-white rounded-lg font-semibold hover:bg-stone-700 transition-colors"
+            className="shrink-0 text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
           >
-            Analyse meeting
+            ✨ Analyse meeting
           </Link>
         </div>
       );
@@ -131,7 +131,7 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
           href="/client/analyze"
           className="shrink-0 text-xs px-3 py-1.5 bg-stone-100 text-stone-700 rounded-lg font-semibold hover:bg-stone-200 transition-colors"
         >
-          Analyse meeting
+          ✨ Analyse meeting
         </Link>
       </div>
     );
@@ -279,7 +279,7 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
                   disabled={actionState === 'loading'}
                   className="px-4 py-2.5 bg-white border border-stone-300 text-stone-600 rounded-xl text-sm font-medium hover:bg-stone-50 disabled:opacity-50 transition-colors"
                 >
-                  Park for now
+                  ⏸ Park for now
                 </button>
               </div>
             )}

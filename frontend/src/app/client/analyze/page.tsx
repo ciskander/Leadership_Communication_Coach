@@ -254,7 +254,7 @@ export default function AnalyzePage() {
       <button
         onClick={handleSubmit}
         disabled={!ready || submitting}
-        className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-semibold text-sm hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+        className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-semibold text-sm hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
       >
         {submitting ? (
           <span className="flex items-center justify-center gap-2">
@@ -262,7 +262,7 @@ export default function AnalyzePage() {
             Starting analysis…
           </span>
         ) : (
-          'Analyse Meeting →'
+          '✨ Analyse Meeting →'
         )}
       </button>
     </div>
