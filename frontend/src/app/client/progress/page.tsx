@@ -422,7 +422,15 @@ function PatternTrendsChart({
 
 // ─── Past experiments section ─────────────────────────────────────────────────
 
-function PastExperimentCard({ exp }: { exp: PastExperiment }) {
+function PastExperimentCard({
+  exp,
+  patternHistory,
+  trendWindowSize,
+}: {
+  exp: PastExperiment;
+  patternHistory: RunHistoryPoint[];
+  trendWindowSize: number;
+}) {
   const [open, setOpen] = useState(false);
 
   const statusColor =
@@ -436,6 +444,18 @@ function PastExperimentCard({ exp }: { exp: PastExperiment }) {
     exp.started_at || exp.ended_at
       ? `${fmtDate(exp.started_at)} – ${fmtDate(exp.ended_at)}`
       : null;
+
+  // Filter history to runs within the experiment's date range
+  const expHistory = patternHistory.filter((run) => {
+    if (!run.meeting_date) return false;
+    if (exp.started_at && run.meeting_date < exp.started_at) return false;
+    if (exp.ended_at && run.meeting_date > exp.ended_at) return false;
+    return run.patterns.some((p) => p.pattern_id === exp.pattern_id);
+  });
+
+  const pid = exp.pattern_id;
+  const color = '#2563eb';
+  const chartData = expHistory.length > 0 ? buildChartData(expHistory, [pid], trendWindowSize) : [];
 
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden">
@@ -460,32 +480,89 @@ function PastExperimentCard({ exp }: { exp: PastExperiment }) {
       </button>
 
       {open && (
-        <div className="px-5 py-4 bg-gray-50 border-t border-gray-200 grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <span className="text-xs text-gray-500 uppercase tracking-wide">Pattern</span>
-            <p className="font-medium text-gray-800 mt-0.5 flex items-center">
-              {PATTERN_LABELS[exp.pattern_id] ?? exp.pattern_id}
-              <InfoPopover patternId={exp.pattern_id} />
-            </p>
-          </div>
-          {dateRange && (
+        <div className="px-5 py-4 bg-gray-50 border-t border-gray-200 space-y-4">
+          <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <span className="text-xs text-gray-500 uppercase tracking-wide">Date range</span>
-              <p className="font-medium text-gray-800 mt-0.5">{dateRange}</p>
-            </div>
-          )}
-          {exp.attempt_count != null && (
-            <div>
-              <span className="text-xs text-gray-500 uppercase tracking-wide">Attempts</span>
-              <p className="font-medium text-gray-800 mt-0.5">
-                {exp.attempt_count}{exp.meeting_count != null && exp.meeting_count > 0 ? ` across ${exp.meeting_count} meeting${exp.meeting_count !== 1 ? 's' : ''}` : ''}
+              <span className="text-xs text-gray-500 uppercase tracking-wide">Pattern</span>
+              <p className="font-medium text-gray-800 mt-0.5 flex items-center">
+                {PATTERN_LABELS[pid] ?? pid}
+                <InfoPopover patternId={pid} />
               </p>
             </div>
-          )}
-          <div>
-            <span className="text-xs text-gray-500 uppercase tracking-wide">ID</span>
-            <p className="font-mono text-xs text-gray-500 mt-0.5">{exp.experiment_id}</p>
+            {dateRange && (
+              <div>
+                <span className="text-xs text-gray-500 uppercase tracking-wide">Date range</span>
+                <p className="font-medium text-gray-800 mt-0.5">{dateRange}</p>
+              </div>
+            )}
+            {exp.attempt_count != null && (
+              <div>
+                <span className="text-xs text-gray-500 uppercase tracking-wide">Attempts</span>
+                <p className="font-medium text-gray-800 mt-0.5">
+                  {exp.attempt_count}{exp.meeting_count != null && exp.meeting_count > 0 ? ` across ${exp.meeting_count} meeting${exp.meeting_count !== 1 ? 's' : ''}` : ''}
+                </p>
+              </div>
+            )}
+            <div>
+              <span className="text-xs text-gray-500 uppercase tracking-wide">ID</span>
+              <p className="font-mono text-xs text-gray-500 mt-0.5">{exp.experiment_id}</p>
+            </div>
           </div>
+
+          {/* Mini trend chart for this experiment's pattern */}
+          {chartData.length >= 2 ? (
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">
+                {PATTERN_LABELS[pid] ?? pid} during experiment
+              </p>
+              <ResponsiveContainer width="100%" height={160}>
+                <LineChart data={chartData} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#9ca3af' }} tickLine={false} />
+                  <YAxis
+                    domain={[0, 100]}
+                    tickFormatter={(v) => `${v}%`}
+                    tick={{ fontSize: 10, fill: '#9ca3af' }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <Tooltip
+                    formatter={(v: number | null) => [v != null ? `${v}%` : '—', PATTERN_LABELS[pid] ?? pid]}
+                    labelStyle={{ fontSize: 11 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey={rawKey(pid)}
+                    stroke="none"
+                    dot={{ r: 2, fill: color, opacity: 0.3 }}
+                    activeDot={false}
+                    connectNulls={false}
+                    legendType="none"
+                    isAnimationActive={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey={pid}
+                    stroke={color}
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 4, fill: color }}
+                    connectNulls
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          ) : chartData.length === 1 ? (
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                {PATTERN_LABELS[pid] ?? pid} during experiment
+              </p>
+              <p className="text-sm font-medium text-gray-800">
+                {chartData[0][pid] != null ? `${chartData[0][pid]}%` : '—'}
+                <span className="text-gray-400 font-normal ml-1">(1 meeting)</span>
+              </p>
+            </div>
+          ) : null}
         </div>
       )}
     </div>
@@ -583,7 +660,7 @@ export default function ProgressPage() {
             ) : (
               <div className="space-y-3">
                 {data.past_experiments.map((exp) => (
-                  <PastExperimentCard key={exp.experiment_record_id} exp={exp} />
+                  <PastExperimentCard key={exp.experiment_record_id} exp={exp} patternHistory={data.pattern_history} trendWindowSize={data.trend_window_size} />
                 ))}
               </div>
             )}
