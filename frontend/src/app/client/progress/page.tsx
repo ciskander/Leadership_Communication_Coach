@@ -227,7 +227,7 @@ function PatternTrendsChart({
   const patternColor = (pid: string) =>
     LINE_COLORS[allPatterns.indexOf(pid) % LINE_COLORS.length];
 
-  const chartData = buildChartData(history, visiblePatterns, trendWindowSize);
+  const chartData = buildChartData(history, allPatterns, trendWindowSize);
   const baselinePoint = chartData.find((p) => p.isBaseline);
 
   // Custom tooltip — show trend line values; raw dots are hidden from tooltip
