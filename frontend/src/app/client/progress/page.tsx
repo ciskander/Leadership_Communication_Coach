@@ -221,6 +221,11 @@ function PatternTrendsChart({
     }
   }
 
+  // Stable color mapping: always based on position in allPatterns so colors
+  // don't shift when filtering to experiment-only view.
+  const patternColor = (pid: string) =>
+    LINE_COLORS[allPatterns.indexOf(pid) % LINE_COLORS.length];
+
   const chartData = buildChartData(history, visiblePatterns, trendWindowSize);
   const baselinePoint = chartData.find((p) => p.isBaseline);
 
@@ -264,13 +269,13 @@ function PatternTrendsChart({
     <div>
       {/* Pattern legend with ⓘ */}
       <div className="flex flex-wrap gap-3 mb-4">
-        {visiblePatterns.map((pid, i) => {
+        {visiblePatterns.map((pid) => {
           const isExp = pid === experimentPatternId;
           return (
             <span key={pid} className={`flex items-center text-sm ${isExp ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
               <span
                 className={`inline-block rounded-full mr-1.5 flex-shrink-0 ${isExp ? 'w-3.5 h-3.5 ring-2 ring-offset-1 ring-current' : 'w-3 h-3'}`}
-                style={{ background: LINE_COLORS[i % LINE_COLORS.length] }}
+                style={{ background: patternColor(pid) }}
               />
               {PATTERN_LABELS[pid] ?? pid}
               {isExp && (
@@ -317,8 +322,8 @@ function PatternTrendsChart({
                 axisLine={false}
               />
               <Tooltip content={<CustomTooltip />} />
-              {visiblePatterns.map((pid, i) => {
-                const color = LINE_COLORS[i % LINE_COLORS.length];
+              {visiblePatterns.map((pid) => {
+                const color = patternColor(pid);
                 const isExp = pid === experimentPatternId;
                 return [
                   /* Faded raw dots — no connecting line */
@@ -405,7 +410,7 @@ function PatternTrendsChart({
                     <Bar dataKey="score" radius={[4, 4, 0, 0]} maxBarSize={48}>
                       {barData.map((entry) => {
                         const isExp = entry.pid === experimentPatternId;
-                        const color = LINE_COLORS[visiblePatterns.indexOf(entry.pid) % LINE_COLORS.length];
+                        const color = patternColor(entry.pid);
                         return (
                           <Cell
                             key={entry.pid}
