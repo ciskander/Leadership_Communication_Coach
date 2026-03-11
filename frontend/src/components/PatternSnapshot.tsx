@@ -21,6 +21,19 @@ const PATTERN_LABELS: Record<string, string> = {
   conversational_balance: 'Conversational Balance',
 };
 
+const PATTERN_ICONS: Record<string, string> = {
+  agenda_clarity: '📋',
+  objective_signaling: '🥅',
+  turn_allocation: '🔄',
+  facilitative_inclusion: '👨‍👩‍👧‍👦',
+  decision_closure: '🔒',
+  owner_timeframe_specification: '📅',
+  summary_checkback: '☑️',
+  question_quality: '❓',
+  listener_response_quality: '👂',
+  conversational_balance: '⚖️',
+};
+
 const BALANCE_COLORS: Record<string, { bg: string; dot: string }> = {
   balanced: { bg: 'bg-emerald-50', dot: 'bg-emerald-500' },
   over_indexed: { bg: 'bg-rose-50', dot: 'bg-rose-400' },
@@ -115,6 +128,9 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
       >
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs font-medium text-gray-700">
+            {PATTERN_ICONS[pattern.pattern_id] && (
+              <span className="mr-1">{PATTERN_ICONS[pattern.pattern_id]}</span>
+            )}
             {PATTERN_LABELS[pattern.pattern_id] ?? pattern.pattern_id}
           </span>
           <div className="flex items-center gap-1.5">
