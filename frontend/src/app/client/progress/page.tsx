@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { api } from '@/lib/api';
 import type { ClientProgress, RunHistoryPoint, PastExperiment } from '@/lib/types';
 import { useActiveExperiment } from '@/hooks/useActiveExperiment';
@@ -199,39 +199,44 @@ function PatternTrendsChart({
   const showLineChart = hasBaseline && postBaselineCount >= 3;
 
   // Aggregate opportunity counts across all runs to pick top patterns
-  const oppCounts: Record<string, number> = {};
-  for (const run of history) {
-    for (const p of run.patterns) {
-      oppCounts[p.pattern_id] = (oppCounts[p.pattern_id] ?? 0) + p.opportunity_count;
+  const { allPatterns, topPatterns } = useMemo(() => {
+    const oppCounts: Record<string, number> = {};
+    for (const run of history) {
+      for (const p of run.patterns) {
+        oppCounts[p.pattern_id] = (oppCounts[p.pattern_id] ?? 0) + p.opportunity_count;
+      }
     }
-  }
-  const allPatterns = Object.keys(oppCounts).sort((a, b) => oppCounts[b] - oppCounts[a]);
-  const topPatterns = allPatterns.slice(0, 5);
+    const all = Object.keys(oppCounts).sort((a, b) => oppCounts[b] - oppCounts[a]);
+    return { allPatterns: all, topPatterns: all.slice(0, 5) };
+  }, [history]);
 
   // Determine visible patterns based on view mode
   const hasExpPattern = experimentPatternId && allPatterns.includes(experimentPatternId);
-  let visiblePatterns: string[];
-  if (viewMode === 'focus' && hasExpPattern) {
-    visiblePatterns = [experimentPatternId];
-  } else if (viewMode === 'all') {
-    visiblePatterns = allPatterns;
-  } else {
-    visiblePatterns = topPatterns;
-    if (hasExpPattern && !topPatterns.includes(experimentPatternId)) {
-      visiblePatterns = [...topPatterns, experimentPatternId];
+  const visiblePatterns = useMemo(() => {
+    if (viewMode === 'focus' && hasExpPattern) {
+      return [experimentPatternId!];
+    } else if (viewMode === 'all') {
+      return allPatterns;
+    } else {
+      if (hasExpPattern && !topPatterns.includes(experimentPatternId!)) {
+        return [...topPatterns, experimentPatternId!];
+      }
+      return topPatterns;
     }
-  }
+  }, [viewMode, hasExpPattern, experimentPatternId, allPatterns, topPatterns]);
 
   // Stable color mapping: always based on position in allPatterns so colors
   // don't shift when filtering to experiment-only view.
-  const patternColor = (pid: string) =>
-    LINE_COLORS[allPatterns.indexOf(pid) % LINE_COLORS.length];
+  const patternColor = useCallback(
+    (pid: string) => LINE_COLORS[allPatterns.indexOf(pid) % LINE_COLORS.length],
+    [allPatterns],
+  );
 
-  const chartData = buildChartData(history, allPatterns, trendWindowSize);
-  const baselinePoint = chartData.find((p) => p.isBaseline);
+  const chartData = useMemo(() => buildChartData(history, allPatterns, trendWindowSize), [history, allPatterns, trendWindowSize]);
+  const baselinePoint = useMemo(() => chartData.find((p) => p.isBaseline), [chartData]);
 
   // Custom tooltip — show trend line values; raw dots are hidden from tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const renderCustomTooltip = useCallback(({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     // Only show trend lines (not raw dot series)
     const trendEntries = payload.filter((e: any) => !e.dataKey.endsWith('_raw'));
@@ -256,7 +261,7 @@ function PatternTrendsChart({
         })}
       </div>
     );
-  };
+  }, []);
 
   if (history.length === 0) {
     return (
@@ -286,7 +291,7 @@ function PatternTrendsChart({
                 tickLine={false}
                 axisLine={false}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={renderCustomTooltip} />
               {visiblePatterns.map((pid) => {
                 const color = patternColor(pid);
                 const isExp = pid === experimentPatternId;
