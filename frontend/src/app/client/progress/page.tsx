@@ -318,6 +318,7 @@ function PatternTrendsChart({
                     dot={false}
                     activeDot={{ r: isExp ? 7 : 5, fill: color }}
                     connectNulls
+                    isAnimationActive={false}
                   />,
                 ];
               })}
