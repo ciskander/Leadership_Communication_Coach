@@ -523,30 +523,12 @@ export default function ProgressPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      {/* Header + view toggle */}
+      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Your Progress</h1>
         <p className="text-gray-500 mt-1 text-sm">
           Pattern trends over time and your experiment history.
         </p>
-        <div className="mt-3 inline-flex rounded-lg border border-gray-200 overflow-hidden">
-          {viewOptions.map(({ key, label, disabled }) => (
-            <button
-              key={key}
-              onClick={() => setViewMode(key)}
-              disabled={disabled}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors border-r last:border-r-0 border-gray-200 ${
-                effectiveViewMode === key
-                  ? 'bg-gray-900 text-white'
-                  : disabled
-                    ? 'bg-white text-gray-300 cursor-not-allowed'
-                    : 'bg-white text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {loading && (
@@ -569,7 +551,27 @@ export default function ProgressPage() {
         <>
           {/* Pattern Trends */}
           <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-5">Pattern Trends</h2>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-semibold text-gray-900">Pattern Trends</h2>
+              <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
+                {viewOptions.map(({ key, label, disabled }) => (
+                  <button
+                    key={key}
+                    onClick={() => setViewMode(key)}
+                    disabled={disabled}
+                    className={`px-3 py-1.5 text-xs font-medium transition-colors border-r last:border-r-0 border-gray-200 ${
+                      effectiveViewMode === key
+                        ? 'bg-gray-900 text-white'
+                        : disabled
+                          ? 'bg-white text-gray-300 cursor-not-allowed'
+                          : 'bg-white text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <PatternTrendsChart history={data.pattern_history} trendWindowSize={data.trend_window_size} experimentPatternId={experimentPatternId} viewMode={effectiveViewMode} />
           </section>
 
