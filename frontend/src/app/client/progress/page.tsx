@@ -179,18 +179,19 @@ function buildChartData(
   });
 }
 
+type ViewMode = 'focus' | 'top5' | 'all';
+
 function PatternTrendsChart({
   history,
   trendWindowSize = 3,
   experimentPatternId,
+  viewMode,
 }: {
   history: RunHistoryPoint[];
   trendWindowSize?: number;
   experimentPatternId?: string | null;
+  viewMode: ViewMode;
 }) {
-  const [showAll, setShowAll] = useState(false);
-  const [experimentOnly, setExperimentOnly] = useState(false);
-
   // Count post-baseline meetings — count non-baseline runs directly rather than
   // relying on sort position, so a missing/failed baseline run can't inflate the count.
   const hasBaseline = history.some((r) => r.is_baseline);
@@ -207,12 +208,12 @@ function PatternTrendsChart({
   const allPatterns = Object.keys(oppCounts).sort((a, b) => oppCounts[b] - oppCounts[a]);
   const topPatterns = allPatterns.slice(0, 5);
 
-  // Ensure experiment pattern is always included in the visible set
+  // Determine visible patterns based on view mode
   const hasExpPattern = experimentPatternId && allPatterns.includes(experimentPatternId);
   let visiblePatterns: string[];
-  if (experimentOnly && hasExpPattern) {
+  if (viewMode === 'focus' && hasExpPattern) {
     visiblePatterns = [experimentPatternId];
-  } else if (showAll) {
+  } else if (viewMode === 'all') {
     visiblePatterns = allPatterns;
   } else {
     visiblePatterns = topPatterns;
@@ -288,20 +289,6 @@ function PatternTrendsChart({
           );
         })}
       </div>
-
-      {/* Experiment filter toggle */}
-      {hasExpPattern && (
-        <button
-          onClick={() => { setExperimentOnly((v) => !v); setShowAll(false); }}
-          className={`mb-4 text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${
-            experimentOnly
-              ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-              : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
-          }`}
-        >
-          {experimentOnly ? 'Show all patterns' : `Focus: ${PATTERN_LABELS[experimentPatternId] ?? experimentPatternId}`}
-        </button>
-      )}
 
       {/* Chart */}
       {showLineChart ? (
@@ -430,15 +417,6 @@ function PatternTrendsChart({
         </>
       )}
 
-      {/* Show all toggle */}
-      {allPatterns.length > 5 && !experimentOnly && (
-        <button
-          onClick={() => setShowAll((v) => !v)}
-          className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
-        >
-          {showAll ? '← Show top patterns only' : `Show all ${allPatterns.length} patterns →`}
-        </button>
-      )}
     </div>
   );
 }
@@ -521,9 +499,11 @@ export default function ProgressPage() {
   const [data, setData] = useState<ClientProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('top5');
   const { data: activeExp } = useActiveExperiment();
 
   const experimentPatternId = activeExp?.experiment?.pattern_id ?? null;
+  const hasExpPattern = !!experimentPatternId;
 
   useEffect(() => {
     api
@@ -533,14 +513,41 @@ export default function ProgressPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Fall back to top5 if focus is selected but there's no active experiment
+  const effectiveViewMode = viewMode === 'focus' && !hasExpPattern ? 'top5' : viewMode;
+
+  const viewOptions: { key: ViewMode; label: string; disabled?: boolean }[] = [
+    { key: 'focus', label: 'Focus Pattern Only', disabled: !hasExpPattern },
+    { key: 'top5', label: 'Top 5 Patterns' },
+    { key: 'all', label: 'All Patterns' },
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      {/* Header */}
+      {/* Header + view toggle */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Your Progress</h1>
         <p className="text-gray-500 mt-1 text-sm">
           Pattern trends over time and your experiment history.
         </p>
+        <div className="mt-3 inline-flex rounded-lg border border-gray-200 overflow-hidden">
+          {viewOptions.map(({ key, label, disabled }) => (
+            <button
+              key={key}
+              onClick={() => setViewMode(key)}
+              disabled={disabled}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors border-r last:border-r-0 border-gray-200 ${
+                effectiveViewMode === key
+                  ? 'bg-gray-900 text-white'
+                  : disabled
+                    ? 'bg-white text-gray-300 cursor-not-allowed'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading && (
@@ -564,7 +571,7 @@ export default function ProgressPage() {
           {/* Pattern Trends */}
           <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-5">Pattern Trends</h2>
-            <PatternTrendsChart history={data.pattern_history} trendWindowSize={data.trend_window_size} experimentPatternId={experimentPatternId} />
+            <PatternTrendsChart history={data.pattern_history} trendWindowSize={data.trend_window_size} experimentPatternId={experimentPatternId} viewMode={effectiveViewMode} />
           </section>
 
           {/* Past Experiments */}
