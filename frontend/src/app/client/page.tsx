@@ -554,11 +554,11 @@ export default function ClientDashboard() {
       {/* Quick actions */}
       <div className="flex gap-3">
         <Link href="/client/analyze" className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
-          <span>✨</span> {STRINGS.clientDashboard.analyzeMeetingBtn}
+          {STRINGS.clientDashboard.analyzeMeetingBtn}
         </Link>
         {bpStatus === 'none' && (
           <Link href="/client/baseline/new" className="flex items-center gap-2 px-5 py-2.5 bg-white border border-stone-300 text-stone-700 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors">
-            <span>📚</span> {STRINGS.clientDashboard.createBaselineBtn}
+            {STRINGS.clientDashboard.createBaselineBtn}
           </Link>
         )}
       </div>
