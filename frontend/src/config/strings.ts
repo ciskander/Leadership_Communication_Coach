@@ -96,10 +96,10 @@ export const STRINGS = {
     turn_allocation: 'Turn Allocation',
     facilitative_inclusion: 'Facilitative Inclusion',
     decision_closure: 'Decision Closure',
-    owner_timeframe_specification: 'Owner & Timeframe',
+    owner_timeframe_specification: 'Owner & Timeframe Specification',
     summary_checkback: 'Summary & Check-back',
     question_quality: 'Question Quality',
-    listener_response_quality: 'Listener Response',
+    listener_response_quality: 'Listener Response Quality',
     conversational_balance: 'Conversational Balance',
   } as Record<string, string>,
 
@@ -137,7 +137,7 @@ export const STRINGS = {
     owner_timeframe_specification: '📅',
     summary_checkback: '☑️',
     question_quality: '❓',
-    listener_response_quality: '🗣',
+    listener_response_quality: '👂',
     conversational_balance: '⚖️',
   } as Record<string, string>,
 
