@@ -290,7 +290,7 @@ export const STRINGS = {
     journeyFirstAnalysis: 'First Analysis',
     journeyExperiment: 'Experiment',
     journeyGrowth: 'Growth',
-    startBaseline: 'Start by building your baseline from 3 past meetings.',
+    startBaseline: 'Start by building your baseline from three past meetings.',
     getStarted: 'Get started →',
     buildingBaseline: 'Building your baseline… check back in a few minutes.',
     experimentOptionsWaiting: 'You have experiment options waiting — pick one to get started.',
@@ -549,7 +549,7 @@ export const STRINGS = {
     journeyHeading: 'How it works',
     journeyStep1Title: 'Build your baseline',
     journeyStep1Desc:
-      'Upload 3 past meeting transcripts so the AI can map your current communication patterns.',
+      'Upload three past meeting transcripts so the AI can map your current communication patterns.',
     journeyStep2Title: 'Analyze a meeting',
     journeyStep2Desc:
       'Upload a new transcript and receive personalized coaching feedback with concrete observations.',
@@ -571,7 +571,7 @@ export const STRINGS = {
     // Contextual tips
     tipDismissLabel: 'Dismiss',
     tipBaselineNew:
-      'Upload 3 past meeting transcripts to build your communication baseline. This gives the AI a starting picture of your patterns.',
+      'Upload three past meeting transcripts to build your communication baseline. This gives the AI a starting picture of your patterns.',
     tipAnalyze:
       'Upload a meeting transcript and the AI will give you personalized coaching feedback plus a micro-experiment to try.',
     tipExperiment:
