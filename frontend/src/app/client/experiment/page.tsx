@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
@@ -206,7 +206,7 @@ function ParkedExperimentCard({
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
-export default function ExperimentPage() {
+function ExperimentPageInner() {
   const { data, loading, error, refetch } = useActiveExperiment();
   const { proposed, pollState, startPolling, reset: resetPoller } = useProposedPoller();
 
@@ -515,5 +515,13 @@ export default function ExperimentPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function ExperimentPage() {
+  return (
+    <Suspense>
+      <ExperimentPageInner />
+    </Suspense>
   );
 }
