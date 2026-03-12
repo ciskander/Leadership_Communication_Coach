@@ -10,136 +10,23 @@ from fastapi import APIRouter, Depends
 
 from ..auth.models import UserAuth
 from ..core.airtable_client import AirtableClient
-from ..core.models import Turn
-from ..core.transcript_parser import parse_transcript
 from .dependencies import get_current_user
 from .dto import (
-    CoachingItemWithQuotes,
     ExperimentDetectionWithQuotes,
     ExperimentResponse,
-    MicroExperimentWithQuotes,
-    PatternSnapshotItem,
-    QuoteObject,
     RunRequestStatusResponse,
     RunStatusResponse,
 )
 from .errors import error_response
+from .quote_helpers import (
+    build_spans_lookup,
+    build_turn_map,
+    resolve_coaching_output,
+    resolve_pattern_snapshot,
+    resolve_quotes,
+)
 
 router = APIRouter()
-
-_QUOTE_MAX_CHARS = 2000
-
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-def _format_timestamp(seconds: float) -> str:
-    """Format seconds as M:SS or H:MM:SS for display."""
-    total = int(seconds)
-    h, remainder = divmod(total, 3600)
-    m, s = divmod(remainder, 60)
-    if h > 0:
-        return f"{h}:{m:02d}:{s:02d}"
-    return f"{m}:{s:02d}"
-
-
-def _build_turn_map(
-    at_client: AirtableClient,
-    transcript_record_id: Optional[str],
-) -> dict[int, Turn]:
-    """Parse the transcript and return a {turn_id: Turn} lookup."""
-    if not transcript_record_id:
-        return {}
-    try:
-        tr_record = at_client.get_transcript(transcript_record_id)
-        tr_fields = tr_record.get("fields", {})
-        transcript_text = (
-            tr_fields.get("Transcript (extracted)")
-            or tr_fields.get("Raw Transcript Text")
-            or ""
-        )
-        if not transcript_text:
-            return {}
-        parsed = parse_transcript(
-            data=transcript_text.encode("utf-8"),
-            filename="transcript.txt",
-            source_id=tr_fields.get("Transcript ID") or transcript_record_id,
-        )
-        return {t.turn_id: t for t in parsed.turns}
-    except Exception:
-        return {}
-
-
-def _resolve_quotes(
-    evidence_span_ids: list[str],
-    spans_by_id: dict[str, dict],
-    transcript_id: Optional[str],
-    meeting_id: Optional[str],
-    turn_map: Optional[dict[int, Turn]] = None,
-) -> list[QuoteObject]:
-    quotes: list[QuoteObject] = []
-    for es_id in evidence_span_ids:
-        span = spans_by_id.get(es_id)
-        if not span:
-            continue
-        turn_start = span.get("turn_start_id")
-        turn_end = span.get("turn_end_id")
-        mid = span.get("meeting_id") or meeting_id
-
-        # Check whether the span covers multiple speakers
-        is_multi_speaker = False
-        if (
-            turn_map
-            and isinstance(turn_start, int)
-            and isinstance(turn_end, int)
-        ):
-            span_speakers = {
-                turn_map[tid].speaker_label
-                for tid in range(turn_start, turn_end + 1)
-                if tid in turn_map
-            }
-            is_multi_speaker = len(span_speakers) > 1
-
-        if is_multi_speaker:
-            # Expand into one quote per turn so each gets its own
-            # speaker name and timestamp.
-            for tid in range(turn_start, turn_end + 1):
-                turn = turn_map.get(tid)
-                if not turn:
-                    continue
-                ts = (
-                    _format_timestamp(turn.start_time_sec)
-                    if turn.start_time_sec is not None
-                    else None
-                )
-                quotes.append(
-                    QuoteObject(
-                        speaker_label=turn.speaker_label,
-                        quote_text=turn.text[:_QUOTE_MAX_CHARS],
-                        meeting_id=mid,
-                        transcript_id=transcript_id,
-                        span_id=es_id,
-                        start_timestamp=ts,
-                    )
-                )
-        else:
-            # Single speaker — show the LLM excerpt with just a timestamp
-            excerpt = (span.get("excerpt") or "")[:_QUOTE_MAX_CHARS]
-            start_ts: Optional[str] = None
-            if turn_map and isinstance(turn_start, int):
-                turn = turn_map.get(turn_start)
-                if turn and turn.start_time_sec is not None:
-                    start_ts = _format_timestamp(turn.start_time_sec)
-            quotes.append(
-                QuoteObject(
-                    speaker_label=None,
-                    quote_text=excerpt,
-                    meeting_id=mid,
-                    transcript_id=transcript_id,
-                    span_id=es_id,
-                    start_timestamp=start_ts,
-                )
-            )
-    return quotes
 
 
 def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = None) -> RunStatusResponse:
@@ -182,99 +69,27 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
         return resp
 
     # Build spans lookup
-    evidence_spans: list[dict] = parsed_json.get("evidence_spans", [])
-    spans_by_id: dict[str, dict] = {
-        s.get("evidence_span_id", ""): s for s in evidence_spans
-    }
+    spans_by_id = build_spans_lookup(parsed_json)
 
     transcript_links = fields.get("Transcript ID", [])
     transcript_id = transcript_links[0] if isinstance(transcript_links, list) and transcript_links else None
     meeting_id = parsed_json.get("context", {}).get("meeting_id")
 
     # Build turn map for timestamp display and multi-speaker expansion
-    turn_map = _build_turn_map(at_client, transcript_id) if at_client else {}
+    turn_map = build_turn_map(at_client, transcript_id) if at_client else {}
 
     # Coaching output with resolved quotes
-    coaching = parsed_json.get("coaching_output", {})
-
-    strengths: list[CoachingItemWithQuotes] = []
-    for s in coaching.get("strengths", []):
-        quotes = _resolve_quotes(s.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_map)
-        strengths.append(
-            CoachingItemWithQuotes(
-                pattern_id=s.get("pattern_id", ""),
-                message=s.get("message", ""),
-                quotes=quotes,
-            )
-        )
-
-    focus: Optional[CoachingItemWithQuotes] = None
-    focus_list = coaching.get("focus", [])
-    if focus_list:
-        f = focus_list[0]
-        rewrite_span_id = f.get("rewrite_for_span_id")
-        all_es_ids = f.get("evidence_span_ids", [])
-
-        # Split: primary quote (the one the rewrite applies to) vs additional
-        if rewrite_span_id and rewrite_span_id in all_es_ids:
-            primary_ids = [rewrite_span_id]
-            additional_ids = [eid for eid in all_es_ids if eid != rewrite_span_id]
-        else:
-            # Fallback: first span is primary, rest are additional
-            primary_ids = all_es_ids[:1]
-            additional_ids = all_es_ids[1:]
-
-        primary_quotes = _resolve_quotes(primary_ids, spans_by_id, transcript_id, meeting_id, turn_map)
-        additional_quotes = _resolve_quotes(additional_ids, spans_by_id, transcript_id, meeting_id, turn_map)
-
-        focus = CoachingItemWithQuotes(
-            pattern_id=f.get("pattern_id", ""),
-            message=f.get("message", ""),
-            quotes=primary_quotes,
-            suggested_rewrite=f.get("suggested_rewrite"),
-            rewrite_for_span_id=rewrite_span_id,
-            additional_quotes=additional_quotes,
-        )
-
-    micro_exp: Optional[MicroExperimentWithQuotes] = None
-    micro_list = coaching.get("micro_experiment", [])
-    if micro_list:
-        m = micro_list[0]
-        quotes = _resolve_quotes(m.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_map)
-        micro_exp = MicroExperimentWithQuotes(
-            experiment_id=m.get("experiment_id", ""),
-            title=m.get("title", ""),
-            instruction=m.get("instruction", ""),
-            success_marker=m.get("success_marker", ""),
-            pattern_id=m.get("pattern_id", ""),
-            quotes=quotes,
-        )
-
+    strengths, focus, micro_exp = resolve_coaching_output(
+        parsed_json, spans_by_id, transcript_id, meeting_id, turn_map
+    )
     resp.strengths = strengths
     resp.focus = focus
     resp.micro_experiment = micro_exp
 
     # ── Pattern snapshot with per-pattern quotes and coaching ──────────────
-    raw_snapshot = parsed_json.get("pattern_snapshot") or []
-    snapshot_items: list[PatternSnapshotItem] = []
-    for ps in raw_snapshot:
-        ps_quotes = _resolve_quotes(
-            ps.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_map
-        )
-        snapshot_items.append(PatternSnapshotItem(
-            pattern_id=ps.get("pattern_id", ""),
-            tier=ps.get("tier"),
-            evaluable_status=ps.get("evaluable_status", "not_evaluable"),
-            numerator=ps.get("numerator"),
-            denominator=ps.get("denominator"),
-            ratio=ps.get("ratio"),
-            balance_assessment=ps.get("balance_assessment"),
-            notes=ps.get("notes"),
-            quotes=ps_quotes,
-            coaching_note=ps.get("coaching_note"),
-            suggested_rewrite=ps.get("suggested_rewrite"),
-            rewrite_for_span_id=ps.get("rewrite_for_span_id"),
-        ))
+    snapshot_items = resolve_pattern_snapshot(
+        parsed_json, spans_by_id, transcript_id, meeting_id, turn_map
+    )
     resp.pattern_snapshot = snapshot_items if snapshot_items else None
 
     resp.evaluation_summary = parsed_json.get("evaluation_summary")
@@ -292,7 +107,7 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
         # Build typed experiment detection with quotes and coaching
         detection = exp_tracking.get("detection_in_this_meeting")
         if isinstance(detection, dict):
-            det_quotes = _resolve_quotes(
+            det_quotes = resolve_quotes(
                 detection.get("evidence_span_ids", []),
                 spans_by_id,
                 transcript_id,

@@ -30,6 +30,12 @@ from .dto import (
     SingleMeetingEnqueueResponse,
 )
 from .errors import error_response, invalid_input
+from .quote_helpers import (
+    build_spans_lookup,
+    build_turn_map,
+    resolve_coaching_output,
+    resolve_pattern_snapshot,
+)
 from ..queue.tasks import enqueue_single_meeting, enqueue_baseline_pack_build, enqueue_next_experiment_suggestion
 
 logger = logging.getLogger(__name__)
@@ -179,11 +185,56 @@ async def get_baseline_pack(
             run_rec = at_client.get_run(last_run_links[0])
             parsed_json_str = run_rec.get("fields", {}).get("Parsed JSON") or "{}"
             parsed = json.loads(parsed_json_str)
+
+            # Baseline aggregate runs receive only slim meeting summaries —
+            # NOT raw transcripts — so evidence_spans contain no real quotes.
+            # Extract coaching text fields only; quotes come from sub-runs.
             coaching = parsed.get("coaching_output", {})
-            strengths = coaching.get("strengths", [])
-            focus = (coaching.get("focus") or [None])[0]
-            micro_experiment = (coaching.get("micro_experiment") or [None])[0]
-            pattern_snapshot = parsed.get("pattern_snapshot", [])
+            strengths = [
+                {"pattern_id": s.get("pattern_id", ""), "message": s.get("message", ""), "quotes": []}
+                for s in coaching.get("strengths", [])
+            ]
+            focus_list = coaching.get("focus", [])
+            if focus_list:
+                f = focus_list[0]
+                focus = {
+                    "pattern_id": f.get("pattern_id", ""),
+                    "message": f.get("message", ""),
+                    "quotes": [],
+                    "suggested_rewrite": f.get("suggested_rewrite"),
+                    "rewrite_for_span_id": None,
+                    "additional_quotes": [],
+                }
+            micro_list = coaching.get("micro_experiment", [])
+            if micro_list:
+                m = micro_list[0]
+                micro_experiment = {
+                    "experiment_id": m.get("experiment_id", ""),
+                    "title": m.get("title", ""),
+                    "instruction": m.get("instruction", ""),
+                    "success_marker": m.get("success_marker", ""),
+                    "pattern_id": m.get("pattern_id", ""),
+                    "quotes": [],
+                }
+            # Pattern snapshot: extract text fields only, no quote resolution
+            raw_snapshot = parsed.get("pattern_snapshot") or []
+            pattern_snapshot = [
+                {
+                    "pattern_id": ps.get("pattern_id", ""),
+                    "tier": ps.get("tier"),
+                    "evaluable_status": ps.get("evaluable_status", "not_evaluable"),
+                    "numerator": ps.get("numerator"),
+                    "denominator": ps.get("denominator"),
+                    "ratio": ps.get("ratio"),
+                    "balance_assessment": ps.get("balance_assessment"),
+                    "notes": ps.get("notes"),
+                    "quotes": [],
+                    "coaching_note": ps.get("coaching_note"),
+                    "suggested_rewrite": ps.get("suggested_rewrite"),
+                    "rewrite_for_span_id": ps.get("rewrite_for_span_id"),
+                }
+                for ps in raw_snapshot
+            ]
         except Exception:
             pass
 
@@ -220,17 +271,56 @@ async def get_baseline_pack(
             if run_links:
                 try:
                     sub_run_rec = at_client.get_run(run_links[0])
-                    sub_parsed_str = sub_run_rec.get("fields", {}).get("Parsed JSON") or "{}"
+                    sub_fields = sub_run_rec.get("fields", {})
+                    sub_parsed_str = sub_fields.get("Parsed JSON") or "{}"
                     sub_parsed = json.loads(sub_parsed_str)
-                    sub_coaching = sub_parsed.get("coaching_output", {})
-                    meeting_info["sub_run_strengths"] = sub_coaching.get("strengths", [])
-                    meeting_info["sub_run_focus"] = (sub_coaching.get("focus") or [None])[0]
-                    meeting_info["sub_run_pattern_snapshot"] = sub_parsed.get("pattern_snapshot", [])
+
+                    # Resolve sub-run evidence spans with transcript turn map
+                    sub_spans = build_spans_lookup(sub_parsed)
+                    sub_transcript_links = sub_fields.get("Transcript ID", [])
+                    sub_transcript_id = sub_transcript_links[0] if isinstance(sub_transcript_links, list) and sub_transcript_links else None
+                    sub_meeting_id = sub_parsed.get("context", {}).get("meeting_id")
+                    meeting_info["meeting_id"] = sub_meeting_id
+                    sub_turn_map = build_turn_map(at_client, sub_transcript_id)
+
+                    sub_strengths, sub_focus, _ = resolve_coaching_output(
+                        sub_parsed, sub_spans, sub_transcript_id, sub_meeting_id, sub_turn_map
+                    )
+                    sub_pattern_snapshot = resolve_pattern_snapshot(
+                        sub_parsed, sub_spans, sub_transcript_id, sub_meeting_id, sub_turn_map
+                    )
+
+                    meeting_info["sub_run_strengths"] = [s.model_dump() for s in sub_strengths]
+                    meeting_info["sub_run_focus"] = sub_focus.model_dump() if sub_focus else None
+                    meeting_info["sub_run_pattern_snapshot"] = [p.model_dump() for p in sub_pattern_snapshot]
                 except Exception as se:
                     logger.warning("get_baseline_pack: could not fetch sub-run %s: %s", run_links[0], se)
             meetings.append(meeting_info)
     except Exception as e:
         logger.warning("get_baseline_pack: could not fetch pack items for %s: %s", bp_id, e)
+
+    # Annotate aggregate quotes with meeting labels for attribution
+    mid_to_label: dict[str, str] = {}
+    for m in meetings:
+        mid = m.get("meeting_id")
+        if mid:
+            label = m.get("title") or m.get("meeting_date") or mid
+            mid_to_label[mid] = label
+
+    def _annotate_quotes(data: object) -> None:
+        """Walk dicts/lists and set meeting_label on any quote with a matching meeting_id."""
+        if isinstance(data, dict):
+            if "quote_text" in data and data.get("meeting_id"):
+                data["meeting_label"] = mid_to_label.get(data["meeting_id"])
+            for v in data.values():
+                _annotate_quotes(v)
+        elif isinstance(data, list):
+            for item in data:
+                _annotate_quotes(item)
+
+    _annotate_quotes(strengths)
+    _annotate_quotes(focus)
+    _annotate_quotes(pattern_snapshot)
 
     return {
         "baseline_pack_id": bp_rec["id"],

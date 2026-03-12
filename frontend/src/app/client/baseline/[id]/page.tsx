@@ -119,10 +119,10 @@ function ProposedExperimentCard({
           {state === 'loading' ? STRINGS.common.accepting : STRINGS.common.acceptExperiment}
         </button>
         <Link
-          href="/client"
+          href="/client/experiment"
           className="text-xs text-stone-500 hover:text-stone-700 transition-colors"
         >
-          {STRINGS.common.decideLater}
+          {STRINGS.experimentPage.seeMoreOptions}
         </Link>
         <span className="text-xs text-stone-400 ml-auto">{experiment.experiment_id}</span>
       </div>

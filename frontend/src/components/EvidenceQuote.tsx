@@ -17,6 +17,9 @@ export function EvidenceQuote({ quote }: EvidenceQuoteProps) {
 
   return (
     <blockquote className="border-l-4 border-indigo-300 pl-4 py-1 my-2 bg-indigo-50 rounded-r-md">
+      {quote.meeting_label && (
+        <p className="text-xs text-indigo-400 font-medium mb-0.5">{quote.meeting_label}</p>
+      )}
       <p className="text-sm text-gray-700">
         {attribution && (
           <><span className="text-gray-500">{attribution}</span>{' '}</>
