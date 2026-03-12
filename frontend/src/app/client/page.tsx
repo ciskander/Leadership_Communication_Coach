@@ -128,7 +128,7 @@ function ProposedExperimentCard({
               {state === 'loading' ? STRINGS.common.accepting : STRINGS.common.acceptExperiment}
             </button>
             <Link
-              href="/client/experiment"
+              href="/client/experiment?expand=1"
               className="text-xs text-stone-500 hover:text-stone-700 transition-colors"
             >
               {STRINGS.experimentPage.seeMoreOptions}
@@ -550,18 +550,13 @@ export default function ClientDashboard() {
         </div>
       </div>
 
-      {/* Suggested experiments */}
+      {/* Suggested experiments — show only the top recommendation */}
       {proposedExperiments.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">{STRINGS.clientDashboard.suggestedExperiments}</h2>
-            <span className="text-xs text-stone-400">{STRINGS.clientDashboard.suggestions(proposedExperiments.length)}</span>
           </div>
-          <div className="space-y-3">
-            {proposedExperiments.map((exp) => (
-              <ProposedExperimentCard key={exp.experiment_record_id} experiment={exp} hasActiveExperiment={hasExperiment} onAccepted={reload} />
-            ))}
-          </div>
+          <ProposedExperimentCard key={proposedExperiments[0].experiment_record_id} experiment={proposedExperiments[0]} hasActiveExperiment={hasExperiment} onAccepted={reload} />
         </section>
       )}
 

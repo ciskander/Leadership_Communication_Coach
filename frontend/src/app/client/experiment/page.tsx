@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { useActiveExperiment } from '@/hooks/useActiveExperiment';
@@ -213,7 +214,8 @@ export default function ExperimentPage() {
   const [options, setOptions] = useState<ExperimentOptions | null>(null);
   const [seedLoading, setSeedLoading] = useState(true);
   const [lastAction, setLastAction] = useState<'completed' | 'parked' | null>(null);
-  const [showMore, setShowMore] = useState(false);
+  const searchParams = useSearchParams();
+  const [showMore, setShowMore] = useState(searchParams.get('expand') === '1');
   const [backfillRetries, setBackfillRetries] = useState(0);
   const MAX_BACKFILL_RETRIES = 8; // 40 seconds max
 
