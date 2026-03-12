@@ -137,7 +137,7 @@ export const STRINGS = {
     owner_timeframe_specification: '📅',
     summary_checkback: '☑️',
     question_quality: '❓',
-    listener_response_quality: '👂',
+    listener_response_quality: '🗣',
     conversational_balance: '⚖️',
   } as Record<string, string>,
 
@@ -214,7 +214,7 @@ export const STRINGS = {
 
   // ── Run status poller ───────────────────────────────────────────────────────
   runStatusPoller: {
-    analysing: 'Analysing your meeting',
+    analysing: 'Analyzing your meeting',
     stillWorking: 'Still working…',
     usuallyTakes: 'This usually takes 30–60 seconds',
     timeoutTitle: 'Taking longer than expected',
@@ -272,7 +272,7 @@ export const STRINGS = {
     attemptHistory: 'Attempt history',
     parkConfirmTitle: 'Park this experiment for now?',
     parkConfirmDesc:
-      'It will be saved and you can resume it later. Any progress recorded so far will be kept.',
+      'Your experiment will be saved so you can resume it later if you choose. We\'ll keep track of any progress recorded so far.',
     yesParkIt: 'Yes, park it',
     keepGoing: 'Keep going',
     markComplete: 'Mark complete ✓',
@@ -337,7 +337,7 @@ export const STRINGS = {
     step1: 'Upload transcript',
     step2: 'Configure analysis',
     whichSpeaker: 'Which speaker are you?',
-    whoAreWeAnalysing: 'Who are we analysing?',
+    whoAreWeAnalysing: 'Who are we analyzing?',
     speakerLabel: 'Speaker label',
     speakerLabelPlaceholder: 'e.g. SPEAKER_00',
     fullName: 'Their full name',
@@ -395,7 +395,7 @@ export const STRINGS = {
     expand: '▼ Expand',
     collapse: '▲ Collapse',
     noAnalysisData: 'Analysis data is not available for this meeting.',
-    notAnalysedYet: 'This meeting has not been analysed yet.',
+    notAnalysedYet: 'This meeting has not been analyzed yet.',
     experimentAccepted: 'Experiment accepted',
     trackExperiment: 'Track progress on My Experiment →',
     experimentReady: 'Your experiment is ready',
@@ -510,7 +510,7 @@ export const STRINGS = {
     targetSpeaker: 'Target speaker',
     speakersFullName: "Speaker's full name",
     targetRole: 'Target role',
-    readyToAnalyse: '✓ Ready to analyse',
+    readyToAnalyse: '✓ Ready to analyze',
     completeFieldsAbove: 'Complete the fields above to continue',
     runningAnalysis: 'Running analysis…',
     runAnalysis: 'Run Analysis',
