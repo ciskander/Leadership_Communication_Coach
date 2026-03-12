@@ -400,6 +400,7 @@ export const STRINGS = {
     trackExperiment: 'Track progress on My Experiment →',
     experimentReady: 'Your experiment is ready',
     loadingExperiment: 'Loading your experiment…',
+    aggregateCoachingNote: 'For personalized coaching based on specific meeting excerpts, take a look at the individual meeting sections below.',
   },
 
   // ── Experiment page ─────────────────────────────────────────────────────────

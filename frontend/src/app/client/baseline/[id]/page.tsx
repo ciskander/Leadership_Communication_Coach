@@ -411,6 +411,13 @@ export default function BaselineDetailPage() {
             microExperiment={null}
           />
 
+          {/* Hint to check individual meetings for transcript-based coaching */}
+          {meetings.length > 0 && (
+            <p className="text-xs text-stone-400 italic">
+              {STRINGS.baselineDetail.aggregateCoachingNote}
+            </p>
+          )}
+
           {/* Experiment section */}
           <ExperimentSection />
 
