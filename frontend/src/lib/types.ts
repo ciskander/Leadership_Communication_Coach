@@ -122,9 +122,16 @@ export interface ActiveExperiment {
   recent_events: Record<string, unknown>[];
 }
 
+export interface RankedExperimentItem {
+  experiment: Experiment;
+  origin: 'proposed' | 'parked';
+  rank: number;
+}
+
 export interface ExperimentOptions {
   proposed: Experiment[];
   parked: Experiment[];
+  ranked: RankedExperimentItem[];
   at_park_cap: boolean;
 }
 

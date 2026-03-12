@@ -24,6 +24,7 @@ from .dto import (
     ExperimentActionResponse,
     ExperimentOptionsResponse,
     ExperimentResponse,
+    RankedExperimentItem,
     ClientProgressResponse,
     HumanConfirmResponse,
     MeResponse,
@@ -664,7 +665,13 @@ async def discard_experiment(
 async def get_experiment_options(
     user: UserAuth = Depends(get_current_user),
 ):
-    """Return all proposed and parked experiments for the selection screen."""
+    """Return all proposed and parked experiments for the selection screen.
+
+    Also returns a ``ranked`` list that merges proposed + parked into a
+    single ordered list (up to 3 items), sorted by pattern weakness score
+    (lowest average ratio first) so the frontend can show one unified set
+    of options.
+    """
     if not user.airtable_user_record_id:
         return ExperimentOptionsResponse()
 
@@ -678,9 +685,63 @@ async def get_experiment_options(
     parked_records = at_client.get_parked_experiments_for_user(user.airtable_user_record_id)
     parked = [_build_experiment_response(r, at_client) for r in parked_records]
 
+    # ── Build ranked merge ────────────────────────────────────────────────
+    # Compute average pattern scores from recent runs to rank experiments.
+    pattern_avg: dict[str, float] = {}
+    try:
+        runs_formula = (
+            f"AND("
+            f"{{Coachee ID}} = '{user.airtable_user_record_id}', "
+            f"{{Gate1 Pass}} = TRUE()"
+            f")"
+        )
+        run_records = at_client.search_records("runs", runs_formula, max_records=5)
+        pattern_scores: dict[str, list[float]] = {}
+        for r in run_records:
+            rf = r.get("fields", {})
+            # Skip baseline sub-runs
+            if rf.get("Analysis Type") == "single_meeting" and rf.get("Baseline Pack"):
+                continue
+            parsed_str = rf.get("Parsed JSON") or "{}"
+            try:
+                parsed = json.loads(parsed_str)
+                for p in parsed.get("pattern_snapshot", []):
+                    pid = p.get("pattern_id")
+                    ratio = p.get("ratio")
+                    if pid and p.get("evaluable_status") == "evaluable" and ratio is not None:
+                        pattern_scores.setdefault(pid, []).append(float(ratio))
+            except Exception:
+                pass
+        pattern_avg = {
+            pid: sum(vals) / len(vals)
+            for pid, vals in pattern_scores.items()
+        }
+    except Exception:
+        logger.warning("get_experiment_options: could not compute pattern scores for ranking")
+
+    # Merge proposed + parked, tag with origin, sort by pattern weakness
+    tagged: list[tuple[str, ExperimentResponse]] = []
+    for exp in proposed:
+        tagged.append(("proposed", exp))
+    for exp in parked:
+        tagged.append(("parked", exp))
+
+    def _sort_key(item: tuple[str, ExperimentResponse]) -> float:
+        # Lower score = weaker pattern = higher priority.
+        # Patterns not in the map get score 0 (highest priority / unknown).
+        return pattern_avg.get(item[1].pattern_id, 0.0)
+
+    tagged.sort(key=_sort_key)
+
+    ranked = [
+        RankedExperimentItem(experiment=exp, origin=origin, rank=i + 1)
+        for i, (origin, exp) in enumerate(tagged[:3])
+    ]
+
     return ExperimentOptionsResponse(
         proposed=proposed,
         parked=parked,
+        ranked=ranked,
         at_park_cap=len(parked) >= 3,
     )
 

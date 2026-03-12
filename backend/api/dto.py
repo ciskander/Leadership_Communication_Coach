@@ -189,10 +189,18 @@ class HumanConfirmResponse(BaseModel):
     confirmed: bool
 
 
+class RankedExperimentItem(BaseModel):
+    """A proposed or parked experiment with its rank position and origin."""
+    experiment: ExperimentResponse
+    origin: str  # "proposed" or "parked"
+    rank: int  # 1-based rank
+
+
 class ExperimentOptionsResponse(BaseModel):
     """Combined proposed + parked experiments for the selection screen."""
     proposed: list[ExperimentResponse] = Field(default_factory=list)
     parked: list[ExperimentResponse] = Field(default_factory=list)
+    ranked: list[RankedExperimentItem] = Field(default_factory=list)
     at_park_cap: bool = False
 
 
