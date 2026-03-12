@@ -298,7 +298,7 @@ export const STRINGS = {
     baselineReadyAnalyze: 'Baseline ready! Analyze a meeting to receive your first experiment suggestion.',
     analyzeMeetingArrow: '✨ Analyze Meeting →',
     baselinePackTitle: 'Baseline Pack',
-    baselinePackCta: 'Analyze 3 past meetings to unlock personalised coaching patterns.',
+    baselinePackCta: 'Analyze three past meetings to unlock personalised coaching patterns.',
     baselinePackDone: '✓ Your communication patterns have been mapped.',
     analysisInProgress: 'Analysis in progress…',
     createBaseline: 'Create baseline',
@@ -356,7 +356,7 @@ export const STRINGS = {
   // ── Baseline new page ───────────────────────────────────────────────────────
   baselineNew: {
     heading: 'Create Baseline Pack',
-    subtitle: 'Select 3 past meeting transcripts to build your communication baseline.',
+    subtitle: 'Select three past meeting transcripts to build your communication baseline.',
     yourFullName: 'Your full name',
     nameHint: 'Used to identify you across all three transcripts.',
     namePlaceholder: 'e.g. Sarah Johnson',
@@ -580,7 +580,7 @@ export const STRINGS = {
     tipExperiment:
       'This is where you track your active experiment. After each meeting analysis, the AI checks whether you tried it.',
     tipProgress:
-      'Your pattern scores over time. Trends become visible after 3 or more analyzed meetings.',
+      'Your pattern scores over time. Trends become visible after three or more analyzed meetings.',
 
     // Sidebar replay
     replayOnboarding: 'Replay intro',
