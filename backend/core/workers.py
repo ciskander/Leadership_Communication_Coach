@@ -377,15 +377,21 @@ def process_single_meeting_analysis(
         source_id=transcript_id_str,
     )
 
-    # 3. Idempotency check
+    # 3. Idempotency check — reuse only if the previous run passed Gate1.
     idem_key = make_run_idempotency_key(
         transcript_id_str, analysis_type, coachee_id,
         target_speaker_label, target_role, config_version,
     )
     existing_run = client.find_run_by_idempotency_key(idem_key)
     if existing_run:
-        logger.info("Idempotency hit, returning existing run %s", existing_run["id"])
-        return existing_run["id"]
+        if _extract_fields(existing_run).get("Gate1 Pass"):
+            logger.info("Idempotency hit, returning existing run %s", existing_run["id"])
+            return existing_run["id"]
+        else:
+            logger.info(
+                "Idempotency hit but run %s failed Gate1 — creating new run.",
+                existing_run["id"],
+            )
 
     # 4. Build memory block
     memory = _build_memory_for_user(client, user_record_id, active_exp_record_id)
@@ -563,10 +569,11 @@ def process_baseline_pack_build(
     config_links = _get_link_ids(bp_fields, "Config") if "Config" in bp_fields else []
 
     # 1a. Idempotency check — prevent duplicate LLM calls if task is retried or
-    # the build endpoint is called twice for the same pack.
+    # the build endpoint is called twice for the same pack.  Only reuse if the
+    # previous run passed Gate1.
     idem_key = f"bp:{bp_pack_id_str}"
     existing_run = client.find_run_by_idempotency_key(idem_key)
-    if existing_run:
+    if existing_run and _extract_fields(existing_run).get("Gate1 Pass"):
         logger.info("Idempotency hit for baseline pack %s, returning existing run %s", baseline_pack_id, existing_run["id"])
         return existing_run["id"]
 
