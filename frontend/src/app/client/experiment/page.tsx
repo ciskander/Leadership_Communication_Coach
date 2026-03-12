@@ -213,6 +213,7 @@ export default function ExperimentPage() {
   const [options, setOptions] = useState<ExperimentOptions | null>(null);
   const [seedLoading, setSeedLoading] = useState(true);
   const [lastAction, setLastAction] = useState<'completed' | 'parked' | null>(null);
+  const [showMore, setShowMore] = useState(false);
 
   function fetchOptions() {
     api.getExperimentOptions()
@@ -247,6 +248,7 @@ export default function ExperimentPage() {
 
   function handleComplete() {
     setLastAction('completed');
+    setShowMore(false);
     resetPoller();
     refetch(false);
     startPolling();
@@ -255,6 +257,7 @@ export default function ExperimentPage() {
 
   function handlePark() {
     setLastAction('parked');
+    setShowMore(false);
     resetPoller();
     refetch(false);
     startPolling();
@@ -263,6 +266,7 @@ export default function ExperimentPage() {
 
   function handleAccepted() {
     setLastAction(null);
+    setShowMore(false);
     resetPoller();
     refetch();
     fetchOptions();
@@ -270,6 +274,7 @@ export default function ExperimentPage() {
 
   function handleResumed() {
     setLastAction(null);
+    setShowMore(false);
     resetPoller();
     refetch();
     fetchOptions();
@@ -379,38 +384,78 @@ export default function ExperimentPage() {
             </section>
           )}
 
-          {/* Ranked options — show all cards (proposed + parked merged by weakness) */}
+          {/* Experiment options — 1 top recommendation by default, all 3 ranked on "See more" */}
           {!showCapScreen && !overallLoading && hasOptions ? (
             <section>
-              <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
-                {lastAction ? STRINGS.experimentPage.chooseNext : STRINGS.experimentPage.suggestedExperiment}
-              </h2>
-              <div className="space-y-3">
-                {rankedItems.map((item) => (
-                  <div key={item.experiment.experiment_record_id}>
-                    <p className={`text-xs font-medium mb-1.5 ${item.rank === 1 ? 'text-emerald-600' : 'text-stone-400'}`}>
-                      {STRINGS.experimentPage.rankLabel(item.rank)}
-                      {item.origin === 'parked' && (
-                        <span className="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                          {STRINGS.experimentPage.parked}
-                        </span>
-                      )}
-                    </p>
-                    {item.origin === 'parked' ? (
-                      <ParkedExperimentCard
-                        experiment={item.experiment}
-                        onResumed={handleResumed}
-                        onDiscarded={handleDiscarded}
-                      />
-                    ) : (
-                      <ProposedExperimentCard
-                        experiment={item.experiment}
-                        onAccepted={handleAccepted}
-                      />
-                    )}
+              {!showMore ? (
+                <>
+                  {/* Default: show only the top-ranked item */}
+                  <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
+                    {lastAction ? STRINGS.experimentPage.recommendedNext : STRINGS.experimentPage.suggestedExperiment}
+                  </h2>
+                  {rankedItems[0].origin === 'parked' ? (
+                    <ParkedExperimentCard
+                      experiment={rankedItems[0].experiment}
+                      onResumed={handleResumed}
+                      onDiscarded={handleDiscarded}
+                    />
+                  ) : (
+                    <ProposedExperimentCard
+                      experiment={rankedItems[0].experiment}
+                      onAccepted={handleAccepted}
+                    />
+                  )}
+                  {rankedItems.length > 1 && (
+                    <button
+                      onClick={() => setShowMore(true)}
+                      className="mt-3 w-full py-2.5 bg-stone-50 border border-stone-200 text-stone-600 rounded-xl text-sm font-medium hover:bg-stone-100 transition-colors"
+                    >
+                      {STRINGS.experimentPage.seeMoreOptions}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* Expanded: all ranked options (proposed + parked merged) */}
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+                      {STRINGS.experimentPage.chooseNext}
+                    </h2>
+                    <button
+                      onClick={() => setShowMore(false)}
+                      className="text-xs text-stone-500 hover:text-stone-700 transition-colors"
+                    >
+                      {STRINGS.experimentPage.backToRecommendation}
+                    </button>
                   </div>
-                ))}
-              </div>
+                  <div className="space-y-3">
+                    {rankedItems.map((item) => (
+                      <div key={item.experiment.experiment_record_id}>
+                        <p className={`text-xs font-medium mb-1.5 ${item.rank === 1 ? 'text-emerald-600' : 'text-stone-400'}`}>
+                          {STRINGS.experimentPage.rankLabel(item.rank)}
+                          {item.origin === 'parked' && (
+                            <span className="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                              {STRINGS.experimentPage.parked}
+                            </span>
+                          )}
+                        </p>
+                        {item.origin === 'parked' ? (
+                          <ParkedExperimentCard
+                            experiment={item.experiment}
+                            onResumed={handleResumed}
+                            onDiscarded={handleDiscarded}
+                          />
+                        ) : (
+                          <ProposedExperimentCard
+                            experiment={item.experiment}
+                            onAccepted={handleAccepted}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </section>
           ) : !showCapScreen && !overallLoading && !isPolling && !hasOptions ? (
             <div className="bg-white rounded-2xl border border-dashed border-stone-300 p-12 text-center space-y-4">
