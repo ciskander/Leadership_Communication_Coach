@@ -421,6 +421,7 @@ export const STRINGS = {
     chooseNext: 'Choose your next experiment',
     backToRecommendation: 'Back to recommendation',
     topPick: 'Top pick',
+    rankLabel: (rank: number) => rank === 1 ? 'Top pick' : `Option ${rank}`,
     previouslyParked: 'Previously parked',
     newSuggestionsArriving: 'New suggestions arriving shortly…',
     orResumeParked: 'Or resume a parked experiment',
