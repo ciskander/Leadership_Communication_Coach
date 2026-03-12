@@ -412,6 +412,7 @@ export const STRINGS = {
     parkedBanner: 'Experiment parked.',
     parkedSubtext: 'You can resume it anytime. Pick your next focus below.',
     findingExperiment: 'Finding your next experiment…',
+    generatingOptions: 'Generating your experiment options…',
     parkCapMessage: (count: number) =>
       `You have ${count} parked experiment${count !== 1 ? 's' : ''} (the maximum).`,
     parkCapHint: 'Resume one to continue, or discard one to free up space for new suggestions.',

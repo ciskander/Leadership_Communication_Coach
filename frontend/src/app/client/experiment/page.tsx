@@ -214,6 +214,8 @@ export default function ExperimentPage() {
   const [seedLoading, setSeedLoading] = useState(true);
   const [lastAction, setLastAction] = useState<'completed' | 'parked' | null>(null);
   const [showMore, setShowMore] = useState(false);
+  const [backfillRetries, setBackfillRetries] = useState(0);
+  const MAX_BACKFILL_RETRIES = 8; // 40 seconds max
 
   function fetchOptions() {
     api.getExperimentOptions()
@@ -225,6 +227,24 @@ export default function ExperimentPage() {
   useEffect(() => {
     fetchOptions();
   }, []);
+
+  // Poll for backfill: when we have 1-2 ranked items, the backend is generating
+  // more in the background. Re-fetch until we have 3 or hit the retry cap.
+  const isBackfilling = !!(
+    options &&
+    options.ranked.length > 0 &&
+    options.ranked.length < 3 &&
+    backfillRetries < MAX_BACKFILL_RETRIES
+  );
+
+  useEffect(() => {
+    if (!isBackfilling) return;
+    const t = setTimeout(() => {
+      setBackfillRetries((r) => r + 1);
+      fetchOptions();
+    }, 5000);
+    return () => clearTimeout(t);
+  }, [isBackfilling, backfillRetries]);
 
   // Build the ranked list, incorporating any newly-polled proposed experiments
   const rankedItems: RankedExperimentItem[] = (() => {
@@ -249,6 +269,7 @@ export default function ExperimentPage() {
   function handleComplete() {
     setLastAction('completed');
     setShowMore(false);
+    setBackfillRetries(0);
     resetPoller();
     refetch(false);
     startPolling();
@@ -258,6 +279,7 @@ export default function ExperimentPage() {
   function handlePark() {
     setLastAction('parked');
     setShowMore(false);
+    setBackfillRetries(0);
     resetPoller();
     refetch(false);
     startPolling();
@@ -267,6 +289,7 @@ export default function ExperimentPage() {
   function handleAccepted() {
     setLastAction(null);
     setShowMore(false);
+    setBackfillRetries(0);
     resetPoller();
     refetch();
     fetchOptions();
@@ -385,7 +408,12 @@ export default function ExperimentPage() {
           )}
 
           {/* Experiment options — 1 top recommendation by default, all 3 ranked on "See more" */}
-          {!showCapScreen && !overallLoading && hasOptions ? (
+          {!showCapScreen && !overallLoading && hasOptions && isBackfilling ? (
+            <div className="flex items-center gap-3 px-5 py-4 bg-blue-50 rounded-2xl border border-blue-100">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 flex-shrink-0" />
+              <p className="text-sm text-blue-700">{STRINGS.experimentPage.generatingOptions}</p>
+            </div>
+          ) : !showCapScreen && !overallLoading && hasOptions ? (
             <section>
               {!showMore ? (
                 <>
