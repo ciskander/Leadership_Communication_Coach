@@ -110,9 +110,36 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
     }
     if (totalAttempted === 0) {
       return (
-        <div className="bg-stone-50 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
-          <p className="text-sm text-stone-600">
-            {STRINGS.experimentTracker.noAttemptsYet(meetingsAnalysed)}
+        <div className="space-y-2">
+          <div className="bg-stone-50 rounded-xl px-4 py-3">
+            <p className="text-sm text-stone-600">
+              {STRINGS.experimentTracker.noAttemptsYet(meetingsAnalysed)}
+            </p>
+          </div>
+          <div className="bg-blue-50 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
+            <p className="text-sm text-blue-700">
+              {STRINGS.experimentTracker.analyzeToContinue}
+            </p>
+            <Link
+              href="/client/analyze"
+              className="shrink-0 text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              {STRINGS.experimentTracker.analyzeMeeting}
+            </Link>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-xs text-stone-400">
+            {STRINGS.experimentTracker.attemptsDetected(totalAttempted, meetingsAnalysed)}
+          </p>
+        </div>
+        <div className="bg-blue-50 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
+          <p className="text-sm text-blue-700">
+            {STRINGS.experimentTracker.analyzeToContinue}
           </p>
           <Link
             href="/client/analyze"
@@ -121,19 +148,6 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
             {STRINGS.experimentTracker.analyzeMeeting}
           </Link>
         </div>
-      );
-    }
-    return (
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-xs text-stone-400">
-          {STRINGS.experimentTracker.attemptsDetected(totalAttempted, meetingsAnalysed)}
-        </p>
-        <Link
-          href="/client/analyze"
-          className="shrink-0 text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-        >
-          {STRINGS.experimentTracker.analyzeMeeting}
-        </Link>
       </div>
     );
   }
