@@ -100,7 +100,7 @@ async def login(request: Request, invite_token: Optional[str] = None):
     state_data = json.dumps({"invite_token": invite_token}) if invite_token else None
     redirect_uri = _REDIRECT_URL
     return await oauth.google.authorize_redirect(
-        request, redirect_uri, state=state_data
+        request, redirect_uri, state=state_data, prompt="select_account"
     )
 
 
