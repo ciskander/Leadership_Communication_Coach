@@ -214,6 +214,7 @@ export default function ExperimentPage() {
   const [seedLoading, setSeedLoading] = useState(true);
   const [lastAction, setLastAction] = useState<'completed' | 'parked' | null>(null);
   const [showMore, setShowMore] = useState(false);
+  const [backfillRetries, setBackfillRetries] = useState(0);
 
   function fetchOptions() {
     api.getExperimentOptions()
@@ -225,6 +226,21 @@ export default function ExperimentPage() {
   useEffect(() => {
     fetchOptions();
   }, []);
+
+  // If the backend returned fewer than 3 ranked options, it triggers backfill
+  // generation. Re-fetch after a delay to pick up the new experiments.
+  // Cap at 6 retries (30 seconds) to avoid polling forever.
+  useEffect(() => {
+    if (!options) return;
+    if (options.ranked.length >= 3) return;
+    if (options.ranked.length === 0) return;
+    if (backfillRetries >= 6) return;
+    const t = setTimeout(() => {
+      setBackfillRetries((r) => r + 1);
+      fetchOptions();
+    }, 5000);
+    return () => clearTimeout(t);
+  }, [options, backfillRetries]);
 
   // Build the ranked list, incorporating any newly-polled proposed experiments
   const rankedItems: RankedExperimentItem[] = (() => {
