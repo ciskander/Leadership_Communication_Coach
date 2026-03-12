@@ -156,6 +156,13 @@
             "null"
           ],
           "pattern": "^M-[0-9]{6}$"
+        },
+        "baseline_pack_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^BP-[0-9]{6}$"
         }
       }
     },

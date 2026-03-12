@@ -1,5 +1,9 @@
 """
 gate1_validator.py — Strict JSON schema + business rule validation for OpenAI output.
+
+Includes a lightweight sanitisation pass that corrects known LLM enum
+confusions *before* schema validation so that minor hallucinated enum values
+do not cause otherwise-valid output to fail Gate1.
 """
 from __future__ import annotations
 
@@ -53,6 +57,59 @@ def _warn(code: str, path: str, message: str) -> ValidationIssue:
     return _issue("warning", code, path, message)
 
 
+# ── Pre-validation sanitiser ─────────────────────────────────────────────────
+
+_VALID_TARGET_CONTROL = {"yes", "no", "unclear"}
+_VALID_COUNT_DECISION = {"counted", "excluded"}
+_VALID_SUCCESS = {"yes", "no", "na"}
+
+
+def _sanitise_output(data: dict) -> int:
+    """
+    Correct known LLM enum confusions in-place.  Returns the number of fixes applied.
+
+    The model occasionally swaps enum values between adjacent fields in
+    opportunity_events (e.g. puts "counted" in target_control).
+    """
+    fixes = 0
+    for item in data.get("pattern_snapshot", []):
+        for event in item.get("opportunity_events", []) or []:
+            tc = event.get("target_control")
+            if tc is not None and tc not in _VALID_TARGET_CONTROL:
+                # "counted"/"excluded" in target_control → infer "yes"/"no"
+                inferred = "yes" if tc == "counted" else "no" if tc == "excluded" else "unclear"
+                logger.warning(
+                    "Sanitiser: target_control %r → %r (event %s)",
+                    tc, inferred, event.get("event_id"),
+                )
+                event["target_control"] = inferred
+                fixes += 1
+
+            cd = event.get("count_decision")
+            if cd is not None and cd not in _VALID_COUNT_DECISION:
+                inferred = "counted" if cd in ("yes",) else "excluded"
+                logger.warning(
+                    "Sanitiser: count_decision %r → %r (event %s)",
+                    cd, inferred, event.get("event_id"),
+                )
+                event["count_decision"] = inferred
+                fixes += 1
+
+            su = event.get("success")
+            if su is not None and su not in _VALID_SUCCESS:
+                inferred = "yes" if su == "counted" else "no" if su == "excluded" else "na"
+                logger.warning(
+                    "Sanitiser: success %r → %r (event %s)",
+                    su, inferred, event.get("event_id"),
+                )
+                event["success"] = inferred
+                fixes += 1
+
+    if fixes:
+        logger.info("Sanitiser applied %d fix(es) to opportunity_events.", fixes)
+    return fixes
+
+
 # ── Public entry point ────────────────────────────────────────────────────────
 
 def validate(raw_text: str) -> Gate1Result:
@@ -61,6 +118,7 @@ def validate(raw_text: str) -> Gate1Result:
 
     Steps:
         1. JSON parse
+        1b. Sanitise known LLM enum confusions
         2. JSON Schema validation
         3. Business rules
 
@@ -75,6 +133,9 @@ def validate(raw_text: str) -> Gate1Result:
     except json.JSONDecodeError as exc:
         issues.append(_err("JSON_PARSE_ERROR", "$", f"JSON parse failed: {exc}"))
         return Gate1Result(passed=False, issues=issues)
+
+    # ── Step 1b: Sanitise known LLM output quirks ─────────────────────────────
+    _sanitise_output(data)
 
     # ── Step 2: JSON Schema ───────────────────────────────────────────────────
     schema_errors = list(_VALIDATOR.iter_errors(data))
