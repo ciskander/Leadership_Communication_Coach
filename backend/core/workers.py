@@ -594,6 +594,16 @@ def process_baseline_pack_build(
         transcript_record_id = transcript_links[0] if transcript_links else None
         run_record_id = run_links[0] if run_links else None
 
+        # If the linked run failed Gate1, discard it so we can create a fresh one.
+        if run_record_id:
+            linked_run = client.get_run(run_record_id)
+            if not _extract_fields(linked_run).get("Gate1 Pass"):
+                logger.info(
+                    "Linked run %s for item %s failed Gate1 — unlinking and retrying.",
+                    run_record_id, item["id"],
+                )
+                run_record_id = None
+
         if not run_record_id:
             # Look for an existing passing run by Transcript ID
             if transcript_record_id:
