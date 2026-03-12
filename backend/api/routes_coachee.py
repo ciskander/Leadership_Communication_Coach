@@ -1061,10 +1061,15 @@ async def client_progress(
                 pid = p.get("pattern_id", "")
                 if not pid:
                     continue
+                ratio_val = p.get("ratio")
+                if ratio_val is None:
+                    continue  # non-evaluable pattern — skip
+                # opportunity_count is optional; fall back to denominator
+                opp = p.get("opportunity_count") or p.get("denominator") or 0
                 patterns.append({
                     "pattern_id": pid,
-                    "ratio": float(p.get("ratio", 0.0)),
-                    "opportunity_count": int(p.get("opportunity_count", 0)),
+                    "ratio": float(ratio_val),
+                    "opportunity_count": int(opp) if opp else 0,
                 })
         except Exception as e:
             logger.warning("client_progress: could not parse run %s JSON: %s", run_rec["id"], e)

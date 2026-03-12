@@ -100,12 +100,12 @@ function buildChartData(
 ): ChartPoint[] {
   // Pre-extract per-run data for each visible pattern
   const runData = history.map((run) => {
-    const map: Record<string, { num: number; den: number }> = {};
+    const map: Record<string, { num: number; den: number; ratio: number }> = {};
     for (const p of run.patterns) {
       if (visiblePatterns.includes(p.pattern_id)) {
-        const den = p.opportunity_count;
-        const num = Math.round(p.ratio * den);
-        map[p.pattern_id] = { num, den };
+        const den = p.opportunity_count ?? 0;
+        const num = den > 0 ? Math.round(p.ratio * den) : 0;
+        map[p.pattern_id] = { num, den, ratio: p.ratio };
       }
     }
     return map;
@@ -122,21 +122,32 @@ function buildChartData(
       // Raw value for this meeting
       const cur = runData[idx][pid];
       if (cur) {
-        point[rawKey(pid)] = cur.den > 0 ? Math.round((cur.num / cur.den) * 100) : null;
+        point[rawKey(pid)] = cur.den > 0
+          ? Math.round((cur.num / cur.den) * 100)
+          : Math.round(cur.ratio * 100);
       }
 
       // Rolling cumulative ratio over the trailing window
       let totalNum = 0;
       let totalDen = 0;
+      let ratioSum = 0;
+      let ratioCount = 0;
       const start = Math.max(0, idx - windowSize + 1);
       for (let j = start; j <= idx; j++) {
         const d = runData[j][pid];
         if (d) {
           totalNum += d.num;
           totalDen += d.den;
+          ratioSum += d.ratio;
+          ratioCount += 1;
         }
       }
-      point[pid] = totalDen > 0 ? Math.round((totalNum / totalDen) * 100) : null;
+      // Prefer denominator-weighted average; fall back to simple ratio average
+      point[pid] = totalDen > 0
+        ? Math.round((totalNum / totalDen) * 100)
+        : ratioCount > 0
+          ? Math.round((ratioSum / ratioCount) * 100)
+          : null;
     }
 
     return point;
