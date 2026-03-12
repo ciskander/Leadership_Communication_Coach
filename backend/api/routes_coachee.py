@@ -186,22 +186,54 @@ async def get_baseline_pack(
             parsed_json_str = run_rec.get("fields", {}).get("Parsed JSON") or "{}"
             parsed = json.loads(parsed_json_str)
 
-            # Resolve evidence spans into displayable quotes
-            spans_by_id = build_spans_lookup(parsed)
-            # Baseline aggregate runs have no single transcript; meeting_id comes from each span
-            strengths, focus, micro_experiment = resolve_coaching_output(
-                parsed, spans_by_id, transcript_id=None, meeting_id=None
-            )
-            # Convert typed objects to dicts for JSON serialisation
-            strengths = [s.model_dump() for s in strengths]
-            if focus:
-                focus = focus.model_dump()
-            if micro_experiment:
-                micro_experiment = micro_experiment.model_dump()
+            # Baseline aggregate runs receive only slim meeting summaries —
+            # NOT raw transcripts — so evidence_spans contain no real quotes.
+            # Extract coaching text fields only; quotes come from sub-runs.
+            coaching = parsed.get("coaching_output", {})
+            strengths = [
+                {"pattern_id": s.get("pattern_id", ""), "message": s.get("message", ""), "quotes": []}
+                for s in coaching.get("strengths", [])
+            ]
+            focus_list = coaching.get("focus", [])
+            if focus_list:
+                f = focus_list[0]
+                focus = {
+                    "pattern_id": f.get("pattern_id", ""),
+                    "message": f.get("message", ""),
+                    "quotes": [],
+                    "suggested_rewrite": f.get("suggested_rewrite"),
+                    "rewrite_for_span_id": None,
+                    "additional_quotes": [],
+                }
+            micro_list = coaching.get("micro_experiment", [])
+            if micro_list:
+                m = micro_list[0]
+                micro_experiment = {
+                    "experiment_id": m.get("experiment_id", ""),
+                    "title": m.get("title", ""),
+                    "instruction": m.get("instruction", ""),
+                    "success_marker": m.get("success_marker", ""),
+                    "pattern_id": m.get("pattern_id", ""),
+                    "quotes": [],
+                }
+            # Pattern snapshot: extract text fields only, no quote resolution
+            raw_snapshot = parsed.get("pattern_snapshot") or []
             pattern_snapshot = [
-                p.model_dump() for p in resolve_pattern_snapshot(
-                    parsed, spans_by_id, transcript_id=None, meeting_id=None
-                )
+                {
+                    "pattern_id": ps.get("pattern_id", ""),
+                    "tier": ps.get("tier"),
+                    "evaluable_status": ps.get("evaluable_status", "not_evaluable"),
+                    "numerator": ps.get("numerator"),
+                    "denominator": ps.get("denominator"),
+                    "ratio": ps.get("ratio"),
+                    "balance_assessment": ps.get("balance_assessment"),
+                    "notes": ps.get("notes"),
+                    "quotes": [],
+                    "coaching_note": ps.get("coaching_note"),
+                    "suggested_rewrite": ps.get("suggested_rewrite"),
+                    "rewrite_for_span_id": ps.get("rewrite_for_span_id"),
+                }
+                for ps in raw_snapshot
             ]
         except Exception:
             pass
