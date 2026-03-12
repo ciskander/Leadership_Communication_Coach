@@ -413,9 +413,12 @@ export default function BaselineDetailPage() {
 
           {/* Hint to check individual meetings for transcript-based coaching */}
           {meetings.length > 0 && (
-            <p className="text-xs text-stone-400 italic">
-              {STRINGS.baselineDetail.aggregateCoachingNote}
-            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-start gap-2.5">
+              <span className="text-blue-500 text-sm leading-5 flex-shrink-0">&#x2139;&#xFE0F;</span>
+              <p className="text-xs text-blue-700 leading-relaxed">
+                {STRINGS.baselineDetail.aggregateCoachingNote}
+              </p>
+            </div>
           )}
 
           {/* Experiment section */}
