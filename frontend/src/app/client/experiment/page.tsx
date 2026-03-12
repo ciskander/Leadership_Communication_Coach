@@ -228,13 +228,15 @@ export default function ExperimentPage() {
     fetchOptions();
   }, []);
 
-  // Poll for backfill: when we have 1-2 ranked items, the backend is generating
-  // more in the background. Re-fetch until we have 3 or hit the retry cap.
+  // Poll for backfill: when we have fewer than 3 ranked items and expect more
+  // (either mid-backfill or just after a park/complete action), re-fetch until
+  // we have 3 or hit the retry cap.
   const isBackfilling = !!(
     options &&
-    options.ranked.length > 0 &&
     options.ranked.length < 3 &&
-    backfillRetries < MAX_BACKFILL_RETRIES
+    backfillRetries < MAX_BACKFILL_RETRIES &&
+    // Either we have some options and need more, or we just completed/parked
+    (options.ranked.length > 0 || lastAction !== null)
   );
 
   useEffect(() => {
