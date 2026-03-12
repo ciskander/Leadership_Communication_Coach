@@ -738,6 +738,16 @@ async def get_experiment_options(
         for i, (origin, exp) in enumerate(tagged[:3])
     ]
 
+    # If fewer than 3 options and no active experiment, trigger backfill generation
+    if len(ranked) < 3 and not at_client.get_active_experiment_for_user(user.airtable_user_record_id):
+        try:
+            enqueue_next_experiment_suggestion.delay(user.airtable_user_record_id)
+            logger.info("get_experiment_options: triggered backfill generation for user %s (%d options)",
+                        user.airtable_user_record_id, len(ranked))
+        except Exception:
+            logger.warning("get_experiment_options: failed to trigger backfill for user %s",
+                           user.airtable_user_record_id)
+
     return ExperimentOptionsResponse(
         proposed=proposed,
         parked=parked,
