@@ -919,7 +919,7 @@
       ],
       "properties": {
         "experiment_id": {
-          "type": "string",
+          "type": ["string", "null"],
           "pattern": "^EXP-[0-9]{6}$"
         },
         "status": {

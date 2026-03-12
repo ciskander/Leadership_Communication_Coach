@@ -594,6 +594,16 @@ def process_baseline_pack_build(
         transcript_record_id = transcript_links[0] if transcript_links else None
         run_record_id = run_links[0] if run_links else None
 
+        # If the linked run failed Gate1, discard it so we can create a fresh one.
+        if run_record_id:
+            linked_run = client.get_run(run_record_id)
+            if not _extract_fields(linked_run).get("Gate1 Pass"):
+                logger.info(
+                    "Linked run %s for item %s failed Gate1 — unlinking and retrying.",
+                    run_record_id, item["id"],
+                )
+                run_record_id = None
+
         if not run_record_id:
             # Look for an existing passing run by Transcript ID
             if transcript_record_id:
@@ -615,23 +625,37 @@ def process_baseline_pack_build(
                     "No passing run found for item %s (transcript %s) — triggering inline single-meeting analysis.",
                     item["id"], transcript_record_id,
                 )
-                # Create a run_request record so process_single_meeting_analysis can read speaker/role context.
-                rr_fields: dict = {
-                    "Transcript": [transcript_record_id],
-                    "Target Speaker Name": bp_fields.get("Target Speaker Name", ""),
-                    "Target Speaker Label": speaker_label,
-                    "Target Role": target_role,
-                    "Analysis Type": "single_meeting",
-                    "Status": "queued",
-                    "Baseline Pack": [baseline_pack_id],
-                }
-                if user_links:
-                    rr_fields["User"] = [user_links[0]]
-                if config_links:
-                    rr_fields["Config"] = config_links
+                # Reuse a previous run_request for this transcript+pack if one
+                # exists (e.g. from a prior failed attempt), otherwise create new.
+                rr_formula = (
+                    f"AND("
+                    f"FIND('{transcript_record_id}', ARRAYJOIN({{Transcript}})), "
+                    f"FIND('{baseline_pack_id}', ARRAYJOIN({{Baseline Pack}}))"
+                    f")"
+                )
+                existing_rrs = client.search_records("run_requests", rr_formula, max_records=1)
+                if existing_rrs:
+                    rr_id = existing_rrs[0]["id"]
+                    # Reset status so process_single_meeting_analysis treats it as new.
+                    client.update_run_request_status(rr_id, "queued")
+                    logger.info("Reusing existing run_request %s for transcript %s", rr_id, transcript_record_id)
+                else:
+                    rr_fields: dict = {
+                        "Transcript": [transcript_record_id],
+                        "Target Speaker Name": bp_fields.get("Target Speaker Name", ""),
+                        "Target Speaker Label": speaker_label,
+                        "Target Role": target_role,
+                        "Analysis Type": "single_meeting",
+                        "Status": "queued",
+                        "Baseline Pack": [baseline_pack_id],
+                    }
+                    if user_links:
+                        rr_fields["User"] = [user_links[0]]
+                    if config_links:
+                        rr_fields["Config"] = config_links
 
-                rr_record = client.create_run_request(rr_fields)
-                rr_id = rr_record["id"]
+                    rr_record = client.create_run_request(rr_fields)
+                    rr_id = rr_record["id"]
 
                 try:
                     run_record_id = process_single_meeting_analysis(rr_id, client=client)
