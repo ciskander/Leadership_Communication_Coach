@@ -167,13 +167,10 @@ function ExperimentSection() {
         <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
           {STRINGS.baselineDetail.experimentReady}
         </h2>
-        {proposed.map((exp) => (
-          <ProposedExperimentCard
-            key={exp.experiment_record_id}
-            experiment={exp}
-            onAccepted={(e) => setAccepted(e)}
-          />
-        ))}
+        <ProposedExperimentCard
+          experiment={proposed[0]}
+          onAccepted={(e) => setAccepted(e)}
+        />
       </section>
     );
   }
