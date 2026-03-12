@@ -244,8 +244,8 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           >
             {acceptLoading ? STRINGS.common.accepting : STRINGS.common.acceptExperiment}
           </button>
-          <Link href="/client" className="text-xs text-stone-500 hover:text-stone-700 transition-colors">
-            {STRINGS.common.decideLater}
+          <Link href="/client/experiment" className="text-xs text-stone-500 hover:text-stone-700 transition-colors">
+            {STRINGS.experimentPage.seeMoreOptions}
           </Link>
         </div>
       </section>
