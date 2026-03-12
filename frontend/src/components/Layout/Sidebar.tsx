@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { STRINGS } from '@/config/strings';
+import { resetOnboarding } from '@/lib/onboarding';
 
 interface NavItem {
   href: string;
@@ -32,6 +33,7 @@ const roleColors: Record<string, { dot: string; label: string }> = {
 export function Sidebar() {
   const { user } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
 
   const items = navItems.filter((item) =>
     user ? item.roles.includes(user.role) : false
@@ -75,8 +77,22 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Bottom hint */}
-      <div className="px-4 py-5">
+      {/* Bottom */}
+      <div className="px-4 py-5 space-y-3">
+        {user?.role === 'coachee' && (
+          <button
+            onClick={() => {
+              resetOnboarding();
+              router.push('/client/welcome');
+            }}
+            className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-emerald-600 transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.94 6.94a.75.75 0 11-1.061-1.061 3 3 0 112.871 5.026v.345a.75.75 0 01-1.5 0v-.916c0-.414.336-.75.75-.75a1.5 1.5 0 10-1.06-2.56zM10 15a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+            </svg>
+            {STRINGS.onboarding.replayOnboarding}
+          </button>
+        )}
         <p className="text-xs text-stone-400 leading-relaxed">
           {STRINGS.brand.sidebarHint}
         </p>

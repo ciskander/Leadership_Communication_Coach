@@ -537,4 +537,49 @@ export const STRINGS = {
     lastLoginColumn: 'Last Login',
     promoteToCoach: 'Promote to Coach',
   },
+
+  // ── Onboarding ────────────────────────────────────────────────────────────
+  onboarding: {
+    // Welcome page
+    welcomeHeading: 'Welcome to ClearVoice',
+    welcomeSubheading: 'AI-powered coaching rooted in your actual meetings.',
+    welcomeIntro:
+      'ClearVoice analyzes your meeting transcripts and gives you personalized coaching feedback — then helps you build better communication habits through small, trackable experiments.',
+
+    journeyHeading: 'How it works',
+    journeyStep1Title: 'Build your baseline',
+    journeyStep1Desc:
+      'Upload 3 past meeting transcripts so the AI can map your current communication patterns.',
+    journeyStep2Title: 'Analyze a meeting',
+    journeyStep2Desc:
+      'Upload a new transcript and receive personalized coaching feedback with concrete observations.',
+    journeyStep3Title: 'Run an experiment',
+    journeyStep3Desc:
+      'Accept a micro-experiment — a small behavioral change to try in your next meetings.',
+    journeyStep4Title: 'Track your growth',
+    journeyStep4Desc:
+      'Each time you analyze a meeting, the AI checks your progress and your pattern scores update over time.',
+
+    expectHeading: 'What to expect',
+    expectItem1: 'Each analysis takes about 30–60 seconds.',
+    expectItem2: 'Feedback is based on what you actually said — not generic advice.',
+    expectItem3: 'Experiments are small and specific, designed to build one habit at a time.',
+
+    getStarted: 'Get started',
+    skip: 'Skip intro',
+
+    // Contextual tips
+    tipDismissLabel: 'Dismiss',
+    tipBaselineNew:
+      'Upload 3 past meeting transcripts to build your communication baseline. This gives the AI a starting picture of your patterns.',
+    tipAnalyze:
+      'Upload a meeting transcript and the AI will give you personalized coaching feedback plus a micro-experiment to try.',
+    tipExperiment:
+      'This is where you track your active experiment. After each meeting analysis, the AI checks whether you tried it.',
+    tipProgress:
+      'Your pattern scores over time. Trends become visible after 3 or more analyzed meetings.',
+
+    // Sidebar replay
+    replayOnboarding: 'Replay intro',
+  },
 } as const;

@@ -7,6 +7,7 @@ import { TranscriptUploadPanel } from '@/components/TranscriptUpload';
 import { SpeakerChips } from '@/components/SpeakerChips';
 import type { TranscriptListItem, TargetRole } from '@/lib/types';
 import { STRINGS } from '@/config/strings';
+import { OnboardingTip } from '@/components/OnboardingTip';
 
 interface TranscriptConfig {
   transcript_id: string;
@@ -362,6 +363,7 @@ export default function BaselineNewPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 py-2">
+      <OnboardingTip tipId="baseline-new" message={STRINGS.onboarding.tipBaselineNew} />
       <div>
         <h1 className="text-2xl font-bold text-stone-900">{STRINGS.baselineNew.heading}</h1>
         <p className="text-sm text-stone-500 mt-1">

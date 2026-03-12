@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { STRINGS } from '@/config/strings';
+import { OnboardingTip } from '@/components/OnboardingTip';
 import { TranscriptUploadPanel } from '@/components/TranscriptUpload';
 import { SpeakerChips } from '@/components/SpeakerChips';
 import type { TargetRole } from '@/lib/types';
@@ -134,6 +135,7 @@ export default function AnalyzePage() {
 
   return (
     <div className="max-w-xl mx-auto space-y-5 py-2">
+      <OnboardingTip tipId="analyze" message={STRINGS.onboarding.tipAnalyze} />
       <div>
         <h1 className="text-2xl font-bold text-stone-900">{STRINGS.analyzePage.heading}</h1>
         <p className="text-sm text-stone-500 mt-1">

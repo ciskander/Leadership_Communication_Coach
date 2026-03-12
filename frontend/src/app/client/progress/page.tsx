@@ -19,6 +19,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { STRINGS } from '@/config/strings';
+import { OnboardingTip } from '@/components/OnboardingTip';
 
 const LINE_COLORS = [
   '#2563eb', '#16a34a', '#dc2626', '#d97706', '#7c3aed',
@@ -569,6 +570,7 @@ export default function ProgressPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
+      <OnboardingTip tipId="progress" message={STRINGS.onboarding.tipProgress} />
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">{STRINGS.progressPage.heading}</h1>

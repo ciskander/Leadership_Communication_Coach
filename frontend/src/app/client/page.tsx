@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { STRINGS } from '@/config/strings';
+import { hasSeenWelcome } from '@/lib/onboarding';
 import type { ClientSummary, Experiment } from '@/lib/types';
 
 function getGreeting() {
@@ -334,6 +336,7 @@ function RecentRunCard({
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ClientDashboard() {
+  const router = useRouter();
   const [summary, setSummary] = useState<ClientSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
@@ -348,6 +351,17 @@ export default function ClientDashboard() {
   }
 
   useEffect(() => { reload(); }, []);
+
+  // Redirect brand-new users to the welcome page (once).
+  useEffect(() => {
+    if (!summary || loading) return;
+    const isNewUser =
+      (summary.baseline_pack_status === 'none' || !summary.baseline_pack_status) &&
+      summary.recent_runs.length === 0;
+    if (isNewUser && !hasSeenWelcome()) {
+      router.replace('/client/welcome');
+    }
+  }, [summary, loading, router]);
 
   function toggleEditMode() {
     setEditMode((v) => !v);
