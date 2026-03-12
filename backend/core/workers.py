@@ -530,6 +530,15 @@ def process_single_meeting_analysis(
         )
         if exp_record_id:
             client.update_run(run_record_id, {F_RUN_EXPERIMENT_INSTANTIATED: True})
+            # Generate additional experiment options so the user has 3 to choose from
+            if user_record_id:
+                try:
+                    process_next_experiment_suggestion(user_record_id, client=client)
+                except Exception:
+                    logger.warning(
+                        "Failed to generate additional experiments after single meeting run %s",
+                        run_record_id,
+                    )
 
     # 10. Update run_request status
     new_status = "completed" if gate1_result.passed else "gate1_failed"
@@ -843,6 +852,16 @@ def process_baseline_pack_build(
             })
             # NOTE: do NOT auto-activate — coachee must accept from the queue.
 
+            # Generate additional experiment options so the user has 3 to choose from
+            if user_record_id:
+                try:
+                    process_next_experiment_suggestion(user_record_id, client=client)
+                except Exception:
+                    logger.warning(
+                        "Failed to generate additional experiments after baseline pack %s",
+                        baseline_pack_id,
+                    )
+
     logger.info(
         "Completed baseline_pack build %s → run %s (gate1_pass=%s)",
         baseline_pack_id, run_record_id, gate1_result.passed,
@@ -1072,26 +1091,23 @@ def process_next_experiment_suggestion(
     if client is None:
         client = AirtableClient()
 
-    # 0. Idempotency: skip if the user already has proposed experiments queued
-    existing_proposed = client.get_proposed_experiments_for_user(user_record_id, max_records=1)
-    if existing_proposed:
-        logger.info(
-            "process_next_experiment_suggestion: user %s already has proposed experiments — skipping",
-            user_record_id,
-        )
-        return None
+    # 0. Check existing proposed + parked counts — only generate the shortfall
+    existing_proposed = client.get_proposed_experiments_for_user(user_record_id, max_records=3)
+    proposed_count = len(existing_proposed)
 
-    # 0b. Check parked experiments — if at cap, skip generation
     parked_records = client.get_parked_experiments_for_user(user_record_id)
     parked_count = len(parked_records)
-    if parked_count >= MAX_PARKED:
+
+    total_options = proposed_count + parked_count
+    if total_options >= MAX_PARKED:
         logger.info(
-            "process_next_experiment_suggestion: user %s at parked cap (%d) — skipping generation",
-            user_record_id, parked_count,
+            "process_next_experiment_suggestion: user %s already has %d options "
+            "(%d proposed + %d parked) — skipping generation",
+            user_record_id, total_options, proposed_count, parked_count,
         )
         return None
 
-    num_to_generate = MAX_PARKED - parked_count  # 1, 2, or 3
+    num_to_generate = MAX_PARKED - total_options  # generate enough to reach 3 total
 
     # 1. Fetch up to 5 recent Gate1-passing runs for this user
     runs_formula = (
@@ -1144,9 +1160,13 @@ def process_next_experiment_suggestion(
             if _extract_fields(r).get(F_EXP_TITLE)
         ]
 
-    # Collect pattern_ids of currently parked experiments — don't propose duplicates
+    # Collect pattern_ids of currently parked + proposed experiments — don't propose duplicates
     parked_pattern_ids: set[str] = set()
     for pr in parked_records:
+        pid = _extract_fields(pr).get(F_EXP_PATTERN_ID)
+        if pid:
+            parked_pattern_ids.add(pid)
+    for pr in existing_proposed:
         pid = _extract_fields(pr).get(F_EXP_PATTERN_ID)
         if pid:
             parked_pattern_ids.add(pid)
