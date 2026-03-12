@@ -387,7 +387,7 @@ export const STRINGS = {
     errorDesc: 'Something went wrong during analysis. Please try creating a new baseline pack.',
     tryAgain: 'Try again',
     completeTitle: 'Baseline complete',
-    completeSubtitle: 'Your communication patterns have been mapped across 3 meetings',
+    completeSubtitle: 'Your communication patterns have been mapped across three meetings',
     yourBaseline: 'Your communication baseline',
     meetingsInBaseline: 'Meetings in this baseline',
     coachingOutput: 'Coaching output',
