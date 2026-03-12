@@ -165,6 +165,10 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
       if (expId) {
         await api.confirmExperimentAttempt(expId, runId, confirmed);
       }
+      // Refresh experiment data so the tracker shows updated attempt counts
+      api.getActiveExperiment()
+        .then(setActiveExpData)
+        .catch(() => {});
     } catch {
       // Non-blocking — confirm is best-effort
     } finally {
