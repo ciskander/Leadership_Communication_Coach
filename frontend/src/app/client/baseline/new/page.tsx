@@ -253,7 +253,7 @@ function TranscriptSlot({
                           {label}
                         </p>
                         {quotes.map((q, i) => (
-                          <p key={i} className="text-sm text-cv-stone-600 leading-snug">"{q}"</p>
+                          <p key={i} className="text-sm text-cv-stone-600 leading-snug italic">"{q}"</p>
                         ))}
                       </button>
                     );

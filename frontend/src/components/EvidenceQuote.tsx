@@ -39,8 +39,8 @@ export function EvidenceQuote({ quote }: EvidenceQuoteProps) {
         </p>
       )}
 
-      {/* Quote text — sans-serif, regular weight for readability */}
-      <p className="text-sm text-cv-stone-700 leading-relaxed">
+      {/* Quote text — italic for quoted speech */}
+      <p className="text-sm text-cv-stone-700 leading-relaxed italic">
         &ldquo;{quote.quote_text}&rdquo;
       </p>
     </blockquote>

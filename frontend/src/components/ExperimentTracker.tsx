@@ -104,13 +104,13 @@ export function ExperimentTracker({
   // ── Analyze-CTA nudge ──────────────────────────────────────────────────────
   function AnalyzeNudge({ message }: { message: string }) {
     return (
-      <div className="bg-cv-teal-50 border border-cv-teal-200 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
-        <p className="text-sm text-cv-teal-800">{message}</p>
+      <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
+        <p className="text-sm text-blue-800">{message}</p>
         <Link
           href="/client/analyze"
-          className="shrink-0 flex items-center gap-2 text-xs px-3 py-1.5 bg-[#1E3A5F] text-white rounded-lg font-semibold hover:bg-[#162D4A] transition-colors"
+          className="shrink-0 flex items-center gap-2 text-xs px-3 py-1.5 bg-[#1E3A5F] text-white rounded-lg font-medium hover:bg-[#162D4A] transition-colors"
         >
-          <span className="shrink-0"><svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M8 1v3M8 12v3M1 8h3M12 8h3M3.05 3.05l2.12 2.12M10.83 10.83l2.12 2.12M3.05 12.95l2.12-2.12M10.83 5.17l2.12-2.12" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg></span>
+          <span className="shrink-0"><svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M9 3L10.5 7.5L15 9L10.5 10.5L9 15L7.5 10.5L3 9L7.5 7.5L9 3Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/><path d="M19 13L19.75 15.25L22 16L19.75 16.75L19 19L18.25 16.75L16 16L18.25 15.25L19 13Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/></svg></span>
           {STRINGS.experimentTracker.analyzeMeeting}
         </Link>
       </div>
