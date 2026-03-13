@@ -261,6 +261,7 @@ export const STRINGS = {
   // ── Experiment tracker ──────────────────────────────────────────────────────
   experimentTracker: {
     analyzeToStart: 'Analyze your next meeting to start tracking this experiment.',
+    analyzeToContinue: 'Analyze your next meeting to continue tracking this experiment.',
     analyzeMeeting: '✨ Analyze Meeting',
     noAttemptsYet: (meetings: number) =>
       `No attempts detected yet across ${meetings} meeting${meetings !== 1 ? 's' : ''}. Keep going — it takes a few tries to build the habit.`,
