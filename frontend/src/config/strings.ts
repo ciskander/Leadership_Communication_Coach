@@ -518,6 +518,7 @@ export const STRINGS = {
     completeFieldsAbove: 'Complete the fields above to continue',
     runningAnalysis: 'Running analysis…',
     runAnalysis: 'Run Analysis',
+    analyzeAnother: 'Analyze another',
   },
 
   // ── Coachee detail page ─────────────────────────────────────────────────────
