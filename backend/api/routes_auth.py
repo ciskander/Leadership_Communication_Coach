@@ -103,7 +103,7 @@ def _cookie_samesite() -> str:
     return "none" if _cookie_secure() else "lax"
 
 
-def _set_session_cookie(response: RedirectResponse, signed_token: str) -> None:
+def _set_session_cookie(response, signed_token: str) -> None:
     response.set_cookie(
         key=SESSION_COOKIE_NAME,
         value=signed_token,
@@ -113,6 +113,26 @@ def _set_session_cookie(response: RedirectResponse, signed_token: str) -> None:
         max_age=SESSION_TTL_DAYS * 86_400,
         path="/",
     )
+
+
+def _cookie_redirect(url: str, signed_token: str):
+    """Return an HTML page that sets the session cookie then redirects.
+
+    Using a 302 redirect with Set-Cookie can fail in Chrome Incognito when the
+    redirect crosses origins (e.g. localhost:8000 → localhost:3000): the browser
+    may silently drop the cookie before following the redirect.  Serving a tiny
+    HTML page ensures the cookie is fully stored before navigating away.
+    """
+    from starlette.responses import HTMLResponse
+
+    html = (
+        "<!DOCTYPE html><html><head>"
+        f'<meta http-equiv="refresh" content="0;url={url}">'
+        "</head><body></body></html>"
+    )
+    resp = HTMLResponse(content=html, status_code=200)
+    _set_session_cookie(resp, signed_token)
+    return resp
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -130,6 +150,14 @@ async def login(request: Request, invite_token: Optional[str] = None):
 @router.get("/api/auth/callback")
 async def callback(request: Request):
     """Handle Google OAuth callback."""
+    import logging
+    _log = logging.getLogger(__name__)
+    _log.info(
+        "OAuth callback — cookie_secure=%s, cookie_samesite=%s, session_cookie_present=%s",
+        _cookie_secure(),
+        _cookie_samesite(),
+        "session" in request.cookies,
+    )
     token = await oauth.google.authorize_access_token(request)
     user_info = token.get("userinfo") or await oauth.google.userinfo(token=token)
 
@@ -155,9 +183,7 @@ async def callback(request: Request):
             update_profile_photo_url(existing.id, picture)
         _sync_airtable_user(existing)
         signed = create_session(existing.id)
-        resp = RedirectResponse(url=_FRONTEND_BASE + landing_url_for(existing.role))
-        _set_session_cookie(resp, signed)
-        return resp
+        return _cookie_redirect(_FRONTEND_BASE + landing_url_for(existing.role), signed)
 
     # ── Case 2: invite-based signup ──────────────────────────────────────────
     if invite_token:
@@ -185,9 +211,7 @@ async def callback(request: Request):
         consume_invite_token(invite_token, new_user.id)
         _sync_airtable_user(new_user)
         signed = create_session(new_user.id)
-        resp = RedirectResponse(url=_FRONTEND_BASE + landing_url_for(new_user.role))
-        _set_session_cookie(resp, signed)
-        return resp
+        return _cookie_redirect(_FRONTEND_BASE + landing_url_for(new_user.role), signed)
 
     # ── Case 3: admin signup ─────────────────────────────────────────────────
     if email in ADMIN_EMAILS:
@@ -201,9 +225,7 @@ async def callback(request: Request):
         )
         _sync_airtable_user(new_user)
         signed = create_session(new_user.id)
-        resp = RedirectResponse(url=_FRONTEND_BASE + landing_url_for("admin"))
-        _set_session_cookie(resp, signed)
-        return resp
+        return _cookie_redirect(_FRONTEND_BASE + landing_url_for("admin"), signed)
 
     # ── No valid path ────────────────────────────────────────────────────────
     return forbidden("Access denied. Please use an invite link to register.")
@@ -216,7 +238,12 @@ async def logout(
     if sid:
         delete_session(sid)
     resp = JSONResponse({"status": "logged_out"})
-    resp.delete_cookie(key=SESSION_COOKIE_NAME)
+    resp.delete_cookie(
+        key=SESSION_COOKIE_NAME,
+        path="/",
+        secure=_cookie_secure(),
+        samesite=_cookie_samesite(),
+    )
     return resp
 
 

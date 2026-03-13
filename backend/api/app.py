@@ -78,7 +78,12 @@ def create_app() -> FastAPI:
     # ── Health ────────────────────────────────────────────────────────────────
     @app.get("/health")
     async def health():
-        return {"status": "ok", "version": "0.2.1"}
+        return {
+            "status": "ok",
+            "version": "0.2.1",
+            "cookie_secure": _secure,
+            "cookie_samesite": _samesite,
+        }
 
     # ── Global exception handler ──────────────────────────────────────────────
     @app.exception_handler(Exception)
