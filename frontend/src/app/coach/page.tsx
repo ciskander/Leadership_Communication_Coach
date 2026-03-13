@@ -6,8 +6,6 @@ import { api } from '@/lib/api';
 import type { CoacheeListItem, CoacheeSummary } from '@/lib/types';
 import { STRINGS } from '@/config/strings';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
 // ── Add Coachee Modal ─────────────────────────────────────────────────────────
 
 function AddCoacheeModal({

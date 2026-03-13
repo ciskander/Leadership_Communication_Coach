@@ -41,7 +41,8 @@ def create_app() -> FastAPI:
     else:
         # Auto-detect: secure only when the OAuth redirect is HTTPS
         _secure = os.getenv("OAUTH_REDIRECT_URL", "").startswith("https://")
-    _samesite = os.getenv("COOKIE_SAMESITE", "none" if _secure else "lax").lower()
+    # Default to 'lax' — the frontend proxies /api/* so cookies are same-origin
+    _samesite = os.getenv("COOKIE_SAMESITE", "lax").lower()
     app.add_middleware(
         SessionMiddleware,
         secret_key=os.environ.get("SESSION_SECRET", "change-me"),

@@ -3,16 +3,15 @@
 import { useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
 function RegisterRedirect() {
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get('invite_token');
 
   useEffect(() => {
+    // Same-origin — Next.js proxy forwards to backend
     const loginUrl = inviteToken
-      ? `${BASE_URL}/api/auth/login?invite_token=${encodeURIComponent(inviteToken)}`
-      : `${BASE_URL}/api/auth/login`;
+      ? `/api/auth/login?invite_token=${encodeURIComponent(inviteToken)}`
+      : `/api/auth/login`;
     window.location.href = loginUrl;
   }, [inviteToken]);
 

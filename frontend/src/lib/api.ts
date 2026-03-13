@@ -1,6 +1,8 @@
 // lib/api.ts — Typed fetch wrapper for backend API
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// All API calls use same-origin; Next.js rewrites proxy /api/* to the backend.
+// This keeps cookies first-party and avoids third-party cookie blocking.
+const BASE_URL = '';
 
 class ApiError extends Error {
   constructor(

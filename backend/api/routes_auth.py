@@ -89,18 +89,14 @@ def _cookie_secure() -> bool:
 
 
 def _cookie_samesite() -> str:
-    """Use 'none' for cross-origin HTTPS; 'lax' for same-site / local dev.
-
-    SameSite=None + Secure=True over plain HTTP breaks in Chrome Incognito
-    because the Secure flag is invalid without HTTPS, and Incognito does not
-    always honour the localhost exception that normal Chrome tabs allow.
-    Using 'lax' in dev is safe because localhost with different ports is
-    treated as same-site (same registrable domain).
+    """Default to 'lax' — the frontend proxies all /api/* requests through
+    Next.js rewrites so cookies are always same-origin.  Override with the
+    COOKIE_SAMESITE env var if needed.
     """
     explicit = os.getenv("COOKIE_SAMESITE")
     if explicit:
         return explicit.lower()
-    return "none" if _cookie_secure() else "lax"
+    return "lax"
 
 
 def _set_session_cookie(response, signed_token: str) -> None:
