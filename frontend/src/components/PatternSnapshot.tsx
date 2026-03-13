@@ -5,6 +5,87 @@ import type { PatternSnapshotItem } from '@/lib/types';
 import { EvidenceQuote } from './EvidenceQuote';
 import { STRINGS } from '@/config/strings';
 
+// ─── Pattern icons (inline SVG — replaces STRINGS.patternIcons emoji) ─────────
+
+const PATTERN_ICONS: Record<string, JSX.Element> = {
+  agenda_clarity: (
+    <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
+      <rect x="2" y="1.5" width="12" height="13" rx="1.5" stroke="currentColor" strokeWidth={1.4} />
+      <path d="M5 5h6M5 8h6M5 11h4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+    </svg>
+  ),
+  objective_signaling: (
+    <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
+      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth={1.4} />
+      <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth={1.4} />
+      <path d="M8 2V1M8 15v-1M2 8H1M15 8h-1" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+    </svg>
+  ),
+  turn_allocation: (
+    <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
+      <path d="M2 5.5h9.5M2 5.5l2.5-2.5M2 5.5l2.5 2.5" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M14 10.5H4.5M14 10.5l-2.5-2.5M14 10.5l-2.5 2.5" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  facilitative_inclusion: (
+    <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
+      <circle cx="8" cy="4.5" r="2" stroke="currentColor" strokeWidth={1.4} />
+      <path d="M4 13c0-2.21 1.79-4 4-4s4 1.79 4 4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+      <circle cx="2.5" cy="6" r="1.5" stroke="currentColor" strokeWidth={1.2} />
+      <path d="M0 13c0-1.66 1.12-3 2.5-3" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" />
+      <circle cx="13.5" cy="6" r="1.5" stroke="currentColor" strokeWidth={1.2} />
+      <path d="M16 13c0-1.66-1.12-3-2.5-3" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" />
+    </svg>
+  ),
+  decision_closure: (
+    <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
+      <rect x="3" y="7" width="10" height="7.5" rx="1.5" stroke="currentColor" strokeWidth={1.4} />
+      <path d="M5.5 7V5a2.5 2.5 0 015 0v2" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+      <path d="M6 10.5l1.5 1.5 2.5-2.5" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  owner_timeframe_specification: (
+    <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
+      <rect x="1.5" y="3" width="13" height="11.5" rx="1.5" stroke="currentColor" strokeWidth={1.4} />
+      <path d="M1.5 6.5h13" stroke="currentColor" strokeWidth={1.4} />
+      <path d="M5 1.5v3M11 1.5v3" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+      <path d="M4.5 9.5h3M4.5 12h2" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+      <circle cx="11.5" cy="11" r="2" stroke="currentColor" strokeWidth={1.2} />
+      <path d="M11.5 9.8V11l.8.8" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  summary_checkback: (
+    <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
+      <path d="M3 4h10M3 7.5h10M3 11h6" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+      <circle cx="12.5" cy="12.5" r="2.5" fill="currentColor" fillOpacity={0.15} stroke="currentColor" strokeWidth={1.2} />
+      <path d="M11.3 12.5l.8.8 1.4-1.4" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  question_quality: (
+    <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
+      <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth={1.4} />
+      <path d="M6.2 6.2a1.8 1.8 0 013.2 1.1c0 1.8-2.2 1.8-2.2 3.2" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+      <circle cx="7.2" cy="11.8" r="0.6" fill="currentColor" />
+    </svg>
+  ),
+  listener_response_quality: (
+    <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
+      <path d="M8 2.5a5 5 0 100 10 5 5 0 000-10z" stroke="currentColor" strokeWidth={1.4} />
+      <path d="M8 2.5c2.5 0 4.5 1.8 4.5 4 0 1.5-1 2.8-2.5 3.4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+      <path d="M5.5 7.5c.5 1 1.5 1.7 2.5 1.7" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+    </svg>
+  ),
+  conversational_balance: (
+    <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
+      <path d="M8 2v12" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+      <path d="M3 2h10" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+      <path d="M3 2l-2 4h4L3 2zM13 2l-2 4h4L13 2z" stroke="currentColor" strokeWidth={1.3} strokeLinejoin="round" />
+      <path d="M2 14h4M10 14h4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+    </svg>
+  ),
+};
+
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function SectionLabel({ text }: { text: string }) {
@@ -139,8 +220,10 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
         <div className="flex items-center justify-between mb-0.5">
           {/* Pattern name */}
           <span className="text-sm font-medium text-cv-stone-800 leading-snug">
-            {STRINGS.patternIcons[pattern.pattern_id] && (
-              <span className="mr-1.5">{STRINGS.patternIcons[pattern.pattern_id]}</span>
+            {PATTERN_ICONS[pattern.pattern_id] && (
+              <span className="mr-1.5 text-cv-stone-400 inline-flex items-center">
+                {PATTERN_ICONS[pattern.pattern_id]}
+              </span>
             )}
             {STRINGS.patternLabels[pattern.pattern_id] ?? pattern.pattern_id}
           </span>

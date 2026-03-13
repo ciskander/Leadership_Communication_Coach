@@ -114,7 +114,7 @@ function ProposedExperimentCard({
   }
 
   return (
-    <div className="bg-white rounded-xl border border-cv-warm-border p-5 space-y-4">
+    <div className="bg-white rounded-xl border border-cv-warm-200 p-5 space-y-4">
       <div className="space-y-1">
         <PatternLabel id={experiment.pattern_id} />
         <p className="text-sm font-medium text-cv-stone-900 leading-snug mt-1">
@@ -122,7 +122,7 @@ function ProposedExperimentCard({
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div className="bg-cv-warm rounded-lg p-3">
+        <div className="bg-cv-warm-100 rounded-lg p-3">
           <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
             {STRINGS.common.whatToDo}
           </p>
@@ -130,7 +130,7 @@ function ProposedExperimentCard({
             {experiment.instruction}
           </p>
         </div>
-        <div className="bg-cv-warm rounded-lg p-3">
+        <div className="bg-cv-warm-100 rounded-lg p-3">
           <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
             {STRINGS.common.successLooksLike}
           </p>
@@ -185,7 +185,7 @@ function ExperimentSection() {
   if (loading) {
     return (
       <div className="flex items-center gap-2.5 py-2">
-        <div className="animate-spin rounded-full h-4 w-4 border-2 border-cv-teal-400 border-t-transparent flex-shrink-0" />
+        <div className="w-4 h-4 border-2 border-cv-teal-600 border-t-transparent rounded-full animate-spin flex-shrink-0" />
         <span className="text-xs text-cv-stone-400 font-light">
           {STRINGS.baselineDetail.loadingExperiment}
         </span>
@@ -266,15 +266,15 @@ function MeetingAccordionCard({
 
   return (
     <div className={`bg-white border rounded-xl overflow-hidden transition-colors ${
-      open ? 'border-cv-stone-100' : 'border-cv-warm-border'
+      open ? 'border-cv-stone-100' : 'border-cv-warm-200'
     }`}>
       {/* Header */}
       <button
         onClick={onToggle}
-        className="w-full flex items-start justify-between gap-3 px-5 py-4 text-left hover:bg-cv-warm transition-colors"
+        className="w-full flex items-start justify-between gap-3 px-5 py-4 text-left hover:bg-cv-warm-100 transition-colors"
       >
         <div className="flex items-start gap-3 min-w-0">
-          <div className="w-6 h-6 rounded-full bg-cv-warm border border-cv-warm-border text-cv-stone-400 flex items-center justify-center text-xs font-medium flex-shrink-0 mt-0.5">
+          <div className="w-6 h-6 rounded-full bg-cv-warm-200 text-cv-stone-600 flex items-center justify-center text-2xs font-semibold flex-shrink-0 mt-0.5">
             {index + 1}
           </div>
           <div className="min-w-0">
@@ -284,14 +284,19 @@ function MeetingAccordionCard({
             )}
           </div>
         </div>
-        <span className="text-2xs text-cv-stone-400 tracking-widest uppercase flex-shrink-0 mt-1">
-          {open ? STRINGS.baselineDetail.collapse : STRINGS.baselineDetail.expand}
-        </span>
+        <svg
+          viewBox="0 0 16 16"
+          fill="none"
+          className={`w-4 h-4 text-cv-stone-400 flex-shrink-0 mt-0.5 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          aria-hidden="true"
+        >
+          <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </button>
 
       {/* Expanded content */}
       {open && (
-        <div className="border-t border-cv-warm-border px-5 pb-6 pt-5 space-y-6">
+        <div className="border-t border-cv-warm-200 px-5 pb-6 pt-5 space-y-6">
           {meeting.run_id && hasSubRunData ? (
             <>
               {(meeting.sub_run_strengths?.length || meeting.sub_run_focus) && (
@@ -358,7 +363,7 @@ export default function BaselineDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-6 w-6 border-2 border-cv-teal-400 border-t-transparent" />
+        <div className="w-6 h-6 border-2 border-cv-teal-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -396,10 +401,10 @@ export default function BaselineDetailPage() {
 
       {/* ── Building state ─────────────────────────────────────────────────── */}
       {isBuilding && !timedOut && (
-        <div className="bg-white rounded-xl border border-cv-warm-border p-10 text-center space-y-5">
+        <div className="bg-white rounded-xl border border-cv-warm-200 p-10 text-center space-y-5">
           <div className="relative mx-auto w-12 h-12">
             <div className="w-12 h-12 rounded-full border-2 border-cv-stone-100" />
-            <div className="absolute inset-0 w-12 h-12 rounded-full border-2 border-cv-teal-400 border-t-transparent animate-spin" />
+            <div className="absolute inset-0 w-12 h-12 rounded-full border-2 border-cv-teal-600 border-t-transparent animate-spin" />
           </div>
           <div>
             <p className="text-sm font-medium text-cv-stone-900">
@@ -425,7 +430,7 @@ export default function BaselineDetailPage() {
             {timedOut && (
               <button
                 onClick={() => { setTimedOut(false); fetchPack(); }}
-                className="text-sm px-4 py-2 bg-cv-warm text-cv-stone-600 rounded-lg font-medium hover:bg-cv-warm-surface transition-colors"
+                className="text-sm px-4 py-2 bg-cv-warm-100 text-cv-stone-600 rounded-lg font-medium hover:bg-cv-warm-200 transition-colors"
               >
                 {STRINGS.runStatusPoller.checkAgain}
               </button>
@@ -466,7 +471,7 @@ export default function BaselineDetailPage() {
 
           {/* Hint to check individual meeting sections */}
           {meetings.length > 0 && (
-            <div className="bg-cv-warm border border-cv-warm-border rounded-xl px-4 py-3 flex items-start gap-2.5">
+            <div className="bg-cv-warm-100 border border-cv-warm-200 rounded-xl px-4 py-3 flex items-start gap-2.5">
               <span className="text-cv-stone-400 text-sm leading-5 flex-shrink-0 mt-0.5">i</span>
               <p className="text-xs text-cv-stone-600 font-light leading-relaxed">
                 {STRINGS.baselineDetail.aggregateCoachingNote}
