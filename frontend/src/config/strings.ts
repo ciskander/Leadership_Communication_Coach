@@ -11,9 +11,9 @@
 export const STRINGS = {
   // ── App-wide ────────────────────────────────────────────────────────────────
   app: {
-    title: 'Leadership Coach',
+    title: 'ClearVoice',
     description: 'AI-powered leadership communication coaching',
-    loginHeading: 'Leadership Coach',
+    loginHeading: 'ClearVoice',
     loginSubheading: 'AI-powered communication coaching rooted in your actual meetings.',
     continueWithGoogle: 'Continue with Google',
     signOut: 'Sign out',
@@ -127,7 +127,7 @@ export const STRINGS = {
       'Whether speaking time is distributed appropriately given your role in the meeting.',
   } as Record<string, string>,
 
-  // ── Pattern icons ───────────────────────────────────────────────────────────
+  // ── Pattern icons (legacy — components now use inline SVG; keep for any unconverted usage) ─────
   patternIcons: {
     agenda_clarity: '📋',
     objective_signaling: '🥅',
@@ -262,7 +262,7 @@ export const STRINGS = {
   experimentTracker: {
     analyzeToStart: 'Analyze your next meeting to start tracking this experiment.',
     analyzeToContinue: 'Analyze your next meeting to continue tracking this experiment.',
-    analyzeMeeting: '✨ Analyze Meeting',
+    analyzeMeeting: 'Analyze Meeting',
     noAttemptsYet: (meetings: number) =>
       `No attempts detected yet across ${meetings} meeting${meetings !== 1 ? 's' : ''}. Keep going — it takes a few tries to build the habit.`,
     attemptsDetected: (attempts: number, meetings: number) =>
@@ -277,7 +277,7 @@ export const STRINGS = {
     yesParkIt: 'Yes, park it',
     keepGoing: 'Keep going',
     markComplete: 'Mark complete ✓',
-    parkForNow: '⏸ Park for now',
+    parkForNow: 'Park for now',
   },
 
   // ── Client dashboard (home) ─────────────────────────────────────────────────
@@ -297,7 +297,7 @@ export const STRINGS = {
     experimentOptionsWaiting: 'You have experiment options waiting — pick one to get started.',
     chooseExperiment: 'Choose experiment →',
     baselineReadyAnalyze: 'Baseline ready! Analyze a meeting to receive your first experiment suggestion.',
-    analyzeMeetingArrow: '✨ Analyze Meeting →',
+    analyzeMeetingArrow: 'Analyze Meeting →',
     baselinePackTitle: 'Baseline Pack',
     baselinePackCta: 'Analyze three past meetings to unlock personalised coaching patterns.',
     baselinePackDone: '✓ Your communication patterns have been mapped.',
@@ -310,8 +310,8 @@ export const STRINGS = {
     completeAnalysisForExperiment: 'Complete an analysis to receive your first personalised experiment.',
     suggestedExperiments: 'Suggested Experiments',
     suggestions: (n: number) => `${n} suggestion${n !== 1 ? 's' : ''}`,
-    analyzeMeetingBtn: '✨ Analyze Meeting',
-    createBaselineBtn: '📚 Create Baseline',
+    analyzeMeetingBtn: 'Analyze Meeting',
+    createBaselineBtn: 'Create Baseline',
     recentAnalyses: 'Recent Analyses',
     deleteSelected: (n: number) => `Delete selected (${n})`,
     done: 'Done',
@@ -345,7 +345,7 @@ export const STRINGS = {
     fullNamePlaceholder: 'e.g. Sarah Johnson',
     roleInMeeting: 'Their role in this meeting',
     selectRole: 'Select role…',
-    submitBtn: '✨ Analyze Meeting →',
+    submitBtn: 'Analyze Meeting →',
     startingAnalysis: 'Starting analysis…',
     // Errors
     failedToEnqueue: 'Failed to enqueue',
@@ -539,7 +539,7 @@ export const STRINGS = {
     viewRunDetails: 'View details',
     gateFailLabel: 'Quality check failed',
     backToDashboard: '← Back to dashboard',
-    analyzeForCoachee: '✨ Run Analysis',
+    analyzeForCoachee: 'Run Analysis',
     noRuns: 'No analyses yet.',
   },
 

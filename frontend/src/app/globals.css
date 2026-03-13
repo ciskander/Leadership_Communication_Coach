@@ -1,3 +1,65 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * ClearVoice — global base styles
+ *
+ * Font variables (--font-sans, --font-serif) are injected by next/font
+ * in app/layout.tsx. Tailwind fontFamily tokens consume them via
+ * tailwind.config.ts. Nothing here should duplicate those definitions.
+ */
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    /* Apply DM Sans as the base UI font */
+    font-family: var(--font-sans, 'DM Sans', ui-sans-serif, system-ui, sans-serif);
+    background-color: theme('colors.cv.warm.50');
+    color: theme('colors.cv.stone.900');
+  }
+
+  /* Headings default to the serif stack for editorial weight */
+  h1, h2, h3 {
+    font-family: var(--font-serif, 'DM Serif Display', ui-serif, Georgia, serif);
+  }
+
+  /* Inherit font in form controls (Tailwind base resets these to system fonts) */
+  input, textarea, select, button {
+    font-family: inherit;
+  }
+
+  /* Focus ring — teal, consistent across interactive elements */
+  :focus-visible {
+    outline: 2px solid theme('colors.cv.teal.500');
+    outline-offset: 2px;
+  }
+
+  /* Text selection colour */
+  ::selection {
+    background-color: theme('colors.cv.teal.100');
+    color: theme('colors.cv.teal.900');
+  }
+
+  /* Scrollbar — subtle warm tones (Chrome/Edge/Safari) */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: theme('colors.cv.warm.300');
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: theme('colors.cv.stone.400');
+  }
+}
