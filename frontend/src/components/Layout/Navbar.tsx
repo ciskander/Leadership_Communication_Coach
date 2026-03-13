@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { STRINGS } from '@/config/strings';
-tsximport { ClearVoiceLogo } from '@/components/ClearVoiceLogo';
+import { ClearVoiceLogo } from '@/components/ClearVoiceLogo';
 
 export function Navbar() {
   const { user } = useAuth();
