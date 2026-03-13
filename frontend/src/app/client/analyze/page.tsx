@@ -24,18 +24,54 @@ function isGenericLabel(label: string): boolean {
   return /^SPEAKER_\d+/i.test(label) || /^UNKNOWN$/i.test(label);
 }
 
+// ─── Step indicator ───────────────────────────────────────────────────────────
+
+function StepBadge({ n, done }: { n: number; done: boolean }) {
+  if (done) {
+    return (
+      <div className="w-6 h-6 rounded-full bg-cv-teal-600 text-white flex items-center justify-center shrink-0">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3" aria-hidden="true">
+          <path d="M2 6l3 3 5-5" />
+        </svg>
+      </div>
+    );
+  }
+  return (
+    <div className="w-6 h-6 rounded-full bg-cv-stone-800 text-white flex items-center justify-center text-xs font-semibold shrink-0">
+      {n}
+    </div>
+  );
+}
+
+// ─── Shared input classes ─────────────────────────────────────────────────────
+
+const inputCls =
+  'mt-1 w-full border border-cv-warm-300 rounded-xl px-3 py-2.5 text-sm text-cv-stone-800 bg-white focus:outline-none focus:border-cv-teal-400 focus:ring-1 focus:ring-cv-teal-400/30 transition-colors placeholder:text-cv-stone-400';
+
+// ─── Field label ──────────────────────────────────────────────────────────────
+
+function FieldLabel({ text }: { text: string }) {
+  return (
+    <label className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400">
+      {text}
+    </label>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function AnalyzePage() {
   const router = useRouter();
-  const [currentUserName, setCurrentUserName] = useState('');
-  const [transcriptId, setTranscriptId] = useState<string | null>(null);
-  const [speakerLabels, setSpeakerLabels] = useState<string[]>([]);
-  const [speakerLabel, setSpeakerLabel] = useState<string | null>(null);
-  const [name, setName] = useState('');
-  const [role, setRole] = useState<TargetRole | ''>('');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [speakerPreviews, setSpeakerPreviews] = useState<Record<string, string[]>>({});
-  const [needsSpeakerPick, setNeedsSpeakerPick] = useState(false);
+  const [currentUserName, setCurrentUserName]     = useState('');
+  const [transcriptId, setTranscriptId]           = useState<string | null>(null);
+  const [speakerLabels, setSpeakerLabels]         = useState<string[]>([]);
+  const [speakerLabel, setSpeakerLabel]           = useState<string | null>(null);
+  const [name, setName]                           = useState('');
+  const [role, setRole]                           = useState<TargetRole | ''>('');
+  const [submitting, setSubmitting]               = useState(false);
+  const [error, setError]                         = useState<string | null>(null);
+  const [speakerPreviews, setSpeakerPreviews]     = useState<Record<string, string[]>>({});
+  const [needsSpeakerPick, setNeedsSpeakerPick]   = useState(false);
 
   useEffect(() => {
     api.me().then((user) => {
@@ -43,41 +79,41 @@ export default function AnalyzePage() {
     }).catch(() => {});
   }, []);
 
-	const handleUploaded = ({
-	  transcript_id,
-	  speaker_labels,
-	  speaker_previews = {},
-	}: {
-	  transcript_id: string;
-	  speaker_labels: string[];
-	  speaker_previews?: Record<string, string[]>;
-	  meeting_date?: string | null;
-	  detected_date?: string | null;
-	}) => {
-	  setTranscriptId(transcript_id);
-	  setSpeakerLabels(speaker_labels);
-	  setSpeakerPreviews(speaker_previews);
+  const handleUploaded = ({
+    transcript_id,
+    speaker_labels,
+    speaker_previews = {},
+  }: {
+    transcript_id: string;
+    speaker_labels: string[];
+    speaker_previews?: Record<string, string[]>;
+    meeting_date?: string | null;
+    detected_date?: string | null;
+  }) => {
+    setTranscriptId(transcript_id);
+    setSpeakerLabels(speaker_labels);
+    setSpeakerPreviews(speaker_previews);
 
-	  const allGeneric = speaker_labels.every(isGenericLabel);
-	  const firstName = currentUserName ? getFirstName(currentUserName) : '';
-	  const matched = !allGeneric && firstName
-		? matchSpeakerByFirstName(speaker_labels, firstName)
-		: null;
+    const allGeneric = speaker_labels.every(isGenericLabel);
+    const firstName  = currentUserName ? getFirstName(currentUserName) : '';
+    const matched    = !allGeneric && firstName
+      ? matchSpeakerByFirstName(speaker_labels, firstName)
+      : null;
 
-	  if (matched) {
-		setSpeakerLabel(matched);
-		setNeedsSpeakerPick(false);
-	  } else if (allGeneric && speaker_labels.length > 1) {
-		setSpeakerLabel(null);
-		setNeedsSpeakerPick(true);
-	  } else {
-		setSpeakerLabel(speaker_labels[0] ?? null);
-		setNeedsSpeakerPick(false);
-	  }
+    if (matched) {
+      setSpeakerLabel(matched);
+      setNeedsSpeakerPick(false);
+    } else if (allGeneric && speaker_labels.length > 1) {
+      setSpeakerLabel(null);
+      setNeedsSpeakerPick(true);
+    } else {
+      setSpeakerLabel(speaker_labels[0] ?? null);
+      setNeedsSpeakerPick(false);
+    }
 
-	  setName(currentUserName || '');
-	  setRole('');
-	};
+    setName(currentUserName || '');
+    setRole('');
+  };
 
   const ready = transcriptId && speakerLabel && name && role;
 
@@ -135,105 +171,110 @@ export default function AnalyzePage() {
 
   return (
     <div className="max-w-xl mx-auto space-y-5 py-2">
+
       <OnboardingTip tipId="analyze" message={STRINGS.onboarding.tipAnalyze} />
+
+      {/* Page heading */}
       <div>
-        <h1 className="text-2xl font-bold text-stone-900">{STRINGS.analyzePage.heading}</h1>
-        <p className="text-sm text-stone-500 mt-1">
-          {STRINGS.analyzePage.subtitle}
-        </p>
+        <h1 className="text-2xl font-semibold text-cv-stone-900 font-serif">
+          {STRINGS.analyzePage.heading}
+        </h1>
+        <p className="text-sm text-cv-stone-500 mt-1">{STRINGS.analyzePage.subtitle}</p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
+      {/* ── Step 1: Upload ── */}
+      <div className="bg-white rounded-2xl border border-cv-warm-200 p-5 space-y-3">
         <div className="flex items-center gap-2.5">
-          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-            step > 1 ? 'bg-emerald-600 text-white' : 'bg-stone-900 text-white'
-          }`}>
-            {step > 1 ? '✓' : '1'}
-          </div>
-          <p className="text-sm font-semibold text-stone-800">{STRINGS.analyzePage.step1}</p>
+          <StepBadge n={1} done={step > 1} />
+          <p className="text-sm font-semibold text-cv-stone-800">{STRINGS.analyzePage.step1}</p>
         </div>
         <TranscriptUploadPanel onUploaded={handleUploaded} withMetadata={true} />
       </div>
 
+      {/* ── Step 2: Configure ── */}
       {transcriptId && (
-        <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-4">
+        <div className="bg-white rounded-2xl border border-cv-warm-200 p-5 space-y-4">
           <div className="flex items-center gap-2.5">
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-              step > 2 ? 'bg-emerald-600 text-white' : 'bg-stone-900 text-white'
-            }`}>
-              {step > 2 ? '✓' : '2'}
-            </div>
-            <p className="text-sm font-semibold text-stone-800">{STRINGS.analyzePage.step2}</p>
+            <StepBadge n={2} done={step > 2} />
+            <p className="text-sm font-semibold text-cv-stone-800">{STRINGS.analyzePage.step2}</p>
           </div>
 
+          {/* Speaker selection */}
           {needsSpeakerPick ? (
-			  <div className="space-y-3">
-				<p className="text-xs text-stone-500 font-medium">{STRINGS.analyzePage.whichSpeaker}</p>
-				<div className="grid grid-cols-1 gap-2">
-				  {speakerLabels.map((label) => {
-					const quotes = speakerPreviews[label] ?? [];
-					return (
-					  <button
-						key={label}
-						onClick={() => { setSpeakerLabel(label); setNeedsSpeakerPick(false); }}
-						className={`text-left p-3.5 rounded-xl border transition-colors ${
-						  speakerLabel === label
-							? 'border-emerald-500 bg-emerald-50'
-							: 'border-stone-200 bg-white hover:border-stone-300'
-						}`}
-					  >
-						<p className="text-xs font-semibold text-stone-500 uppercase tracking-widest mb-1.5">
-						  {label}
-						</p>
-						{quotes.map((q, i) => (
-						  <p key={i} className="text-sm text-stone-600 leading-snug">
-							"{q}"
-						  </p>
-						))}
-					  </button>
-					);
-				  })}
-				</div>
-			  </div>
-			) : speakerLabels.length > 0 ? (
-			  <div>
-				<p className="text-xs text-stone-500 mb-2">{STRINGS.analyzePage.whoAreWeAnalysing}</p>
-				<SpeakerChips
-				  speakers={speakerLabels}
-				  selected={speakerLabel}
-				  onSelect={setSpeakerLabel}
-				/>
-			  </div>
-			) : (
-			  <div>
-				<label className="text-xs text-stone-500">{STRINGS.analyzePage.speakerLabel}</label>
-				<input
-				  type="text"
-				  value={speakerLabel ?? ''}
-				  onChange={(e) => setSpeakerLabel(e.target.value || null)}
-				  placeholder={STRINGS.analyzePage.speakerLabelPlaceholder}
-				  className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
-				/>
-			  </div>
-		    )}
+            <div className="space-y-2.5">
+              <p className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400">
+                {STRINGS.analyzePage.whichSpeaker}
+              </p>
+              <div className="grid grid-cols-1 gap-2">
+                {speakerLabels.map((label) => {
+                  const quotes = speakerPreviews[label] ?? [];
+                  return (
+                    <button
+                      key={label}
+                      onClick={() => { setSpeakerLabel(label); setNeedsSpeakerPick(false); }}
+                      className={[
+                        'text-left p-3.5 rounded-xl border transition-colors',
+                        speakerLabel === label
+                          ? 'border-cv-teal-500 bg-cv-teal-50'
+                          : 'border-cv-warm-200 bg-white hover:border-cv-warm-300',
+                      ].join(' ')}
+                    >
+                      <p className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400 mb-1.5">
+                        {label}
+                      </p>
+                      {quotes.map((q, i) => (
+                        <p key={i} className="text-sm text-cv-stone-600 leading-snug italic">
+                          &ldquo;{q}&rdquo;
+                        </p>
+                      ))}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : speakerLabels.length > 0 ? (
+            <div>
+              <p className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400 mb-2">
+                {STRINGS.analyzePage.whoAreWeAnalysing}
+              </p>
+              <SpeakerChips
+                speakers={speakerLabels}
+                selected={speakerLabel}
+                onSelect={setSpeakerLabel}
+              />
+            </div>
+          ) : (
+            <div>
+              <FieldLabel text={STRINGS.analyzePage.speakerLabel} />
+              <input
+                type="text"
+                value={speakerLabel ?? ''}
+                onChange={(e) => setSpeakerLabel(e.target.value || null)}
+                placeholder={STRINGS.analyzePage.speakerLabelPlaceholder}
+                className={inputCls}
+              />
+            </div>
+          )}
 
+          {/* Full name */}
           <div>
-            <label className="text-xs text-stone-500">{STRINGS.analyzePage.fullName}</label>
+            <FieldLabel text={STRINGS.analyzePage.fullName} />
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={STRINGS.analyzePage.fullNamePlaceholder}
-              className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
+              className={inputCls}
             />
           </div>
 
+          {/* Role in meeting */}
           <div>
-            <label className="text-xs text-stone-500">{STRINGS.analyzePage.roleInMeeting}</label>
+            <FieldLabel text={STRINGS.analyzePage.roleInMeeting} />
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as TargetRole)}
-              className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
+              className={inputCls}
             >
               <option value="">{STRINGS.analyzePage.selectRole}</option>
               {ROLE_OPTIONS.map((r) => (
@@ -244,14 +285,18 @@ export default function AnalyzePage() {
         </div>
       )}
 
+      {/* Error */}
       {error && (
-        <p className="text-sm text-rose-600 bg-rose-50 rounded-xl px-4 py-3">{error}</p>
+        <p className="text-sm text-cv-red-700 bg-cv-red-50 border border-cv-red-200 rounded-xl px-4 py-3">
+          {error}
+        </p>
       )}
 
+      {/* Submit */}
       <button
         onClick={handleSubmit}
         disabled={!ready || submitting}
-        className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-semibold text-sm hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+        className="w-full py-3.5 bg-cv-teal-600 text-white rounded-xl font-semibold text-sm hover:bg-cv-teal-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
       >
         {submitting ? (
           <span className="flex items-center justify-center gap-2">
