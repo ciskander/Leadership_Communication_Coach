@@ -455,7 +455,7 @@ export default function BaselineDetailPage() {
               <p className="text-sm font-medium text-cv-teal-800">
                 {STRINGS.baselineDetail.completeTitle}
               </p>
-              <p className="text-xs text-cv-teal-400 font-light mt-0.5">
+              <p className="text-sm text-cv-teal-400 font-light mt-0.5">
                 {STRINGS.baselineDetail.completeSubtitle}
               </p>
             </div>
@@ -477,7 +477,7 @@ export default function BaselineDetailPage() {
                 <path d="M8 7v4.5" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" />
                 <circle cx="8" cy="4.5" r="0.75" fill="currentColor" />
               </svg>
-              <p className="text-xs text-blue-800 leading-relaxed">
+              <p className="text-sm text-blue-800 leading-relaxed">
                 {STRINGS.baselineDetail.aggregateCoachingNote}
               </p>
             </div>

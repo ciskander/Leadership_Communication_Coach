@@ -87,8 +87,8 @@ const config: Config = {
 
       fontSize: {
         '2xs': ['10px', { lineHeight: '1.4', letterSpacing: '0.08em' }],
-        'xs':  ['11px', { lineHeight: '1.5' }],
-        'sm':  ['13px', { lineHeight: '1.6' }],
+        'xs':  ['12px', { lineHeight: '1.5' }],
+        'sm':  ['14px', { lineHeight: '1.6' }],
         'base':['15px', { lineHeight: '1.65' }],
         'lg':  ['18px', { lineHeight: '1.4' }],
         'xl':  ['22px', { lineHeight: '1.3' }],
