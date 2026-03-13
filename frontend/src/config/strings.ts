@@ -11,9 +11,9 @@
 export const STRINGS = {
   // ── App-wide ────────────────────────────────────────────────────────────────
   app: {
-    title: 'Leadership Coach',
+    title: 'ClearVoice',
     description: 'AI-powered leadership communication coaching',
-    loginHeading: 'Leadership Coach',
+    loginHeading: 'ClearVoice',
     loginSubheading: 'AI-powered communication coaching rooted in your actual meetings.',
     continueWithGoogle: 'Continue with Google',
     signOut: 'Sign out',
@@ -127,7 +127,7 @@ export const STRINGS = {
       'Whether speaking time is distributed appropriately given your role in the meeting.',
   } as Record<string, string>,
 
-  // ── Pattern icons ───────────────────────────────────────────────────────────
+  // ── Pattern icons (legacy — components now use inline SVG; keep for any unconverted usage) ─────
   patternIcons: {
     agenda_clarity: '📋',
     objective_signaling: '🥅',
@@ -311,7 +311,7 @@ export const STRINGS = {
     suggestedExperiments: 'Suggested Experiments',
     suggestions: (n: number) => `${n} suggestion${n !== 1 ? 's' : ''}`,
     analyzeMeetingBtn: 'Analyze Meeting',
-    createBaselineBtn: '📚 Create Baseline',
+    createBaselineBtn: 'Create Baseline',
     recentAnalyses: 'Recent Analyses',
     deleteSelected: (n: number) => `Delete selected (${n})`,
     done: 'Done',
@@ -518,6 +518,7 @@ export const STRINGS = {
     completeFieldsAbove: 'Complete the fields above to continue',
     runningAnalysis: 'Running analysis…',
     runAnalysis: 'Run Analysis',
+    analyzeAnother: 'Analyze another',
   },
 
   // ── Coachee detail page ─────────────────────────────────────────────────────

@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const auth = useAuthFetch();
+  const auth   = useAuthFetch();
   const router = useRouter();
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <Navbar />
         <div className="flex flex-1">
           <Sidebar />
-          <main className="flex-1 p-6 bg-gray-50 overflow-y-auto">{children}</main>
+          <main className="flex-1 p-6 bg-cv-warm-50 overflow-y-auto">{children}</main>
         </div>
       </div>
     </AuthContext.Provider>

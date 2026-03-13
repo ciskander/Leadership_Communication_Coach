@@ -11,9 +11,11 @@ import type { Experiment, ExperimentOptions, RankedExperimentItem } from '@/lib/
 import { STRINGS } from '@/config/strings';
 import { OnboardingTip } from '@/components/OnboardingTip';
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 function PatternLabel({ id }: { id: string }) {
   return (
-    <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+    <span className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-teal-600">
       {id.replace(/_/g, ' ')}
     </span>
   );
@@ -21,20 +23,39 @@ function PatternLabel({ id }: { id: string }) {
 
 function timeAgo(dateStr: string | null): string {
   if (!dateStr) return '';
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const days = Math.floor(diff / 86_400_000);
-  if (days < 1) return 'today';
+  const diff  = Date.now() - new Date(dateStr).getTime();
+  const days  = Math.floor(diff / 86_400_000);
+  if (days < 1)   return 'today';
   if (days === 1) return '1 day ago';
-  if (days < 7) return `${days} days ago`;
+  if (days < 7)   return `${days} days ago`;
   const weeks = Math.floor(days / 7);
   if (weeks === 1) return '1 week ago';
-  if (weeks < 5) return `${weeks} weeks ago`;
+  if (weeks < 5)   return `${weeks} weeks ago`;
   const months = Math.floor(days / 30);
   if (months === 1) return '1 month ago';
   return `${months} months ago`;
 }
 
-// ── Proposed Experiment Card ──────────────────────────────────────────────────
+/** Shared inset box used in proposed + parked cards */
+function InsetBox({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-cv-warm-50 border border-cv-warm-200 rounded-xl p-3">
+      <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1">
+        {label}
+      </p>
+      {children}
+    </div>
+  );
+}
+
+/** Inline spinner */
+function Spinner() {
+  return (
+    <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin inline-block" />
+  );
+}
+
+// ─── Proposed experiment card ─────────────────────────────────────────────────
 
 function ProposedExperimentCard({
   experiment,
@@ -45,7 +66,7 @@ function ProposedExperimentCard({
   onAccepted: () => void;
   compact?: boolean;
 }) {
-  const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [state, setState]     = useState<'idle' | 'loading' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   async function handleAccept() {
@@ -62,39 +83,43 @@ function ProposedExperimentCard({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
+    <div className="bg-white rounded-2xl border border-cv-warm-200 p-5 space-y-3">
       <div className="space-y-1">
         <PatternLabel id={experiment.pattern_id} />
-        <p className="text-sm font-semibold text-stone-900 leading-snug">{experiment.title}</p>
+        <p className="text-sm font-semibold text-cv-stone-900 leading-snug font-serif">
+          {experiment.title}
+        </p>
       </div>
+
       {!compact && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div className="bg-stone-50 rounded-xl p-3">
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.whatToDo}</p>
-            <p className="text-xs text-stone-600 leading-relaxed">{experiment.instruction}</p>
-          </div>
-          <div className="bg-stone-50 rounded-xl p-3">
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.successLooksLike}</p>
-            <p className="text-xs text-stone-600 leading-relaxed">{experiment.success_marker}</p>
-          </div>
+          <InsetBox label={STRINGS.common.whatToDo}>
+            <p className="text-xs text-cv-stone-600 leading-relaxed">{experiment.instruction}</p>
+          </InsetBox>
+          <InsetBox label={STRINGS.common.successLooksLike}>
+            <p className="text-xs text-cv-stone-600 leading-relaxed">{experiment.success_marker}</p>
+          </InsetBox>
         </div>
       )}
-      {errorMsg && <p className="text-xs text-rose-600">{errorMsg}</p>}
+
+      {errorMsg && <p className="text-xs text-cv-red-600">{errorMsg}</p>}
+
       <div className="flex items-center gap-3">
         <button
           onClick={handleAccept}
           disabled={state === 'loading'}
-          className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
+          className="flex items-center gap-2 px-4 py-2 bg-cv-teal-600 text-white rounded-xl text-xs font-semibold hover:bg-cv-teal-700 transition-colors disabled:opacity-60"
         >
+          {state === 'loading' && <Spinner />}
           {state === 'loading' ? STRINGS.common.accepting : STRINGS.common.acceptExperiment}
         </button>
-        <span className="text-xs text-stone-400 ml-auto">{experiment.experiment_id}</span>
+        <span className="text-2xs text-cv-stone-400 ml-auto tabular-nums">{experiment.experiment_id}</span>
       </div>
     </div>
   );
 }
 
-// ── Parked Experiment Card ────────────────────────────────────────────────────
+// ─── Parked experiment card ───────────────────────────────────────────────────
 
 function ParkedExperimentCard({
   experiment,
@@ -105,7 +130,7 @@ function ParkedExperimentCard({
   onResumed: () => void;
   onDiscarded: () => void;
 }) {
-  const [state, setState] = useState<'idle' | 'loading' | 'confirm-discard'>('idle');
+  const [state, setState]       = useState<'idle' | 'loading' | 'confirm-discard'>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   async function handleResume() {
@@ -134,48 +159,48 @@ function ParkedExperimentCard({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-amber-200 p-5 space-y-3">
+    <div className="bg-white rounded-2xl border border-cv-amber-200 p-5 space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+            <span className="text-2xs font-semibold px-2 py-0.5 rounded-full bg-cv-amber-100 text-cv-amber-700">
               {STRINGS.experimentPage.parked}
             </span>
             {experiment.ended_at && (
-              <span className="text-xs text-stone-400">
-                {timeAgo(experiment.ended_at)}
-              </span>
+              <span className="text-2xs text-cv-stone-400">{timeAgo(experiment.ended_at)}</span>
             )}
           </div>
           <PatternLabel id={experiment.pattern_id} />
-          <p className="text-sm font-semibold text-stone-900 leading-snug">{experiment.title}</p>
+          <p className="text-sm font-semibold text-cv-stone-900 leading-snug font-serif">
+            {experiment.title}
+          </p>
         </div>
       </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div className="bg-stone-50 rounded-xl p-3">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.whatToDo}</p>
-          <p className="text-xs text-stone-600 leading-relaxed">{experiment.instruction}</p>
-        </div>
-        <div className="bg-stone-50 rounded-xl p-3">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.successLooksLike}</p>
-          <p className="text-xs text-stone-600 leading-relaxed">{experiment.success_marker}</p>
-        </div>
+        <InsetBox label={STRINGS.common.whatToDo}>
+          <p className="text-xs text-cv-stone-600 leading-relaxed">{experiment.instruction}</p>
+        </InsetBox>
+        <InsetBox label={STRINGS.common.successLooksLike}>
+          <p className="text-xs text-cv-stone-600 leading-relaxed">{experiment.success_marker}</p>
+        </InsetBox>
       </div>
-      {errorMsg && <p className="text-xs text-rose-600">{errorMsg}</p>}
+
+      {errorMsg && <p className="text-xs text-cv-red-600">{errorMsg}</p>}
 
       {state === 'confirm-discard' ? (
-        <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 space-y-2">
-          <p className="text-xs text-rose-700">{STRINGS.experimentPage.discardConfirm}</p>
+        <div className="bg-cv-red-50 border border-cv-red-200 rounded-xl p-3 space-y-2">
+          <p className="text-xs text-cv-red-700">{STRINGS.experimentPage.discardConfirm}</p>
           <div className="flex gap-2">
             <button
               onClick={handleDiscard}
-              className="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-semibold hover:bg-rose-700 transition-colors"
+              className="px-3 py-1.5 bg-cv-red-600 text-white rounded-lg text-xs font-semibold hover:bg-cv-red-700 transition-colors"
             >
               {STRINGS.experimentPage.discard}
             </button>
             <button
               onClick={() => setState('idle')}
-              className="px-3 py-1.5 bg-white border border-stone-300 text-stone-600 rounded-lg text-xs font-semibold hover:bg-stone-50 transition-colors"
+              className="px-3 py-1.5 bg-white border border-cv-warm-300 text-cv-stone-600 rounded-lg text-xs font-semibold hover:bg-cv-warm-50 transition-colors"
             >
               {STRINGS.common.cancel}
             </button>
@@ -186,38 +211,48 @@ function ParkedExperimentCard({
           <button
             onClick={handleResume}
             disabled={state === 'loading'}
-            className="px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-semibold hover:bg-amber-700 transition-colors disabled:opacity-60"
+            className="flex items-center gap-2 px-4 py-2 bg-cv-amber-600 text-white rounded-xl text-xs font-semibold hover:bg-cv-amber-700 transition-colors disabled:opacity-60"
           >
+            {state === 'loading' && <Spinner />}
             {state === 'loading' ? STRINGS.experimentPage.resuming : STRINGS.experimentPage.resumeExperiment}
           </button>
           <button
             onClick={() => setState('confirm-discard')}
             disabled={state === 'loading'}
-            className="text-xs text-stone-400 hover:text-rose-600 transition-colors"
+            className="text-xs text-cv-stone-400 hover:text-cv-red-600 transition-colors"
           >
             {STRINGS.experimentPage.discard}
           </button>
-          <span className="text-xs text-stone-400 ml-auto">{experiment.experiment_id}</span>
+          <span className="text-2xs text-cv-stone-400 ml-auto tabular-nums">{experiment.experiment_id}</span>
         </div>
       )}
     </div>
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+// ─── Section heading ──────────────────────────────────────────────────────────
+
+function SectionHeading({ text }: { text: string }) {
+  return (
+    <h2 className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-3">
+      {text}
+    </h2>
+  );
+}
+
+// ─── Main page (inner) ────────────────────────────────────────────────────────
 
 function ExperimentPageInner() {
   const { data, loading, error, refetch } = useActiveExperiment();
   const { proposed, pollState, startPolling, reset: resetPoller } = useProposedPoller();
 
-  // Seed proposed + parked + ranked lists from a one-shot fetch on mount
-  const [options, setOptions] = useState<ExperimentOptions | null>(null);
-  const [seedLoading, setSeedLoading] = useState(true);
-  const [lastAction, setLastAction] = useState<'completed' | 'parked' | null>(null);
-  const searchParams = useSearchParams();
-  const [showMore, setShowMore] = useState(searchParams.get('expand') === '1');
+  const [options, setOptions]             = useState<ExperimentOptions | null>(null);
+  const [seedLoading, setSeedLoading]     = useState(true);
+  const [lastAction, setLastAction]       = useState<'completed' | 'parked' | null>(null);
+  const searchParams                      = useSearchParams();
+  const [showMore, setShowMore]           = useState(searchParams.get('expand') === '1');
   const [backfillRetries, setBackfillRetries] = useState(0);
-  const MAX_BACKFILL_RETRIES = 8; // 40 seconds max
+  const MAX_BACKFILL_RETRIES = 8;
 
   function fetchOptions() {
     api.getExperimentOptions()
@@ -226,18 +261,12 @@ function ExperimentPageInner() {
       .finally(() => setSeedLoading(false));
   }
 
-  useEffect(() => {
-    fetchOptions();
-  }, []);
+  useEffect(() => { fetchOptions(); }, []);
 
-  // Poll for backfill: when we have fewer than 3 ranked items and expect more
-  // (either mid-backfill or just after a park/complete action), re-fetch until
-  // we have 3 or hit the retry cap.
   const isBackfilling = !!(
     options &&
     options.ranked.length < 3 &&
     backfillRetries < MAX_BACKFILL_RETRIES &&
-    // Either we have some options and need more, or we just completed/parked
     (options.ranked.length > 0 || lastAction !== null)
   );
 
@@ -250,12 +279,9 @@ function ExperimentPageInner() {
     return () => clearTimeout(t);
   }, [isBackfilling, backfillRetries]);
 
-  // Build the ranked list, incorporating any newly-polled proposed experiments
   const rankedItems: RankedExperimentItem[] = (() => {
     const baseRanked = options?.ranked ?? [];
     if (proposed.length === 0) return baseRanked;
-
-    // Merge polled proposed into ranked, deduplicating by record ID
     const seen = new Set(baseRanked.map((r) => r.experiment.experiment_record_id));
     const extras: RankedExperimentItem[] = [];
     for (const exp of proposed) {
@@ -267,105 +293,90 @@ function ExperimentPageInner() {
   })();
 
   const parkedExperiments = options?.parked ?? [];
-  const atParkCap = options?.at_park_cap ?? false;
-  const isPolling = pollState === 'polling';
+  const atParkCap         = options?.at_park_cap ?? false;
+  const isPolling         = pollState === 'polling';
 
   function handleComplete() {
-    setLastAction('completed');
-    setShowMore(false);
-    setBackfillRetries(0);
-    resetPoller();
-    refetch(false);
-    startPolling();
-    fetchOptions();
+    setLastAction('completed'); setShowMore(false); setBackfillRetries(0);
+    resetPoller(); refetch(false); startPolling(); fetchOptions();
   }
-
   function handlePark() {
-    setLastAction('parked');
-    setShowMore(false);
-    setBackfillRetries(0);
-    resetPoller();
-    refetch(false);
-    startPolling();
-    fetchOptions();
+    setLastAction('parked'); setShowMore(false); setBackfillRetries(0);
+    resetPoller(); refetch(false); startPolling(); fetchOptions();
   }
-
   function handleAccepted() {
-    setLastAction(null);
-    setShowMore(false);
-    setBackfillRetries(0);
-    resetPoller();
-    refetch();
-    fetchOptions();
+    setLastAction(null); setShowMore(false); setBackfillRetries(0);
+    resetPoller(); refetch(); fetchOptions();
   }
-
   function handleResumed() {
-    setLastAction(null);
-    setShowMore(false);
-    resetPoller();
-    refetch();
-    fetchOptions();
+    setLastAction(null); setShowMore(false); resetPoller(); refetch(); fetchOptions();
   }
+  function handleDiscarded() { fetchOptions(); }
 
-  function handleDiscarded() {
-    fetchOptions();
-  }
-
+  // ── Loading / error states ────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
+        <span className="w-8 h-8 border-2 border-cv-teal-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (error) {
-    return <p className="text-sm text-rose-600">{error}</p>;
+    return (
+      <p className="text-sm text-cv-red-600 bg-cv-red-50 border border-cv-red-200 rounded-xl px-4 py-3">
+        {error}
+      </p>
+    );
   }
 
   const experiment = data?.experiment;
-  const events = data?.recent_events ?? [];
-  const hasActive = !!experiment && experiment.status === 'active';
+  const events     = data?.recent_events ?? [];
+  const hasActive  = !!experiment && experiment.status === 'active';
 
+  // ── Post-action banner ────────────────────────────────────────────────────
   function PostActionBanner() {
     if (!lastAction) return null;
     if (lastAction === 'completed') {
       return (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 flex items-center gap-3">
-          <svg viewBox="0 0 16 16" fill="none" className="w-5 h-5 shrink-0 text-emerald-600" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth={1.4}/><path d="M5 8l2 2 4-4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"/></svg>
+        <div className="bg-cv-teal-50 border border-cv-teal-200 rounded-2xl px-5 py-4 flex items-center gap-3">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-cv-teal-600 shrink-0" aria-hidden="true">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+          </svg>
           <div>
-            <p className="text-sm font-semibold text-emerald-800">{STRINGS.experimentPage.completeBanner}</p>
-            <p className="text-xs text-emerald-700 mt-0.5">{STRINGS.experimentPage.completeSubtext}</p>
+            <p className="text-sm font-semibold text-cv-teal-800">{STRINGS.experimentPage.completeBanner}</p>
+            <p className="text-xs text-cv-teal-700 mt-0.5">{STRINGS.experimentPage.completeSubtext}</p>
           </div>
         </div>
       );
     }
     return (
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 flex items-center gap-3">
-        <svg viewBox="0 0 16 16" fill="none" className="w-5 h-5 shrink-0 text-amber-600" aria-hidden="true"><rect x="3.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/><rect x="9.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/></svg>
+      <div className="bg-cv-amber-50 border border-cv-amber-200 rounded-2xl px-5 py-4 flex items-center gap-3">
+        <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-cv-amber-600 shrink-0" aria-hidden="true">
+          <path fillRule="evenodd" d="M2 10a8 8 0 1116 0 8 8 0 01-16 0zm5-2.25A.75.75 0 017.75 7h.5a.75.75 0 01.75.75v4.5a.75.75 0 01-.75.75h-.5A.75.75 0 017 12.25v-4.5zm4.25-.75a.75.75 0 00-.75.75v4.5c0 .414.336.75.75.75h.5a.75.75 0 00.75-.75v-4.5a.75.75 0 00-.75-.75h-.5z" clipRule="evenodd" />
+        </svg>
         <div>
-          <p className="text-sm font-semibold text-amber-800">{STRINGS.experimentPage.parkedBanner}</p>
-          <p className="text-xs text-amber-700 mt-0.5">{STRINGS.experimentPage.parkedSubtext}</p>
+          <p className="text-sm font-semibold text-cv-amber-800">{STRINGS.experimentPage.parkedBanner}</p>
+          <p className="text-xs text-cv-amber-700 mt-0.5">{STRINGS.experimentPage.parkedSubtext}</p>
         </div>
       </div>
     );
   }
 
   const overallLoading = seedLoading && !lastAction;
-
-  // At park cap — only show parked experiments, no new proposals
-  const showCapScreen = atParkCap && !hasActive;
-  // Has options to show
-  const hasOptions = rankedItems.length > 0;
+  const showCapScreen  = atParkCap && !hasActive;
+  const hasOptions     = rankedItems.length > 0;
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 py-2">
       <OnboardingTip tipId="experiment" message={STRINGS.onboarding.tipExperiment} />
+
+      {/* Page heading */}
       <div>
-        <h1 className="text-2xl font-bold text-stone-900">{STRINGS.experimentPage.heading}</h1>
-        <p className="text-sm text-stone-500 mt-1">
-          {STRINGS.experimentPage.subtitle}
-        </p>
+        <h1 className="text-2xl font-semibold text-cv-stone-900 font-serif">
+          {STRINGS.experimentPage.heading}
+        </h1>
+        <p className="text-sm text-cv-stone-500 mt-1">{STRINGS.experimentPage.subtitle}</p>
       </div>
 
       {hasActive ? (
@@ -381,20 +392,20 @@ function ExperimentPageInner() {
 
           {/* Polling indicator */}
           {isPolling && (
-            <div className="flex items-center gap-3 px-5 py-3 bg-blue-50 rounded-2xl border border-blue-100">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 flex-shrink-0" />
-              <p className="text-sm text-blue-700">{STRINGS.experimentPage.findingExperiment}</p>
+            <div className="flex items-center gap-3 px-5 py-3 bg-cv-teal-50 border border-cv-teal-100 rounded-2xl">
+              <span className="w-4 h-4 border-2 border-cv-teal-500 border-t-transparent rounded-full animate-spin shrink-0" />
+              <p className="text-sm text-cv-teal-700">{STRINGS.experimentPage.findingExperiment}</p>
             </div>
           )}
 
-          {/* Park cap screen — user must resume or discard a parked experiment */}
+          {/* Park-cap screen */}
           {showCapScreen && parkedExperiments.length > 0 && (
             <section>
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 mb-4">
-                <p className="text-sm font-medium text-amber-800">
+              <div className="bg-cv-amber-50 border border-cv-amber-200 rounded-2xl px-5 py-4 mb-4">
+                <p className="text-sm font-semibold text-cv-amber-800">
                   {STRINGS.experimentPage.parkCapMessage(parkedExperiments.length)}
                 </p>
-                <p className="text-xs text-amber-700 mt-1">
+                <p className="text-xs text-cv-amber-700 mt-1">
                   {STRINGS.experimentPage.parkCapHint}
                 </p>
               </div>
@@ -411,20 +422,17 @@ function ExperimentPageInner() {
             </section>
           )}
 
-          {/* Experiment options — 1 top recommendation by default, all 3 ranked on "See more" */}
+          {/* Experiment options */}
           {!showCapScreen && !overallLoading && hasOptions && isBackfilling ? (
-            <div className="flex items-center gap-3 px-5 py-4 bg-blue-50 rounded-2xl border border-blue-100">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 flex-shrink-0" />
-              <p className="text-sm text-blue-700">{STRINGS.experimentPage.generatingOptions}</p>
+            <div className="flex items-center gap-3 px-5 py-4 bg-cv-teal-50 border border-cv-teal-100 rounded-2xl">
+              <span className="w-4 h-4 border-2 border-cv-teal-500 border-t-transparent rounded-full animate-spin shrink-0" />
+              <p className="text-sm text-cv-teal-700">{STRINGS.experimentPage.generatingOptions}</p>
             </div>
           ) : !showCapScreen && !overallLoading && hasOptions ? (
             <section>
               {!showMore ? (
                 <>
-                  {/* Default: show only the top-ranked item */}
-                  <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
-                    {lastAction ? STRINGS.experimentPage.recommendedNext : STRINGS.experimentPage.suggestedExperiment}
-                  </h2>
+                  <SectionHeading text={lastAction ? STRINGS.experimentPage.recommendedNext : STRINGS.experimentPage.suggestedExperiment} />
                   {rankedItems[0].origin === 'parked' ? (
                     <ParkedExperimentCard
                       experiment={rankedItems[0].experiment}
@@ -440,7 +448,7 @@ function ExperimentPageInner() {
                   {rankedItems.length > 1 && (
                     <button
                       onClick={() => setShowMore(true)}
-                      className="mt-3 w-full py-2.5 bg-stone-50 border border-stone-200 text-stone-600 rounded-xl text-sm font-medium hover:bg-stone-100 transition-colors"
+                      className="mt-3 w-full py-2.5 bg-cv-warm-50 border border-cv-warm-200 text-cv-stone-600 rounded-xl text-sm font-medium hover:bg-cv-warm-100 transition-colors"
                     >
                       {STRINGS.experimentPage.seeMoreOptions}
                     </button>
@@ -448,14 +456,11 @@ function ExperimentPageInner() {
                 </>
               ) : (
                 <>
-                  {/* Expanded: all ranked options (proposed + parked merged) */}
                   <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
-                      {STRINGS.experimentPage.chooseNext}
-                    </h2>
+                    <SectionHeading text={STRINGS.experimentPage.chooseNext} />
                     <button
                       onClick={() => setShowMore(false)}
-                      className="text-xs text-stone-500 hover:text-stone-700 transition-colors"
+                      className="text-xs text-cv-stone-500 hover:text-cv-stone-700 transition-colors -mt-3"
                     >
                       {STRINGS.experimentPage.backToRecommendation}
                     </button>
@@ -463,10 +468,10 @@ function ExperimentPageInner() {
                   <div className="space-y-3">
                     {rankedItems.map((item) => (
                       <div key={item.experiment.experiment_record_id}>
-                        <p className={`text-xs font-medium mb-1.5 ${item.rank === 1 ? 'text-emerald-600' : 'text-stone-400'}`}>
+                        <p className={`text-xs font-medium mb-1.5 ${item.rank === 1 ? 'text-cv-teal-600' : 'text-cv-stone-400'}`}>
                           {STRINGS.experimentPage.rankLabel(item.rank)}
                           {item.origin === 'parked' && (
-                            <span className="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                            <span className="ml-2 text-2xs font-semibold px-2 py-0.5 rounded-full bg-cv-amber-100 text-cv-amber-700">
                               {STRINGS.experimentPage.parked}
                             </span>
                           )}
@@ -490,10 +495,16 @@ function ExperimentPageInner() {
               )}
             </section>
           ) : !showCapScreen && !overallLoading && !isPolling && !hasOptions ? (
-            <div className="bg-white rounded-2xl border border-dashed border-stone-300 p-12 text-center space-y-4">
-              <div className="text-4xl">🧪</div>
-              <p className="text-stone-600 font-medium">{STRINGS.experimentPage.noActiveExperiment}</p>
-              <p className="text-sm text-stone-400 max-w-xs mx-auto leading-relaxed">
+            /* Empty state */
+            <div className="bg-white rounded-2xl border border-dashed border-cv-warm-300 p-12 text-center space-y-4">
+              {/* Beaker icon */}
+              <div className="flex justify-center">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 text-cv-stone-300" aria-hidden="true">
+                  <path d="M9 3H15M9 3V9L4 18H20L15 9V3M9 3H15M7.5 14H16.5" />
+                </svg>
+              </div>
+              <p className="text-cv-stone-600 font-semibold">{STRINGS.experimentPage.noActiveExperiment}</p>
+              <p className="text-sm text-cv-stone-400 max-w-xs mx-auto leading-relaxed">
                 {STRINGS.experimentPage.noActiveExperimentDesc}
               </p>
               <div className="flex gap-3 justify-center pt-2">
@@ -506,7 +517,7 @@ function ExperimentPageInner() {
                 </Link>
                 <Link
                   href="/client/baseline/new"
-                  className="px-5 py-2.5 bg-white border border-stone-300 text-stone-700 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors"
+                  className="px-5 py-2.5 bg-white border border-cv-warm-300 text-cv-stone-700 rounded-xl text-sm font-medium hover:bg-cv-warm-50 transition-colors"
                 >
                   {STRINGS.clientDashboard.createBaseline}
                 </Link>

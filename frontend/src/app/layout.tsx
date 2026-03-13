@@ -1,9 +1,29 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, DM_Sans, DM_Serif_Display } from 'next/font/google';
 import './globals.css';
 import { STRINGS } from '@/config/strings';
 
-const inter = Inter({ subsets: ['latin'] });
+// Kept for any legacy components still using it directly
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+});
+
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  weight: ['300', '400', '500'],
+  style: ['normal', 'italic'],
+  variable: '--font-sans',
+  display: 'swap',
+});
+
+const dmSerif = DM_Serif_Display({
+  subsets: ['latin'],
+  weight: ['400'],
+  style: ['normal', 'italic'],
+  variable: '--font-serif',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: STRINGS.app.title,
@@ -16,8 +36,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
+    <html lang="en" className={`${dmSans.variable} ${dmSerif.variable} ${inter.variable}`}>
+      <body className={dmSans.className}>{children}</body>
     </html>
   );
 }

@@ -7,13 +7,11 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
-  const auth = useAuthFetch();
+  const auth   = useAuthFetch();
   const router = useRouter();
 
   useEffect(() => {
-    if (!auth.loading && !auth.user) {
-      router.push('/');
-    }
+    if (!auth.loading && !auth.user) router.push('/');
   }, [auth.loading, auth.user, router]);
 
   return (
@@ -22,9 +20,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         <Navbar />
         <div className="flex flex-1">
           <Sidebar />
-          <main className="flex-1 p-6 bg-gray-50 overflow-y-auto">
-            {children}
-          </main>
+          <main className="flex-1 p-6 bg-cv-warm-50 overflow-y-auto">{children}</main>
         </div>
       </div>
     </AuthContext.Provider>

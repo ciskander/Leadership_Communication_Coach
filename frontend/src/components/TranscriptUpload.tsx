@@ -38,16 +38,94 @@ interface TranscriptUploadPanelProps {
   withMetadata?: boolean;
 }
 
-export function TranscriptUploadPanel({ onUploaded, withMetadata = false }: TranscriptUploadPanelProps) {
-  const [uploading, setUploading] = useState(false);
-  const [uploaded, setUploaded] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+// ─── Shared input class (matches analyze page) ────────────────────────────────
+const inputCls =
+  'mt-1 w-full border border-cv-warm-300 rounded-xl px-3 py-2.5 text-sm text-cv-stone-800 bg-white focus:outline-none focus:border-cv-teal-400 focus:ring-1 focus:ring-cv-teal-400/30 transition-colors placeholder:text-cv-stone-400';
 
-  const [title, setTitle] = useState('');
-  const [meetingType, setMeetingType] = useState('');
+// ─── Field label ──────────────────────────────────────────────────────────────
+function FieldLabel({ text, suffix }: { text: string; suffix?: React.ReactNode }) {
+  return (
+    <label className="flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400">
+      {text}
+      {suffix && <span className="font-normal normal-case tracking-normal text-cv-stone-400">{suffix}</span>}
+    </label>
+  );
+}
+
+// ─── Upload drop zone ─────────────────────────────────────────────────────────
+function DropZone({
+  uploading,
+  uploaded,
+  selectedFile,
+  onClick,
+}: {
+  uploading: boolean;
+  uploaded: boolean;
+  selectedFile: File | null;
+  onClick: () => void;
+}) {
+  if (uploaded) {
+    return (
+      <div className="flex items-center gap-2.5 bg-cv-teal-50 border border-cv-teal-200 rounded-xl px-4 py-3">
+        <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-teal-600 shrink-0" aria-hidden="true">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+        </svg>
+        <span className="text-sm text-cv-teal-700 font-medium">{STRINGS.transcriptUpload.fileUploadedSuccess}</span>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={uploading}
+      onClick={onClick}
+      className={[
+        'w-full border-2 border-dashed rounded-xl transition-colors disabled:opacity-50',
+        selectedFile
+          ? 'border-cv-teal-300 bg-cv-teal-50 py-4'
+          : 'border-cv-warm-300 py-7 hover:border-cv-teal-400',
+      ].join(' ')}
+    >
+      {uploading ? (
+        <span className="flex items-center justify-center gap-2 text-sm text-cv-stone-500">
+          <span className="w-4 h-4 border-2 border-cv-teal-400 border-t-transparent rounded-full animate-spin" />
+          {STRINGS.common.uploading}
+        </span>
+      ) : selectedFile ? (
+        <span className="flex items-center justify-center gap-2 text-sm text-cv-teal-700">
+          {/* Document icon */}
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0 text-cv-teal-500" aria-hidden="true">
+            <path d="M3 3.5A1.5 1.5 0 014.5 2h6.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 01.439 1.061V16.5A1.5 1.5 0 0113.5 18h-9A1.5 1.5 0 013 16.5v-13z" />
+          </svg>
+          <span className="font-medium truncate max-w-xs">{selectedFile.name}</span>
+        </span>
+      ) : (
+        <span className="flex flex-col items-center gap-1.5">
+          {/* Upload cloud icon */}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-cv-stone-400" aria-hidden="true">
+            <path d="M12 16V8m0 0l-3 3m3-3l3 3" />
+            <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3" />
+          </svg>
+          <span className="text-sm text-cv-stone-400">{STRINGS.transcriptUpload.clickToSelect}</span>
+        </span>
+      )}
+    </button>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
+export function TranscriptUploadPanel({ onUploaded, withMetadata = false }: TranscriptUploadPanelProps) {
+  const [uploading, setUploading]                 = useState(false);
+  const [uploaded, setUploaded]                   = useState(false);
+  const [error, setError]                         = useState<string | null>(null);
+  const [selectedFile, setSelectedFile]           = useState<File | null>(null);
+
+  const [title, setTitle]                         = useState('');
+  const [meetingType, setMeetingType]             = useState('');
   const [meetingTypeCustom, setMeetingTypeCustom] = useState('');
-  const [meetingDate, setMeetingDate] = useState('');
+  const [meetingDate, setMeetingDate]             = useState('');
 
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -69,20 +147,20 @@ export function TranscriptUploadPanel({ onUploaded, withMetadata = false }: Tran
       const fd = new FormData();
       fd.append('file', file);
       if (titleVal) fd.append('title', titleVal);
-      if (typeVal) fd.append('meeting_type', typeVal);
-      if (dateVal) fd.append('meeting_date', dateVal);
+      if (typeVal)  fd.append('meeting_type', typeVal);
+      if (dateVal)  fd.append('meeting_date', dateVal);
 
       const result = await api.uploadTranscript(fd);
       setUploaded(true);
-		onUploaded({
-		  transcript_id: result.transcript_id,
-		  speaker_labels: result.speaker_labels,
-		  meeting_date: result.meeting_date,
-		  detected_date: result.detected_date ?? null,
-		  speaker_previews: result.speaker_previews ?? {},
-		  meeting_type: result.meeting_type,
-		  title: titleVal || file.name,
-		});
+      onUploaded({
+        transcript_id:   result.transcript_id,
+        speaker_labels:  result.speaker_labels,
+        meeting_date:    result.meeting_date,
+        detected_date:   result.detected_date ?? null,
+        speaker_previews: result.speaker_previews ?? {},
+        meeting_type:    result.meeting_type,
+        title:           titleVal || file.name,
+      });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Upload failed');
     } finally {
@@ -96,74 +174,77 @@ export function TranscriptUploadPanel({ onUploaded, withMetadata = false }: Tran
     doUpload(selectedFile, title, effectiveType, meetingDate);
   };
 
+  // ── Simple variant (no metadata) ──────────────────────────────────────────
   if (!withMetadata) {
     return (
       <div>
-        <input ref={fileRef} type="file" accept=".vtt,.srt,.txt,.docx,.pdf" className="hidden" onChange={handleFileSelect} />
-        <button
-          type="button"
-          disabled={uploading || uploaded}
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".vtt,.srt,.txt,.docx,.pdf"
+          className="hidden"
+          onChange={handleFileSelect}
+        />
+        <DropZone
+          uploading={uploading}
+          uploaded={uploaded}
+          selectedFile={selectedFile}
           onClick={() => fileRef.current?.click()}
-          className="w-full border-2 border-dashed border-stone-300 rounded-xl py-7 text-sm text-stone-400 hover:border-emerald-400 hover:text-emerald-600 transition-colors disabled:opacity-50"
-        >
-          {uploading
-            ? STRINGS.common.uploading
-            : uploaded
-            ? STRINGS.transcriptUpload.fileUploaded
-            : STRINGS.transcriptUpload.clickToUpload}
-        </button>
-        {error && <p className="text-sm text-rose-600 mt-1">{error}</p>}
+        />
+        {error && (
+          <p className="text-xs text-cv-red-600 bg-cv-red-50 border border-cv-red-200 rounded-xl px-3 py-2 mt-2">
+            {error}
+          </p>
+        )}
       </div>
     );
   }
 
+  // ── Full variant (with metadata fields) ───────────────────────────────────
   return (
     <div className="space-y-4">
-      <input ref={fileRef} type="file" accept=".vtt,.srt,.txt,.docx,.pdf" className="hidden" onChange={handleFileSelect} />
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".vtt,.srt,.txt,.docx,.pdf"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
 
-      {!uploaded ? (
-        <button
-          type="button"
-          disabled={uploading}
-          onClick={() => fileRef.current?.click()}
-          className={`w-full border-2 border-dashed rounded-xl py-6 text-sm transition-colors ${
-            selectedFile
-              ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-              : 'border-stone-300 text-stone-400 hover:border-emerald-400 hover:text-emerald-600'
-          }`}
-        >
-          {selectedFile ? `📄 ${selectedFile.name}` : STRINGS.transcriptUpload.clickToSelect}
-        </button>
-      ) : (
-        <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
-          <span className="text-emerald-600">✓</span>
-          <span className="text-sm text-emerald-700 font-medium">{STRINGS.transcriptUpload.fileUploadedSuccess}</span>
-        </div>
-      )}
+      <DropZone
+        uploading={uploading}
+        uploaded={uploaded}
+        selectedFile={selectedFile}
+        onClick={() => fileRef.current?.click()}
+      />
 
       {selectedFile && !uploaded && (
         <div className="space-y-3">
+          {/* Meeting title */}
           <div>
-            <label className="text-xs text-stone-500">{STRINGS.transcriptUpload.meetingTitle}</label>
+            <FieldLabel text={STRINGS.transcriptUpload.meetingTitle} />
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={STRINGS.transcriptUpload.meetingTitlePlaceholder}
-              className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
+              className={inputCls}
             />
           </div>
 
+          {/* Meeting type */}
           <div>
-            <label className="text-xs text-stone-500">{STRINGS.transcriptUpload.meetingType}</label>
+            <FieldLabel text={STRINGS.transcriptUpload.meetingType} />
             <select
               value={meetingType}
               onChange={(e) => setMeetingType(e.target.value)}
-              className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
+              className={inputCls}
             >
               <option value="">{STRINGS.transcriptUpload.selectType}</option>
               {MEETING_TYPE_OPTIONS.map((t) => (
-                <option key={t} value={t}>{t.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}</option>
+                <option key={t} value={t}>
+                  {t.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                </option>
               ))}
               <option value="__custom__">{STRINGS.transcriptUpload.otherTypeBelow}</option>
             </select>
@@ -173,33 +254,47 @@ export function TranscriptUploadPanel({ onUploaded, withMetadata = false }: Tran
                 value={meetingTypeCustom}
                 onChange={(e) => setMeetingTypeCustom(e.target.value)}
                 placeholder={STRINGS.transcriptUpload.enterMeetingType}
-                className="mt-2 w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
+                className={`${inputCls} mt-2`}
               />
             )}
           </div>
 
+          {/* Meeting date */}
           <div>
-            <label className="text-xs text-stone-500">
-              {STRINGS.transcriptUpload.meetingDate}
-              <span className="ml-1.5 text-stone-400 font-normal">{STRINGS.transcriptUpload.meetingDateAutodetect}</span>
-            </label>
+            <FieldLabel
+              text={STRINGS.transcriptUpload.meetingDate}
+              suffix={STRINGS.transcriptUpload.meetingDateAutodetect}
+            />
             <input
               type="date"
               value={meetingDate}
               onChange={(e) => setMeetingDate(e.target.value)}
-              className="mt-1 w-full border border-stone-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
+              className={inputCls}
             />
           </div>
 
-          {error && <p className="text-sm text-rose-600 bg-rose-50 rounded-xl px-3 py-2">{error}</p>}
+          {/* Error */}
+          {error && (
+            <p className="text-xs text-cv-red-600 bg-cv-red-50 border border-cv-red-200 rounded-xl px-3 py-2">
+              {error}
+            </p>
+          )}
 
+          {/* Upload button */}
           <button
             type="button"
             onClick={handleUploadClick}
             disabled={uploading}
-            className="w-full py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+            className="w-full py-2.5 bg-cv-teal-600 text-white rounded-xl text-sm font-semibold hover:bg-cv-teal-700 disabled:opacity-50 transition-colors"
           >
-            {uploading ? STRINGS.common.uploading : STRINGS.transcriptUpload.uploadTranscript}
+            {uploading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                {STRINGS.common.uploading}
+              </span>
+            ) : (
+              STRINGS.transcriptUpload.uploadTranscript
+            )}
           </button>
         </div>
       )}

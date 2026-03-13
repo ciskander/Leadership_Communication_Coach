@@ -8,33 +8,33 @@ import { api } from '@/lib/api';
 import type { CoacheeSummary, Experiment, ClientProgress, RunStatus, RunHistoryPoint } from '@/lib/types';
 import { ExperimentTracker } from '@/components/ExperimentTracker';
 import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
+  LineChart, Line, BarChart, Bar, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, ReferenceLine,
 } from 'recharts';
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Chart palette — cv-aligned ───────────────────────────────────────────────
 
 const LINE_COLORS = [
-  '#2563eb', '#16a34a', '#dc2626', '#d97706', '#7c3aed',
-  '#0891b2', '#db2777', '#65a30d', '#ea580c', '#6b7280',
+  '#0F6E56', // cv-teal-600
+  '#D97706', // cv-amber-600
+  '#2563eb',
+  '#7c3aed',
+  '#0891b2',
+  '#db2777',
+  '#65a30d',
+  '#ea580c',
+  '#6b7280',
+  '#16a34a',
 ];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmtDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '—';
   try {
     return new Date(dateStr).toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
+      day: 'numeric', month: 'short', year: 'numeric',
     });
   } catch {
     return dateStr;
@@ -43,13 +43,11 @@ function fmtDate(dateStr: string | null | undefined): string {
 
 function PatternLabel({ id }: { id: string }) {
   return (
-    <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+    <span className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-teal-600">
       {STRINGS.patternLabels[id] ?? id.replace(/_/g, ' ')}
     </span>
   );
 }
-
-// ── Chart helpers (mirrored from progress page) ─────────────────────────────
 
 const rawKey = (pid: string) => `${pid}_raw`;
 
@@ -79,11 +77,10 @@ function buildChartData(
 
   return history.map((run, idx) => {
     const point: ChartPoint = {
-      date: run.meeting_date ?? '',
-      label: run.meeting_date ? fmtDate(run.meeting_date) : 'Unknown',
+      date:       run.meeting_date ?? '',
+      label:      run.meeting_date ? fmtDate(run.meeting_date) : 'Unknown',
       isBaseline: run.is_baseline,
     };
-
     for (const pid of visiblePatterns) {
       const cur = runData[idx][pid];
       if (cur) {
@@ -91,33 +88,31 @@ function buildChartData(
           ? Math.round((cur.num / cur.den) * 100)
           : Math.round(cur.ratio * 100);
       }
-
-      let totalNum = 0;
-      let totalDen = 0;
-      let ratioSum = 0;
-      let ratioCount = 0;
+      let totalNum = 0, totalDen = 0, ratioSum = 0, ratioCount = 0;
       const start = Math.max(0, idx - windowSize + 1);
       for (let j = start; j <= idx; j++) {
         const d = runData[j][pid];
-        if (d) {
-          totalNum += d.num;
-          totalDen += d.den;
-          ratioSum += d.ratio;
-          ratioCount += 1;
-        }
+        if (d) { totalNum += d.num; totalDen += d.den; ratioSum += d.ratio; ratioCount++; }
       }
       point[pid] = totalDen > 0
         ? Math.round((totalNum / totalDen) * 100)
-        : ratioCount > 0
-          ? Math.round((ratioSum / ratioCount) * 100)
-          : null;
+        : ratioCount > 0 ? Math.round((ratioSum / ratioCount) * 100) : null;
     }
-
     return point;
   });
 }
 
-// ── Pattern Trends (compact version for coach view) ──────────────────────────
+// ─── Section heading ──────────────────────────────────────────────────────────
+
+function SectionHeading({ text }: { text: string }) {
+  return (
+    <h2 className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-3">
+      {text}
+    </h2>
+  );
+}
+
+// ─── Pattern trends (compact) ─────────────────────────────────────────────────
 
 function PatternTrendsCompact({
   history,
@@ -128,9 +123,9 @@ function PatternTrendsCompact({
   trendWindowSize?: number;
   experimentPatternId?: string | null;
 }) {
-  const hasBaseline = history.some((r) => r.is_baseline);
+  const hasBaseline       = history.some((r) => r.is_baseline);
   const postBaselineCount = history.filter((r) => !r.is_baseline).length;
-  const showLineChart = hasBaseline && postBaselineCount >= 3;
+  const showLineChart     = hasBaseline && postBaselineCount >= 3;
 
   const { allPatterns, topPatterns } = useMemo(() => {
     const oppCounts: Record<string, number> = {};
@@ -155,42 +150,35 @@ function PatternTrendsCompact({
     [allPatterns],
   );
 
-  const chartData = useMemo(
-    () => buildChartData(history, allPatterns, trendWindowSize),
-    [history, allPatterns, trendWindowSize],
-  );
+  const chartData     = useMemo(() => buildChartData(history, allPatterns, trendWindowSize), [history, allPatterns, trendWindowSize]);
   const baselinePoint = useMemo(() => chartData.find((p) => p.isBaseline), [chartData]);
 
   if (history.length === 0) {
     return (
-      <div className="flex items-center justify-center h-32 text-stone-400 text-sm">
+      <div className="flex items-center justify-center h-32 text-cv-stone-400 text-sm">
         {STRINGS.coacheeDetail.noProgressYet}
       </div>
     );
   }
+
+  const axisStyle = { fontSize: 10, fill: '#A8A29E' };
 
   return (
     <div>
       {showLineChart ? (
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#9ca3af' }} tickLine={false} />
-            <YAxis
-              domain={[0, 100]}
-              tickFormatter={(v) => `${v}%`}
-              tick={{ fontSize: 10, fill: '#9ca3af' }}
-              tickLine={false}
-              axisLine={false}
-            />
+            <CartesianGrid strokeDasharray="3 3" stroke="#EDE8E3" />
+            <XAxis dataKey="label" tick={axisStyle} tickLine={false} />
+            <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={axisStyle} tickLine={false} axisLine={false} />
             <Tooltip
               content={({ active, payload, label }: any) => {
                 if (!active || !payload?.length) return null;
                 const trendEntries = payload.filter((e: any) => !e.dataKey.endsWith('_raw'));
                 if (!trendEntries.length) return null;
                 return (
-                  <div className="bg-white border border-stone-200 rounded-lg shadow-lg p-2 text-xs min-w-[160px]">
-                    <p className="font-semibold text-stone-700 mb-1">{label}</p>
+                  <div className="bg-white border border-cv-warm-200 rounded-xl shadow-lg p-2 text-xs min-w-[160px]">
+                    <p className="font-semibold text-cv-stone-700 mb-1">{label}</p>
                     {trendEntries.map((entry: any) => (
                       <div key={entry.dataKey} className="flex justify-between gap-3">
                         <span style={{ color: entry.color }}>{STRINGS.patternLabels[entry.dataKey] ?? entry.dataKey}</span>
@@ -205,77 +193,47 @@ function PatternTrendsCompact({
               const color = patternColor(pid);
               const isExp = pid === experimentPatternId;
               return [
-                <Line
-                  key={`${pid}_raw`}
-                  type="monotone"
-                  dataKey={rawKey(pid)}
-                  stroke="none"
+                <Line key={`${pid}_raw`} type="monotone" dataKey={rawKey(pid)} stroke="none"
                   dot={{ r: isExp ? 3 : 2, fill: color, opacity: isExp ? 0.5 : 0.3 }}
-                  activeDot={false}
-                  connectNulls={false}
-                  legendType="none"
-                  isAnimationActive={false}
+                  activeDot={false} connectNulls={false} legendType="none" isAnimationActive={false}
                 />,
-                <Line
-                  key={pid}
-                  type="monotone"
-                  dataKey={pid}
-                  stroke={color}
-                  strokeWidth={isExp ? 3 : 1.5}
-                  dot={false}
+                <Line key={pid} type="monotone" dataKey={pid} stroke={color}
+                  strokeWidth={isExp ? 3 : 1.5} dot={false}
                   activeDot={{ r: isExp ? 6 : 4, fill: color }}
-                  connectNulls
-                  isAnimationActive={false}
+                  connectNulls isAnimationActive={false}
                 />,
               ];
             })}
             {baselinePoint && (
               <ReferenceLine
                 x={baselinePoint.label}
-                stroke="#9ca3af"
+                stroke="#A8A29E"
                 strokeDasharray="4 4"
-                label={{ value: STRINGS.progressPage.baseline, position: 'insideTopRight', fontSize: 10, fill: '#6b7280' }}
+                label={{ value: STRINGS.progressPage.baseline, position: 'insideTopRight', fontSize: 10, fill: '#78716C' }}
               />
             )}
           </LineChart>
         </ResponsiveContainer>
       ) : (
         (() => {
-          const latest = [...history].reverse().find((r) => !r.is_baseline) ?? history[history.length - 1];
+          const latest  = [...history].reverse().find((r) => !r.is_baseline) ?? history[history.length - 1];
           const barData = visiblePatterns.map((pid) => {
             const p = latest.patterns.find((x) => x.pattern_id === pid);
-            return {
-              name: STRINGS.patternLabels[pid] ?? pid,
-              score: p ? Math.round(p.ratio * 100) : 0,
-              pid,
-            };
+            return { name: STRINGS.patternLabels[pid] ?? pid, score: p ? Math.round(p.ratio * 100) : 0, pid };
           });
           const meetingsUntil = Math.max(0, 3 - postBaselineCount);
           return (
             <>
               {meetingsUntil > 0 && (
-                <div className="mb-3 inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-xs font-medium px-3 py-1.5 rounded-full">
+                <div className="mb-3 inline-flex items-center gap-2 bg-cv-teal-50 text-cv-teal-700 text-xs font-medium px-3 py-1.5 rounded-full">
                   {STRINGS.progressPage.meetingsUntilTrends(meetingsUntil)}
                 </div>
               )}
               <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={barData} margin={{ top: 4, right: 16, left: 0, bottom: 30 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fontSize: 9, fill: '#9ca3af' }}
-                    tickLine={false}
-                    angle={-30}
-                    textAnchor="end"
-                    interval={0}
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    tickFormatter={(v) => `${v}%`}
-                    tick={{ fontSize: 10, fill: '#9ca3af' }}
-                    tickLine={false}
-                    axisLine={false}
-                  />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#EDE8E3" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#A8A29E' }} tickLine={false} angle={-30} textAnchor="end" interval={0} />
+                  <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={axisStyle} tickLine={false} axisLine={false} />
                   <Bar dataKey="score" radius={[4, 4, 0, 0]} maxBarSize={36}>
                     {barData.map((entry) => (
                       <Cell key={entry.pid} fill={patternColor(entry.pid)} opacity={0.8} />
@@ -293,14 +251,11 @@ function PatternTrendsCompact({
         {visiblePatterns.map((pid) => {
           const isExp = pid === experimentPatternId;
           return (
-            <span key={pid} className={`flex items-center text-xs ${isExp ? 'font-semibold text-stone-900' : 'text-stone-600'}`}>
-              <span
-                className="inline-block w-2.5 h-2.5 rounded-full mr-1 flex-shrink-0"
-                style={{ background: patternColor(pid) }}
-              />
+            <span key={pid} className={`flex items-center text-xs ${isExp ? 'font-semibold text-cv-stone-900' : 'text-cv-stone-600'}`}>
+              <span className="inline-block w-2.5 h-2.5 rounded-full mr-1 shrink-0" style={{ background: patternColor(pid) }} />
               {STRINGS.patternLabels[pid] ?? pid}
               {isExp && (
-                <span className="ml-1 text-[9px] font-semibold uppercase tracking-wide bg-indigo-100 text-indigo-700 px-1 py-0.5 rounded-full leading-none">
+                <span className="ml-1 text-[9px] font-semibold uppercase tracking-wide bg-cv-teal-100 text-cv-teal-700 px-1 py-0.5 rounded-full leading-none">
                   Exp
                 </span>
               )}
@@ -312,74 +267,107 @@ function PatternTrendsCompact({
   );
 }
 
-// ── Proposed Experiment Row ──────────────────────────────────────────────────
+// ─── Proposed experiment row ──────────────────────────────────────────────────
 
 function ProposedExperimentRow({ experiment }: { experiment: Experiment }) {
   return (
-    <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-2">
+    <div className="bg-cv-warm-50 border border-cv-warm-200 rounded-xl p-4 space-y-2">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1 min-w-0">
           <PatternLabel id={experiment.pattern_id} />
-          <p className="text-sm font-semibold text-stone-800 leading-snug">
+          <p className="text-sm font-semibold text-cv-stone-800 leading-snug font-serif">
             {experiment.title}
           </p>
         </div>
-        <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-violet-100 text-violet-700 whitespace-nowrap shrink-0">
+        <span className="text-2xs px-2 py-0.5 rounded-full font-semibold bg-cv-warm-200 text-cv-stone-600 whitespace-nowrap shrink-0">
           {STRINGS.experimentStatus.proposed}
         </span>
       </div>
-      <p className="text-xs text-stone-500 leading-relaxed line-clamp-2">
+      <p className="text-xs text-cv-stone-500 leading-relaxed line-clamp-2">
         {experiment.instruction}
       </p>
     </div>
   );
 }
 
-// ── Pattern Snapshot Bar ─────────────────────────────────────────────────────
+// ─── Pattern snapshot bar ─────────────────────────────────────────────────────
 
 function PatternSnapshotBar({ item }: { item: { pattern_id: string; ratio?: number | null; evaluable_status?: string } }) {
   const ratio = item.ratio;
-  const pct = ratio != null ? Math.round(ratio * 100) : null;
+  const pct   = ratio != null ? Math.round(ratio * 100) : null;
   const label = STRINGS.patternLabels[item.pattern_id] ?? item.pattern_id.replace(/_/g, ' ');
 
   if (pct === null) {
     return (
       <div className="flex items-center justify-between text-xs py-0.5">
-        <span className="text-stone-500">{label}</span>
-        <span className="text-stone-300">{STRINGS.evaluableStatus[item.evaluable_status ?? ''] ?? '—'}</span>
+        <span className="text-cv-stone-500">{label}</span>
+        <span className="text-cv-stone-300">{STRINGS.evaluableStatus[item.evaluable_status ?? ''] ?? '—'}</span>
       </div>
     );
   }
 
-  const barColor = pct >= 70 ? 'bg-emerald-400' : pct >= 40 ? 'bg-amber-400' : 'bg-rose-400';
+  const barColor = pct >= 70 ? 'bg-cv-teal-400' : pct >= 40 ? 'bg-cv-amber-400' : 'bg-cv-red-400';
 
   return (
     <div className="flex items-center gap-2 py-0.5">
-      <span className="text-xs text-stone-600 w-40 truncate flex-shrink-0">{label}</span>
-      <div className="flex-1 h-2 bg-stone-100 rounded-full overflow-hidden">
+      <span className="text-xs text-cv-stone-600 w-40 truncate shrink-0">{label}</span>
+      <div className="flex-1 h-1.5 bg-cv-warm-200 rounded-full overflow-hidden">
         <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-xs text-stone-500 w-8 text-right">{pct}%</span>
+      <span className="text-xs text-cv-stone-500 w-8 text-right tabular-nums">{pct}%</span>
     </div>
   );
 }
 
-// ── Recent Run Row ───────────────────────────────────────────────────────────
+// ─── Past experiment row ──────────────────────────────────────────────────────
+
+function PastExperimentRow({ exp }: { exp: Record<string, unknown> }) {
+  const statusCls =
+    exp.status === 'completed' ? 'bg-cv-teal-100 text-cv-teal-700'
+    : exp.status === 'parked'  ? 'bg-cv-amber-100 text-cv-amber-700'
+    : 'bg-cv-red-100 text-cv-red-700';
+
+  const dateRange =
+    exp.started_at || exp.ended_at
+      ? `${fmtDate(exp.started_at as string)} – ${fmtDate(exp.ended_at as string)}`
+      : null;
+
+  return (
+    <div className="flex items-center justify-between px-4 py-3 bg-white border border-cv-warm-200 rounded-xl">
+      <div className="flex items-center gap-3 min-w-0">
+        <span className={`text-2xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${statusCls}`}>
+          {STRINGS.experimentStatus[exp.status as string] ?? exp.status}
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-cv-stone-800 truncate">{exp.title as string}</p>
+          <p className="text-xs text-cv-stone-400">
+            {STRINGS.patternLabels[exp.pattern_id as string] ?? exp.pattern_id}
+            {exp.attempt_count != null && ` · ${STRINGS.progressPage.attemptsAcross(exp.attempt_count as number, (exp.meeting_count as number) ?? 0)}`}
+          </p>
+        </div>
+      </div>
+      {dateRange && (
+        <span className="text-xs text-cv-stone-400 whitespace-nowrap ml-3">{dateRange}</span>
+      )}
+    </div>
+  );
+}
+
+// ─── Recent run row ───────────────────────────────────────────────────────────
 
 function RunRow({ run }: { run: Record<string, unknown> }) {
-  const [expanded, setExpanded] = useState(false);
-  const [runDetail, setRunDetail] = useState<RunStatus | null>(null);
+  const [expanded, setExpanded]       = useState(false);
+  const [runDetail, setRunDetail]     = useState<RunStatus | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
-  const runId = (run.run_id as string) ?? (run.id as string);
-  const gate1Pass = run.gate1_pass as boolean | null;
-  const title = run.title as string | undefined;
-  const meetingDate = run.meeting_date as string | undefined;
-  const meetingType = run.meeting_type as string | undefined;
+  const runId        = (run.run_id as string) ?? (run.id as string);
+  const gate1Pass    = run.gate1_pass as boolean | null;
+  const title        = run.title as string | undefined;
+  const meetingDate  = run.meeting_date as string | undefined;
+  const meetingType  = run.meeting_type as string | undefined;
   const analysisType = run.analysis_type as string | undefined;
   const focusPattern = run.focus_pattern as string | undefined;
 
-  // Display title: prefer explicit title, then formatted meeting_type, then fallback
   const displayTitle = title
     || (meetingType ? meetingType.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : null)
     || STRINGS.common.meeting;
@@ -395,60 +383,58 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
   };
 
   return (
-    <div className="border border-stone-200 rounded-xl overflow-hidden">
+    <div className="border border-cv-warm-200 rounded-xl overflow-hidden">
+      {/* Row header */}
       <button
         onClick={handleToggle}
-        className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-stone-50 transition-colors text-left"
+        className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-cv-warm-50 transition-colors text-left"
         type="button"
       >
         <div className="flex items-center gap-2.5 min-w-0">
           {gate1Pass === false && (
-            <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-amber-100 text-amber-700 whitespace-nowrap flex-shrink-0">
+            <span className="text-2xs px-2 py-0.5 rounded-full font-semibold bg-cv-amber-100 text-cv-amber-700 whitespace-nowrap shrink-0">
               {STRINGS.coacheeDetail.gateFailLabel}
             </span>
           )}
           {isBaseline && (
-            <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-blue-100 text-blue-700 whitespace-nowrap flex-shrink-0">
+            <span className="text-2xs px-2 py-0.5 rounded-full font-semibold bg-cv-teal-100 text-cv-teal-700 whitespace-nowrap shrink-0">
               {STRINGS.common.baselinePackAnalysis}
             </span>
           )}
-          <span className="text-sm font-medium text-stone-800 truncate">
-            {displayTitle}
-          </span>
+          <span className="text-sm font-medium text-cv-stone-800 truncate">{displayTitle}</span>
           {focusPattern && gate1Pass !== false && (
-            <span className="text-xs text-stone-400 whitespace-nowrap flex-shrink-0">
+            <span className="text-xs text-cv-stone-400 whitespace-nowrap shrink-0">
               Focus: {STRINGS.patternLabels[focusPattern] ?? focusPattern.replace(/_/g, ' ')}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-          <span className="text-xs text-stone-400">
-            {meetingDate ? fmtDate(meetingDate) : ''}
-          </span>
+        <div className="flex items-center gap-2 shrink-0 ml-3">
+          <span className="text-xs text-cv-stone-400">{meetingDate ? fmtDate(meetingDate) : ''}</span>
           <svg
-            className={`w-4 h-4 text-stone-400 transition-transform ${expanded ? 'rotate-180' : ''}`}
-            viewBox="0 0 20 20"
-            fill="currentColor"
+            className={`w-4 h-4 text-cv-stone-400 transition-transform ${expanded ? 'rotate-180' : ''}`}
+            viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={2}
+            strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
           >
-            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+            <path d="M5 8l5 5 5-5" />
           </svg>
         </div>
       </button>
 
+      {/* Expanded detail */}
       {expanded && (
-        <div className="px-4 py-4 bg-stone-50 border-t border-stone-200 space-y-4">
+        <div className="px-4 py-4 bg-cv-warm-50 border-t border-cv-warm-200 space-y-4">
           {loadingDetail && (
-            <div className="flex items-center gap-2 text-stone-400 text-sm py-4 justify-center">
-              <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center gap-2 text-cv-stone-400 text-sm py-4 justify-center">
+              <span className="w-4 h-4 border-2 border-cv-teal-500 border-t-transparent rounded-full animate-spin" />
               {STRINGS.common.loading}
             </div>
           )}
+
           {runDetail && runDetail.status === 'complete' && gate1Pass !== false && (
             <>
-              {/* Pattern Snapshot */}
               {runDetail.pattern_snapshot && runDetail.pattern_snapshot.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest mb-2">
+                  <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-2">
                     {STRINGS.runStatusPoller.patternSnapshot}
                   </p>
                   <div className="space-y-1">
@@ -459,46 +445,43 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
                 </div>
               )}
 
-              {/* Strengths */}
               {runDetail.strengths.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-emerald-700 uppercase tracking-widest mb-1.5">
+                  <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-teal-700 mb-1.5">
                     {STRINGS.coachingCard.strengthsHeading}
                   </p>
                   {runDetail.strengths.map((s, i) => (
                     <div key={i} className="mb-2">
-                      <p className="text-xs text-stone-500 font-medium">
+                      <p className="text-xs text-cv-stone-500 font-medium">
                         {STRINGS.patternLabels[s.pattern_id] ?? s.pattern_id}
                       </p>
-                      <p className="text-sm text-stone-700">{s.message}</p>
+                      <p className="text-sm text-cv-stone-700">{s.message}</p>
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* Focus */}
               {runDetail.focus && (
                 <div>
-                  <p className="text-xs font-semibold text-amber-700 uppercase tracking-widest mb-1.5">
+                  <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-amber-700 mb-1.5">
                     {STRINGS.coachingCard.focusHeading}
                   </p>
-                  <p className="text-xs text-stone-500 font-medium">
+                  <p className="text-xs text-cv-stone-500 font-medium">
                     {STRINGS.patternLabels[runDetail.focus.pattern_id] ?? runDetail.focus.pattern_id}
                   </p>
-                  <p className="text-sm text-stone-700">{runDetail.focus.message}</p>
+                  <p className="text-sm text-cv-stone-700">{runDetail.focus.message}</p>
                   {runDetail.focus.suggested_rewrite && (
-                    <div className="mt-1.5 bg-blue-50 rounded-lg px-3 py-2">
-                      <p className="text-xs text-blue-600 font-medium mb-0.5">{STRINGS.common.nextTimeTry}</p>
-                      <p className="text-sm text-blue-800 italic">{runDetail.focus.suggested_rewrite}</p>
+                    <div className="mt-1.5 bg-cv-teal-50 border border-cv-teal-100 rounded-xl px-3 py-2">
+                      <p className="text-2xs font-semibold text-cv-teal-600 mb-0.5">{STRINGS.common.nextTimeTry}</p>
+                      <p className="text-sm text-cv-teal-800 italic font-serif">{runDetail.focus.suggested_rewrite}</p>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Experiment detection */}
               {runDetail.experiment_detection && (
-                <div className="bg-violet-50 rounded-lg px-3 py-2">
-                  <p className="text-xs font-semibold text-violet-700 mb-0.5">
+                <div className="bg-cv-warm-100 border border-cv-warm-200 rounded-xl px-3 py-2">
+                  <p className="text-2xs font-semibold text-cv-stone-600 mb-0.5">
                     {runDetail.experiment_detection.attempt === 'yes'
                       ? STRINGS.runStatusPoller.nicelyDone
                       : runDetail.experiment_detection.attempt === 'partial'
@@ -506,17 +489,18 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
                         : STRINGS.runStatusPoller.noAttemptDetected}
                   </p>
                   {runDetail.experiment_detection.coaching_note && (
-                    <p className="text-sm text-violet-800">{runDetail.experiment_detection.coaching_note}</p>
+                    <p className="text-sm text-cv-stone-700">{runDetail.experiment_detection.coaching_note}</p>
                   )}
                 </div>
               )}
             </>
           )}
+
           {runDetail && runDetail.status === 'complete' && gate1Pass === false && (
-            <p className="text-sm text-amber-600">{STRINGS.runStatusPoller.qualityCheckDesc}</p>
+            <p className="text-sm text-cv-amber-600">{STRINGS.runStatusPoller.qualityCheckDesc}</p>
           )}
           {runDetail && runDetail.status === 'error' && (
-            <p className="text-sm text-rose-600">{STRINGS.runStatusPoller.errorFallback}</p>
+            <p className="text-sm text-cv-red-600">{STRINGS.runStatusPoller.errorFallback}</p>
           )}
         </div>
       )}
@@ -524,49 +508,13 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
   );
 }
 
-// ── Past Experiment Card (compact) ───────────────────────────────────────────
-
-function PastExperimentRow({ exp }: { exp: Record<string, unknown> }) {
-  const statusColor =
-    exp.status === 'completed'
-      ? 'bg-emerald-100 text-emerald-700'
-      : exp.status === 'parked'
-        ? 'bg-amber-100 text-amber-700'
-        : 'bg-rose-100 text-rose-700';
-
-  const dateRange =
-    exp.started_at || exp.ended_at
-      ? `${fmtDate(exp.started_at as string)} – ${fmtDate(exp.ended_at as string)}`
-      : null;
-
-  return (
-    <div className="flex items-center justify-between px-4 py-3 bg-white border border-stone-200 rounded-xl">
-      <div className="flex items-center gap-3 min-w-0">
-        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${statusColor}`}>
-          {STRINGS.experimentStatus[exp.status as string] ?? exp.status}
-        </span>
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-stone-800 truncate">{exp.title as string}</p>
-          <p className="text-xs text-stone-400">
-            {STRINGS.patternLabels[exp.pattern_id as string] ?? exp.pattern_id}
-            {exp.attempt_count != null && ` · ${STRINGS.progressPage.attemptsAcross(exp.attempt_count as number, (exp.meeting_count as number) ?? 0)}`}
-          </p>
-        </div>
-      </div>
-      {dateRange && (
-        <span className="text-xs text-stone-400 whitespace-nowrap ml-3">{dateRange}</span>
-      )}
-    </div>
-  );
-}
-
-// ── Page ─────────────────────────────────────────────────────────────────────
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function CoacheeDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<CoacheeSummary | null>(null);
-  const [progress, setProgress] = useState<ClientProgress | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData]                     = useState<CoacheeSummary | null>(null);
+  const [progress, setProgress]             = useState<ClientProgress | null>(null);
+  const [loading, setLoading]               = useState(true);
   const [progressLoading, setProgressLoading] = useState(true);
 
   useEffect(() => {
@@ -577,32 +525,32 @@ export default function CoacheeDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
+        <span className="w-8 h-8 border-2 border-cv-teal-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  if (!data) return <p className="text-sm text-stone-500">{STRINGS.coacheeDetail.coacheeNotFound}</p>;
+  if (!data) return <p className="text-sm text-cv-stone-500">{STRINGS.coacheeDetail.coacheeNotFound}</p>;
 
-  const proposedExperiments = data.proposed_experiments ?? [];
-  const experimentPatternId = data.active_experiment?.pattern_id ?? null;
+  const proposedExperiments  = data.proposed_experiments ?? [];
+  const experimentPatternId  = data.active_experiment?.pattern_id ?? null;
+
+  // Shared card shell
+  const cardCls = 'bg-white rounded-2xl border border-cv-warm-200 p-5';
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 py-2">
-      {/* Back + Header */}
+      {/* Back + header */}
       <div>
-        <Link
-          href="/coach"
-          className="text-sm text-stone-500 hover:text-stone-700 transition-colors"
-        >
-          {STRINGS.coacheeDetail.backToDashboard}
+        <Link href="/coach" className="text-sm text-cv-stone-500 hover:text-cv-stone-700 transition-colors">
+          ← {STRINGS.coacheeDetail.backToDashboard}
         </Link>
         <div className="flex items-start justify-between mt-2">
           <div>
-            <h1 className="text-2xl font-bold text-stone-900">
+            <h1 className="text-2xl font-semibold text-cv-stone-900 font-serif">
               {data.coachee.display_name ?? data.coachee.email}
             </h1>
-            <p className="text-sm text-stone-500">{data.coachee.email}</p>
+            <p className="text-sm text-cv-stone-500">{data.coachee.email}</p>
           </div>
           <Link
             href={`/coach/analyze?coachee=${id}`}
@@ -614,29 +562,22 @@ export default function CoacheeDetailPage() {
         </div>
       </div>
 
-      {/* Active Experiment */}
-      <section className="bg-white rounded-2xl border border-stone-200 shadow-sm p-5">
-        <h2 className="text-sm font-semibold text-stone-700 uppercase tracking-wide mb-3">
-          {STRINGS.coacheeDetail.activeExperiment}
-        </h2>
+      {/* Active experiment */}
+      <section className={cardCls}>
+        <SectionHeading text={STRINGS.coacheeDetail.activeExperiment} />
         {data.active_experiment ? (
-          <ExperimentTracker
-            experiment={data.active_experiment}
-            events={[]}
-          />
+          <ExperimentTracker experiment={data.active_experiment} events={[]} />
         ) : (
-          <p className="text-sm text-stone-400">{STRINGS.coacheeDetail.noActiveExperiment}</p>
+          <p className="text-sm text-cv-stone-400">{STRINGS.coacheeDetail.noActiveExperiment}</p>
         )}
       </section>
 
-      {/* Proposed Experiments */}
+      {/* Proposed experiments */}
       {proposedExperiments.length > 0 && (
-        <section className="bg-white rounded-2xl border border-stone-200 shadow-sm p-5">
+        <section className={cardCls}>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-stone-700 uppercase tracking-wide">
-              {STRINGS.coacheeDetail.suggestedExperiments}
-            </h2>
-            <span className="text-xs text-stone-400">
+            <SectionHeading text={STRINGS.coacheeDetail.suggestedExperiments} />
+            <span className="text-xs text-cv-stone-400 -mt-3">
               {STRINGS.coacheeDetail.inQueue(proposedExperiments.length)}
             </span>
           </div>
@@ -645,20 +586,16 @@ export default function CoacheeDetailPage() {
               <ProposedExperimentRow key={exp.experiment_record_id} experiment={exp} />
             ))}
           </div>
-          <p className="text-xs text-stone-400 mt-2">
-            {STRINGS.coacheeDetail.coacheeCanAccept}
-          </p>
+          <p className="text-xs text-cv-stone-400 mt-2">{STRINGS.coacheeDetail.coacheeCanAccept}</p>
         </section>
       )}
 
-      {/* Pattern Trends */}
-      <section className="bg-white rounded-2xl border border-stone-200 shadow-sm p-5">
-        <h2 className="text-sm font-semibold text-stone-700 uppercase tracking-wide mb-4">
-          {STRINGS.coacheeDetail.progressTitle}
-        </h2>
+      {/* Pattern trends */}
+      <section className={cardCls}>
+        <SectionHeading text={STRINGS.coacheeDetail.progressTitle} />
         {progressLoading ? (
-          <div className="flex items-center gap-2 text-stone-400 text-sm py-8 justify-center">
-            <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+          <div className="flex items-center gap-2 text-cv-stone-400 text-sm py-8 justify-center">
+            <span className="w-4 h-4 border-2 border-cv-teal-500 border-t-transparent rounded-full animate-spin" />
             {STRINGS.common.loading}
           </div>
         ) : progress && progress.pattern_history.length > 0 ? (
@@ -668,31 +605,27 @@ export default function CoacheeDetailPage() {
             experimentPatternId={experimentPatternId}
           />
         ) : (
-          <p className="text-sm text-stone-400 py-4 text-center">
-            {STRINGS.coacheeDetail.noProgressYet}
-          </p>
+          <p className="text-sm text-cv-stone-400 py-4 text-center">{STRINGS.coacheeDetail.noProgressYet}</p>
         )}
       </section>
 
-      {/* Baseline Pack */}
+      {/* Baseline pack */}
       {data.active_baseline_pack && (
-        <section className="bg-white rounded-2xl border border-stone-200 shadow-sm p-5">
-          <h2 className="text-sm font-semibold text-stone-700 uppercase tracking-wide mb-3">
-            {STRINGS.coacheeDetail.baselinePack}
-          </h2>
+        <section className={cardCls}>
+          <SectionHeading text={STRINGS.coacheeDetail.baselinePack} />
           <div className="flex items-center gap-2">
             {(() => {
               const status = (data.active_baseline_pack as Record<string, unknown>).status as string;
-              const statusColor =
+              const statusCls =
                 status === 'completed' || status === 'baseline_ready'
-                  ? 'bg-emerald-100 text-emerald-700'
+                  ? 'bg-cv-teal-100 text-cv-teal-700'
                   : status === 'building'
-                    ? 'bg-amber-100 text-amber-700'
+                    ? 'bg-cv-amber-100 text-cv-amber-700'
                     : status === 'error'
-                      ? 'bg-rose-100 text-rose-700'
-                      : 'bg-stone-100 text-stone-600';
+                      ? 'bg-cv-red-100 text-cv-red-700'
+                      : 'bg-cv-warm-100 text-cv-stone-600';
               return (
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusColor}`}>
+                <span className={`text-2xs font-semibold px-2.5 py-1 rounded-full ${statusCls}`}>
                   {STRINGS.baselineStatus[status] ?? status}
                 </span>
               );
@@ -701,11 +634,9 @@ export default function CoacheeDetailPage() {
         </section>
       )}
 
-      {/* Recent Analyses */}
-      <section className="bg-white rounded-2xl border border-stone-200 shadow-sm p-5">
-        <h2 className="text-sm font-semibold text-stone-700 uppercase tracking-wide mb-3">
-          {STRINGS.coacheeDetail.recentRuns}
-        </h2>
+      {/* Recent analyses */}
+      <section className={cardCls}>
+        <SectionHeading text={STRINGS.coacheeDetail.recentRuns} />
         {data.recent_runs.length > 0 ? (
           <div className="space-y-2">
             {data.recent_runs.map((run: Record<string, unknown>, i) => (
@@ -713,16 +644,14 @@ export default function CoacheeDetailPage() {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-stone-400">{STRINGS.coacheeDetail.noRuns}</p>
+          <p className="text-sm text-cv-stone-400">{STRINGS.coacheeDetail.noRuns}</p>
         )}
       </section>
 
-      {/* Past Experiments */}
+      {/* Past experiments */}
       {progress && progress.past_experiments.length > 0 && (
-        <section className="bg-white rounded-2xl border border-stone-200 shadow-sm p-5">
-          <h2 className="text-sm font-semibold text-stone-700 uppercase tracking-wide mb-3">
-            {STRINGS.coacheeDetail.pastExperiments}
-          </h2>
+        <section className={cardCls}>
+          <SectionHeading text={STRINGS.coacheeDetail.pastExperiments} />
           <div className="space-y-2">
             {progress.past_experiments.map((exp) => (
               <PastExperimentRow key={exp.experiment_record_id} exp={exp as unknown as Record<string, unknown>} />
