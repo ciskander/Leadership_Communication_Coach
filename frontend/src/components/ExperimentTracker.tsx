@@ -6,6 +6,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { STRINGS } from '@/config/strings';
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 interface Event {
   id?: string;
   event_id?: string;
@@ -27,33 +29,43 @@ interface ExperimentTrackerProps {
   onAbandon?: () => void;
 }
 
+// ─── Config maps ──────────────────────────────────────────────────────────────
+
 const ATTEMPT_CONFIG: Record<string, { color: string; label: string; dot: string; bg: string }> = {
-  yes:     { color: 'text-emerald-700', label: STRINGS.attemptLabels.yes,     dot: 'bg-emerald-500', bg: 'bg-emerald-50' },
-  partial: { color: 'text-amber-700',   label: STRINGS.attemptLabels.partial, dot: 'bg-amber-400',   bg: 'bg-amber-50' },
-  no:      { color: 'text-stone-500',   label: STRINGS.attemptLabels.no,      dot: 'bg-stone-300',   bg: 'bg-stone-50' },
+  yes:     { color: 'text-cv-teal-700',   label: STRINGS.attemptLabels.yes,     dot: 'bg-cv-teal-500',   bg: 'bg-cv-teal-50'  },
+  partial: { color: 'text-cv-amber-700',  label: STRINGS.attemptLabels.partial, dot: 'bg-cv-amber-400',  bg: 'bg-cv-amber-50' },
+  no:      { color: 'text-cv-stone-500',  label: STRINGS.attemptLabels.no,      dot: 'bg-cv-stone-300',  bg: 'bg-cv-warm-100' },
 };
 
-// Human override pill — white background with coloured border to sit on top of the row background
 const HUMAN_PILL_CONFIG: Record<string, { label: string; color: string; border: string }> = {
-  confirmed_attempt:    { label: STRINGS.humanConfirmation.confirmed_attempt, color: 'text-emerald-700', border: 'border-emerald-300' },
-  confirmed_no_attempt: { label: STRINGS.humanConfirmation.confirmed_no_attempt,   color: 'text-stone-500',   border: 'border-stone-300' },
+  confirmed_attempt:    { label: STRINGS.humanConfirmation.confirmed_attempt,    color: 'text-cv-teal-700',  border: 'border-cv-teal-300'  },
+  confirmed_no_attempt: { label: STRINGS.humanConfirmation.confirmed_no_attempt, color: 'text-cv-stone-500', border: 'border-cv-stone-300' },
 };
 
 const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
-  proposed:  { bg: 'bg-violet-100',  text: 'text-violet-700',  label: STRINGS.experimentStatus.proposed },
-  active:    { bg: 'bg-emerald-100', text: 'text-emerald-700', label: STRINGS.experimentStatus.active },
-  completed: { bg: 'bg-stone-100',   text: 'text-stone-600',   label: STRINGS.experimentStatus.completed },
-  parked:    { bg: 'bg-amber-100',   text: 'text-amber-700',   label: STRINGS.experimentStatus.parked },
-  abandoned: { bg: 'bg-rose-100',    text: 'text-rose-700',    label: STRINGS.experimentStatus.abandoned },
+  proposed:  { bg: 'bg-cv-warm-100',   text: 'text-cv-stone-600',  label: STRINGS.experimentStatus.proposed  },
+  active:    { bg: 'bg-cv-teal-100',   text: 'text-cv-teal-700',   label: STRINGS.experimentStatus.active    },
+  completed: { bg: 'bg-cv-warm-200',   text: 'text-cv-stone-600',  label: STRINGS.experimentStatus.completed },
+  parked:    { bg: 'bg-cv-amber-100',  text: 'text-cv-amber-700',  label: STRINGS.experimentStatus.parked    },
+  abandoned: { bg: 'bg-cv-red-100',    text: 'text-cv-red-700',    label: STRINGS.experimentStatus.abandoned },
 };
 
-export function ExperimentTracker({ experiment, events, onUpdate, onComplete, onPark, onAbandon }: ExperimentTrackerProps) {
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export function ExperimentTracker({
+  experiment,
+  events,
+  onUpdate,
+  onComplete,
+  onPark,
+  onAbandon,
+}: ExperimentTrackerProps) {
   const [actionState, setActionState] = useState<'idle' | 'confirm-park' | 'loading'>('idle');
 
-  const isActive = experiment.status === 'active';
-  const statusCfg = STATUS_CONFIG[experiment.status] ?? STATUS_CONFIG.active;
+  const isActive   = experiment.status === 'active';
+  const statusCfg  = STATUS_CONFIG[experiment.status] ?? STATUS_CONFIG.active;
 
-  // Sort most-recent first, cap at 10 rows
+  // Sort most-recent first, cap at 10
   const sortedEvents = [...events]
     .sort((a, b) => {
       const da = a.meeting_date || a.created_at || '';
@@ -62,9 +74,9 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
     })
     .slice(0, 10);
 
-  const successCount = events.filter((e) => e.attempt === 'yes').length;
-  const partialCount = events.filter((e) => e.attempt === 'partial').length;
-  const totalAttempted = successCount + partialCount;
+  const successCount    = events.filter((e) => e.attempt === 'yes').length;
+  const partialCount    = events.filter((e) => e.attempt === 'partial').length;
+  const totalAttempted  = successCount + partialCount;
   const meetingsAnalysed = events.length;
 
   async function handleComplete() {
@@ -79,88 +91,71 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
   }
 
   async function handlePark() {
-    if (actionState !== 'loading') {
-      setActionState('loading');
-      try {
-        await api.parkExperiment(experiment.experiment_record_id);
-        (onPark ?? onAbandon) ? (onPark ?? onAbandon)!() : onUpdate?.();
-      } catch {
-        setActionState('idle');
-      }
+    if (actionState === 'loading') return;
+    setActionState('loading');
+    try {
+      await api.parkExperiment(experiment.experiment_record_id);
+      (onPark ?? onAbandon) ? (onPark ?? onAbandon)!() : onUpdate?.();
+    } catch {
+      setActionState('idle');
     }
   }
 
-  // Context-aware empty / progress nudge message
+  // ── Analyze-CTA nudge ──────────────────────────────────────────────────────
+  function AnalyzeNudge({ message }: { message: string }) {
+    return (
+      <div className="bg-cv-teal-50 border border-cv-teal-200 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
+        <p className="text-sm text-cv-teal-800">{message}</p>
+        <Link
+          href="/client/analyze"
+          className="shrink-0 text-xs px-3 py-1.5 bg-cv-teal-600 text-white rounded-lg font-semibold hover:bg-cv-teal-700 transition-colors"
+        >
+          {STRINGS.experimentTracker.analyzeMeeting}
+        </Link>
+      </div>
+    );
+  }
+
   function ProgressNudge() {
     if (!isActive) return null;
     if (meetingsAnalysed === 0) {
-      return (
-        <div className="bg-blue-50 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
-          <p className="text-sm text-blue-700">
-            {STRINGS.experimentTracker.analyzeToStart}
-          </p>
-          <Link
-            href="/client/analyze"
-            className="shrink-0 text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-          >
-            {STRINGS.experimentTracker.analyzeMeeting}
-          </Link>
-        </div>
-      );
+      return <AnalyzeNudge message={STRINGS.experimentTracker.analyzeToStart} />;
     }
     if (totalAttempted === 0) {
       return (
         <div className="space-y-2">
-          <div className="bg-stone-50 rounded-xl px-4 py-3">
-            <p className="text-sm text-stone-600">
+          <div className="bg-cv-warm-50 border border-cv-warm-200 rounded-xl px-4 py-3">
+            <p className="text-sm text-cv-stone-600">
               {STRINGS.experimentTracker.noAttemptsYet(meetingsAnalysed)}
             </p>
           </div>
-          <div className="bg-blue-50 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
-            <p className="text-sm text-blue-700">
-              {STRINGS.experimentTracker.analyzeToContinue}
-            </p>
-            <Link
-              href="/client/analyze"
-              className="shrink-0 text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-            >
-              {STRINGS.experimentTracker.analyzeMeeting}
-            </Link>
-          </div>
+          <AnalyzeNudge message={STRINGS.experimentTracker.analyzeToContinue} />
         </div>
       );
     }
     return (
       <div className="space-y-2">
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-xs text-stone-400">
-            {STRINGS.experimentTracker.attemptsDetected(totalAttempted, meetingsAnalysed)}
-          </p>
-        </div>
-        <div className="bg-blue-50 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
-          <p className="text-sm text-blue-700">
-            {STRINGS.experimentTracker.analyzeToContinue}
-          </p>
-          <Link
-            href="/client/analyze"
-            className="shrink-0 text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-          >
-            {STRINGS.experimentTracker.analyzeMeeting}
-          </Link>
-        </div>
+        <p className="text-xs text-cv-stone-400">
+          {STRINGS.experimentTracker.attemptsDetected(totalAttempted, meetingsAnalysed)}
+        </p>
+        <AnalyzeNudge message={STRINGS.experimentTracker.analyzeToContinue} />
       </div>
     );
   }
 
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+    <div className="bg-white rounded-2xl border border-cv-warm-200 overflow-hidden">
+
       {/* Header */}
-      <div className="px-5 py-4 border-b border-stone-100 flex items-start justify-between gap-4">
+      <div className="px-5 py-4 border-b border-cv-warm-100 flex items-start justify-between gap-4">
         <div className="space-y-0.5 min-w-0">
-          <h3 className="font-semibold text-stone-900 leading-snug">{experiment.title}</h3>
-          <p className="text-xs text-stone-400">{experiment.experiment_id}</p>
+          <h3 className="font-semibold text-cv-stone-900 leading-snug font-serif">
+            {experiment.title}
+          </h3>
+          <p className="text-2xs text-cv-stone-400 tabular-nums">{experiment.experiment_id}</p>
         </div>
-        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${statusCfg.bg} ${statusCfg.text}`}>
+        <span className={`text-2xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${statusCfg.bg} ${statusCfg.text}`}>
           {statusCfg.label}
         </span>
       </div>
@@ -170,50 +165,48 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
 
         {/* Instruction + Success marker */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="bg-stone-50 rounded-xl p-3.5">
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+          <div className="bg-cv-warm-50 border border-cv-warm-200 rounded-xl p-3.5">
+            <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1.5">
               {STRINGS.common.whatToDo}
             </p>
-            <p className="text-sm text-stone-700 leading-relaxed">{experiment.instruction}</p>
+            <p className="text-sm text-cv-stone-700 leading-relaxed">{experiment.instruction}</p>
           </div>
-          <div className="bg-stone-50 rounded-xl p-3.5">
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+          <div className="bg-cv-warm-50 border border-cv-warm-200 rounded-xl p-3.5">
+            <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1.5">
               {STRINGS.common.successLooksLike}
             </p>
-            <p className="text-sm text-stone-700 leading-relaxed">{experiment.success_marker}</p>
+            <p className="text-sm text-cv-stone-700 leading-relaxed">{experiment.success_marker}</p>
           </div>
         </div>
 
-        {/* Attempt count headline — only shown once there's data */}
+        {/* Stats headline */}
         {meetingsAnalysed > 0 && (
-          <div className="grid grid-cols-3 gap-3 py-1">
-            <div className="bg-emerald-50 rounded-xl p-3 text-center">
-              <p className="text-2xl font-bold text-emerald-600">{successCount}</p>
-              <p className="text-xs text-stone-500 mt-0.5">{STRINGS.experimentTracker.fullAttempts}</p>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-cv-teal-50 rounded-xl p-3 text-center">
+              <p className="text-2xl font-bold text-cv-teal-600">{successCount}</p>
+              <p className="text-xs text-cv-stone-500 mt-0.5">{STRINGS.experimentTracker.fullAttempts}</p>
             </div>
-            <div className="bg-amber-50 rounded-xl p-3 text-center">
-              <p className="text-2xl font-bold text-amber-500">{partialCount}</p>
-              <p className="text-xs text-stone-500 mt-0.5">{STRINGS.experimentTracker.partial}</p>
+            <div className="bg-cv-amber-50 rounded-xl p-3 text-center">
+              <p className="text-2xl font-bold text-cv-amber-500">{partialCount}</p>
+              <p className="text-xs text-cv-stone-500 mt-0.5">{STRINGS.experimentTracker.partial}</p>
             </div>
-            <div className="bg-stone-50 rounded-xl p-3 text-center">
-              <p className="text-2xl font-bold text-stone-400">{meetingsAnalysed}</p>
-              <p className="text-xs text-stone-500 mt-0.5">{STRINGS.experimentTracker.meetings}</p>
+            <div className="bg-cv-warm-100 rounded-xl p-3 text-center">
+              <p className="text-2xl font-bold text-cv-stone-400">{meetingsAnalysed}</p>
+              <p className="text-xs text-cv-stone-500 mt-0.5">{STRINGS.experimentTracker.meetings}</p>
             </div>
           </div>
         )}
 
-        {/* Per-meeting timeline — most recent first, max 10 rows */}
+        {/* Timeline */}
         {sortedEvents.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-2.5">
+            <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-2.5">
               {STRINGS.experimentTracker.attemptHistory}
             </p>
             <ul className="space-y-1.5">
               {sortedEvents.map((ev, i) => {
-                const cfg = ATTEMPT_CONFIG[ev.attempt ?? 'no'] ?? ATTEMPT_CONFIG.no;
-                const humanCfg = ev.human_confirmed
-                  ? HUMAN_PILL_CONFIG[ev.human_confirmed]
-                  : undefined;
+                const cfg       = ATTEMPT_CONFIG[ev.attempt ?? 'no'] ?? ATTEMPT_CONFIG.no;
+                const humanCfg  = ev.human_confirmed ? HUMAN_PILL_CONFIG[ev.human_confirmed] : undefined;
                 const displayDate = ev.meeting_date || ev.created_at;
 
                 return (
@@ -221,14 +214,9 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
                     key={ev.event_id ?? ev.id ?? i}
                     className={`flex items-center gap-2 rounded-lg px-3 py-2 ${cfg.bg}`}
                   >
-                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot}`} />
+                    <span className={`text-xs font-semibold ${cfg.color}`}>{cfg.label}</span>
 
-                    {/* Model detection pill */}
-                    <span className={`text-xs font-semibold ${cfg.color}`}>
-                      {cfg.label}
-                    </span>
-
-                    {/* Human override pill — shown side-by-side when present */}
                     {humanCfg && (
                       <span
                         className={`text-xs font-medium px-2 py-0.5 rounded-full bg-white border ${humanCfg.border} ${humanCfg.color}`}
@@ -239,7 +227,7 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
                     )}
 
                     {displayDate && (
-                      <span className="text-xs text-stone-400 ml-auto shrink-0">
+                      <span className="text-xs text-cv-stone-400 ml-auto shrink-0 tabular-nums">
                         {new Date(displayDate).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
@@ -253,28 +241,28 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
           </div>
         )}
 
-        {/* Context-aware nudge / Analyse button */}
+        {/* Analyze nudge */}
         <ProgressNudge />
 
         {/* Actions */}
         {isActive && (
           <div className="pt-1 space-y-2">
             {actionState === 'confirm-park' ? (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
-                <p className="text-sm font-medium text-amber-800">{STRINGS.experimentTracker.parkConfirmTitle}</p>
-                <p className="text-xs text-amber-700 leading-relaxed">
+              <div className="bg-cv-amber-50 border border-cv-amber-200 rounded-xl p-4 space-y-3">
+                <p className="text-sm font-semibold text-cv-amber-800">{STRINGS.experimentTracker.parkConfirmTitle}</p>
+                <p className="text-xs text-cv-amber-700 leading-relaxed">
                   {STRINGS.experimentTracker.parkConfirmDesc}
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={handlePark}
-                    className="px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-semibold hover:bg-amber-700 transition-colors"
+                    className="px-4 py-2 bg-cv-amber-600 text-white rounded-xl text-xs font-semibold hover:bg-cv-amber-700 transition-colors"
                   >
                     {STRINGS.experimentTracker.yesParkIt}
                   </button>
                   <button
                     onClick={() => setActionState('idle')}
-                    className="px-4 py-2 bg-white border border-stone-300 text-stone-600 rounded-xl text-xs font-semibold hover:bg-stone-50 transition-colors"
+                    className="px-4 py-2 bg-white border border-cv-warm-300 text-cv-stone-600 rounded-xl text-xs font-semibold hover:bg-cv-warm-50 transition-colors"
                   >
                     {STRINGS.experimentTracker.keepGoing}
                   </button>
@@ -285,14 +273,14 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
                 <button
                   onClick={handleComplete}
                   disabled={actionState === 'loading'}
-                  className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                  className="flex-1 py-2.5 bg-cv-teal-600 text-white rounded-xl text-sm font-medium hover:bg-cv-teal-700 disabled:opacity-50 transition-colors"
                 >
                   {actionState === 'loading' ? STRINGS.common.saving : STRINGS.experimentTracker.markComplete}
                 </button>
                 <button
                   onClick={() => setActionState('confirm-park')}
                   disabled={actionState === 'loading'}
-                  className="px-4 py-2.5 bg-white border border-stone-300 text-stone-600 rounded-xl text-sm font-medium hover:bg-stone-50 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2.5 bg-white border border-cv-warm-300 text-cv-stone-600 rounded-xl text-sm font-medium hover:bg-cv-warm-50 disabled:opacity-50 transition-colors"
                 >
                   {STRINGS.experimentTracker.parkForNow}
                 </button>
