@@ -8,13 +8,12 @@ interface EvidenceQuoteProps {
  * EvidenceQuote — renders a single piece of transcript evidence.
  *
  * Design:
- *   - Warm parchment background (cv-warm-50) with a 3px solid teal-600 left bar
- *   - Meeting label in small-tracked-caps amber
- *   - Attribution (speaker + timestamp) in stone-400, monospaced weight
- *   - Quote text in DM Serif Display italic, stone-700
+ *   - Soft blue-50 background with a 3px solid blue-500 left bar
+ *   - Attribution (speaker + timestamp) in stone-400, tabular numerals
+ *   - Quote text in DM Sans (sans-serif), regular weight, stone-700
+ *     — no italic/bold: improves legibility for long excerpts
  */
 export function EvidenceQuote({ quote }: EvidenceQuoteProps) {
-  // Build attribution: "Speaker (ts):" / "(ts):" / "Speaker:" / null
   let attribution: string | null = null;
   if (quote.speaker_label && quote.start_timestamp) {
     attribution = `${quote.speaker_label} · ${quote.start_timestamp}`;
@@ -25,7 +24,7 @@ export function EvidenceQuote({ quote }: EvidenceQuoteProps) {
   }
 
   return (
-    <blockquote className="border-l-[3px] border-cv-teal-600 pl-4 pr-3 py-2.5 my-2 bg-cv-warm-50 rounded-r-lg">
+    <blockquote className="border-l-[3px] border-blue-500 pl-4 pr-3 py-2.5 my-2 bg-blue-50 rounded-r-lg">
       {/* Meeting label — amber small-caps */}
       {quote.meeting_label && (
         <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-amber-600 mb-1">
@@ -40,8 +39,8 @@ export function EvidenceQuote({ quote }: EvidenceQuoteProps) {
         </p>
       )}
 
-      {/* Quote text — serif italic */}
-      <p className="text-sm text-cv-stone-700 font-serif italic leading-relaxed">
+      {/* Quote text — sans-serif, regular weight for readability */}
+      <p className="text-sm text-cv-stone-700 leading-relaxed">
         &ldquo;{quote.quote_text}&rdquo;
       </p>
     </blockquote>
