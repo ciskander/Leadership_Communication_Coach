@@ -220,14 +220,42 @@ async def coachee_summary(
             run_records = at_client.search_records("runs", run_formula, max_records=10)
             for r in run_records:
                 rf = r.get("fields", {})
-                recent_runs.append({
+                # Skip baseline sub-runs
+                if rf.get("baseline_pack_items"):
+                    continue
+                # Enrich with transcript metadata (title, meeting_date, meeting_type)
+                transcript_meta: dict = {}
+                transcript_links = rf.get("Transcript ID", [])
+                if transcript_links:
+                    try:
+                        tr_rec = at_client.get_transcript(transcript_links[0])
+                        trf = tr_rec.get("fields", {})
+                        transcript_meta = {
+                            "title": trf.get("Title"),
+                            "transcript_id": trf.get("Transcript ID"),
+                            "meeting_date": trf.get("Meeting Date"),
+                            "meeting_type": trf.get("Meeting Type"),
+                            "target_role": trf.get("Target Role"),
+                        }
+                    except Exception as te:
+                        logger.warning("coachee_summary: could not fetch transcript for run %s: %s", r["id"], te)
+                run_entry: dict = {
                     "run_id": r["id"],
                     "analysis_type": rf.get("Analysis Type"),
                     "gate1_pass": rf.get("Gate1 Pass"),
                     "focus_pattern": rf.get("Focus Pattern"),
                     "created_at": r.get("createdTime"),
-                    "meeting_type": rf.get("Meeting Type"),
-                })
+                    **transcript_meta,
+                }
+                if rf.get("Analysis Type") == "baseline_pack":
+                    bp_run_links = rf.get("baseline_packs (Last Run)", [])
+                    run_entry["baseline_pack_id"] = bp_run_links[0] if bp_run_links else None
+                recent_runs.append(run_entry)
+            # Sort newest meeting date first; runs with no date go to the end
+            recent_runs.sort(
+                key=lambda x: (x.get("meeting_date") is None, x.get("meeting_date") or ""),
+                reverse=True,
+            )
         except Exception:
             pass
 

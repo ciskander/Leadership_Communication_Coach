@@ -335,6 +335,35 @@ function ProposedExperimentRow({ experiment }: { experiment: Experiment }) {
   );
 }
 
+// ── Pattern Snapshot Bar ─────────────────────────────────────────────────────
+
+function PatternSnapshotBar({ item }: { item: { pattern_id: string; ratio?: number | null; evaluable_status?: string } }) {
+  const ratio = item.ratio;
+  const pct = ratio != null ? Math.round(ratio * 100) : null;
+  const label = STRINGS.patternLabels[item.pattern_id] ?? item.pattern_id.replace(/_/g, ' ');
+
+  if (pct === null) {
+    return (
+      <div className="flex items-center justify-between text-xs py-0.5">
+        <span className="text-stone-500">{label}</span>
+        <span className="text-stone-300">{STRINGS.evaluableStatus[item.evaluable_status ?? ''] ?? '—'}</span>
+      </div>
+    );
+  }
+
+  const barColor = pct >= 70 ? 'bg-emerald-400' : pct >= 40 ? 'bg-amber-400' : 'bg-rose-400';
+
+  return (
+    <div className="flex items-center gap-2 py-0.5">
+      <span className="text-xs text-stone-600 w-40 truncate flex-shrink-0">{label}</span>
+      <div className="flex-1 h-2 bg-stone-100 rounded-full overflow-hidden">
+        <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
+      </div>
+      <span className="text-xs text-stone-500 w-8 text-right">{pct}%</span>
+    </div>
+  );
+}
+
 // ── Recent Run Row ───────────────────────────────────────────────────────────
 
 function RunRow({ run }: { run: Record<string, unknown> }) {
@@ -344,9 +373,18 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
 
   const runId = (run.run_id as string) ?? (run.id as string);
   const gate1Pass = run.gate1_pass as boolean | null;
-  const createdAt = run.created_at as string | undefined;
+  const title = run.title as string | undefined;
+  const meetingDate = run.meeting_date as string | undefined;
   const meetingType = run.meeting_type as string | undefined;
+  const analysisType = run.analysis_type as string | undefined;
   const focusPattern = run.focus_pattern as string | undefined;
+
+  // Display title: prefer explicit title, then formatted meeting_type, then fallback
+  const displayTitle = title
+    || (meetingType ? meetingType.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : null)
+    || STRINGS.common.meeting;
+
+  const isBaseline = analysisType === 'baseline_pack';
 
   const handleToggle = () => {
     if (!expanded && !runDetail && runId) {
@@ -363,25 +401,29 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
         className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-stone-50 transition-colors text-left"
         type="button"
       >
-        <div className="flex items-center gap-3 min-w-0">
-          {gate1Pass === false ? (
-            <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-amber-100 text-amber-700 whitespace-nowrap">
+        <div className="flex items-center gap-2.5 min-w-0">
+          {gate1Pass === false && (
+            <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-amber-100 text-amber-700 whitespace-nowrap flex-shrink-0">
               {STRINGS.coacheeDetail.gateFailLabel}
             </span>
-          ) : focusPattern ? (
-            <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-blue-50 text-blue-700 whitespace-nowrap">
-              {STRINGS.patternLabels[focusPattern] ?? focusPattern.replace(/_/g, ' ')}
+          )}
+          {isBaseline && (
+            <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-blue-100 text-blue-700 whitespace-nowrap flex-shrink-0">
+              {STRINGS.common.baselinePackAnalysis}
             </span>
-          ) : null}
-          <span className="text-sm text-stone-700 truncate">
-            {meetingType
-              ? meetingType.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
-              : STRINGS.common.meeting}
+          )}
+          <span className="text-sm font-medium text-stone-800 truncate">
+            {displayTitle}
           </span>
+          {focusPattern && gate1Pass !== false && (
+            <span className="text-xs text-stone-400 whitespace-nowrap flex-shrink-0">
+              Focus: {STRINGS.patternLabels[focusPattern] ?? focusPattern.replace(/_/g, ' ')}
+            </span>
+          )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0 ml-3">
           <span className="text-xs text-stone-400">
-            {createdAt ? fmtDate(createdAt) : ''}
+            {meetingDate ? fmtDate(meetingDate) : ''}
           </span>
           <svg
             className={`w-4 h-4 text-stone-400 transition-transform ${expanded ? 'rotate-180' : ''}`}
@@ -394,7 +436,7 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
       </button>
 
       {expanded && (
-        <div className="px-4 py-4 bg-stone-50 border-t border-stone-200 space-y-3">
+        <div className="px-4 py-4 bg-stone-50 border-t border-stone-200 space-y-4">
           {loadingDetail && (
             <div className="flex items-center gap-2 text-stone-400 text-sm py-4 justify-center">
               <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
@@ -403,6 +445,20 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
           )}
           {runDetail && runDetail.status === 'complete' && gate1Pass !== false && (
             <>
+              {/* Pattern Snapshot */}
+              {runDetail.pattern_snapshot && runDetail.pattern_snapshot.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest mb-2">
+                    {STRINGS.runStatusPoller.patternSnapshot}
+                  </p>
+                  <div className="space-y-1">
+                    {runDetail.pattern_snapshot.map((item) => (
+                      <PatternSnapshotBar key={item.pattern_id} item={item} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Strengths */}
               {runDetail.strengths.length > 0 && (
                 <div>
@@ -419,6 +475,7 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
                   ))}
                 </div>
               )}
+
               {/* Focus */}
               {runDetail.focus && (
                 <div>
@@ -437,6 +494,7 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
                   )}
                 </div>
               )}
+
               {/* Experiment detection */}
               {runDetail.experiment_detection && (
                 <div className="bg-violet-50 rounded-lg px-3 py-2">
