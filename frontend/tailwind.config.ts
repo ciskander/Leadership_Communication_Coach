@@ -10,44 +10,81 @@ const config: Config = {
     extend: {
       colors: {
         cv: {
+
+          // ── Teal — primary brand ramp ────────────────────────────────────
           teal: {
             50:  '#E1F5EE',
             100: '#9FE1CB',
             200: '#5DCAA5',
+            300: '#2DB88A',  // ← added
             400: '#1D9E75',
-            600: '#0F6E56',
+            500: '#158064',  // ← added
+            600: '#0F6E56',  // primary CTA
+            700: '#0C5848',  // ← added
             800: '#085041',
             900: '#04342C',
           },
+
+          // ── Warm — parchment backgrounds and surfaces ────────────────────
+          // NOTE: The legacy named keys (DEFAULT / surface / border) are kept
+          // for backwards compatibility but all components should use numeric steps.
           warm: {
             DEFAULT: '#F7F5F0',
             surface: '#EFEDE7',
-            border:  'rgba(0, 0, 0, 0.07)',
+            border:  'rgba(0,0,0,0.07)',
+            50:  '#FDFCF9',  // near-white body tint      ← added
+            100: '#F7F5F0',  // == DEFAULT; main bg
+            200: '#EFEDE7',  // == surface; card/border
+            300: '#E4E1D8',  // stronger border / hover   ← added
           },
+
+          // ── Stone — warm neutral text and UI chrome ──────────────────────
           stone: {
             50:  '#F1EFE8',
             100: '#D3D1C7',
+            200: '#C0BDB2',  // ← added
+            300: '#A8A59A',  // ← added
             400: '#888780',
+            500: '#726F68',  // ← added
             600: '#5F5E5A',
+            700: '#4D4C49',  // ← added
             800: '#444441',
             900: '#2C2C2A',
           },
+
+          // ── Amber — warnings, building states ───────────────────────────
           amber: {
+            50:  '#FEF8EC',  // ← added
             100: '#FAC775',
+            200: '#F7B04C',  // ← added
             400: '#EF9F27',
+            500: '#D48820',  // ← added
             600: '#BA7517',
+            700: '#8F5910',  // ← added
+            800: '#6A4010',  // ← added
           },
+
+          // ── Red — errors, destructive actions ────────────────────────────
           red: {
+            50:  '#FDF2F2',  // ← added
             100: '#F7C1C1',
+            200: '#F09898',  // ← added
+            300: '#E87070',  // ← added
             400: '#E24B4A',
+            500: '#CC3635',  // ← added
             600: '#A32D2D',
+            700: '#7A2020',  // ← added
           },
+
         },
       },
+
       fontFamily: {
+        // CSS variables are injected by next/font in app/layout.tsx
         serif: ['var(--font-serif)', 'Georgia', 'serif'],
         sans:  ['var(--font-sans)',  'system-ui', 'sans-serif'],
       },
+
       fontSize: {
         '2xs': ['10px', { lineHeight: '1.4', letterSpacing: '0.08em' }],
         'xs':  ['11px', { lineHeight: '1.5' }],
@@ -58,6 +95,7 @@ const config: Config = {
         '2xl': ['28px', { lineHeight: '1.2' }],
         '3xl': ['38px', { lineHeight: '1.15' }],
       },
+
       borderRadius: {
         'sm': '4px',
         'md': '6px',
