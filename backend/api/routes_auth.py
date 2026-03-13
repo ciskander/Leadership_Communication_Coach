@@ -80,13 +80,36 @@ def _sync_airtable_user(user: UserAuth) -> None:
         pass  # Non-blocking; Airtable sync failure should not break login
 
 
+def _cookie_secure() -> bool:
+    explicit = os.getenv("COOKIE_SECURE")
+    if explicit is not None:
+        return explicit.lower() == "true"
+    # Auto-detect: secure only when the backend is behind HTTPS
+    return _REDIRECT_URL.startswith("https://")
+
+
+def _cookie_samesite() -> str:
+    """Use 'none' for cross-origin HTTPS; 'lax' for same-site / local dev.
+
+    SameSite=None + Secure=True over plain HTTP breaks in Chrome Incognito
+    because the Secure flag is invalid without HTTPS, and Incognito does not
+    always honour the localhost exception that normal Chrome tabs allow.
+    Using 'lax' in dev is safe because localhost with different ports is
+    treated as same-site (same registrable domain).
+    """
+    explicit = os.getenv("COOKIE_SAMESITE")
+    if explicit:
+        return explicit.lower()
+    return "none" if _cookie_secure() else "lax"
+
+
 def _set_session_cookie(response: RedirectResponse, signed_token: str) -> None:
     response.set_cookie(
         key=SESSION_COOKIE_NAME,
         value=signed_token,
         httponly=True,
-        secure=True,
-        samesite="none",
+        secure=_cookie_secure(),
+        samesite=_cookie_samesite(),
         max_age=SESSION_TTL_DAYS * 86_400,
         path="/",
     )

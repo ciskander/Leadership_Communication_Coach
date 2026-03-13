@@ -35,11 +35,18 @@ def create_app() -> FastAPI:
     )
 
     # ── Session middleware (required by authlib Starlette client) ─────────────
+    _secure_env = os.getenv("COOKIE_SECURE")
+    if _secure_env is not None:
+        _secure = _secure_env.lower() == "true"
+    else:
+        # Auto-detect: secure only when the OAuth redirect is HTTPS
+        _secure = os.getenv("OAUTH_REDIRECT_URL", "").startswith("https://")
+    _samesite = os.getenv("COOKIE_SAMESITE", "none" if _secure else "lax").lower()
     app.add_middleware(
         SessionMiddleware,
         secret_key=os.environ.get("SESSION_SECRET", "change-me"),
-        https_only=os.getenv("COOKIE_SECURE", "true").lower() == "true",
-        same_site="none",
+        https_only=_secure,
+        same_site=_samesite,
     )
 
     # ── CORS ──────────────────────────────────────────────────────────────────
