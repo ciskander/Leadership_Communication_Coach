@@ -251,7 +251,7 @@ export default function AnalyzePage() {
       <button
         onClick={handleSubmit}
         disabled={!ready || submitting}
-        className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-semibold text-sm hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+        className="w-full py-3.5 bg-[#1E3A5F] text-white rounded-xl font-semibold text-sm hover:bg-[#162D4A] disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
       >
         {submitting ? (
           <span className="flex items-center justify-center gap-2">
@@ -259,7 +259,10 @@ export default function AnalyzePage() {
             {STRINGS.analyzePage.startingAnalysis}
           </span>
         ) : (
-          STRINGS.analyzePage.submitBtn
+          <span className="flex items-center justify-center gap-2">
+            <span className="shrink-0"><svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M8 1v3M8 12v3M1 8h3M12 8h3M3.05 3.05l2.12 2.12M10.83 10.83l2.12 2.12M3.05 12.95l2.12-2.12M10.83 5.17l2.12-2.12" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg></span>
+            {STRINGS.analyzePage.submitBtn}
+          </span>
         )}
       </button>
     </div>

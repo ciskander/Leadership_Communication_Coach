@@ -101,8 +101,9 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
           </p>
           <Link
             href="/client/analyze"
-            className="shrink-0 text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            className="shrink-0 flex items-center gap-2 text-xs px-3 py-1.5 bg-[#1E3A5F] text-white rounded-lg font-semibold hover:bg-[#162D4A] transition-colors"
           >
+            <span className="shrink-0"><svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M8 1v3M8 12v3M1 8h3M12 8h3M3.05 3.05l2.12 2.12M10.83 10.83l2.12 2.12M3.05 12.95l2.12-2.12M10.83 5.17l2.12-2.12" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg></span>
             {STRINGS.experimentTracker.analyzeMeeting}
           </Link>
         </div>
@@ -143,8 +144,9 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
           </p>
           <Link
             href="/client/analyze"
-            className="shrink-0 text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            className="shrink-0 flex items-center gap-2 text-xs px-3 py-1.5 bg-[#1E3A5F] text-white rounded-lg font-semibold hover:bg-[#162D4A] transition-colors"
           >
+            <span className="shrink-0"><svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M8 1v3M8 12v3M1 8h3M12 8h3M3.05 3.05l2.12 2.12M10.83 10.83l2.12 2.12M3.05 12.95l2.12-2.12M10.83 5.17l2.12-2.12" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg></span>
             {STRINGS.experimentTracker.analyzeMeeting}
           </Link>
         </div>
@@ -292,8 +294,9 @@ export function ExperimentTracker({ experiment, events, onUpdate, onComplete, on
                 <button
                   onClick={() => setActionState('confirm-park')}
                   disabled={actionState === 'loading'}
-                  className="px-4 py-2.5 bg-white border border-stone-300 text-stone-600 rounded-xl text-sm font-medium hover:bg-stone-50 disabled:opacity-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-stone-300 text-stone-600 rounded-xl text-sm font-medium hover:bg-stone-50 disabled:opacity-50 transition-colors"
                 >
+                  <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><rect x="3.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/><rect x="9.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/></svg>
                   {STRINGS.experimentTracker.parkForNow}
                 </button>
               </div>

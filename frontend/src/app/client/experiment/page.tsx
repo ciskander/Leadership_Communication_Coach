@@ -332,7 +332,7 @@ function ExperimentPageInner() {
     if (lastAction === 'completed') {
       return (
         <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 flex items-center gap-3">
-          <span className="text-xl">🎉</span>
+          <svg viewBox="0 0 16 16" fill="none" className="w-5 h-5 shrink-0 text-emerald-600" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth={1.4}/><path d="M5 8l2 2 4-4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"/></svg>
           <div>
             <p className="text-sm font-semibold text-emerald-800">{STRINGS.experimentPage.completeBanner}</p>
             <p className="text-xs text-emerald-700 mt-0.5">{STRINGS.experimentPage.completeSubtext}</p>
@@ -342,7 +342,7 @@ function ExperimentPageInner() {
     }
     return (
       <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 flex items-center gap-3">
-        <span className="text-xl">⏸</span>
+        <svg viewBox="0 0 16 16" fill="none" className="w-5 h-5 shrink-0 text-amber-600" aria-hidden="true"><rect x="3.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/><rect x="9.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/></svg>
         <div>
           <p className="text-sm font-semibold text-amber-800">{STRINGS.experimentPage.parkedBanner}</p>
           <p className="text-xs text-amber-700 mt-0.5">{STRINGS.experimentPage.parkedSubtext}</p>
@@ -499,8 +499,9 @@ function ExperimentPageInner() {
               <div className="flex gap-3 justify-center pt-2">
                 <Link
                   href="/client/analyze"
-                  className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-[#1E3A5F] text-white rounded-xl text-sm font-medium hover:bg-[#162D4A] transition-colors"
                 >
+                  <span className="shrink-0"><svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M8 1v3M8 12v3M1 8h3M12 8h3M3.05 3.05l2.12 2.12M10.83 10.83l2.12 2.12M3.05 12.95l2.12-2.12M10.83 5.17l2.12-2.12" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg></span>
                   {STRINGS.experimentTracker.analyzeMeeting}
                 </Link>
                 <Link
