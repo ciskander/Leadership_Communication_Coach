@@ -12,45 +12,52 @@ import { STRINGS } from '@/config/strings';
 
 const ROLE_OPTIONS = STRINGS.roleOptions;
 
-export default function CoachAnalyzePageWrapper() {
+// ─── Shared input styles ──────────────────────────────────────────────────────
+
+const inputCls = 'mt-1 w-full border border-cv-warm-300 rounded-xl px-3 py-2 text-sm text-cv-stone-800 bg-white focus:outline-none focus:border-cv-teal-400 focus:ring-1 focus:ring-cv-teal-400/30 transition-colors placeholder:text-cv-stone-400';
+
+// ─── Step label ───────────────────────────────────────────────────────────────
+
+function StepLabel({ text, done }: { text: string; done?: boolean }) {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" /></div>}>
-      <CoachAnalyzePage />
-    </Suspense>
+    <div className="flex items-center gap-2 mb-3">
+      {done ? (
+        <span className="flex items-center justify-center w-4 h-4 rounded-full bg-cv-teal-600 shrink-0">
+          <svg viewBox="0 0 12 12" fill="none" className="w-2.5 h-2.5" aria-hidden="true">
+            <path d="M2 6l3 3 5-5" stroke="white" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      ) : (
+        <span className="w-4 h-4 rounded-full border-2 border-cv-warm-300 shrink-0" />
+      )}
+      <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400">{text}</p>
+    </div>
   );
 }
 
+// ─── Page inner ───────────────────────────────────────────────────────────────
+
 function CoachAnalyzePage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams       = useSearchParams();
   const preselectedCoachee = searchParams.get('coachee');
 
-  const [coachees, setCoachees] = useState<CoacheeListItem[]>([]);
+  const [coachees, setCoachees]             = useState<CoacheeListItem[]>([]);
   const [loadingCoachees, setLoadingCoachees] = useState(true);
-
-  // Selected coachee
   const [selectedCoacheeId, setSelectedCoacheeId] = useState<string | null>(preselectedCoachee);
 
-  // Upload result
-  const [transcriptId, setTranscriptId] = useState<string | null>(null);
-  const [speakerLabels, setSpeakerLabels] = useState<string[]>([]);
-
-  // Config fields
-  const [speakerLabel, setSpeakerLabel] = useState<string | null>(null);
-  const [name, setName] = useState('');
-  const [role, setRole] = useState<TargetRole | ''>('');
-
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Run result state — show inline instead of redirecting
-  const [runId, setRunId] = useState<string | null>(null);
+  const [transcriptId, setTranscriptId]     = useState<string | null>(null);
+  const [speakerLabels, setSpeakerLabels]   = useState<string[]>([]);
+  const [speakerLabel, setSpeakerLabel]     = useState<string | null>(null);
+  const [name, setName]                     = useState('');
+  const [role, setRole]                     = useState<TargetRole | ''>('');
+  const [submitting, setSubmitting]         = useState(false);
+  const [error, setError]                   = useState<string | null>(null);
+  const [runId, setRunId]                   = useState<string | null>(null);
 
   useEffect(() => {
     api.listCoachees().then(setCoachees).finally(() => setLoadingCoachees(false));
   }, []);
 
-  // Pre-fill speaker name when coachee is selected
   useEffect(() => {
     if (selectedCoacheeId) {
       const coachee = coachees.find((c) => c.id === selectedCoacheeId);
@@ -66,48 +73,20 @@ function CoachAnalyzePage() {
 
   const ready = selectedCoacheeId && transcriptId && speakerLabel && name && role;
 
-  const handleSubmit = async () => {
-    if (!ready) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      const result = await api.coachEnqueueAnalysis(selectedCoacheeId!, {
-        transcript_id: transcriptId!,
-        target_speaker_name: name,
-        target_speaker_label: speakerLabel!,
-        target_role: role as TargetRole,
-      });
-      if (result.run_id) {
-        setRunId(result.run_id);
-      } else {
-        pollRunRequest(result.run_request_id);
-      }
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : STRINGS.analyzePage.failedToEnqueue);
-      setSubmitting(false);
-    }
-  };
-
   const pollRunRequest = async (rrId: string) => {
     let count = 0;
     const poll = async () => {
       count++;
       try {
         const status = await api.getRunRequest(rrId);
-        if (status.run_id) {
-          setRunId(status.run_id);
-          return;
-        }
+        if (status.run_id) { setRunId(status.run_id); return; }
         if (status.status === 'error') {
           setError(STRINGS.analyzePage.analysisFailedToStart);
           setSubmitting(false);
           return;
         }
         if (count < 30) setTimeout(poll, 2000);
-        else {
-          setError(STRINGS.analyzePage.timedOutWaiting);
-          setSubmitting(false);
-        }
+        else { setError(STRINGS.analyzePage.timedOutWaiting); setSubmitting(false); }
       } catch {
         setError(STRINGS.analyzePage.failedToPollStatus);
         setSubmitting(false);
@@ -116,7 +95,26 @@ function CoachAnalyzePage() {
     poll();
   };
 
-  // If we have a run ID, show the results inline
+  const handleSubmit = async () => {
+    if (!ready) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const result = await api.coachEnqueueAnalysis(selectedCoacheeId!, {
+        transcript_id:         transcriptId!,
+        target_speaker_name:   name,
+        target_speaker_label:  speakerLabel!,
+        target_role:           role as TargetRole,
+      });
+      if (result.run_id) setRunId(result.run_id);
+      else pollRunRequest(result.run_request_id);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : STRINGS.analyzePage.failedToEnqueue);
+      setSubmitting(false);
+    }
+  };
+
+  // ── Results view ────────────────────────────────────────────────────────────
   if (runId) {
     const selectedCoachee = coachees.find((c) => c.id === selectedCoacheeId);
     return (
@@ -124,18 +122,20 @@ function CoachAnalyzePage() {
         <div>
           <Link
             href={selectedCoacheeId ? `/coach/coachees/${selectedCoacheeId}` : '/coach'}
-            className="text-sm text-stone-500 hover:text-stone-700 transition-colors"
+            className="text-sm text-cv-stone-500 hover:text-cv-stone-700 transition-colors"
           >
             ← Back to {selectedCoachee?.display_name ?? 'coachee'}
           </Link>
-          <h1 className="text-2xl font-bold text-stone-900 mt-2">
+          <h1 className="text-2xl font-semibold text-cv-stone-900 font-serif mt-2">
             {STRINGS.common.meetingAnalysis}
           </h1>
-          <p className="text-sm text-stone-500 mt-1">
+          <p className="text-sm text-cv-stone-500 mt-1">
             {selectedCoachee?.display_name ?? selectedCoachee?.email}
           </p>
         </div>
+
         <RunStatusPoller runId={runId} />
+
         <div className="flex gap-3">
           <button
             onClick={() => {
@@ -146,43 +146,42 @@ function CoachAnalyzePage() {
               setRole('');
               setSubmitting(false);
             }}
-            className="px-4 py-2 border border-stone-300 text-stone-600 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors"
+            className="px-4 py-2 border border-cv-warm-300 text-cv-stone-600 rounded-xl text-sm font-medium hover:bg-cv-warm-50 transition-colors"
           >
-            Analyze another
+            {STRINGS.coachAnalyze.analyzeAnother ?? 'Analyze another'}
           </button>
           <Link
             href={`/coach/coachees/${selectedCoacheeId}`}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors"
+            className="px-4 py-2 bg-cv-teal-600 text-white rounded-xl text-sm font-medium hover:bg-cv-teal-700 transition-colors"
           >
-            Back to coachee
+            {STRINGS.coacheeDetail.backToDashboard ?? 'Back to coachee'}
           </Link>
         </div>
       </div>
     );
   }
 
+  // ── Form view ───────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-xl mx-auto space-y-6 py-2">
+    <div className="max-w-xl mx-auto space-y-5 py-2">
       <div>
-        <h1 className="text-2xl font-bold text-stone-900">{STRINGS.coachAnalyze.heading}</h1>
-        <p className="text-sm text-stone-500 mt-1">
-          {STRINGS.coachAnalyze.subtitle}
-        </p>
+        <h1 className="text-2xl font-semibold text-cv-stone-900 font-serif">
+          {STRINGS.coachAnalyze.heading}
+        </h1>
+        <p className="text-sm text-cv-stone-500 mt-1">{STRINGS.coachAnalyze.subtitle}</p>
       </div>
 
       {/* Step 1 — Select coachee */}
-      <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
-        <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
-          {STRINGS.coachAnalyze.step1}
-        </p>
+      <div className="bg-white rounded-2xl border border-cv-warm-200 p-5">
+        <StepLabel text={STRINGS.coachAnalyze.step1} done={!!selectedCoacheeId} />
         {loadingCoachees ? (
           <div className="h-8 flex items-center">
-            <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+            <span className="w-4 h-4 border-2 border-cv-teal-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : coachees.length === 0 ? (
-          <p className="text-sm text-stone-500">
+          <p className="text-sm text-cv-stone-500">
             {STRINGS.coachAnalyze.noCoachees}{' '}
-            <a href="/coach" className="text-emerald-600 underline">
+            <a href="/coach" className="text-cv-teal-600 underline">
               {STRINGS.coachAnalyze.inviteFirst}
             </a>
           </p>
@@ -191,11 +190,12 @@ function CoachAnalyzePage() {
             {coachees.map((c) => (
               <label
                 key={c.id}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer border transition-colors ${
+                className={[
+                  'flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer border transition-colors',
                   selectedCoacheeId === c.id
-                    ? 'border-emerald-400 bg-emerald-50'
-                    : 'border-stone-200 hover:border-stone-300'
-                }`}
+                    ? 'border-cv-teal-400 bg-cv-teal-50'
+                    : 'border-cv-warm-200 hover:border-cv-warm-300',
+                ].join(' ')}
               >
                 <input
                   type="radio"
@@ -203,13 +203,13 @@ function CoachAnalyzePage() {
                   value={c.id}
                   checked={selectedCoacheeId === c.id}
                   onChange={() => setSelectedCoacheeId(c.id)}
-                  className="accent-emerald-600"
+                  className="accent-cv-teal-600"
                 />
                 <div>
-                  <p className="text-sm font-medium text-stone-800">
+                  <p className="text-sm font-medium text-cv-stone-800">
                     {c.display_name ?? STRINGS.coachDashboard.unnamed}
                   </p>
-                  <p className="text-xs text-stone-400">{c.email}</p>
+                  <p className="text-xs text-cv-stone-400">{c.email}</p>
                 </div>
               </label>
             ))}
@@ -219,24 +219,20 @@ function CoachAnalyzePage() {
 
       {/* Step 2 — Upload transcript */}
       {selectedCoacheeId && (
-        <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
-            {STRINGS.coachAnalyze.step2}
-          </p>
+        <div className="bg-white rounded-2xl border border-cv-warm-200 p-5">
+          <StepLabel text={STRINGS.coachAnalyze.step2} done={!!transcriptId} />
           <TranscriptUploadPanel onUploaded={handleUploaded} />
         </div>
       )}
 
       {/* Step 3 — Configure */}
       {transcriptId && (
-        <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
-            {STRINGS.coachAnalyze.step3}
-          </p>
+        <div className="bg-white rounded-2xl border border-cv-warm-200 p-5 space-y-4">
+          <StepLabel text={STRINGS.coachAnalyze.step3} done={!!(speakerLabel && name && role)} />
 
           {speakerLabels.length > 0 ? (
             <div>
-              <p className="text-xs text-stone-500 mb-1.5">{STRINGS.coachAnalyze.targetSpeaker}</p>
+              <p className="text-xs text-cv-stone-500 mb-1.5">{STRINGS.coachAnalyze.targetSpeaker}</p>
               <SpeakerChips
                 speakers={speakerLabels}
                 selected={speakerLabel}
@@ -245,34 +241,34 @@ function CoachAnalyzePage() {
             </div>
           ) : (
             <div>
-              <label className="text-xs text-stone-500">{STRINGS.analyzePage.speakerLabel}</label>
+              <label className="text-xs font-medium text-cv-stone-500">{STRINGS.analyzePage.speakerLabel}</label>
               <input
                 type="text"
                 value={speakerLabel ?? ''}
                 onChange={(e) => setSpeakerLabel(e.target.value || null)}
                 placeholder={STRINGS.analyzePage.speakerLabelPlaceholder}
-                className="mt-1 w-full border border-stone-300 rounded-lg px-3 py-2 text-sm"
+                className={inputCls}
               />
             </div>
           )}
 
           <div>
-            <label className="text-xs text-stone-500">{STRINGS.coachAnalyze.speakersFullName}</label>
+            <label className="text-xs font-medium text-cv-stone-500">{STRINGS.coachAnalyze.speakersFullName}</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={STRINGS.analyzePage.fullNamePlaceholder}
-              className="mt-1 w-full border border-stone-300 rounded-lg px-3 py-2 text-sm"
+              className={inputCls}
             />
           </div>
 
           <div>
-            <label className="text-xs text-stone-500">{STRINGS.coachAnalyze.targetRole}</label>
+            <label className="text-xs font-medium text-cv-stone-500">{STRINGS.coachAnalyze.targetRole}</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as TargetRole)}
-              className="mt-1 w-full border border-stone-300 rounded-lg px-3 py-2 text-sm"
+              className={inputCls}
             >
               <option value="">{STRINGS.analyzePage.selectRole}</option>
               {ROLE_OPTIONS.map((r) => (
@@ -281,22 +277,42 @@ function CoachAnalyzePage() {
             </select>
           </div>
 
-          {speakerLabel && name && role
-            ? <p className="text-xs text-emerald-600 font-medium">{STRINGS.coachAnalyze.readyToAnalyse}</p>
-            : <p className="text-xs text-amber-600">{STRINGS.coachAnalyze.completeFieldsAbove}</p>
-          }
+          {speakerLabel && name && role ? (
+            <p className="text-xs text-cv-teal-600 font-medium">{STRINGS.coachAnalyze.readyToAnalyse}</p>
+          ) : (
+            <p className="text-xs text-cv-amber-600">{STRINGS.coachAnalyze.completeFieldsAbove}</p>
+          )}
         </div>
       )}
 
-      {error && <p className="text-sm text-rose-600">{error}</p>}
+      {error && (
+        <p className="text-sm text-cv-red-600 bg-cv-red-50 border border-cv-red-200 rounded-xl px-4 py-3">
+          {error}
+        </p>
+      )}
 
       <button
         onClick={handleSubmit}
         disabled={!ready || submitting}
-        className="w-full py-3 bg-emerald-600 text-white rounded-xl font-medium text-sm hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+        className="w-full py-3 bg-cv-teal-600 text-white rounded-xl font-medium text-sm hover:bg-cv-teal-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center justify-center gap-2"
       >
+        {submitting && (
+          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        )}
         {submitting ? STRINGS.coachAnalyze.runningAnalysis : STRINGS.coachAnalyze.runAnalysis}
       </button>
     </div>
+  );
+}
+
+export default function CoachAnalyzePageWrapper() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-64">
+        <span className="w-8 h-8 border-2 border-cv-teal-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <CoachAnalyzePage />
+    </Suspense>
   );
 }
