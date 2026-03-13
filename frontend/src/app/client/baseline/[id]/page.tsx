@@ -4,17 +4,25 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import type { BaselinePack, BaselinePackMeeting, CoachingItem, Experiment, ActiveExperiment, PatternSnapshotItem } from '@/lib/types';
+import type {
+  BaselinePack,
+  BaselinePackMeeting,
+  CoachingItem,
+  Experiment,
+  ActiveExperiment,
+  PatternSnapshotItem,
+} from '@/lib/types';
 import { CoachingCard } from '@/components/CoachingCard';
 import { PatternSnapshot } from '@/components/PatternSnapshot';
 import { ExperimentTracker } from '@/components/ExperimentTracker';
 import { STRINGS } from '@/config/strings';
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 const ROLE_LABELS = STRINGS.roles;
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmtDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '';
@@ -29,46 +37,58 @@ function fmtDate(dateStr: string | null | undefined): string {
 
 function PatternLabel({ id }: { id: string }) {
   return (
-    <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+    <span className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest">
       {id.replace(/_/g, ' ')}
     </span>
   );
 }
 
-// ── Accepted Experiment Panel ─────────────────────────────────────────────────
+// ─── Accepted Experiment Panel ────────────────────────────────────────────────
 
 function AcceptedExperimentPanel({ experiment }: { experiment: Experiment }) {
   return (
-    <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 space-y-3">
+    <div className="bg-cv-teal-50 border border-cv-teal-100 rounded-xl p-5 space-y-4">
       <div className="flex items-center gap-2">
-        <span className="text-emerald-600">✦</span>
-        <span className="text-sm font-semibold text-emerald-800">{STRINGS.baselineDetail.experimentAccepted}</span>
+        <div className="w-1.5 h-4 rounded-full bg-cv-teal-400 flex-shrink-0" />
+        <span className="text-sm font-medium text-cv-teal-800">
+          {STRINGS.baselineDetail.experimentAccepted}
+        </span>
       </div>
       <div className="space-y-1">
         <PatternLabel id={experiment.pattern_id} />
-        <p className="text-sm font-semibold text-stone-900 leading-snug">{experiment.title}</p>
+        <p className="text-sm font-medium text-cv-stone-900 leading-snug mt-1">
+          {experiment.title}
+        </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div className="bg-white rounded-xl p-3 border border-emerald-100">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.whatToDo}</p>
-          <p className="text-xs text-stone-600 leading-relaxed">{experiment.instruction}</p>
+        <div className="bg-white rounded-lg p-3 border border-cv-teal-100">
+          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+            {STRINGS.common.whatToDo}
+          </p>
+          <p className="text-xs text-cv-stone-600 font-light leading-relaxed">
+            {experiment.instruction}
+          </p>
         </div>
-        <div className="bg-white rounded-xl p-3 border border-emerald-100">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.successLooksLike}</p>
-          <p className="text-xs text-stone-600 leading-relaxed">{experiment.success_marker}</p>
+        <div className="bg-white rounded-lg p-3 border border-cv-teal-100">
+          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+            {STRINGS.common.successLooksLike}
+          </p>
+          <p className="text-xs text-cv-stone-600 font-light leading-relaxed">
+            {experiment.success_marker}
+          </p>
         </div>
       </div>
       <Link
         href="/client/experiment"
-        className="inline-flex items-center text-sm text-emerald-700 font-medium hover:text-emerald-900 transition-colors"
+        className="inline-flex items-center text-sm text-cv-teal-600 font-medium hover:text-cv-teal-800 transition-colors"
       >
-        {STRINGS.baselineDetail.trackExperiment}
+        {STRINGS.baselineDetail.trackExperiment} →
       </Link>
     </div>
   );
 }
 
-// ── Proposed Experiment Card ──────────────────────────────────────────────────
+// ─── Proposed Experiment Card ─────────────────────────────────────────────────
 
 function ProposedExperimentCard({
   experiment,
@@ -94,43 +114,57 @@ function ProposedExperimentCard({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-3">
+    <div className="bg-white rounded-xl border border-cv-warm-border p-5 space-y-4">
       <div className="space-y-1">
         <PatternLabel id={experiment.pattern_id} />
-        <p className="text-sm font-semibold text-stone-900 leading-snug">{experiment.title}</p>
+        <p className="text-sm font-medium text-cv-stone-900 leading-snug mt-1">
+          {experiment.title}
+        </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div className="bg-stone-50 rounded-xl p-3">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.whatToDo}</p>
-          <p className="text-xs text-stone-600 leading-relaxed">{experiment.instruction}</p>
+        <div className="bg-cv-warm rounded-lg p-3">
+          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+            {STRINGS.common.whatToDo}
+          </p>
+          <p className="text-xs text-cv-stone-600 font-light leading-relaxed">
+            {experiment.instruction}
+          </p>
         </div>
-        <div className="bg-stone-50 rounded-xl p-3">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.successLooksLike}</p>
-          <p className="text-xs text-stone-600 leading-relaxed">{experiment.success_marker}</p>
+        <div className="bg-cv-warm rounded-lg p-3">
+          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+            {STRINGS.common.successLooksLike}
+          </p>
+          <p className="text-xs text-cv-stone-600 font-light leading-relaxed">
+            {experiment.success_marker}
+          </p>
         </div>
       </div>
-      {errorMsg && <p className="text-xs text-rose-600">{errorMsg}</p>}
+      {errorMsg && (
+        <p className="text-xs text-cv-red-600">{errorMsg}</p>
+      )}
       <div className="flex items-center gap-3">
         <button
           onClick={handleAccept}
           disabled={state === 'loading'}
-          className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
+          className="px-4 py-2 bg-cv-teal-600 text-cv-teal-50 rounded-lg text-xs font-medium hover:bg-cv-teal-800 transition-colors disabled:opacity-50"
         >
           {state === 'loading' ? STRINGS.common.accepting : STRINGS.common.acceptExperiment}
         </button>
         <Link
           href="/client/experiment?expand=1"
-          className="text-xs text-stone-500 hover:text-stone-700 transition-colors"
+          className="text-xs text-cv-stone-400 hover:text-cv-stone-600 transition-colors"
         >
           {STRINGS.experimentPage.seeMoreOptions}
         </Link>
-        <span className="text-xs text-stone-400 ml-auto">{experiment.experiment_id}</span>
+        <span className="text-2xs text-cv-stone-400 ml-auto tracking-wide">
+          {experiment.experiment_id}
+        </span>
       </div>
     </div>
   );
 }
 
-// ── Experiment Section ────────────────────────────────────────────────────────
+// ─── Experiment Section ───────────────────────────────────────────────────────
 
 function ExperimentSection() {
   const [proposed, setProposed] = useState<Experiment[]>([]);
@@ -150,9 +184,11 @@ function ExperimentSection() {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 py-2">
-        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-stone-400 flex-shrink-0" />
-        <span className="text-xs text-stone-400">{STRINGS.baselineDetail.loadingExperiment}</span>
+      <div className="flex items-center gap-2.5 py-2">
+        <div className="animate-spin rounded-full h-4 w-4 border-2 border-cv-teal-400 border-t-transparent flex-shrink-0" />
+        <span className="text-xs text-cv-stone-400 font-light">
+          {STRINGS.baselineDetail.loadingExperiment}
+        </span>
       </div>
     );
   }
@@ -164,9 +200,9 @@ function ExperimentSection() {
   if (proposed.length > 0) {
     return (
       <section className="space-y-3">
-        <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+        <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest">
           {STRINGS.baselineDetail.experimentReady}
-        </h2>
+        </p>
         <ProposedExperimentCard
           experiment={proposed[0]}
           onAccepted={(e) => setAccepted(e)}
@@ -187,22 +223,22 @@ function ExperimentSection() {
   return null;
 }
 
-// ── Sub-run Pattern Snapshot ──────────────────────────────────────────────────
+// ─── Sub-run Pattern Snapshot ─────────────────────────────────────────────────
 
 function SubRunPatternSnapshot({ patterns }: { patterns: Record<string, unknown>[] }) {
   return (
     <div className="mt-1">
-      <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-2">
+      <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-3">
         {STRINGS.baselineDetail.patternScores}
       </p>
-      <div className="opacity-80">
+      <div className="opacity-90">
         <PatternSnapshot patterns={patterns as unknown as PatternSnapshotItem[]} />
       </div>
     </div>
   );
 }
 
-// ── Meeting Accordion Card ────────────────────────────────────────────────────
+// ─── Meeting Accordion Card ───────────────────────────────────────────────────
 
 function MeetingAccordionCard({
   meeting,
@@ -217,7 +253,9 @@ function MeetingAccordionCard({
 }) {
   const title = meeting.title || 'Untitled meeting';
   const date = fmtDate(meeting.meeting_date);
-  const role = meeting.target_role ? (ROLE_LABELS[meeting.target_role] ?? meeting.target_role) : null;
+  const role = meeting.target_role
+    ? (ROLE_LABELS[meeting.target_role] ?? meeting.target_role)
+    : null;
   const meta = [date, meeting.meeting_type, role].filter(Boolean).join(' · ');
 
   const hasSubRunData = !!(
@@ -227,34 +265,38 @@ function MeetingAccordionCard({
   );
 
   return (
-    <div className={`bg-white border rounded-xl overflow-hidden transition-all ${open ? 'border-stone-300 shadow-sm' : 'border-stone-200'}`}>
+    <div className={`bg-white border rounded-xl overflow-hidden transition-colors ${
+      open ? 'border-cv-stone-100' : 'border-cv-warm-border'
+    }`}>
       {/* Header */}
       <button
         onClick={onToggle}
-        className="w-full flex items-start justify-between gap-3 px-4 py-3 text-left hover:bg-stone-50 transition-colors"
+        className="w-full flex items-start justify-between gap-3 px-5 py-4 text-left hover:bg-cv-warm transition-colors"
       >
         <div className="flex items-start gap-3 min-w-0">
-          <div className="w-6 h-6 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+          <div className="w-6 h-6 rounded-full bg-cv-warm border border-cv-warm-border text-cv-stone-400 flex items-center justify-center text-xs font-medium flex-shrink-0 mt-0.5">
             {index + 1}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-stone-800 truncate">{title}</p>
-            {meta && <p className="text-xs text-stone-400 mt-0.5">{meta}</p>}
+            <p className="text-sm font-medium text-cv-stone-900 truncate">{title}</p>
+            {meta && (
+              <p className="text-xs text-cv-stone-400 font-light mt-0.5">{meta}</p>
+            )}
           </div>
         </div>
-        <span className="text-stone-400 flex-shrink-0 mt-0.5 text-xs font-medium">
+        <span className="text-2xs text-cv-stone-400 tracking-widest uppercase flex-shrink-0 mt-1">
           {open ? STRINGS.baselineDetail.collapse : STRINGS.baselineDetail.expand}
         </span>
       </button>
 
       {/* Expanded content */}
       {open && (
-        <div className="border-t border-stone-100 px-4 pb-5 pt-4 space-y-5">
+        <div className="border-t border-cv-warm-border px-5 pb-6 pt-5 space-y-6">
           {meeting.run_id && hasSubRunData ? (
             <>
               {(meeting.sub_run_strengths?.length || meeting.sub_run_focus) && (
                 <div>
-                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
+                  <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-4">
                     {STRINGS.baselineDetail.coachingOutput}
                   </p>
                   <CoachingCard
@@ -264,12 +306,13 @@ function MeetingAccordionCard({
                   />
                 </div>
               )}
-              {meeting.sub_run_pattern_snapshot && meeting.sub_run_pattern_snapshot.length > 0 && (
-                <SubRunPatternSnapshot patterns={meeting.sub_run_pattern_snapshot} />
-              )}
+              {meeting.sub_run_pattern_snapshot &&
+                meeting.sub_run_pattern_snapshot.length > 0 && (
+                  <SubRunPatternSnapshot patterns={meeting.sub_run_pattern_snapshot} />
+                )}
             </>
           ) : (
-            <p className="text-xs text-stone-400">
+            <p className="text-xs text-cv-stone-400 font-light">
               {meeting.run_id
                 ? STRINGS.baselineDetail.noAnalysisData
                 : STRINGS.baselineDetail.notAnalysedYet}
@@ -281,7 +324,7 @@ function MeetingAccordionCard({
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function BaselineDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -310,18 +353,22 @@ export default function BaselineDetailPage() {
     }
   }, [pack]);
 
+  // ── Loading ────────────────────────────────────────────────────────────────
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
+        <div className="animate-spin rounded-full h-6 w-6 border-2 border-cv-teal-400 border-t-transparent" />
       </div>
     );
   }
 
+  // ── Not found ──────────────────────────────────────────────────────────────
+
   if (!pack) {
     return (
       <div className="max-w-xl mx-auto py-12 text-center">
-        <p className="text-sm text-stone-500">{STRINGS.baselineDetail.notFound}</p>
+        <p className="text-sm text-cv-stone-400 font-light">{STRINGS.baselineDetail.notFound}</p>
       </div>
     );
   }
@@ -334,54 +381,58 @@ export default function BaselineDetailPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6 py-2">
 
-      {/* Header */}
+      {/* Page header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-stone-900">{STRINGS.baselineDetail.heading}</h1>
+        <h1 className="font-serif text-2xl text-cv-stone-900">
+          {STRINGS.baselineDetail.heading}
+        </h1>
         <Link
           href="/client"
-          className="text-sm text-stone-500 hover:text-stone-700 transition-colors"
+          className="text-xs text-cv-stone-400 tracking-widest uppercase hover:text-cv-stone-600 transition-colors"
         >
-          {STRINGS.nav.dashboard}
+          ← {STRINGS.nav.dashboard}
         </Link>
       </div>
 
-      {/* Building state */}
+      {/* ── Building state ─────────────────────────────────────────────────── */}
       {isBuilding && !timedOut && (
-        <div className="bg-white rounded-2xl border border-blue-200 p-8 text-center space-y-4">
-          <div className="relative mx-auto w-14 h-14">
-            <div className="w-14 h-14 rounded-full border-2 border-stone-100" />
-            <div className="absolute inset-0 w-14 h-14 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+        <div className="bg-white rounded-xl border border-cv-warm-border p-10 text-center space-y-5">
+          <div className="relative mx-auto w-12 h-12">
+            <div className="w-12 h-12 rounded-full border-2 border-cv-stone-100" />
+            <div className="absolute inset-0 w-12 h-12 rounded-full border-2 border-cv-teal-400 border-t-transparent animate-spin" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-stone-800">{STRINGS.baselineDetail.buildingTitle}</p>
-            <p className="text-xs text-stone-400 mt-1">{STRINGS.baselineDetail.buildingDesc}</p>
+            <p className="text-sm font-medium text-cv-stone-900">
+              {STRINGS.baselineDetail.buildingTitle}
+            </p>
+            <p className="text-xs text-cv-stone-400 font-light mt-1">
+              {STRINGS.baselineDetail.buildingDesc}
+            </p>
           </div>
         </div>
       )}
 
-      {/* Error state */}
+      {/* ── Error state ────────────────────────────────────────────────────── */}
       {isError && (
-        <div className="bg-white rounded-2xl border border-rose-200 p-6 space-y-3">
-          <p className="text-sm font-semibold text-rose-700">
+        <div className="bg-white rounded-xl border border-cv-red-100 p-6 space-y-4">
+          <p className="text-sm font-medium text-cv-red-600">
             {timedOut ? STRINGS.baselineDetail.timeoutTitle : STRINGS.baselineDetail.errorTitle}
           </p>
-          <p className="text-sm text-stone-500">
-            {timedOut
-              ? STRINGS.baselineDetail.timeoutDesc
-              : STRINGS.baselineDetail.errorDesc}
+          <p className="text-sm text-cv-stone-400 font-light">
+            {timedOut ? STRINGS.baselineDetail.timeoutDesc : STRINGS.baselineDetail.errorDesc}
           </p>
           <div className="flex gap-2">
             {timedOut && (
               <button
                 onClick={() => { setTimedOut(false); fetchPack(); }}
-                className="inline-block text-sm px-4 py-2 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 transition-colors"
+                className="text-sm px-4 py-2 bg-cv-warm text-cv-stone-600 rounded-lg font-medium hover:bg-cv-warm-surface transition-colors"
               >
                 {STRINGS.runStatusPoller.checkAgain}
               </button>
             )}
             <Link
               href="/client/baseline/new"
-              className="inline-block text-sm px-4 py-2 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors"
+              className="text-sm px-4 py-2 bg-cv-teal-600 text-cv-teal-50 rounded-lg font-medium hover:bg-cv-teal-800 transition-colors"
             >
               {STRINGS.baselineDetail.tryAgain}
             </Link>
@@ -389,30 +440,35 @@ export default function BaselineDetailPage() {
         </div>
       )}
 
-      {/* Ready state */}
+      {/* ── Ready state ────────────────────────────────────────────────────── */}
       {isReady && (
         <>
           {/* Success banner */}
-          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-3.5 flex items-center gap-3">
-            <span className="text-emerald-600 text-lg">✦</span>
+          <div className="bg-cv-teal-50 border border-cv-teal-100 rounded-xl px-5 py-4 flex items-center gap-3">
+            <div className="w-1.5 h-8 rounded-full bg-cv-teal-400 flex-shrink-0" />
             <div>
-              <p className="text-sm font-semibold text-emerald-800">{STRINGS.baselineDetail.completeTitle}</p>
-              <p className="text-xs text-emerald-600">{STRINGS.baselineDetail.completeSubtitle}</p>
+              <p className="text-sm font-medium text-cv-teal-800">
+                {STRINGS.baselineDetail.completeTitle}
+              </p>
+              <p className="text-xs text-cv-teal-400 font-light mt-0.5">
+                {STRINGS.baselineDetail.completeSubtitle}
+              </p>
             </div>
           </div>
 
-          {/* Aggregate coaching output — micro_experiment suppressed */}
+          {/* Aggregate coaching — micro_experiment suppressed at baseline */}
+          {/* NOTE: CoachingCard needs its own design pass — see implementation notes */}
           <CoachingCard
             strengths={pack.strengths ?? []}
             focus={pack.focus ?? null}
             microExperiment={null}
           />
 
-          {/* Hint to check individual meetings for transcript-based coaching */}
+          {/* Hint to check individual meeting sections */}
           {meetings.length > 0 && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-start gap-2.5">
-              <span className="text-blue-500 text-sm leading-5 flex-shrink-0">&#x2139;&#xFE0F;</span>
-              <p className="text-xs text-blue-700 leading-relaxed">
+            <div className="bg-cv-warm border border-cv-warm-border rounded-xl px-4 py-3 flex items-start gap-2.5">
+              <span className="text-cv-stone-400 text-sm leading-5 flex-shrink-0 mt-0.5">i</span>
+              <p className="text-xs text-cv-stone-600 font-light leading-relaxed">
                 {STRINGS.baselineDetail.aggregateCoachingNote}
               </p>
             </div>
@@ -424,19 +480,20 @@ export default function BaselineDetailPage() {
           {/* Aggregate pattern snapshot */}
           {pack.pattern_snapshot && pack.pattern_snapshot.length > 0 && (
             <section>
-              <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
+              <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-4">
                 {STRINGS.baselineDetail.yourBaseline}
-              </h2>
+              </p>
+              {/* NOTE: PatternSnapshot needs its own design pass — see implementation notes */}
               <PatternSnapshot patterns={pack.pattern_snapshot as unknown as PatternSnapshotItem[]} />
             </section>
           )}
 
-          {/* Constituent meetings as accordions */}
+          {/* Individual meetings as accordions */}
           {meetings.length > 0 && (
             <section>
-              <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
+              <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-4">
                 {STRINGS.baselineDetail.meetingsInBaseline}
-              </h2>
+              </p>
               <div className="space-y-2">
                 {meetings.map((meeting, i) => (
                   <MeetingAccordionCard
@@ -452,10 +509,10 @@ export default function BaselineDetailPage() {
           )}
 
           {/* Bottom CTA */}
-          <div>
+          <div className="pb-4">
             <Link
               href="/client/analyze"
-              className="inline-block px-5 py-3 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-3 bg-cv-teal-600 text-cv-teal-50 rounded-lg text-sm font-medium hover:bg-cv-teal-800 transition-colors"
             >
               {STRINGS.experimentTracker.analyzeMeeting}
             </Link>
