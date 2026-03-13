@@ -258,6 +258,9 @@ export const api = {
       body: JSON.stringify({ user_id: userId }),
     });
   },
+  getCoacheeProgress(coacheeId: string): Promise<ClientProgress> {
+    return request(`/api/coach/coachees/${coacheeId}/progress`);
+  },
 
   // Admin
   listAdminUsers(): Promise<AdminUser[]> {

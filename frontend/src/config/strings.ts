@@ -529,8 +529,31 @@ export const STRINGS = {
     coacheeCanAccept: 'The coachee can accept one of these from their dashboard when ready.',
     baselinePack: 'Baseline Pack',
     status: 'Status',
-    recentRuns: 'Recent Runs',
+    recentRuns: 'Recent Analyses',
     coacheeNotFound: 'Coachee not found.',
+    progressTitle: 'Pattern Trends',
+    noProgressYet: 'No pattern data yet. Analyses will populate trends here.',
+    pastExperiments: 'Past Experiments',
+    noPastExperiments: 'No completed or parked experiments yet.',
+    baselineNotStarted: 'Baseline not started.',
+    viewRunDetails: 'View details',
+    gateFailLabel: 'Quality check failed',
+    backToDashboard: '← Back to dashboard',
+    analyzeForCoachee: '✨ Run Analysis',
+    noRuns: 'No analyses yet.',
+  },
+
+  // ── Coach dashboard cards ─────────────────────────────────────────────────
+  coachCard: {
+    noBaseline: 'No baseline',
+    baselineBuilding: 'Baseline building',
+    baselineReady: 'Baseline ready',
+    experimenting: 'Experimenting',
+    noActivity: 'No activity yet',
+    lastAnalysis: (daysAgo: number) =>
+      daysAgo === 0 ? 'Today' : daysAgo === 1 ? '1 day ago' : `${daysAgo}d ago`,
+    noAnalyses: 'No analyses',
+    attempts: (n: number) => `${n} attempt${n !== 1 ? 's' : ''}`,
   },
 
   // ── Admin page ──────────────────────────────────────────────────────────────

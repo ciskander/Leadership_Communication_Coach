@@ -1,22 +1,35 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { api } from '@/lib/api';
 import { TranscriptUploadPanel } from '@/components/TranscriptUpload';
 import { SpeakerChips } from '@/components/SpeakerChips';
+import { RunStatusPoller } from '@/components/RunStatusPoller';
 import type { CoacheeListItem, TargetRole } from '@/lib/types';
 import { STRINGS } from '@/config/strings';
 
 const ROLE_OPTIONS = STRINGS.roleOptions;
 
-export default function CoachAnalyzePage() {
+export default function CoachAnalyzePageWrapper() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" /></div>}>
+      <CoachAnalyzePage />
+    </Suspense>
+  );
+}
+
+function CoachAnalyzePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const preselectedCoachee = searchParams.get('coachee');
+
   const [coachees, setCoachees] = useState<CoacheeListItem[]>([]);
   const [loadingCoachees, setLoadingCoachees] = useState(true);
 
   // Selected coachee
-  const [selectedCoacheeId, setSelectedCoacheeId] = useState<string | null>(null);
+  const [selectedCoacheeId, setSelectedCoacheeId] = useState<string | null>(preselectedCoachee);
 
   // Upload result
   const [transcriptId, setTranscriptId] = useState<string | null>(null);
@@ -29,6 +42,9 @@ export default function CoachAnalyzePage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Run result state — show inline instead of redirecting
+  const [runId, setRunId] = useState<string | null>(null);
 
   useEffect(() => {
     api.listCoachees().then(setCoachees).finally(() => setLoadingCoachees(false));
@@ -62,7 +78,7 @@ export default function CoachAnalyzePage() {
         target_role: role as TargetRole,
       });
       if (result.run_id) {
-        router.push(`/client/runs/${result.run_id}`);
+        setRunId(result.run_id);
       } else {
         pollRunRequest(result.run_request_id);
       }
@@ -79,7 +95,7 @@ export default function CoachAnalyzePage() {
       try {
         const status = await api.getRunRequest(rrId);
         if (status.run_id) {
-          router.push(`/client/runs/${status.run_id}`);
+          setRunId(status.run_id);
           return;
         }
         if (status.status === 'error') {
@@ -99,6 +115,51 @@ export default function CoachAnalyzePage() {
     };
     poll();
   };
+
+  // If we have a run ID, show the results inline
+  if (runId) {
+    const selectedCoachee = coachees.find((c) => c.id === selectedCoacheeId);
+    return (
+      <div className="max-w-3xl mx-auto space-y-6 py-2">
+        <div>
+          <Link
+            href={selectedCoacheeId ? `/coach/coachees/${selectedCoacheeId}` : '/coach'}
+            className="text-sm text-stone-500 hover:text-stone-700 transition-colors"
+          >
+            ← Back to {selectedCoachee?.display_name ?? 'coachee'}
+          </Link>
+          <h1 className="text-2xl font-bold text-stone-900 mt-2">
+            {STRINGS.common.meetingAnalysis}
+          </h1>
+          <p className="text-sm text-stone-500 mt-1">
+            {selectedCoachee?.display_name ?? selectedCoachee?.email}
+          </p>
+        </div>
+        <RunStatusPoller runId={runId} />
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              setRunId(null);
+              setTranscriptId(null);
+              setSpeakerLabels([]);
+              setSpeakerLabel(null);
+              setRole('');
+              setSubmitting(false);
+            }}
+            className="px-4 py-2 border border-stone-300 text-stone-600 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors"
+          >
+            Analyze another
+          </button>
+          <Link
+            href={`/coach/coachees/${selectedCoacheeId}`}
+            className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors"
+          >
+            Back to coachee
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-xl mx-auto space-y-6 py-2">

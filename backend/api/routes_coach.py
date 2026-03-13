@@ -3,6 +3,7 @@ api/routes_coach.py — Coach-facing endpoints.
 """
 from __future__ import annotations
 
+import json
 import logging
 from typing import Optional
 
@@ -16,6 +17,7 @@ from ..core.airtable_client import AirtableClient
 from .auth import list_coachees_for_coach
 from .dependencies import get_current_user
 from .dto import (
+    ClientProgressResponse,
     CoacheeListItem,
     CoacheeSummaryResponse,
     ExperimentResponse,
@@ -145,6 +147,7 @@ async def coachee_summary(
 
     active_bp: Optional[dict] = None
     active_exp_resp: Optional[ExperimentResponse] = None
+    proposed_experiments: list[ExperimentResponse] = []
     recent_runs: list[dict] = []
 
     if coachee.airtable_user_record_id:
@@ -166,16 +169,52 @@ async def coachee_summary(
             if ae_links:
                 exp_rec = at_client.get_experiment(ae_links[0])
                 ef = exp_rec.get("fields", {})
+                attempt_count = None
+                meeting_count = None
+                try:
+                    attempt_count, meeting_count = at_client.count_experiment_attempts_and_meetings(exp_rec["id"])
+                except Exception:
+                    pass
                 active_exp_resp = ExperimentResponse(
                     experiment_record_id=exp_rec["id"],
                     experiment_id=ef.get("Experiment ID", ""),
                     title=ef.get("Title", ""),
-                    instruction=ef.get("Instructions", ""),
-                    success_marker=ef.get("Success Marker", ""),
+                    instruction=ef.get("Instructions") or ef.get("Instruction", ""),
+                    success_marker=ef.get("Success Marker") or ef.get("Success Criteria", ""),
                     pattern_id=ef.get("Pattern ID", ""),
                     status=ef.get("Status", ""),
                     created_at=exp_rec.get("createdTime"),
+                    attempt_count=attempt_count,
+                    meeting_count=meeting_count,
+                    started_at=ef.get("Started At"),
+                    ended_at=ef.get("Ended At"),
                 )
+
+            # Proposed experiments
+            user_primary_id = uf.get("User ID", "")
+            if user_primary_id:
+                try:
+                    exp_formula = (
+                        f"AND("
+                        f"FIND('{user_primary_id}', ARRAYJOIN({{User}})), "
+                        f"{{Status}} = 'proposed'"
+                        f")"
+                    )
+                    prop_records = at_client.search_records("experiments", exp_formula, max_records=3)
+                    for pe in prop_records:
+                        pef = pe.get("fields", {})
+                        proposed_experiments.append(ExperimentResponse(
+                            experiment_record_id=pe["id"],
+                            experiment_id=pef.get("Experiment ID", ""),
+                            title=pef.get("Title", ""),
+                            instruction=pef.get("Instructions") or pef.get("Instruction", ""),
+                            success_marker=pef.get("Success Marker") or pef.get("Success Criteria", ""),
+                            pattern_id=pef.get("Pattern ID", ""),
+                            status=pef.get("Status", ""),
+                            created_at=pe.get("createdTime"),
+                        ))
+                except Exception:
+                    logger.warning("coachee_summary: could not fetch proposed experiments for %s", coachee_auth_id)
 
             run_formula = f"{{Coachee ID}} = '{coachee.airtable_user_record_id}'"
             run_records = at_client.search_records("runs", run_formula, max_records=10)
@@ -187,6 +226,7 @@ async def coachee_summary(
                     "gate1_pass": rf.get("Gate1 Pass"),
                     "focus_pattern": rf.get("Focus Pattern"),
                     "created_at": r.get("createdTime"),
+                    "meeting_type": rf.get("Meeting Type"),
                 })
         except Exception:
             pass
@@ -200,6 +240,7 @@ async def coachee_summary(
         ),
         active_baseline_pack=active_bp,
         active_experiment=active_exp_resp,
+        proposed_experiments=proposed_experiments,
         recent_runs=recent_runs,
     )
 
@@ -252,4 +293,146 @@ async def coach_analyze(
         run_request_id=rr_id,
         job_id=job.id,
         status="queued",
+    )
+
+
+@router.get("/api/coach/coachees/{coachee_auth_id}/progress", response_model=ClientProgressResponse)
+async def coachee_progress(
+    coachee_auth_id: str,
+    user: UserAuth = Depends(get_current_user),
+):
+    """Return pattern history and past experiments for a coach's coachee."""
+    _require_coach(user)
+
+    from .auth import get_user_by_id
+    coachee = get_user_by_id(coachee_auth_id)
+    if not coachee:
+        raise HTTPException(status_code=404, detail="Coachee not found.")
+    if user.role == "coach" and coachee.coach_id != user.id:
+        raise HTTPException(status_code=403, detail="This coachee is not under your coaching.")
+
+    at_client = AirtableClient()
+    pattern_history: list[dict] = []
+    past_experiments: list[dict] = []
+
+    if not coachee.airtable_user_record_id:
+        return ClientProgressResponse(pattern_history=[], past_experiments=[])
+
+    # ── Fetch eligible runs ───────────────────────────────────────────────
+    runs_formula = (
+        f"AND({{Coachee ID}} = '{coachee.airtable_user_record_id}', {{Gate1 Pass}} = TRUE())"
+    )
+    try:
+        run_records = at_client.search_records("runs", runs_formula, max_records=60)
+    except Exception as e:
+        logger.warning("coachee_progress: error fetching runs: %s", e)
+        run_records = []
+
+    for run_rec in run_records:
+        rf = run_rec.get("fields", {})
+        analysis_type = rf.get("Analysis Type", "")
+
+        if rf.get("baseline_pack_items"):
+            continue
+
+        is_baseline = analysis_type == "baseline_pack"
+
+        meeting_date: Optional[str] = None
+        transcript_links = rf.get("Transcript ID", [])
+        if transcript_links:
+            try:
+                tr_rec = at_client.get_transcript(transcript_links[0])
+                meeting_date = tr_rec.get("fields", {}).get("Meeting Date")
+            except Exception:
+                pass
+
+        patterns = []
+        parsed_json_str = rf.get("Parsed JSON") or "{}"
+        try:
+            parsed = json.loads(parsed_json_str)
+            snapshot = parsed.get("pattern_snapshot", [])
+            for p in snapshot:
+                pid = p.get("pattern_id", "")
+                if not pid:
+                    continue
+                ratio_val = p.get("ratio")
+                if ratio_val is None:
+                    continue
+                opp = p.get("opportunity_count") or p.get("denominator") or 0
+                patterns.append({
+                    "pattern_id": pid,
+                    "ratio": float(ratio_val),
+                    "opportunity_count": int(opp) if opp else 0,
+                })
+        except Exception:
+            pass
+
+        if not patterns:
+            continue
+
+        pattern_history.append({
+            "run_id": run_rec["id"],
+            "meeting_date": meeting_date,
+            "is_baseline": is_baseline,
+            "analysis_type": analysis_type,
+            "patterns": patterns,
+        })
+
+    pattern_history.sort(
+        key=lambda x: (x["meeting_date"] is None, x["meeting_date"] or "")
+    )
+
+    # ── Fetch past experiments ────────────────────────────────────────────
+    user_primary_id = ""
+    try:
+        user_rec = at_client.get_user(coachee.airtable_user_record_id)
+        user_primary_id = user_rec.get("fields", {}).get("User ID", "")
+    except Exception:
+        pass
+
+    if user_primary_id:
+        exp_formula = (
+            f"AND("
+            f"FIND('{user_primary_id}', ARRAYJOIN({{User}})), "
+            f"OR({{Status}} = 'completed', {{Status}} = 'abandoned', {{Status}} = 'parked')"
+            f")"
+        )
+        try:
+            exp_records = at_client.search_records("experiments", exp_formula, max_records=30)
+        except Exception:
+            exp_records = []
+
+        for exp_rec in exp_records:
+            ef = exp_rec.get("fields", {})
+            attempt_count, meeting_count = at_client.count_experiment_attempts_and_meetings(exp_rec["id"])
+            past_experiments.append({
+                "experiment_record_id": exp_rec["id"],
+                "experiment_id": ef.get("Experiment ID", ""),
+                "title": ef.get("Title", ""),
+                "pattern_id": ef.get("Pattern ID", ""),
+                "status": ef.get("Status", ""),
+                "started_at": ef.get("Started At"),
+                "ended_at": ef.get("Ended At"),
+                "attempt_count": attempt_count,
+                "meeting_count": meeting_count,
+            })
+
+        past_experiments.sort(key=lambda x: (x["ended_at"] or ""), reverse=True)
+
+    # ── Read trend window size ────────────────────────────────────────────
+    from ..core.airtable_client import F_CFG_TREND_WINDOW_SIZE
+    trend_window_size = 3
+    try:
+        active_cfg = at_client.get_active_config()
+        if active_cfg:
+            cfg_val = active_cfg.get("fields", {}).get(F_CFG_TREND_WINDOW_SIZE)
+            if cfg_val is not None:
+                trend_window_size = max(1, int(cfg_val))
+    except Exception:
+        pass
+
+    return ClientProgressResponse(
+        pattern_history=pattern_history,
+        past_experiments=past_experiments,
+        trend_window_size=trend_window_size,
     )

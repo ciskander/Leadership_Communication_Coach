@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import type { CoacheeListItem } from '@/lib/types';
+import type { CoacheeListItem, CoacheeSummary } from '@/lib/types';
 import { STRINGS } from '@/config/strings';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -218,24 +218,181 @@ function AddCoacheeModal({
   );
 }
 
+// ── Status helpers ────────────────────────────────────────────────────────────
+
+function getJourneyStage(summary: CoacheeSummary): {
+  label: string;
+  color: string;
+  dotColor: string;
+} {
+  const bp = summary.active_baseline_pack;
+  const exp = summary.active_experiment;
+
+  if (exp) {
+    return {
+      label: STRINGS.coachCard.experimenting,
+      color: 'bg-violet-50 text-violet-700',
+      dotColor: 'bg-violet-500',
+    };
+  }
+  if (bp) {
+    const status = (bp as Record<string, unknown>).status as string;
+    if (status === 'completed' || status === 'baseline_ready') {
+      return {
+        label: STRINGS.coachCard.baselineReady,
+        color: 'bg-emerald-50 text-emerald-700',
+        dotColor: 'bg-emerald-500',
+      };
+    }
+    return {
+      label: STRINGS.coachCard.baselineBuilding,
+      color: 'bg-amber-50 text-amber-700',
+      dotColor: 'bg-amber-500',
+    };
+  }
+  if (summary.recent_runs.length > 0) {
+    return {
+      label: STRINGS.coachCard.baselineReady,
+      color: 'bg-emerald-50 text-emerald-700',
+      dotColor: 'bg-emerald-500',
+    };
+  }
+  return {
+    label: STRINGS.coachCard.noActivity,
+    color: 'bg-stone-50 text-stone-500',
+    dotColor: 'bg-stone-400',
+  };
+}
+
+function getDaysAgo(dateStr: string | undefined): number | null {
+  if (!dateStr) return null;
+  try {
+    const d = new Date(dateStr);
+    const now = new Date();
+    return Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+  } catch {
+    return null;
+  }
+}
+
+// ── Coachee Card ──────────────────────────────────────────────────────────────
+
+function CoacheeCard({
+  coachee,
+  summary,
+  colorClass,
+}: {
+  coachee: CoacheeListItem;
+  summary: CoacheeSummary | null;
+  colorClass: string;
+}) {
+  const initials = (() => {
+    const name = coachee.display_name ?? coachee.email;
+    return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+  })();
+
+  const stage = summary ? getJourneyStage(summary) : null;
+
+  // Last analysis staleness
+  const lastRunDate = summary?.recent_runs?.[0]?.created_at as string | undefined;
+  const daysAgo = getDaysAgo(lastRunDate);
+  const stalenessColor =
+    daysAgo === null ? 'text-stone-400'
+    : daysAgo <= 7 ? 'text-emerald-600'
+    : daysAgo <= 21 ? 'text-amber-600'
+    : 'text-rose-500';
+
+  // Experiment info
+  const exp = summary?.active_experiment;
+
+  return (
+    <Link
+      href={`/coach/coachees/${coachee.id}`}
+      className="bg-white rounded-2xl border border-stone-200 p-5 hover:border-emerald-300 hover:shadow-md transition-all group space-y-3"
+    >
+      {/* Header: avatar + name */}
+      <div className="flex items-center gap-3">
+        <div
+          className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${colorClass}`}
+        >
+          {initials}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-stone-800 text-sm truncate">
+            {coachee.display_name ?? STRINGS.coachDashboard.unnamed}
+          </p>
+          <p className="text-xs text-stone-400 truncate">{coachee.email}</p>
+        </div>
+      </div>
+
+      {/* Status row */}
+      {stage && (
+        <div className="flex items-center justify-between">
+          <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${stage.color}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${stage.dotColor}`} />
+            {stage.label}
+          </span>
+          <span className={`text-xs ${stalenessColor}`}>
+            {daysAgo !== null
+              ? STRINGS.coachCard.lastAnalysis(daysAgo)
+              : STRINGS.coachCard.noAnalyses}
+          </span>
+        </div>
+      )}
+
+      {/* Experiment info */}
+      {exp && (
+        <div className="bg-violet-50 rounded-lg px-3 py-2">
+          <p className="text-xs font-medium text-violet-800 truncate">
+            {exp.title}
+          </p>
+          {exp.attempt_count != null && exp.attempt_count > 0 && (
+            <p className="text-xs text-violet-600 mt-0.5">
+              {STRINGS.coachCard.attempts(exp.attempt_count)}
+              {exp.meeting_count ? ` / ${exp.meeting_count} meetings` : ''}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-1 border-t border-stone-100">
+        <span className="text-xs text-stone-400">{STRINGS.coachDashboard.viewProfile}</span>
+        <span className="text-emerald-500 group-hover:translate-x-0.5 transition-transform">→</span>
+      </div>
+    </Link>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function CoachDashboard() {
   const [coachees, setCoachees] = useState<CoacheeListItem[]>([]);
+  const [summaries, setSummaries] = useState<Record<string, CoacheeSummary>>({});
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    api.listCoachees().then(setCoachees).finally(() => setLoading(false));
+    api.listCoachees().then((list) => {
+      setCoachees(list);
+      setLoading(false);
+      // Fetch summaries in parallel
+      list.forEach((c) => {
+        api.getCoacheeSummary(c.id).then((s) => {
+          setSummaries((prev) => ({ ...prev, [c.id]: s }));
+        }).catch(() => {
+          // Non-fatal — card just won't show status
+        });
+      });
+    }).catch(() => setLoading(false));
   }, []);
 
   const handleAdded = (c: CoacheeListItem) => {
     setCoachees((prev) => [...prev, c]);
-  };
-
-  const initials = (c: CoacheeListItem) => {
-    const name = c.display_name ?? c.email;
-    return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+    // Fetch summary for new coachee
+    api.getCoacheeSummary(c.id).then((s) => {
+      setSummaries((prev) => ({ ...prev, [c.id]: s }));
+    }).catch(() => {});
   };
 
   const colors = [
@@ -300,31 +457,12 @@ export default function CoachDashboard() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {coachees.map((c, i) => (
-            <Link
+            <CoacheeCard
               key={c.id}
-              href={`/coach/coachees/${c.id}`}
-              className="bg-white rounded-2xl border border-stone-200 p-5 hover:border-emerald-300 hover:shadow-md transition-all group space-y-4"
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                    colors[i % colors.length]
-                  }`}
-                >
-                  {initials(c)}
-                </div>
-                <div className="min-w-0">
-                  <p className="font-semibold text-stone-800 text-sm truncate">
-                    {c.display_name ?? STRINGS.coachDashboard.unnamed}
-                  </p>
-                  <p className="text-xs text-stone-400 truncate">{c.email}</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between pt-2 border-t border-stone-100">
-                <span className="text-xs text-stone-400">{STRINGS.coachDashboard.viewProfile}</span>
-                <span className="text-emerald-500 group-hover:translate-x-0.5 transition-transform">→</span>
-              </div>
-            </Link>
+              coachee={c}
+              summary={summaries[c.id] ?? null}
+              colorClass={colors[i % colors.length]}
+            />
           ))}
         </div>
       )}

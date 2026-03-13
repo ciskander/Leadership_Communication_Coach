@@ -199,12 +199,22 @@ async def get_run(
         return error_response("NOT_FOUND", f"Run {run_id} not found.", 404)
 
     # Ownership check: coachees can only see their own runs.
-    # Deny access if Coachee ID is blank — don't silently allow it.
+    # Coaches can only see runs belonging to their assigned coachees.
     fields = run_record.get("fields", {})
     coachee_id = fields.get("Coachee ID")
     if user.role == "coachee":
         if coachee_id != user.airtable_user_record_id:
             return error_response("FORBIDDEN", "You do not have access to this run.", 403)
+    elif user.role == "coach":
+        from .auth import get_conn
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT 1 FROM users_auth WHERE airtable_user_record_id = %s AND coach_id = %s LIMIT 1",
+                    (coachee_id, user.id),
+                )
+                if not cur.fetchone():
+                    return error_response("FORBIDDEN", "You do not have access to this run.", 403)
 
     return _build_run_response(run_record, at_client)
 
