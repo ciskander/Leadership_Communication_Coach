@@ -472,12 +472,12 @@ export default function BaselineDetailPage() {
           {/* Hint to check individual meeting sections */}
           {meetings.length > 0 && (
             <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex items-start gap-2.5">
-              <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" aria-hidden="true">
+              <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 text-[#1E3A5F] shrink-0 mt-0.5" aria-hidden="true">
                 <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth={1.4} />
                 <path d="M8 7v4.5" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" />
                 <circle cx="8" cy="4.5" r="0.75" fill="currentColor" />
               </svg>
-              <p className="text-sm text-blue-800 leading-relaxed">
+              <p className="text-sm text-[#1E3A5F] leading-relaxed">
                 {STRINGS.baselineDetail.aggregateCoachingNote}
               </p>
             </div>
