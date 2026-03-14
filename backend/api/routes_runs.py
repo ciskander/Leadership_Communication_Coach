@@ -51,12 +51,15 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
     bp_links = fields.get("baseline_pack", [])
     baseline_pack_id = bp_links[0] if isinstance(bp_links, list) and bp_links else None
 
+    target_speaker_label: Optional[str] = fields.get("Target Speaker Label")
+
     resp = RunStatusResponse(
         run_id=run_id,
         status=status,
         gate1_pass=gate1_pass,
         analysis_type=analysis_type,
         baseline_pack_id=baseline_pack_id,
+        target_speaker_label=target_speaker_label,
     )
 
     if not parsed_json_str:

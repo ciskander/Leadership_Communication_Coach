@@ -28,7 +28,7 @@ function PatternLabel({ id, className = 'text-cv-teal-600' }: { id: string; clas
  */
 function SuggestedRewrite({ text }: { text: string }) {
   return (
-    <blockquote className="border-l-[3px] border-cv-teal-400 pl-4 pr-3 py-2.5 bg-cv-teal-50 rounded-r-lg my-2">
+    <blockquote className="border-l-[3px] border-cv-teal-700 pl-4 pr-3 py-2.5 bg-cv-teal-50 rounded-r-lg my-2">
       <p className="text-sm text-cv-stone-700 italic leading-relaxed">
         &ldquo;{text}&rdquo;
       </p>
@@ -52,15 +52,16 @@ interface CoachingCardProps {
   strengths: CoachingItem[];
   focus: CoachingItem | null;
   microExperiment: MicroExperiment | null;
+  targetSpeaker?: string | null;
 }
 
-export function CoachingCard({ strengths, focus, microExperiment }: CoachingCardProps) {
+export function CoachingCard({ strengths, focus, microExperiment, targetSpeaker }: CoachingCardProps) {
   return (
     <div className="space-y-4">
 
       {/* ── Strengths ────────────────────────────────────────────────────── */}
       {strengths.length > 0 && (
-        <section className="bg-white rounded-2xl border border-cv-warm-200 overflow-hidden">
+        <section className="bg-white rounded-2xl border border-cv-teal-800 overflow-hidden">
           {/* Header */}
           <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-100 bg-cv-teal-800">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-teal-50 shrink-0" aria-hidden="true">
@@ -76,7 +77,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
                 <PatternLabel id={s.pattern_id} />
                 <p className="text-sm text-cv-stone-700 leading-relaxed">{s.message}</p>
                 {(s.quotes ?? []).map((q, i) => (
-                  <EvidenceQuote key={i} quote={q} />
+                  <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />
                 ))}
               </div>
             ))}
@@ -86,7 +87,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
 
       {/* ── Focus ────────────────────────────────────────────────────────── */}
       {focus && (
-        <section className="bg-white rounded-2xl border border-cv-warm-200 overflow-hidden">
+        <section className="bg-white rounded-2xl border border-cv-amber-800 overflow-hidden">
           {/* Header */}
           <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-100 bg-cv-amber-800">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-amber-50 shrink-0" aria-hidden="true">
@@ -106,7 +107,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
                 <div>
                   <SectionLabel text={STRINGS.common.forExampleYouSaid} />
                   {focus.quotes.map((q, i) => (
-                    <EvidenceQuote key={i} quote={q} />
+                    <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />
                   ))}
                 </div>
 
@@ -121,7 +122,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
                   <div>
                     <SectionLabel text={STRINGS.common.otherMoments} />
                     {focus.additional_quotes!.map((q, i) => (
-                      <EvidenceQuote key={i} quote={q} />
+                      <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />
                     ))}
                   </div>
                 )}
@@ -170,7 +171,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
 
             {/* Evidence quotes */}
             {(microExperiment.quotes ?? []).map((q, i) => (
-              <EvidenceQuote key={i} quote={q} />
+              <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />
             ))}
           </div>
         </section>

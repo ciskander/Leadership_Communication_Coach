@@ -99,7 +99,7 @@ function SectionLabel({ text }: { text: string }) {
 
 function SuggestedRewrite({ text }: { text: string }) {
   return (
-    <blockquote className="border-l-[3px] border-cv-teal-400 pl-4 pr-3 py-2.5 bg-cv-teal-50 rounded-r-lg my-2">
+    <blockquote className="border-l-[3px] border-cv-teal-700 pl-4 pr-3 py-2.5 bg-cv-teal-50 rounded-r-lg my-2">
       <p className="text-sm text-cv-stone-700 italic leading-relaxed">
         &ldquo;{text}&rdquo;
       </p>
@@ -169,7 +169,7 @@ function Chevron({ open }: { open: boolean }) {
 
 // ─── Individual pattern card ──────────────────────────────────────────────────
 
-function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
+function PatternCard({ pattern, targetSpeaker }: { pattern: PatternSnapshotItem; targetSpeaker: string | null }) {
   const [expanded, setExpanded] = useState(false);
 
   const quotes                  = pattern.quotes ?? [];
@@ -265,7 +265,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
               {hasNotes && (
                 <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{pattern.notes}</p>
               )}
-              {quotes.map((q, i) => <EvidenceQuote key={i} quote={q} />)}
+              {quotes.map((q, i) => <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />)}
             </div>
           )}
 
@@ -278,7 +278,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                   {hasNotes && (
                     <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{pattern.notes}</p>
                   )}
-                  {successQuotes.map((q, i) => <EvidenceQuote key={i} quote={q} />)}
+                  {successQuotes.map((q, i) => <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />)}
                 </div>
               )}
               <div>
@@ -289,7 +289,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                 {improvementQuotes.length > 0 && (
                   <div>
                     <SectionLabel text={STRINGS.common.forExampleYouSaid} />
-                    <EvidenceQuote quote={improvementQuotes[0]} />
+                    <EvidenceQuote quote={improvementQuotes[0]} targetSpeaker={targetSpeaker} />
                   </div>
                 )}
                 {pattern.suggested_rewrite && (
@@ -301,7 +301,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                 {improvementQuotes.length > 1 && (
                   <div className="mt-2">
                     <SectionLabel text={STRINGS.common.otherMoments} />
-                    {improvementQuotes.slice(1).map((q, i) => <EvidenceQuote key={i} quote={q} />)}
+                    {improvementQuotes.slice(1).map((q, i) => <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />)}
                   </div>
                 )}
               </div>
@@ -325,7 +325,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                 {hasQuotes && (
                   <div>
                     <SectionLabel text={STRINGS.common.forExampleYouSaid} />
-                    <EvidenceQuote quote={quotes[0]} />
+                    <EvidenceQuote quote={quotes[0]} targetSpeaker={targetSpeaker} />
                   </div>
                 )}
                 {pattern.suggested_rewrite && (
@@ -337,7 +337,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
                 {quotes.length > 1 && (
                   <div className="mt-2">
                     <SectionLabel text={STRINGS.common.otherMoments} />
-                    {quotes.slice(1).map((q, i) => <EvidenceQuote key={i} quote={q} />)}
+                    {quotes.slice(1).map((q, i) => <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />)}
                   </div>
                 )}
               </div>
@@ -370,7 +370,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
               {hasQuotes && (
                 <div>
                   <SectionLabel text={STRINGS.common.forExampleYouSaid} />
-                  <EvidenceQuote quote={quotes[0]} />
+                  <EvidenceQuote quote={quotes[0]} targetSpeaker={targetSpeaker} />
                 </div>
               )}
               {pattern.suggested_rewrite && (
@@ -382,7 +382,7 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
               {quotes.length > 1 && (
                 <div className="mt-2">
                   <SectionLabel text={STRINGS.common.otherMoments} />
-                  {quotes.slice(1).map((q, i) => <EvidenceQuote key={i} quote={q} />)}
+                  {quotes.slice(1).map((q, i) => <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />)}
                 </div>
               )}
             </div>
@@ -398,13 +398,14 @@ function PatternCard({ pattern }: { pattern: PatternSnapshotItem }) {
 
 interface PatternSnapshotProps {
   patterns: PatternSnapshotItem[];
+  targetSpeaker?: string | null;
 }
 
-export function PatternSnapshot({ patterns }: PatternSnapshotProps) {
+export function PatternSnapshot({ patterns, targetSpeaker }: PatternSnapshotProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {patterns.map((p) => (
-        <PatternCard key={p.pattern_id} pattern={p} />
+        <PatternCard key={p.pattern_id} pattern={p} targetSpeaker={targetSpeaker ?? null} />
       ))}
     </div>
   );

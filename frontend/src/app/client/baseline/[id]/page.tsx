@@ -225,14 +225,14 @@ function ExperimentSection() {
 
 // ─── Sub-run Pattern Snapshot ─────────────────────────────────────────────────
 
-function SubRunPatternSnapshot({ patterns }: { patterns: Record<string, unknown>[] }) {
+function SubRunPatternSnapshot({ patterns, targetSpeaker }: { patterns: Record<string, unknown>[]; targetSpeaker?: string | null }) {
   return (
     <div className="mt-1">
       <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-3">
         {STRINGS.baselineDetail.patternScores}
       </p>
       <div className="opacity-90">
-        <PatternSnapshot patterns={patterns as unknown as PatternSnapshotItem[]} />
+        <PatternSnapshot patterns={patterns as unknown as PatternSnapshotItem[]} targetSpeaker={targetSpeaker} />
       </div>
     </div>
   );
@@ -308,12 +308,13 @@ function MeetingAccordionCard({
                     strengths={(meeting.sub_run_strengths ?? []) as CoachingItem[]}
                     focus={(meeting.sub_run_focus ?? null) as CoachingItem | null}
                     microExperiment={null}
+                    targetSpeaker={pack?.target_speaker_label}
                   />
                 </div>
               )}
               {meeting.sub_run_pattern_snapshot &&
                 meeting.sub_run_pattern_snapshot.length > 0 && (
-                  <SubRunPatternSnapshot patterns={meeting.sub_run_pattern_snapshot} />
+                  <SubRunPatternSnapshot patterns={meeting.sub_run_pattern_snapshot} targetSpeaker={pack?.target_speaker_label} />
                 )}
             </>
           ) : (
@@ -467,6 +468,7 @@ export default function BaselineDetailPage() {
             strengths={pack.strengths ?? []}
             focus={pack.focus ?? null}
             microExperiment={null}
+            targetSpeaker={pack.target_speaker_label}
           />
 
           {/* Hint to check individual meeting sections */}
@@ -493,7 +495,7 @@ export default function BaselineDetailPage() {
                 {STRINGS.baselineDetail.yourBaseline}
               </p>
               {/* NOTE: PatternSnapshot needs its own design pass — see implementation notes */}
-              <PatternSnapshot patterns={pack.pattern_snapshot as unknown as PatternSnapshotItem[]} />
+              <PatternSnapshot patterns={pack.pattern_snapshot as unknown as PatternSnapshotItem[]} targetSpeaker={pack.target_speaker_label} />
             </section>
           )}
 
