@@ -128,7 +128,7 @@ export default function WelcomePage() {
       <div className="flex items-center gap-5 pt-10">
         <button
           onClick={handleGetStarted}
-          className="bg-cv-teal-600 text-cv-teal-50 px-9 py-3.5 rounded-lg text-sm font-medium tracking-wide hover:bg-cv-teal-800 transition-colors"
+          className="bg-cv-teal-600 text-cv-teal-50 px-9 py-3.5 rounded text-sm font-medium tracking-wide hover:bg-cv-teal-800 transition-colors"
         >
           {S.getStarted}
         </button>

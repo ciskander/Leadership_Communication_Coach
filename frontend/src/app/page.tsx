@@ -27,7 +27,7 @@ export default function RootPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-cv-warm-100">
-      <div className="bg-white rounded-2xl border border-cv-warm-200 shadow-sm p-10 max-w-sm w-full text-center space-y-7">
+      <div className="bg-white rounded border border-cv-warm-200 shadow-sm p-10 max-w-sm w-full text-center space-y-7">
 
         {/* Logo */}
         <div className="flex justify-center">
@@ -50,7 +50,7 @@ export default function RootPage() {
         {/* Google sign-in */}
         <a
           href={getGoogleLoginUrl('/client')}
-          className="inline-flex items-center justify-center gap-3 w-full border border-cv-warm-300 rounded-xl px-5 py-3 text-sm font-medium text-cv-stone-700 hover:bg-cv-warm-50 transition-colors"
+          className="inline-flex items-center justify-center gap-3 w-full border border-cv-warm-300 rounded px-5 py-3 text-sm font-medium text-cv-stone-700 hover:bg-cv-warm-50 transition-colors"
         >
           {/* Google logo — unchanged, brand-required colours */}
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 48 48" aria-hidden="true">

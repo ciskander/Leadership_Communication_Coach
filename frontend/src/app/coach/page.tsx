@@ -102,7 +102,7 @@ function CoacheeCard({
   return (
     <Link
       href={`/coach/coachees/${coachee.id}`}
-      className="bg-white rounded-2xl border border-cv-warm-200 p-5 hover:border-cv-teal-300 hover:shadow-sm transition-all group space-y-3"
+      className="bg-white rounded border border-cv-warm-200 p-5 hover:border-cv-teal-300 hover:shadow-sm transition-all group space-y-3"
     >
       {/* Avatar + name */}
       <div className="flex items-center gap-3">
@@ -134,7 +134,7 @@ function CoacheeCard({
 
       {/* Active experiment */}
       {exp && (
-        <div className="bg-cv-warm-100 rounded-lg px-3 py-2">
+        <div className="bg-cv-warm-100 rounded px-3 py-2">
           <p className="text-xs font-medium text-cv-stone-700 truncate">{exp.title}</p>
           {exp.attempt_count != null && exp.attempt_count > 0 && (
             <p className="text-xs text-cv-stone-500 mt-0.5">
@@ -234,11 +234,11 @@ function AddCoacheeModal({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const inputCls = 'w-full border border-cv-warm-300 rounded-xl px-4 py-2.5 text-sm text-cv-stone-800 bg-white focus:outline-none focus:border-cv-teal-400 focus:ring-1 focus:ring-cv-teal-400/30 transition-colors placeholder:text-cv-stone-400';
+  const inputCls = 'w-full border border-cv-warm-300 rounded px-4 py-2.5 text-sm text-cv-stone-800 bg-white focus:outline-none focus:border-cv-teal-400 focus:ring-1 focus:ring-cv-teal-400/30 transition-colors placeholder:text-cv-stone-400';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+      <div className="bg-white rounded shadow-xl w-full max-w-md mx-4 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-cv-warm-200">
           <h2 className="font-semibold text-cv-stone-800">{STRINGS.coachDashboard.addCoacheeModalTitle}</h2>
@@ -296,7 +296,7 @@ function AddCoacheeModal({
                   {results.map((r) => (
                     <li
                       key={r.id}
-                      className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-cv-warm-200 hover:border-cv-warm-300 transition-colors"
+                      className="flex items-center justify-between px-3 py-2.5 rounded border border-cv-warm-200 hover:border-cv-warm-300 transition-colors"
                     >
                       <div>
                         <p className="text-sm font-medium text-cv-stone-800">
@@ -307,7 +307,7 @@ function AddCoacheeModal({
                       <button
                         onClick={() => handleAssign(r.id)}
                         disabled={assigning === r.id}
-                        className="text-xs px-3 py-1.5 bg-cv-teal-600 text-white rounded-lg font-medium hover:bg-cv-teal-700 disabled:opacity-50 transition-colors"
+                        className="text-xs px-3 py-1.5 bg-cv-teal-600 text-white rounded font-medium hover:bg-cv-teal-700 disabled:opacity-50 transition-colors"
                       >
                         {assigning === r.id ? '…' : STRINGS.coachDashboard.add}
                       </button>
@@ -331,7 +331,7 @@ function AddCoacheeModal({
                 <button
                   onClick={handleInvite}
                   disabled={inviting}
-                  className="w-full py-2.5 bg-cv-teal-600 text-white rounded-xl text-sm font-medium hover:bg-cv-teal-700 disabled:opacity-50 transition-colors"
+                  className="w-full py-2.5 bg-cv-teal-600 text-white rounded text-sm font-medium hover:bg-cv-teal-700 disabled:opacity-50 transition-colors"
                 >
                   {inviting ? (
                     <span className="flex items-center justify-center gap-2">
@@ -342,19 +342,19 @@ function AddCoacheeModal({
                 </button>
               ) : (
                 <div className="space-y-3">
-                  <div className="bg-cv-warm-50 border border-cv-warm-200 rounded-xl p-3">
+                  <div className="bg-cv-warm-50 border border-cv-warm-200 rounded p-3">
                     <p className="text-xs font-mono text-cv-stone-600 break-all">{inviteUrl}</p>
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={handleCopy}
-                      className="flex-1 py-2 bg-cv-teal-600 text-white rounded-xl text-sm font-medium hover:bg-cv-teal-700 transition-colors"
+                      className="flex-1 py-2 bg-cv-teal-600 text-white rounded text-sm font-medium hover:bg-cv-teal-700 transition-colors"
                     >
                       {copied ? STRINGS.coachDashboard.copied : STRINGS.coachDashboard.copyLink}
                     </button>
                     <button
                       onClick={() => setInviteUrl(null)}
-                      className="px-4 py-2 border border-cv-warm-300 text-cv-stone-600 rounded-xl text-sm font-medium hover:bg-cv-warm-50 transition-colors"
+                      className="px-4 py-2 border border-cv-warm-300 text-cv-stone-600 rounded text-sm font-medium hover:bg-cv-warm-50 transition-colors"
                     >
                       {STRINGS.coachDashboard.new}
                     </button>
@@ -424,7 +424,7 @@ export default function CoachDashboard() {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-cv-teal-600 text-white rounded-xl text-sm font-medium hover:bg-cv-teal-700 transition-colors shadow-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-cv-teal-600 text-white rounded text-sm font-medium hover:bg-cv-teal-700 transition-colors shadow-sm"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4" aria-hidden="true">
             <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
@@ -435,7 +435,7 @@ export default function CoachDashboard() {
 
       {/* Grid / empty state */}
       {coachees.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-dashed border-cv-warm-300 p-12 text-center space-y-3">
+        <div className="bg-white rounded border border-dashed border-cv-warm-300 p-12 text-center space-y-3">
           <div className="flex justify-center">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 text-cv-stone-300" aria-hidden="true">
               <path d="M17 20C17 18 14.76 16 12 16C9.24 16 7 18 7 20M12 13C13.66 13 15 11.66 15 10C15 8.34 13.66 7 12 7C10.34 7 9 8.34 9 10C9 11.66 10.34 13 12 13Z" />
@@ -446,7 +446,7 @@ export default function CoachDashboard() {
           <p className="text-sm text-cv-stone-400">{STRINGS.coachDashboard.noCoacheesDesc}</p>
           <button
             onClick={() => setShowModal(true)}
-            className="mt-2 px-4 py-2 bg-cv-teal-600 text-white rounded-xl text-sm font-medium hover:bg-cv-teal-700 transition-colors"
+            className="mt-2 px-4 py-2 bg-cv-teal-600 text-white rounded text-sm font-medium hover:bg-cv-teal-700 transition-colors"
           >
             {STRINGS.coachDashboard.addCoachee}
           </button>

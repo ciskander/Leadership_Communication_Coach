@@ -99,7 +99,7 @@ function SectionLabel({ text }: { text: string }) {
 
 function SuggestedRewrite({ text }: { text: string }) {
   return (
-    <blockquote className="border-l-[3px] border-cv-teal-700 pl-4 pr-3 py-2.5 bg-cv-teal-50 rounded-r-lg my-2">
+    <blockquote className="border-l-[3px] border-cv-teal-700 pl-4 pr-3 py-2.5 bg-cv-teal-50 rounded-r my-2">
       <p className="text-sm text-cv-stone-700 italic leading-relaxed">
         &ldquo;{text}&rdquo;
       </p>
@@ -208,7 +208,7 @@ function PatternCard({ pattern, targetSpeaker }: { pattern: PatternSnapshotItem;
     : (isPerfectScore ? [] : quotes);
 
   return (
-    <div className="bg-white border border-cv-warm-200 rounded-xl overflow-hidden">
+    <div className="bg-white border border-cv-warm-200 rounded overflow-hidden">
       {/* ── Card header row ── */}
       <button
         type="button"

@@ -132,7 +132,7 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={[
-                'flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-all duration-150',
+                'flex items-center gap-2.5 px-3 py-2.5 rounded text-sm transition-all duration-150',
                 active
                   ? 'bg-cv-teal-600 text-white shadow-sm'
                   : 'text-cv-stone-500 hover:bg-cv-warm-100 hover:text-cv-stone-800',

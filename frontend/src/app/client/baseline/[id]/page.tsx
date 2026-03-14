@@ -47,7 +47,7 @@ function PatternLabel({ id }: { id: string }) {
 
 function AcceptedExperimentPanel({ experiment }: { experiment: Experiment }) {
   return (
-    <div className="bg-cv-teal-50 border border-cv-teal-100 rounded-xl p-5 space-y-4">
+    <div className="bg-cv-teal-50 border border-cv-teal-100 rounded p-5 space-y-4">
       <div className="flex items-center gap-2">
         <div className="w-1.5 h-4 rounded-full bg-cv-teal-400 flex-shrink-0" />
         <span className="text-sm font-medium text-cv-teal-800">
@@ -61,7 +61,7 @@ function AcceptedExperimentPanel({ experiment }: { experiment: Experiment }) {
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div className="bg-white rounded-lg p-3 border border-cv-teal-100">
+        <div className="bg-white rounded p-3 border border-cv-teal-100">
           <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
             {STRINGS.common.whatToDo}
           </p>
@@ -69,7 +69,7 @@ function AcceptedExperimentPanel({ experiment }: { experiment: Experiment }) {
             {experiment.instruction}
           </p>
         </div>
-        <div className="bg-white rounded-lg p-3 border border-cv-teal-100">
+        <div className="bg-white rounded p-3 border border-cv-teal-100">
           <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
             {STRINGS.common.successLooksLike}
           </p>
@@ -114,7 +114,7 @@ function ProposedExperimentCard({
   }
 
   return (
-    <div className="bg-white rounded-xl border border-cv-warm-200 p-5 space-y-4">
+    <div className="bg-white rounded border border-cv-warm-200 p-5 space-y-4">
       <div className="space-y-1">
         <PatternLabel id={experiment.pattern_id} />
         <p className="text-sm font-medium text-cv-stone-900 leading-snug mt-1">
@@ -122,7 +122,7 @@ function ProposedExperimentCard({
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div className="bg-cv-warm-100 rounded-lg p-3">
+        <div className="bg-cv-warm-100 rounded p-3">
           <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
             {STRINGS.common.whatToDo}
           </p>
@@ -130,7 +130,7 @@ function ProposedExperimentCard({
             {experiment.instruction}
           </p>
         </div>
-        <div className="bg-cv-warm-100 rounded-lg p-3">
+        <div className="bg-cv-warm-100 rounded p-3">
           <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
             {STRINGS.common.successLooksLike}
           </p>
@@ -146,7 +146,7 @@ function ProposedExperimentCard({
         <button
           onClick={handleAccept}
           disabled={state === 'loading'}
-          className="px-4 py-2 bg-cv-teal-600 text-cv-teal-50 rounded-lg text-xs font-medium hover:bg-cv-teal-800 transition-colors disabled:opacity-50"
+          className="px-4 py-2 bg-cv-teal-600 text-cv-teal-50 rounded text-xs font-medium hover:bg-cv-teal-800 transition-colors disabled:opacity-50"
         >
           {state === 'loading' ? STRINGS.common.accepting : STRINGS.common.acceptExperiment}
         </button>
@@ -245,11 +245,13 @@ function MeetingAccordionCard({
   index,
   open,
   onToggle,
+  targetSpeaker,
 }: {
   meeting: BaselinePackMeeting;
   index: number;
   open: boolean;
   onToggle: () => void;
+  targetSpeaker?: string | null;
 }) {
   const title = meeting.title || 'Untitled meeting';
   const date = fmtDate(meeting.meeting_date);
@@ -265,7 +267,7 @@ function MeetingAccordionCard({
   );
 
   return (
-    <div className={`bg-white border rounded-xl overflow-hidden transition-colors ${
+    <div className={`bg-white border rounded overflow-hidden transition-colors ${
       open ? 'border-cv-stone-100' : 'border-cv-warm-200'
     }`}>
       {/* Header */}
@@ -308,13 +310,13 @@ function MeetingAccordionCard({
                     strengths={(meeting.sub_run_strengths ?? []) as CoachingItem[]}
                     focus={(meeting.sub_run_focus ?? null) as CoachingItem | null}
                     microExperiment={null}
-                    targetSpeaker={pack?.target_speaker_label}
+                    targetSpeaker={targetSpeaker}
                   />
                 </div>
               )}
               {meeting.sub_run_pattern_snapshot &&
                 meeting.sub_run_pattern_snapshot.length > 0 && (
-                  <SubRunPatternSnapshot patterns={meeting.sub_run_pattern_snapshot} targetSpeaker={pack?.target_speaker_label} />
+                  <SubRunPatternSnapshot patterns={meeting.sub_run_pattern_snapshot} targetSpeaker={targetSpeaker} />
                 )}
             </>
           ) : (
@@ -402,7 +404,7 @@ export default function BaselineDetailPage() {
 
       {/* ── Building state ─────────────────────────────────────────────────── */}
       {isBuilding && !timedOut && (
-        <div className="bg-white rounded-xl border border-cv-warm-200 p-10 text-center space-y-5">
+        <div className="bg-white rounded border border-cv-warm-200 p-10 text-center space-y-5">
           <div className="relative mx-auto w-12 h-12">
             <div className="w-12 h-12 rounded-full border-2 border-cv-stone-100" />
             <div className="absolute inset-0 w-12 h-12 rounded-full border-2 border-cv-teal-600 border-t-transparent animate-spin" />
@@ -420,7 +422,7 @@ export default function BaselineDetailPage() {
 
       {/* ── Error state ────────────────────────────────────────────────────── */}
       {isError && (
-        <div className="bg-white rounded-xl border border-cv-red-100 p-6 space-y-4">
+        <div className="bg-white rounded border border-cv-red-100 p-6 space-y-4">
           <p className="text-sm font-medium text-cv-red-600">
             {timedOut ? STRINGS.baselineDetail.timeoutTitle : STRINGS.baselineDetail.errorTitle}
           </p>
@@ -431,14 +433,14 @@ export default function BaselineDetailPage() {
             {timedOut && (
               <button
                 onClick={() => { setTimedOut(false); fetchPack(); }}
-                className="text-sm px-4 py-2 bg-cv-warm-100 text-cv-stone-600 rounded-lg font-medium hover:bg-cv-warm-200 transition-colors"
+                className="text-sm px-4 py-2 bg-cv-warm-100 text-cv-stone-600 rounded font-medium hover:bg-cv-warm-200 transition-colors"
               >
                 {STRINGS.runStatusPoller.checkAgain}
               </button>
             )}
             <Link
               href="/client/baseline/new"
-              className="text-sm px-4 py-2 bg-cv-teal-600 text-cv-teal-50 rounded-lg font-medium hover:bg-cv-teal-800 transition-colors"
+              className="text-sm px-4 py-2 bg-cv-teal-600 text-cv-teal-50 rounded font-medium hover:bg-cv-teal-800 transition-colors"
             >
               {STRINGS.baselineDetail.tryAgain}
             </Link>
@@ -450,7 +452,7 @@ export default function BaselineDetailPage() {
       {isReady && (
         <>
           {/* Success banner */}
-          <div className="bg-cv-teal-50 border border-cv-teal-100 rounded-xl px-5 py-4 flex items-center gap-3">
+          <div className="bg-cv-teal-50 border border-cv-teal-100 rounded px-5 py-4 flex items-center gap-3">
             <div className="w-1.5 h-8 rounded-full bg-cv-teal-400 flex-shrink-0" />
             <div>
               <p className="text-sm font-medium text-cv-teal-800">
@@ -473,7 +475,7 @@ export default function BaselineDetailPage() {
 
           {/* Hint to check individual meeting sections */}
           {meetings.length > 0 && (
-            <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex items-start gap-2.5">
+            <div className="bg-blue-50 border border-blue-100 rounded px-4 py-3 flex items-start gap-2.5">
               <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 text-[#1E3A5F] shrink-0 mt-0.5" aria-hidden="true">
                 <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth={1.4} />
                 <path d="M8 7v4.5" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" />
@@ -513,6 +515,7 @@ export default function BaselineDetailPage() {
                     index={i}
                     open={openMeeting === i}
                     onToggle={() => setOpenMeeting(openMeeting === i ? null : i)}
+                    targetSpeaker={pack.target_speaker_label}
                   />
                 ))}
               </div>
@@ -523,7 +526,7 @@ export default function BaselineDetailPage() {
           <div className="pb-4">
             <Link
               href="/client/analyze"
-              className="inline-flex items-center gap-2 px-5 py-3 bg-[#1E3A5F] text-white rounded-lg text-sm font-medium hover:bg-[#162D4A] transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-3 bg-[#1E3A5F] text-white rounded text-sm font-medium hover:bg-[#162D4A] transition-colors"
             >
               <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M9 3L10.5 7.5L15 9L10.5 10.5L9 15L7.5 10.5L3 9L7.5 7.5L9 3Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/><path d="M19 13L19.75 15.25L22 16L19.75 16.75L19 19L18.25 16.75L16 16L18.25 15.25L19 13Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/></svg>
               {STRINGS.experimentTracker.analyzeMeeting}
