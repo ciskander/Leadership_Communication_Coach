@@ -420,8 +420,10 @@ export default function ClientDashboard() {
         <div className="bg-white rounded-2xl border border-cv-warm-200 p-5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-teal-600 shrink-0" aria-hidden="true">
-                <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-cv-teal-600 shrink-0" aria-hidden="true">
+                <path d="M12 2L3 7L12 12L21 7L12 2Z" />
+                <path d="M3 12L12 17L21 12" />
+                <path d="M3 17L12 22L21 17" />
               </svg>
               <h2 className="font-semibold text-cv-stone-800 text-sm">{STRINGS.clientDashboard.baselinePackTitle}</h2>
             </div>
@@ -439,8 +441,10 @@ export default function ClientDashboard() {
 
         <div className="bg-white rounded-2xl border border-cv-warm-200 p-5 space-y-3">
           <div className="flex items-center gap-2">
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-teal-600 shrink-0" aria-hidden="true">
-              <path fillRule="evenodd" d="M8.5 3.528v4.644c0 .414-.2.806-.525 1.055L5.322 11.02C4.048 11.97 4.696 14 6.286 14l7.428.002c1.59 0 2.238-2.032.964-2.981l-2.653-1.792a1.25 1.25 0 01-.525-1.055V3.528a.75.75 0 00-.75-.75h-1.5a.75.75 0 00-.75.75z" clipRule="evenodd" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-cv-teal-600 shrink-0" aria-hidden="true">
+              <path d="M9 3H15" />
+              <path d="M9 3V9L4 18H20L15 9V3" />
+              <path d="M7.5 14H16.5" />
             </svg>
             <h2 className="font-semibold text-cv-stone-800 text-sm">{STRINGS.clientDashboard.activeExperimentTitle}</h2>
           </div>
