@@ -19,15 +19,15 @@
   }
 
   body {
-    /* Apply DM Sans as the base UI font */
-    font-family: var(--font-sans, 'DM Sans', ui-sans-serif, system-ui, sans-serif);
+    /* Apply Montserrat as the base UI font */
+    font-family: var(--font-sans, 'Montserrat', ui-sans-serif, system-ui, sans-serif);
     background-color: theme('colors.cv.warm.50');
     color: theme('colors.cv.stone.900');
   }
 
   /* Headings default to the serif stack for editorial weight */
   h1, h2, h3 {
-    font-family: var(--font-serif, 'DM Serif Display', ui-serif, Georgia, serif);
+    font-family: var(--font-serif, 'Lora', ui-serif, Georgia, serif);
   }
 
   /* Inherit font in form controls (Tailwind base resets these to system fonts) */
