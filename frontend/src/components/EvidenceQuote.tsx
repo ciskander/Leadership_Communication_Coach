@@ -31,8 +31,8 @@ export function EvidenceQuote({ quote, targetSpeaker }: EvidenceQuoteProps) {
     quote.speaker_label !== targetSpeaker;
 
   const blockStyles = isOtherSpeaker
-    ? 'border-l-[3px] border-cv-stone-300 pl-4 pr-3 py-2.5 my-2 bg-cv-warm-100 rounded-r-lg'
-    : 'border-l-[3px] border-[#1E3A5F] pl-4 pr-3 py-2.5 my-2 bg-blue-50 rounded-r-lg';
+    ? 'border-l-[3px] border-cv-stone-300 pl-4 pr-3 py-2.5 my-2 bg-cv-warm-100 rounded-r'
+    : 'border-l-[3px] border-[#1E3A5F] pl-4 pr-3 py-2.5 my-2 bg-blue-50 rounded-r';
 
   return (
     <blockquote className={blockStyles}>

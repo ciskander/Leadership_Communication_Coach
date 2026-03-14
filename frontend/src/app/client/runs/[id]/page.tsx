@@ -36,7 +36,7 @@ function ConfirmDeleteModal({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
+      <div className="bg-white rounded shadow-xl max-w-sm w-full p-6 space-y-4">
         <div className="flex items-start gap-3">
           {/* Warning icon */}
           <div className="w-9 h-9 rounded-full bg-cv-red-50 flex items-center justify-center shrink-0">
@@ -56,14 +56,14 @@ function ConfirmDeleteModal({
           <button
             onClick={onCancel}
             disabled={deleting}
-            className="px-4 py-2 text-xs font-semibold text-cv-stone-600 bg-cv-warm-100 rounded-xl hover:bg-cv-warm-200 transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-xs font-semibold text-cv-stone-600 bg-cv-warm-100 rounded hover:bg-cv-warm-200 transition-colors disabled:opacity-50"
           >
             {STRINGS.common.cancel}
           </button>
           <button
             onClick={onConfirm}
             disabled={deleting}
-            className="px-4 py-2 text-xs font-semibold text-white bg-cv-red-600 rounded-xl hover:bg-cv-red-700 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+            className="px-4 py-2 text-xs font-semibold text-white bg-cv-red-600 rounded hover:bg-cv-red-700 transition-colors disabled:opacity-50 flex items-center gap-1.5"
           >
             {deleting && (
               <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -83,7 +83,7 @@ function ConfirmDeleteModal({
 
 function MetaPill({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-cv-warm-100 text-2xs font-medium text-cv-stone-500 tabular-nums">
+    <span className="inline-flex items-center px-2 py-0.5 rounded bg-cv-warm-100 text-2xs font-medium text-cv-stone-500 tabular-nums">
       {children}
     </span>
   );

@@ -46,7 +46,7 @@ function StepBadge({ n, done }: { n: number; done: boolean }) {
 // ─── Shared input classes ─────────────────────────────────────────────────────
 
 const inputCls =
-  'mt-1 w-full border border-cv-warm-300 rounded-xl px-3 py-2.5 text-sm text-cv-stone-800 bg-white focus:outline-none focus:border-cv-teal-400 focus:ring-1 focus:ring-cv-teal-400/30 transition-colors placeholder:text-cv-stone-400';
+  'mt-1 w-full border border-cv-warm-300 rounded px-3 py-2.5 text-sm text-cv-stone-800 bg-white focus:outline-none focus:border-cv-teal-400 focus:ring-1 focus:ring-cv-teal-400/30 transition-colors placeholder:text-cv-stone-400';
 
 // ─── Field label ──────────────────────────────────────────────────────────────
 
@@ -183,7 +183,7 @@ export default function AnalyzePage() {
       </div>
 
       {/* ── Step 1: Upload ── */}
-      <div className="bg-white rounded-2xl border border-cv-warm-200 p-5 space-y-3">
+      <div className="bg-white rounded border border-cv-warm-200 p-5 space-y-3">
         <div className="flex items-center gap-2.5">
           <StepBadge n={1} done={step > 1} />
           <p className="text-sm font-semibold text-cv-stone-800">{STRINGS.analyzePage.step1}</p>
@@ -193,7 +193,7 @@ export default function AnalyzePage() {
 
       {/* ── Step 2: Configure ── */}
       {transcriptId && (
-        <div className="bg-white rounded-2xl border border-cv-warm-200 p-5 space-y-4">
+        <div className="bg-white rounded border border-cv-warm-200 p-5 space-y-4">
           <div className="flex items-center gap-2.5">
             <StepBadge n={2} done={step > 2} />
             <p className="text-sm font-semibold text-cv-stone-800">{STRINGS.analyzePage.step2}</p>
@@ -213,7 +213,7 @@ export default function AnalyzePage() {
                       key={label}
                       onClick={() => { setSpeakerLabel(label); setNeedsSpeakerPick(false); }}
                       className={[
-                        'text-left p-3.5 rounded-xl border transition-colors',
+                        'text-left p-3.5 rounded border transition-colors',
                         speakerLabel === label
                           ? 'border-cv-teal-500 bg-cv-teal-50'
                           : 'border-cv-warm-200 bg-white hover:border-cv-warm-300',
@@ -287,7 +287,7 @@ export default function AnalyzePage() {
 
       {/* Error */}
       {error && (
-        <p className="text-sm text-cv-red-700 bg-cv-red-50 border border-cv-red-200 rounded-xl px-4 py-3">
+        <p className="text-sm text-cv-red-700 bg-cv-red-50 border border-cv-red-200 rounded px-4 py-3">
           {error}
         </p>
       )}
@@ -296,7 +296,7 @@ export default function AnalyzePage() {
       <button
         onClick={handleSubmit}
         disabled={!ready || submitting}
-        className="w-full py-3.5 bg-[#1E3A5F] text-white rounded-xl font-medium text-sm hover:bg-[#162D4A] disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+        className="w-full py-3.5 bg-[#1E3A5F] text-white rounded font-medium text-sm hover:bg-[#162D4A] disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
       >
         {submitting ? (
           <span className="flex items-center justify-center gap-2">

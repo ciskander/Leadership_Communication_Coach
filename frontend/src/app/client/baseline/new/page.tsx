@@ -129,7 +129,7 @@ function TranscriptSlot({
   const isComplete = !!(transcriptId && speakerLabel && role);
 
   return (
-    <div className={`bg-white rounded-xl border transition-colors overflow-hidden ${
+    <div className={`bg-white rounded border transition-colors overflow-hidden ${
       isComplete ? 'border-cv-teal-200' : 'border-cv-warm-border'
     }`}>
 
@@ -153,7 +153,7 @@ function TranscriptSlot({
         </div>
 
         {/* Mode toggle */}
-        <div className="flex gap-0.5 bg-white rounded-md p-0.5 border border-cv-warm-border">
+        <div className="flex gap-0.5 bg-white rounded p-0.5 border border-cv-warm-border">
           {(['select', 'upload'] as const).map((m) => (
             <button
               key={m}
@@ -185,7 +185,7 @@ function TranscriptSlot({
 
         {/* Select mode */}
         {mode === 'select' && (
-          <div className="max-h-44 overflow-y-auto rounded-lg border border-cv-warm-border divide-y divide-cv-warm-border">
+          <div className="max-h-44 overflow-y-auto rounded border border-cv-warm-border divide-y divide-cv-warm-border">
             {existingTranscripts.length === 0 ? (
               <p className="text-xs text-cv-stone-400 text-center py-6">
                 {STRINGS.baselineNew.noTranscripts}{' '}
@@ -243,7 +243,7 @@ function TranscriptSlot({
                       <button
                         key={label}
                         onClick={() => pickSpeaker(label)}
-                        className={`text-left p-3.5 rounded-lg border transition-colors ${
+                        className={`text-left p-3.5 rounded border transition-colors ${
                           speakerLabel === label
                             ? 'border-cv-teal-400 bg-cv-teal-50'
                             : 'border-cv-warm-border bg-white hover:border-cv-stone-100'
@@ -288,7 +288,7 @@ function TranscriptSlot({
                     notify(transcriptId, s, role, speakerLabels, meetingDate);
                   }}
                   placeholder={STRINGS.analyzePage.speakerLabelPlaceholder}
-                  className="mt-1 w-full border border-cv-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cv-teal-400 bg-white"
+                  className="mt-1 w-full border border-cv-warm-border rounded px-3 py-2 text-sm focus:outline-none focus:border-cv-teal-400 bg-white"
                 />
               </div>
             )}
@@ -302,7 +302,7 @@ function TranscriptSlot({
                 type="date"
                 value={meetingDate ?? ''}
                 onChange={(e) => setDateField(e.target.value)}
-                className="mt-1 w-full border border-cv-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cv-teal-400 bg-white"
+                className="mt-1 w-full border border-cv-warm-border rounded px-3 py-2 text-sm focus:outline-none focus:border-cv-teal-400 bg-white"
               />
               {!meetingDate && (
                 <p className="text-xs text-cv-amber-600 mt-1">
@@ -319,7 +319,7 @@ function TranscriptSlot({
               <select
                 value={role}
                 onChange={(e) => setRoleField(e.target.value as TargetRole)}
-                className="mt-1 w-full border border-cv-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cv-teal-400 bg-white text-cv-stone-900"
+                className="mt-1 w-full border border-cv-warm-border rounded px-3 py-2 text-sm focus:outline-none focus:border-cv-teal-400 bg-white text-cv-stone-900"
               >
                 <option value="">{STRINGS.baselineNew.selectPlaceholder}</option>
                 {ROLE_OPTIONS.map((r) => (
@@ -418,7 +418,7 @@ export default function BaselineNewPage() {
       </div>
 
       {/* Speaker name */}
-      <div className="bg-white rounded-xl border border-cv-warm-border p-5">
+      <div className="bg-white rounded border border-cv-warm-border p-5">
         <label className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest">
           {STRINGS.baselineNew.yourFullName}
         </label>
@@ -430,12 +430,12 @@ export default function BaselineNewPage() {
           value={speakerName}
           onChange={(e) => setSpeakerName(e.target.value)}
           placeholder={STRINGS.baselineNew.namePlaceholder}
-          className="w-full border border-cv-warm-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-cv-teal-400 bg-white text-cv-stone-900"
+          className="w-full border border-cv-warm-border rounded px-3 py-2.5 text-sm focus:outline-none focus:border-cv-teal-400 bg-white text-cv-stone-900"
         />
       </div>
 
       {/* Progress indicator */}
-      <div className="flex items-center gap-3 bg-white rounded-xl border border-cv-warm-border px-5 py-3.5">
+      <div className="flex items-center gap-3 bg-white rounded border border-cv-warm-border px-5 py-3.5">
         <div className="flex gap-1.5">
           {[0, 1, 2].map((i) => (
             <div
@@ -477,7 +477,7 @@ export default function BaselineNewPage() {
 
       {/* Error */}
       {error && (
-        <p className="text-sm text-cv-red-600 bg-cv-red-100/40 rounded-lg px-4 py-3">
+        <p className="text-sm text-cv-red-600 bg-cv-red-100/40 rounded px-4 py-3">
           {error}
         </p>
       )}
@@ -486,7 +486,7 @@ export default function BaselineNewPage() {
       <button
         onClick={handleSubmit}
         disabled={!allReady || submitting}
-        className="w-full py-3.5 bg-cv-teal-600 text-cv-teal-50 rounded-lg font-medium text-sm hover:bg-cv-teal-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="w-full py-3.5 bg-cv-teal-600 text-cv-teal-50 rounded font-medium text-sm hover:bg-cv-teal-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
         {submitting ? (
           <span className="flex items-center justify-center gap-2">

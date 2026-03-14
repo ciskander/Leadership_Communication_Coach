@@ -177,7 +177,7 @@ function PatternTrendsCompact({
                 const trendEntries = payload.filter((e: any) => !e.dataKey.endsWith('_raw'));
                 if (!trendEntries.length) return null;
                 return (
-                  <div className="bg-white border border-cv-warm-200 rounded-xl shadow-lg p-2 text-xs min-w-[160px]">
+                  <div className="bg-white border border-cv-warm-200 rounded shadow-lg p-2 text-xs min-w-[160px]">
                     <p className="font-semibold text-cv-stone-700 mb-1">{label}</p>
                     {trendEntries.map((entry: any) => (
                       <div key={entry.dataKey} className="flex justify-between gap-3">
@@ -271,7 +271,7 @@ function PatternTrendsCompact({
 
 function ProposedExperimentRow({ experiment }: { experiment: Experiment }) {
   return (
-    <div className="bg-cv-warm-50 border border-cv-warm-200 rounded-xl p-4 space-y-2">
+    <div className="bg-cv-warm-50 border border-cv-warm-200 rounded p-4 space-y-2">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1 min-w-0">
           <PatternLabel id={experiment.pattern_id} />
@@ -333,7 +333,7 @@ function PastExperimentRow({ exp }: { exp: Record<string, unknown> }) {
       : null;
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-white border border-cv-warm-200 rounded-xl">
+    <div className="flex items-center justify-between px-4 py-3 bg-white border border-cv-warm-200 rounded">
       <div className="flex items-center gap-3 min-w-0">
         <span className={`text-2xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${statusCls}`}>
           {STRINGS.experimentStatus[exp.status as string] ?? exp.status}
@@ -383,7 +383,7 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
   };
 
   return (
-    <div className="border border-cv-warm-200 rounded-xl overflow-hidden">
+    <div className="border border-cv-warm-200 rounded overflow-hidden">
       {/* Row header */}
       <button
         onClick={handleToggle}
@@ -471,7 +471,7 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
                   </p>
                   <p className="text-sm text-cv-stone-700">{runDetail.focus.message}</p>
                   {runDetail.focus.suggested_rewrite && (
-                    <div className="mt-1.5 bg-cv-teal-50 border border-cv-teal-100 rounded-xl px-3 py-2">
+                    <div className="mt-1.5 bg-cv-teal-50 border border-cv-teal-100 rounded px-3 py-2">
                       <p className="text-2xs font-semibold text-cv-teal-600 mb-0.5">{STRINGS.common.nextTimeTry}</p>
                       <p className="text-sm text-cv-teal-800 italic">{runDetail.focus.suggested_rewrite}</p>
                     </div>
@@ -480,7 +480,7 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
               )}
 
               {runDetail.experiment_detection && (
-                <div className="bg-cv-warm-100 border border-cv-warm-200 rounded-xl px-3 py-2">
+                <div className="bg-cv-warm-100 border border-cv-warm-200 rounded px-3 py-2">
                   <p className="text-2xs font-semibold text-cv-stone-600 mb-0.5">
                     {runDetail.experiment_detection.attempt === 'yes'
                       ? STRINGS.runStatusPoller.nicelyDone
@@ -536,7 +536,7 @@ export default function CoacheeDetailPage() {
   const experimentPatternId  = data.active_experiment?.pattern_id ?? null;
 
   // Shared card shell
-  const cardCls = 'bg-white rounded-2xl border border-cv-warm-200 p-5';
+  const cardCls = 'bg-white rounded border border-cv-warm-200 p-5';
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 py-2">
@@ -554,7 +554,7 @@ export default function CoacheeDetailPage() {
           </div>
           <Link
             href={`/coach/analyze?coachee=${id}`}
-            className="flex items-center gap-2 px-4 py-2 bg-[#1E3A5F] text-white rounded-xl text-sm font-medium hover:bg-[#162D4A] transition-colors shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-[#1E3A5F] text-white rounded text-sm font-medium hover:bg-[#162D4A] transition-colors shadow-sm"
           >
             <span className="shrink-0"><svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M8 1v3M8 12v3M1 8h3M12 8h3M3.05 3.05l2.12 2.12M10.83 10.83l2.12 2.12M3.05 12.95l2.12-2.12M10.83 5.17l2.12-2.12" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg></span>
             {STRINGS.coacheeDetail.analyzeForCoachee}

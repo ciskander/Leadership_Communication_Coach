@@ -104,11 +104,11 @@ export function ExperimentTracker({
   // ── Analyze-CTA nudge ──────────────────────────────────────────────────────
   function AnalyzeNudge({ message }: { message: string }) {
     return (
-      <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
+      <div className="bg-blue-50 border border-blue-200 rounded px-4 py-3 flex items-center justify-between gap-4">
         <p className="text-sm text-[#1E3A5F]">{message}</p>
         <Link
           href="/client/analyze"
-          className="shrink-0 flex items-center gap-2 text-xs px-3 py-1.5 bg-[#1E3A5F] text-white rounded-lg font-medium hover:bg-[#162D4A] transition-colors"
+          className="shrink-0 flex items-center gap-2 text-xs px-3 py-1.5 bg-[#1E3A5F] text-white rounded font-medium hover:bg-[#162D4A] transition-colors"
         >
           <span className="shrink-0"><svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M9 3L10.5 7.5L15 9L10.5 10.5L9 15L7.5 10.5L3 9L7.5 7.5L9 3Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/><path d="M19 13L19.75 15.25L22 16L19.75 16.75L19 19L18.25 16.75L16 16L18.25 15.25L19 13Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/></svg></span>
           {STRINGS.experimentTracker.analyzeMeeting}
@@ -125,7 +125,7 @@ export function ExperimentTracker({
     if (totalAttempted === 0) {
       return (
         <div className="space-y-2">
-          <div className="bg-cv-warm-50 border border-cv-warm-200 rounded-xl px-4 py-3">
+          <div className="bg-cv-warm-50 border border-cv-warm-200 rounded px-4 py-3">
             <p className="text-sm text-cv-stone-600">
               {STRINGS.experimentTracker.noAttemptsYet(meetingsAnalysed)}
             </p>
@@ -146,7 +146,7 @@ export function ExperimentTracker({
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="bg-white rounded-2xl border border-cv-warm-200 overflow-hidden">
+    <div className="bg-white rounded border border-cv-warm-200 overflow-hidden">
 
       {/* Header */}
       <div className="px-5 py-4 border-b border-cv-warm-100 flex items-start justify-between gap-4">
@@ -166,13 +166,13 @@ export function ExperimentTracker({
 
         {/* Instruction + Success marker */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="bg-cv-warm-50 border border-cv-warm-200 rounded-xl p-3.5">
+          <div className="bg-cv-warm-50 border border-cv-warm-200 rounded p-3.5">
             <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1.5">
               {STRINGS.common.whatToDo}
             </p>
             <p className="text-sm text-cv-stone-700 leading-relaxed">{experiment.instruction}</p>
           </div>
-          <div className="bg-cv-warm-50 border border-cv-warm-200 rounded-xl p-3.5">
+          <div className="bg-cv-warm-50 border border-cv-warm-200 rounded p-3.5">
             <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1.5">
               {STRINGS.common.successLooksLike}
             </p>
@@ -183,15 +183,15 @@ export function ExperimentTracker({
         {/* Stats headline */}
         {meetingsAnalysed > 0 && (
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-cv-teal-50 rounded-xl p-3 text-center">
+            <div className="bg-cv-teal-50 rounded p-3 text-center">
               <p className="text-2xl font-bold text-cv-teal-600">{successCount}</p>
               <p className="text-xs text-cv-stone-500 mt-0.5">{STRINGS.experimentTracker.fullAttempts}</p>
             </div>
-            <div className="bg-cv-amber-50 rounded-xl p-3 text-center">
+            <div className="bg-cv-amber-50 rounded p-3 text-center">
               <p className="text-2xl font-bold text-cv-amber-500">{partialCount}</p>
               <p className="text-xs text-cv-stone-500 mt-0.5">{STRINGS.experimentTracker.partial}</p>
             </div>
-            <div className="bg-cv-warm-100 rounded-xl p-3 text-center">
+            <div className="bg-cv-warm-100 rounded p-3 text-center">
               <p className="text-2xl font-bold text-cv-stone-400">{meetingsAnalysed}</p>
               <p className="text-xs text-cv-stone-500 mt-0.5">{STRINGS.experimentTracker.meetings}</p>
             </div>
@@ -213,7 +213,7 @@ export function ExperimentTracker({
                 return (
                   <li
                     key={ev.event_id ?? ev.id ?? i}
-                    className={`flex items-center gap-2 rounded-lg px-3 py-2 ${cfg.bg}`}
+                    className={`flex items-center gap-2 rounded px-3 py-2 ${cfg.bg}`}
                   >
                     <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot}`} />
                     <span className={`text-xs font-semibold ${cfg.color}`}>{cfg.label}</span>
@@ -249,7 +249,7 @@ export function ExperimentTracker({
         {isActive && (
           <div className="pt-1 space-y-2">
             {actionState === 'confirm-park' ? (
-              <div className="bg-cv-amber-50 border border-cv-amber-200 rounded-xl p-4 space-y-3">
+              <div className="bg-cv-amber-50 border border-cv-amber-200 rounded p-4 space-y-3">
                 <p className="text-sm font-semibold text-cv-amber-800">{STRINGS.experimentTracker.parkConfirmTitle}</p>
                 <p className="text-xs text-cv-amber-700 leading-relaxed">
                   {STRINGS.experimentTracker.parkConfirmDesc}
@@ -257,13 +257,13 @@ export function ExperimentTracker({
                 <div className="flex gap-2">
                   <button
                     onClick={handlePark}
-                    className="px-4 py-2 bg-cv-amber-600 text-white rounded-xl text-xs font-semibold hover:bg-cv-amber-700 transition-colors"
+                    className="px-4 py-2 bg-cv-amber-600 text-white rounded text-xs font-semibold hover:bg-cv-amber-700 transition-colors"
                   >
                     {STRINGS.experimentTracker.yesParkIt}
                   </button>
                   <button
                     onClick={() => setActionState('idle')}
-                    className="px-4 py-2 bg-white border border-cv-warm-300 text-cv-stone-600 rounded-xl text-xs font-semibold hover:bg-cv-warm-50 transition-colors"
+                    className="px-4 py-2 bg-white border border-cv-warm-300 text-cv-stone-600 rounded text-xs font-semibold hover:bg-cv-warm-50 transition-colors"
                   >
                     {STRINGS.experimentTracker.keepGoing}
                   </button>
@@ -274,14 +274,14 @@ export function ExperimentTracker({
                 <button
                   onClick={handleComplete}
                   disabled={actionState === 'loading'}
-                  className="flex-1 py-2.5 bg-cv-teal-600 text-white rounded-xl text-sm font-medium hover:bg-cv-teal-700 disabled:opacity-50 transition-colors"
+                  className="flex-1 py-2.5 bg-cv-teal-600 text-white rounded text-sm font-medium hover:bg-cv-teal-700 disabled:opacity-50 transition-colors"
                 >
                   {actionState === 'loading' ? STRINGS.common.saving : STRINGS.experimentTracker.markComplete}
                 </button>
                 <button
                   onClick={() => setActionState('confirm-park')}
                   disabled={actionState === 'loading'}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-cv-warm-300 text-cv-stone-600 rounded-xl text-sm font-medium hover:bg-cv-warm-50 disabled:opacity-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-cv-warm-300 text-cv-stone-600 rounded text-sm font-medium hover:bg-cv-warm-50 disabled:opacity-50 transition-colors"
                 >
                   <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><rect x="3.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/><rect x="9.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/></svg>
                   {STRINGS.experimentTracker.parkForNow}

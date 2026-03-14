@@ -80,7 +80,7 @@ function InfoPopover({ patternId }: { patternId: string }) {
         </svg>
       </button>
       {open && (
-        <div className="absolute z-50 left-5 top-0 w-64 bg-white border border-cv-warm-200 rounded-xl shadow-lg p-3 text-sm text-cv-stone-700 leading-snug">
+        <div className="absolute z-50 left-5 top-0 w-64 bg-white border border-cv-warm-200 rounded shadow-lg p-3 text-sm text-cv-stone-700 leading-snug">
           {STRINGS.patternExplanations[patternId] ?? STRINGS.common.noExplanationAvailable}
         </div>
       )}
@@ -198,7 +198,7 @@ function PatternTrendsChart({
     const trendEntries = payload.filter((e: any) => !e.dataKey.endsWith('_raw'));
     if (!trendEntries.length) return null;
     return (
-      <div className="bg-white border border-cv-warm-200 rounded-xl shadow-lg p-3 text-sm min-w-[200px]">
+      <div className="bg-white border border-cv-warm-200 rounded shadow-lg p-3 text-sm min-w-[200px]">
         <p className="font-semibold text-cv-stone-700 mb-1.5">{label}</p>
         {trendEntries.map((entry: any) => {
           const rawEntry = payload.find((e: any) => e.dataKey === rawKey(entry.dataKey));
@@ -371,7 +371,7 @@ function PastExperimentCard({
   const axisStyle = { fontSize: 10, fill: '#A8A29E' };
 
   return (
-    <div className="border border-cv-warm-200 rounded-xl overflow-hidden">
+    <div className="border border-cv-warm-200 rounded overflow-hidden">
       {/* Row */}
       <button
         onClick={() => setOpen((v) => !v)}
@@ -515,7 +515,7 @@ export default function ProgressPage() {
 
       {/* Error */}
       {error && (
-        <div className="bg-cv-red-50 border border-cv-red-200 text-cv-red-700 rounded-xl px-5 py-4 text-sm">
+        <div className="bg-cv-red-50 border border-cv-red-200 text-cv-red-700 rounded px-5 py-4 text-sm">
           {error}
         </div>
       )}
@@ -523,12 +523,12 @@ export default function ProgressPage() {
       {data && (
         <>
           {/* Pattern Trends */}
-          <section className="bg-white rounded-2xl border border-cv-warm-200 p-6">
+          <section className="bg-white rounded border border-cv-warm-200 p-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-semibold text-cv-stone-900">{STRINGS.progressPage.patternTrends}</h2>
 
               {/* View mode pill selector */}
-              <div className="inline-flex rounded-lg border border-cv-warm-200 overflow-hidden">
+              <div className="inline-flex rounded border border-cv-warm-200 overflow-hidden">
                 {viewOptions.map(({ key, label, disabled }) => (
                   <button
                     key={key}
@@ -558,7 +558,7 @@ export default function ProgressPage() {
           </section>
 
           {/* Past Experiments */}
-          <section className="bg-white rounded-2xl border border-cv-warm-200 p-6">
+          <section className="bg-white rounded border border-cv-warm-200 p-6">
             <h2 className="text-lg font-semibold text-cv-stone-900 mb-5">
               {STRINGS.progressPage.pastExperiments}
             </h2>

@@ -40,7 +40,7 @@ interface TranscriptUploadPanelProps {
 
 // ─── Shared input class (matches analyze page) ────────────────────────────────
 const inputCls =
-  'mt-1 w-full border border-cv-warm-300 rounded-xl px-3 py-2.5 text-sm text-cv-stone-800 bg-white focus:outline-none focus:border-cv-teal-400 focus:ring-1 focus:ring-cv-teal-400/30 transition-colors placeholder:text-cv-stone-400';
+  'mt-1 w-full border border-cv-warm-300 rounded px-3 py-2.5 text-sm text-cv-stone-800 bg-white focus:outline-none focus:border-cv-teal-400 focus:ring-1 focus:ring-cv-teal-400/30 transition-colors placeholder:text-cv-stone-400';
 
 // ─── Field label ──────────────────────────────────────────────────────────────
 function FieldLabel({ text, suffix }: { text: string; suffix?: React.ReactNode }) {
@@ -66,7 +66,7 @@ function DropZone({
 }) {
   if (uploaded) {
     return (
-      <div className="flex items-center gap-2.5 bg-cv-teal-50 border border-cv-teal-200 rounded-xl px-4 py-3">
+      <div className="flex items-center gap-2.5 bg-cv-teal-50 border border-cv-teal-200 rounded px-4 py-3">
         <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-teal-600 shrink-0" aria-hidden="true">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
         </svg>
@@ -81,7 +81,7 @@ function DropZone({
       disabled={uploading}
       onClick={onClick}
       className={[
-        'w-full border-2 border-dashed rounded-xl transition-colors disabled:opacity-50',
+        'w-full border-2 border-dashed rounded transition-colors disabled:opacity-50',
         selectedFile
           ? 'border-cv-teal-300 bg-cv-teal-50 py-4'
           : 'border-cv-warm-300 py-7 hover:border-cv-teal-400',
@@ -192,7 +192,7 @@ export function TranscriptUploadPanel({ onUploaded, withMetadata = false }: Tran
           onClick={() => fileRef.current?.click()}
         />
         {error && (
-          <p className="text-xs text-cv-red-600 bg-cv-red-50 border border-cv-red-200 rounded-xl px-3 py-2 mt-2">
+          <p className="text-xs text-cv-red-600 bg-cv-red-50 border border-cv-red-200 rounded px-3 py-2 mt-2">
             {error}
           </p>
         )}
@@ -275,7 +275,7 @@ export function TranscriptUploadPanel({ onUploaded, withMetadata = false }: Tran
 
           {/* Error */}
           {error && (
-            <p className="text-xs text-cv-red-600 bg-cv-red-50 border border-cv-red-200 rounded-xl px-3 py-2">
+            <p className="text-xs text-cv-red-600 bg-cv-red-50 border border-cv-red-200 rounded px-3 py-2">
               {error}
             </p>
           )}
@@ -285,7 +285,7 @@ export function TranscriptUploadPanel({ onUploaded, withMetadata = false }: Tran
             type="button"
             onClick={handleUploadClick}
             disabled={uploading}
-            className="w-full py-2.5 bg-cv-teal-600 text-white rounded-xl text-sm font-semibold hover:bg-cv-teal-700 disabled:opacity-50 transition-colors"
+            className="w-full py-2.5 bg-cv-teal-600 text-white rounded text-sm font-semibold hover:bg-cv-teal-700 disabled:opacity-50 transition-colors"
           >
             {uploading ? (
               <span className="flex items-center justify-center gap-2">

@@ -28,7 +28,7 @@ export function OnboardingTip({ tipId, message }: OnboardingTipProps) {
   }
 
   return (
-    <div className="mb-4 flex items-start gap-3 bg-cv-amber-50 border border-cv-amber-200 rounded-xl px-4 py-3">
+    <div className="mb-4 flex items-start gap-3 bg-cv-amber-50 border border-cv-amber-200 rounded px-4 py-3">
 
       {/* Lightbulb icon */}
       <svg

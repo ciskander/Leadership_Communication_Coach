@@ -14,7 +14,7 @@ const ROLE_OPTIONS = STRINGS.roleOptions;
 
 // ─── Shared input styles ──────────────────────────────────────────────────────
 
-const inputCls = 'mt-1 w-full border border-cv-warm-300 rounded-xl px-3 py-2 text-sm text-cv-stone-800 bg-white focus:outline-none focus:border-cv-teal-400 focus:ring-1 focus:ring-cv-teal-400/30 transition-colors placeholder:text-cv-stone-400';
+const inputCls = 'mt-1 w-full border border-cv-warm-300 rounded px-3 py-2 text-sm text-cv-stone-800 bg-white focus:outline-none focus:border-cv-teal-400 focus:ring-1 focus:ring-cv-teal-400/30 transition-colors placeholder:text-cv-stone-400';
 
 // ─── Step label ───────────────────────────────────────────────────────────────
 
@@ -146,13 +146,13 @@ function CoachAnalyzePage() {
               setRole('');
               setSubmitting(false);
             }}
-            className="px-4 py-2 border border-cv-warm-300 text-cv-stone-600 rounded-xl text-sm font-medium hover:bg-cv-warm-50 transition-colors"
+            className="px-4 py-2 border border-cv-warm-300 text-cv-stone-600 rounded text-sm font-medium hover:bg-cv-warm-50 transition-colors"
           >
             {STRINGS.coachAnalyze.analyzeAnother ?? 'Analyze another'}
           </button>
           <Link
             href={`/coach/coachees/${selectedCoacheeId}`}
-            className="px-4 py-2 bg-cv-teal-600 text-white rounded-xl text-sm font-medium hover:bg-cv-teal-700 transition-colors"
+            className="px-4 py-2 bg-cv-teal-600 text-white rounded text-sm font-medium hover:bg-cv-teal-700 transition-colors"
           >
             {STRINGS.coacheeDetail.backToDashboard ?? 'Back to coachee'}
           </Link>
@@ -172,7 +172,7 @@ function CoachAnalyzePage() {
       </div>
 
       {/* Step 1 — Select coachee */}
-      <div className="bg-white rounded-2xl border border-cv-warm-200 p-5">
+      <div className="bg-white rounded border border-cv-warm-200 p-5">
         <StepLabel text={STRINGS.coachAnalyze.step1} done={!!selectedCoacheeId} />
         {loadingCoachees ? (
           <div className="h-8 flex items-center">
@@ -191,7 +191,7 @@ function CoachAnalyzePage() {
               <label
                 key={c.id}
                 className={[
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer border transition-colors',
+                  'flex items-center gap-3 px-3 py-2.5 rounded cursor-pointer border transition-colors',
                   selectedCoacheeId === c.id
                     ? 'border-cv-teal-400 bg-cv-teal-50'
                     : 'border-cv-warm-200 hover:border-cv-warm-300',
@@ -219,7 +219,7 @@ function CoachAnalyzePage() {
 
       {/* Step 2 — Upload transcript */}
       {selectedCoacheeId && (
-        <div className="bg-white rounded-2xl border border-cv-warm-200 p-5">
+        <div className="bg-white rounded border border-cv-warm-200 p-5">
           <StepLabel text={STRINGS.coachAnalyze.step2} done={!!transcriptId} />
           <TranscriptUploadPanel onUploaded={handleUploaded} />
         </div>
@@ -227,7 +227,7 @@ function CoachAnalyzePage() {
 
       {/* Step 3 — Configure */}
       {transcriptId && (
-        <div className="bg-white rounded-2xl border border-cv-warm-200 p-5 space-y-4">
+        <div className="bg-white rounded border border-cv-warm-200 p-5 space-y-4">
           <StepLabel text={STRINGS.coachAnalyze.step3} done={!!(speakerLabel && name && role)} />
 
           {speakerLabels.length > 0 ? (
@@ -286,7 +286,7 @@ function CoachAnalyzePage() {
       )}
 
       {error && (
-        <p className="text-sm text-cv-red-600 bg-cv-red-50 border border-cv-red-200 rounded-xl px-4 py-3">
+        <p className="text-sm text-cv-red-600 bg-cv-red-50 border border-cv-red-200 rounded px-4 py-3">
           {error}
         </p>
       )}
@@ -294,7 +294,7 @@ function CoachAnalyzePage() {
       <button
         onClick={handleSubmit}
         disabled={!ready || submitting}
-        className="w-full py-3 bg-cv-teal-600 text-white rounded-xl font-medium text-sm hover:bg-cv-teal-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center justify-center gap-2"
+        className="w-full py-3 bg-cv-teal-600 text-white rounded font-medium text-sm hover:bg-cv-teal-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center justify-center gap-2"
       >
         {submitting && (
           <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

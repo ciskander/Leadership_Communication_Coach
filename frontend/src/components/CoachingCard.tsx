@@ -28,7 +28,7 @@ function PatternLabel({ id, className = 'text-cv-teal-600' }: { id: string; clas
  */
 function SuggestedRewrite({ text }: { text: string }) {
   return (
-    <blockquote className="border-l-[3px] border-cv-teal-700 pl-4 pr-3 py-2.5 bg-cv-teal-50 rounded-r-lg my-2">
+    <blockquote className="border-l-[3px] border-cv-teal-700 pl-4 pr-3 py-2.5 bg-cv-teal-50 rounded-r my-2">
       <p className="text-sm text-cv-stone-700 italic leading-relaxed">
         &ldquo;{text}&rdquo;
       </p>
@@ -39,7 +39,7 @@ function SuggestedRewrite({ text }: { text: string }) {
 /** Inset box used in the micro-experiment body */
 function InsetBox({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="bg-cv-warm-50 border border-cv-warm-200 rounded-xl p-3.5">
+    <div className="bg-cv-warm-50 border border-cv-warm-200 rounded p-3.5">
       <SectionLabel text={label} />
       {children}
     </div>
@@ -61,7 +61,7 @@ export function CoachingCard({ strengths, focus, microExperiment, targetSpeaker 
 
       {/* ── Strengths ────────────────────────────────────────────────────── */}
       {strengths.length > 0 && (
-        <section className="bg-white rounded-2xl border border-cv-teal-800 overflow-hidden">
+        <section className="bg-white rounded border border-cv-teal-800 overflow-hidden">
           {/* Header */}
           <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-100 bg-cv-teal-800">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-teal-50 shrink-0" aria-hidden="true">
@@ -87,7 +87,7 @@ export function CoachingCard({ strengths, focus, microExperiment, targetSpeaker 
 
       {/* ── Focus ────────────────────────────────────────────────────────── */}
       {focus && (
-        <section className="bg-white rounded-2xl border border-cv-amber-800 overflow-hidden">
+        <section className="bg-white rounded border border-cv-amber-800 overflow-hidden">
           {/* Header */}
           <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-100 bg-cv-amber-800">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-amber-50 shrink-0" aria-hidden="true">
@@ -134,7 +134,7 @@ export function CoachingCard({ strengths, focus, microExperiment, targetSpeaker 
 
       {/* ── Micro-experiment ─────────────────────────────────────────────── */}
       {microExperiment && (
-        <section className="bg-white rounded-2xl border border-cv-warm-200 overflow-hidden">
+        <section className="bg-white rounded border border-cv-warm-200 overflow-hidden">
           {/* Header */}
           <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-100 bg-cv-warm-100">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-stone-500 shrink-0" aria-hidden="true">

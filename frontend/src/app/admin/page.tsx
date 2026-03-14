@@ -38,7 +38,7 @@ export default function AdminPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <h1 className="text-2xl font-semibold text-cv-stone-900 font-serif">{STRINGS.admin.heading}</h1>
 
-      <div className="bg-white rounded-2xl border border-cv-warm-200 overflow-hidden">
+      <div className="bg-white rounded border border-cv-warm-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-cv-warm-50 border-b border-cv-warm-200">
             <tr>
@@ -79,7 +79,7 @@ export default function AdminPage() {
                     <button
                       onClick={() => promote(u.id)}
                       disabled={promoting === u.id}
-                      className="text-xs px-3 py-1.5 bg-cv-teal-600 text-white rounded-lg font-medium hover:bg-cv-teal-700 disabled:opacity-50 transition-colors"
+                      className="text-xs px-3 py-1.5 bg-cv-teal-600 text-white rounded font-medium hover:bg-cv-teal-700 disabled:opacity-50 transition-colors"
                     >
                       {promoting === u.id ? '…' : STRINGS.admin.promoteToCoach}
                     </button>
