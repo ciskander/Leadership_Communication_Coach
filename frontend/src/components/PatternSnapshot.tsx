@@ -70,9 +70,10 @@ const PATTERN_ICONS: Record<string, JSX.Element> = {
   ),
   listener_response_quality: (
     <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
-      <path d="M8 2.5a5 5 0 100 10 5 5 0 000-10z" stroke="currentColor" strokeWidth={1.4} />
-      <path d="M8 2.5c2.5 0 4.5 1.8 4.5 4 0 1.5-1 2.8-2.5 3.4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
-      <path d="M5.5 7.5c.5 1 1.5 1.7 2.5 1.7" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+      <path d="M4.5 10.5C3.5 9.5 3 8.3 3 7a4 4 0 018 0c0 1.2-.8 2-1.2 2.5-.4.5-.8 1-.8 1.8v.2a1.5 1.5 0 01-3 0" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7 5.5A1.5 1.5 0 005.5 7c0 .6.3 1 .7 1.3" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 5.5a4.5 4.5 0 010 4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+      <path d="M13.5 3.5a7 7 0 010 6" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
     </svg>
   ),
   conversational_balance: (
