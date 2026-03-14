@@ -6,11 +6,37 @@ import { STRINGS } from '@/config/strings';
 
 const S = STRINGS.onboarding;
 
+// Icon paths matching the sidebar nav (24×24 stroke viewport)
+const stepIcons: string[][] = [
+  // book — Baseline Pack
+  [
+    'M12 6.25V19.25',
+    'M12 6.25C10.83 5.48 9.25 5 7.5 5C5.75 5 4.17 5.48 3 6.25V19.25C4.17 18.48 5.75 18 7.5 18C9.25 18 10.83 18.48 12 19.25',
+    'M12 6.25C13.17 5.48 14.75 5 16.5 5C18.25 5 19.83 5.48 21 6.25V19.25C19.83 18.48 18.25 18 16.5 18C14.75 18 13.17 18.48 12 19.25',
+  ],
+  // sparkles — Analyze Meeting
+  [
+    'M9 3L10.5 7.5L15 9L10.5 10.5L9 15L7.5 10.5L3 9L7.5 7.5L9 3Z',
+    'M19 13L19.75 15.25L22 16L19.75 16.75L19 19L18.25 16.75L16 16L18.25 15.25L19 13Z',
+  ],
+  // beaker — Experiment
+  [
+    'M9 3H15',
+    'M9 3V9L4 18H20L15 9V3',
+    'M7.5 14H16.5',
+  ],
+  // trendingUp — Progress
+  [
+    'M3 17L9 11L13 15L21 7',
+    'M15 7H21V13',
+  ],
+];
+
 const steps = [
-  { num: 1, title: S.journeyStep1Title, desc: S.journeyStep1Desc, tag: 'One time' },
-  { num: 2, title: S.journeyStep2Title, desc: S.journeyStep2Desc, tag: 'Each meeting' },
-  { num: 3, title: S.journeyStep3Title, desc: S.journeyStep3Desc, tag: 'One at a time' },
-  { num: 4, title: S.journeyStep4Title, desc: S.journeyStep4Desc, tag: 'Over time' },
+  { num: 1, title: S.journeyStep1Title, desc: S.journeyStep1Desc, tag: 'One time',      icon: stepIcons[0] },
+  { num: 2, title: S.journeyStep2Title, desc: S.journeyStep2Desc, tag: 'Each meeting',   icon: stepIcons[1] },
+  { num: 3, title: S.journeyStep3Title, desc: S.journeyStep3Desc, tag: 'One at a time',  icon: stepIcons[2] },
+  { num: 4, title: S.journeyStep4Title, desc: S.journeyStep4Desc, tag: 'Over time',      icon: stepIcons[3] },
 ];
 
 const expectations = [S.expectItem1, S.expectItem2, S.expectItem3];
@@ -67,7 +93,12 @@ export default function WelcomePage() {
                 <span className="text-xs font-medium text-cv-teal-600">{step.num}</span>
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-cv-stone-900 mb-1">{step.title}</p>
+                <p className="text-sm font-medium text-cv-stone-900 mb-1 flex items-center gap-1.5">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 shrink-0 text-cv-teal-600" aria-hidden="true">
+                    {step.icon.map((d, i) => <path key={i} d={d} />)}
+                  </svg>
+                  {step.title}
+                </p>
                 <p className="text-sm text-cv-stone-400 font-light leading-relaxed">{step.desc}</p>
                 <span className="inline-block mt-2 text-2xs font-medium tracking-wide uppercase text-cv-teal-400 bg-cv-teal-400/10 px-2 py-0.5 rounded">
                   {step.tag}
