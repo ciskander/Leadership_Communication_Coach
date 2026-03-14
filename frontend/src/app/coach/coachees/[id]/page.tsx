@@ -466,14 +466,14 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
                   <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-amber-50 bg-cv-amber-800 inline-block px-2 py-0.5 rounded mb-1.5">
                     {STRINGS.coachingCard.focusHeading}
                   </p>
-                  <p className="text-xs text-cv-stone-500 font-medium">
+                  <p className="text-xs text-cv-amber-800 font-medium">
                     {STRINGS.patternLabels[runDetail.focus.pattern_id] ?? runDetail.focus.pattern_id}
                   </p>
                   <p className="text-sm text-cv-stone-700">{runDetail.focus.message}</p>
                   {runDetail.focus.suggested_rewrite && (
                     <div className="mt-1.5 bg-cv-teal-50 border border-cv-teal-100 rounded-xl px-3 py-2">
                       <p className="text-2xs font-semibold text-cv-teal-600 mb-0.5">{STRINGS.common.nextTimeTry}</p>
-                      <p className="text-sm text-cv-teal-800 italic font-serif">{runDetail.focus.suggested_rewrite}</p>
+                      <p className="text-sm text-cv-teal-800 italic">{runDetail.focus.suggested_rewrite}</p>
                     </div>
                   )}
                 </div>

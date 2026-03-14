@@ -99,7 +99,7 @@ function SectionLabel({ text }: { text: string }) {
 function SuggestedRewrite({ text }: { text: string }) {
   return (
     <blockquote className="border-l-[3px] border-cv-teal-400 pl-4 pr-3 py-2.5 bg-cv-teal-50 rounded-r-lg my-2">
-      <p className="text-sm text-cv-stone-700 font-serif italic leading-relaxed">
+      <p className="text-sm text-cv-stone-700 italic leading-relaxed">
         &ldquo;{text}&rdquo;
       </p>
     </blockquote>

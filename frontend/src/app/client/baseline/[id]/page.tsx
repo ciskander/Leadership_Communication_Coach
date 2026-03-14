@@ -521,8 +521,9 @@ export default function BaselineDetailPage() {
           <div className="pb-4">
             <Link
               href="/client/analyze"
-              className="inline-flex items-center gap-2 px-5 py-3 bg-cv-teal-600 text-cv-teal-50 rounded-lg text-sm font-medium hover:bg-cv-teal-800 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-3 bg-[#1E3A5F] text-white rounded-lg text-sm font-medium hover:bg-[#162D4A] transition-colors"
             >
+              <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M9 3L10.5 7.5L15 9L10.5 10.5L9 15L7.5 10.5L3 9L7.5 7.5L9 3Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/><path d="M19 13L19.75 15.25L22 16L19.75 16.75L19 19L18.25 16.75L16 16L18.25 15.25L19 13Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/></svg>
               {STRINGS.experimentTracker.analyzeMeeting}
             </Link>
           </div>

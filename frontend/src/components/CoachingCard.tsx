@@ -14,9 +14,9 @@ function SectionLabel({ text }: { text: string }) {
 }
 
 /** Pattern taxonomy ID rendered as readable small-caps label */
-function PatternLabel({ id }: { id: string }) {
+function PatternLabel({ id, className = 'text-cv-teal-600' }: { id: string; className?: string }) {
   return (
-    <span className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-teal-600">
+    <span className={`text-2xs font-semibold uppercase tracking-[0.14em] ${className}`}>
       {id.replace(/_/g, ' ')}
     </span>
   );
@@ -29,7 +29,7 @@ function PatternLabel({ id }: { id: string }) {
 function SuggestedRewrite({ text }: { text: string }) {
   return (
     <blockquote className="border-l-[3px] border-cv-teal-400 pl-4 pr-3 py-2.5 bg-cv-teal-50 rounded-r-lg my-2">
-      <p className="text-sm text-cv-stone-700 font-serif italic leading-relaxed">
+      <p className="text-sm text-cv-stone-700 italic leading-relaxed">
         &ldquo;{text}&rdquo;
       </p>
     </blockquote>
@@ -98,7 +98,7 @@ export function CoachingCard({ strengths, focus, microExperiment }: CoachingCard
 
           {/* Body */}
           <div className="px-5 py-4 space-y-3">
-            <PatternLabel id={focus.pattern_id} />
+            <PatternLabel id={focus.pattern_id} className="text-cv-amber-800" />
             <p className="text-sm text-cv-stone-700 leading-relaxed">{focus.message}</p>
 
             {(focus.quotes ?? []).length > 0 && (
