@@ -2,18 +2,20 @@ import type { QuoteObject } from '@/lib/types';
 
 interface EvidenceQuoteProps {
   quote: QuoteObject;
+  /** When provided, quotes from non-target speakers use neutral styling. */
+  targetSpeaker?: string | null;
 }
 
 /**
  * EvidenceQuote — renders a single piece of transcript evidence.
  *
  * Design:
- *   - Soft blue-50 background with a 3px solid blue-500 left bar
+ *   - Target speaker: blue-50 background with a 3px solid #1E3A5F left bar
+ *   - Other speakers: warm-100 background with a 3px solid stone-300 left bar
  *   - Attribution (speaker + timestamp) in stone-400, tabular numerals
- *   - Quote text in DM Sans (sans-serif), regular weight, stone-700
- *     — no italic/bold: improves legibility for long excerpts
+ *   - Quote text in sans-serif, regular weight, stone-700
  */
-export function EvidenceQuote({ quote }: EvidenceQuoteProps) {
+export function EvidenceQuote({ quote, targetSpeaker }: EvidenceQuoteProps) {
   let attribution: string | null = null;
   if (quote.speaker_label && quote.start_timestamp) {
     attribution = `${quote.speaker_label} · ${quote.start_timestamp}`;
@@ -23,8 +25,17 @@ export function EvidenceQuote({ quote }: EvidenceQuoteProps) {
     attribution = quote.start_timestamp;
   }
 
+  const isOtherSpeaker =
+    targetSpeaker != null &&
+    quote.speaker_label != null &&
+    quote.speaker_label !== targetSpeaker;
+
+  const blockStyles = isOtherSpeaker
+    ? 'border-l-[3px] border-cv-stone-300 pl-4 pr-3 py-2.5 my-2 bg-cv-warm-100 rounded-r-lg'
+    : 'border-l-[3px] border-[#1E3A5F] pl-4 pr-3 py-2.5 my-2 bg-blue-50 rounded-r-lg';
+
   return (
-    <blockquote className="border-l-[3px] border-[#1E3A5F] pl-4 pr-3 py-2.5 my-2 bg-blue-50 rounded-r-lg">
+    <blockquote className={blockStyles}>
       {/* Meeting label — amber small-caps */}
       {quote.meeting_label && (
         <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-amber-600 mb-1">

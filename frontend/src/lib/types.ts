@@ -70,6 +70,7 @@ export interface RunStatus {
   gate1_pass: boolean | null;
   analysis_type: string | null;
   baseline_pack_id: string | null;
+  target_speaker_label: string | null;
   error: Record<string, unknown> | null;
   strengths: CoachingItem[];
   focus: CoachingItem | null;
@@ -178,6 +179,7 @@ export interface BaselinePackMeeting {
 export interface BaselinePack {
   baseline_pack_id: string;
   status: string;
+  target_speaker_label?: string | null;
   run_id?: string | null;
   strengths?: CoachingItem[];
   focus?: CoachingItem | null;

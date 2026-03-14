@@ -150,6 +150,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
   const attempt = detection?.attempt ?? null;
   const countAttempts = detection?.count_attempts ?? null;
   const detectionQuotes = detection?.quotes ?? [];
+  const targetSpeaker = run?.target_speaker_label ?? null;
   const expRecordId = activeExp
     ? (run.experiment_tracking as Record<string, unknown> & { _record_id?: string })?._record_id ?? null
     : null;
@@ -318,7 +319,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                     {attempt === 'yes' ? STRINGS.runStatusPoller.fromTranscript : STRINGS.runStatusPoller.whatYouSaid}
                   </p>
                   {detectionQuotes.map((q, i) => (
-                    <EvidenceQuote key={i} quote={q} />
+                    <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />
                   ))}
                 </div>
 
@@ -339,7 +340,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
                       {STRINGS.common.nextTimeTry}
                     </p>
-                    <blockquote className="border-l-4 border-emerald-300 pl-4 py-1 my-2 bg-emerald-50 rounded-r-md">
+                    <blockquote className="border-l-4 border-cv-teal-700 pl-4 py-1 my-2 bg-emerald-50 rounded-r-md">
                       <p className="text-sm text-stone-700 italic">
                         &ldquo;{detection.suggested_rewrite}&rdquo;
                       </p>
@@ -433,6 +434,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
       <CoachingCard
         strengths={run.strengths}
         focus={run.focus}
+        targetSpeaker={targetSpeaker}
         microExperiment={
           hasActiveExp ||
           proposedExperiments.length > 0 ||
@@ -451,7 +453,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
             {STRINGS.runStatusPoller.patternSnapshot}
           </p>
-          <PatternSnapshot patterns={run.pattern_snapshot} />
+          <PatternSnapshot patterns={run.pattern_snapshot} targetSpeaker={targetSpeaker} />
         </section>
       )}
     </div>
