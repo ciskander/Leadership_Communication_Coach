@@ -8,11 +8,11 @@ const S = STRINGS.onboarding;
 
 // Icon paths matching the sidebar nav (24×24 stroke viewport)
 const stepIcons: string[][] = [
-  // stacked pages — Baseline Pack
+  // layers — Baseline Pack
   [
-    'M14 3H22V11H14V3Z',
-    'M10 7H18V15H10V7Z',
-    'M2 10H16V21H2V10Z',
+    'M12 2L3 7L12 12L21 7L12 2Z',
+    'M3 12L12 17L21 12',
+    'M3 17L12 22L21 17',
   ],
   // sparkles — Analyze Meeting
   [
