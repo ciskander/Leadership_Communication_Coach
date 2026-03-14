@@ -447,7 +447,7 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
 
               {runDetail.strengths.length > 0 && (
                 <div>
-                  <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-teal-700 mb-1.5">
+                  <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-teal-50 bg-cv-teal-800 inline-block px-2 py-0.5 rounded mb-1.5">
                     {STRINGS.coachingCard.strengthsHeading}
                   </p>
                   {runDetail.strengths.map((s, i) => (
@@ -463,7 +463,7 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
 
               {runDetail.focus && (
                 <div>
-                  <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-amber-700 mb-1.5">
+                  <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-amber-50 bg-cv-amber-800 inline-block px-2 py-0.5 rounded mb-1.5">
                     {STRINGS.coachingCard.focusHeading}
                   </p>
                   <p className="text-xs text-cv-stone-500 font-medium">

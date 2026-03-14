@@ -24,7 +24,7 @@ export function EvidenceQuote({ quote }: EvidenceQuoteProps) {
   }
 
   return (
-    <blockquote className="border-l-[3px] border-blue-500 pl-4 pr-3 py-2.5 my-2 bg-blue-50 rounded-r-lg">
+    <blockquote className="border-l-[3px] border-[#1E3A5F] pl-4 pr-3 py-2.5 my-2 bg-blue-50 rounded-r-lg">
       {/* Meeting label — amber small-caps */}
       {quote.meeting_label && (
         <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-amber-600 mb-1">

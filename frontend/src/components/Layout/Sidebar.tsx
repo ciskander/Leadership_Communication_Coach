@@ -90,7 +90,7 @@ const navItems: NavItem[] = [
 // Uses cv-* tokens from tailwind.tokens.ts
 const roleColors: Record<string, { dot: string; label: string }> = {
   coachee: { dot: 'bg-cv-teal-500',   label: 'text-cv-teal-700'  },
-  coach:   { dot: 'bg-blue-500',      label: 'text-blue-700'     },
+  coach:   { dot: 'bg-blue-500',      label: 'text-[#1E3A5F]'    },
   admin:   { dot: 'bg-cv-amber-500',  label: 'text-cv-amber-700' },
 };
 

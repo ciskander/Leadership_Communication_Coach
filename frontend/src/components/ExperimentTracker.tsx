@@ -105,7 +105,7 @@ export function ExperimentTracker({
   function AnalyzeNudge({ message }: { message: string }) {
     return (
       <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
-        <p className="text-sm text-blue-800">{message}</p>
+        <p className="text-sm text-[#1E3A5F]">{message}</p>
         <Link
           href="/client/analyze"
           className="shrink-0 flex items-center gap-2 text-xs px-3 py-1.5 bg-[#1E3A5F] text-white rounded-lg font-medium hover:bg-[#162D4A] transition-colors"
