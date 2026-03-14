@@ -1,25 +1,19 @@
 import type { Metadata } from 'next';
-import { Inter, DM_Sans, DM_Serif_Display } from 'next/font/google';
+import { Montserrat, Lora } from 'next/font/google';
 import './globals.css';
 import { STRINGS } from '@/config/strings';
 
-// Kept for any legacy components still using it directly
-const inter = Inter({
+const montserrat = Montserrat({
   subsets: ['latin'],
-  variable: '--font-inter',
-});
-
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  weight: ['300', '400', '500'],
+  weight: ['300', '400', '500', '600', '700'],
   style: ['normal', 'italic'],
   variable: '--font-sans',
   display: 'swap',
 });
 
-const dmSerif = DM_Serif_Display({
+const lora = Lora({
   subsets: ['latin'],
-  weight: ['400'],
+  weight: ['400', '500', '600', '700'],
   style: ['normal', 'italic'],
   variable: '--font-serif',
   display: 'swap',
@@ -36,8 +30,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${dmSerif.variable} ${inter.variable}`}>
-      <body className={dmSans.className}>{children}</body>
+    <html lang="en" className={`${montserrat.variable} ${lora.variable}`}>
+      <body className={montserrat.className}>{children}</body>
     </html>
   );
 }
