@@ -19,6 +19,7 @@ export interface QuoteObject {
   span_id: string | null;
   start_timestamp: string | null;
   meeting_label: string | null;
+  is_target_speaker: boolean | null;
 }
 
 export interface CoachingItem {

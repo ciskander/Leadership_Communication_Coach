@@ -64,8 +64,10 @@ def resolve_quotes(
     transcript_id: Optional[str],
     meeting_id: Optional[str],
     turn_map: Optional[dict[int, Turn]] = None,
+    target_speaker_label: Optional[str] = None,
 ) -> list[QuoteObject]:
     quotes: list[QuoteObject] = []
+    norm_target = target_speaker_label.strip().lower() if target_speaker_label else None
     for es_id in evidence_span_ids:
         span = spans_by_id.get(es_id)
         if not span:
@@ -98,6 +100,10 @@ def resolve_quotes(
                     if turn.start_time_sec is not None
                     else None
                 )
+                # Determine if this turn is from the target speaker
+                is_target: Optional[bool] = None
+                if norm_target is not None:
+                    is_target = turn.speaker_label.strip().lower() == norm_target
                 quotes.append(
                     QuoteObject(
                         speaker_label=turn.speaker_label,
@@ -106,6 +112,7 @@ def resolve_quotes(
                         transcript_id=transcript_id,
                         span_id=es_id,
                         start_timestamp=ts,
+                        is_target_speaker=is_target,
                     )
                 )
         else:
@@ -115,6 +122,12 @@ def resolve_quotes(
                 turn = turn_map.get(turn_start)
                 if turn and turn.start_time_sec is not None:
                     start_ts = format_timestamp(turn.start_time_sec)
+            # Single-speaker span: determine target status from the span's speaker
+            is_target_single: Optional[bool] = None
+            if norm_target is not None and turn_map and isinstance(turn_start, int):
+                turn = turn_map.get(turn_start)
+                if turn:
+                    is_target_single = turn.speaker_label.strip().lower() == norm_target
             quotes.append(
                 QuoteObject(
                     speaker_label=None,
@@ -123,6 +136,7 @@ def resolve_quotes(
                     transcript_id=transcript_id,
                     span_id=es_id,
                     start_timestamp=start_ts,
+                    is_target_speaker=is_target_single,
                 )
             )
     return quotes
@@ -134,6 +148,7 @@ def resolve_coaching_output(
     transcript_id: Optional[str],
     meeting_id: Optional[str],
     turn_map: Optional[dict[int, Turn]] = None,
+    target_speaker_label: Optional[str] = None,
 ) -> tuple[
     list[CoachingItemWithQuotes],
     Optional[CoachingItemWithQuotes],
@@ -144,7 +159,7 @@ def resolve_coaching_output(
 
     strengths: list[CoachingItemWithQuotes] = []
     for s in coaching.get("strengths", []):
-        quotes = resolve_quotes(s.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_map)
+        quotes = resolve_quotes(s.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_map, target_speaker_label)
         strengths.append(
             CoachingItemWithQuotes(
                 pattern_id=s.get("pattern_id", ""),
@@ -167,8 +182,8 @@ def resolve_coaching_output(
             primary_ids = all_es_ids[:1]
             additional_ids = all_es_ids[1:]
 
-        primary_quotes = resolve_quotes(primary_ids, spans_by_id, transcript_id, meeting_id, turn_map)
-        additional_quotes = resolve_quotes(additional_ids, spans_by_id, transcript_id, meeting_id, turn_map)
+        primary_quotes = resolve_quotes(primary_ids, spans_by_id, transcript_id, meeting_id, turn_map, target_speaker_label)
+        additional_quotes = resolve_quotes(additional_ids, spans_by_id, transcript_id, meeting_id, turn_map, target_speaker_label)
 
         focus = CoachingItemWithQuotes(
             pattern_id=f.get("pattern_id", ""),
@@ -183,7 +198,7 @@ def resolve_coaching_output(
     micro_list = coaching.get("micro_experiment", [])
     if micro_list:
         m = micro_list[0]
-        quotes = resolve_quotes(m.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_map)
+        quotes = resolve_quotes(m.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_map, target_speaker_label)
         micro_exp = MicroExperimentWithQuotes(
             experiment_id=m.get("experiment_id", ""),
             title=m.get("title", ""),
@@ -202,13 +217,14 @@ def resolve_pattern_snapshot(
     transcript_id: Optional[str],
     meeting_id: Optional[str],
     turn_map: Optional[dict[int, Turn]] = None,
+    target_speaker_label: Optional[str] = None,
 ) -> list[PatternSnapshotItem]:
     """Resolve pattern_snapshot items with per-pattern quotes."""
     raw_snapshot = parsed_json.get("pattern_snapshot") or []
     snapshot_items: list[PatternSnapshotItem] = []
     for ps in raw_snapshot:
         ps_quotes = resolve_quotes(
-            ps.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_map
+            ps.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_map, target_speaker_label
         )
         snapshot_items.append(PatternSnapshotItem(
             pattern_id=ps.get("pattern_id", ""),

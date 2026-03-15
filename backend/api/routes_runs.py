@@ -78,6 +78,9 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
     if context_label:
         resp.target_speaker_label = context_label
 
+    # Use context label for quote-level is_target_speaker marking
+    effective_target = context_label or target_speaker_label
+
     # Build spans lookup
     spans_by_id = build_spans_lookup(parsed_json)
 
@@ -90,7 +93,7 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
 
     # Coaching output with resolved quotes
     strengths, focus, micro_exp = resolve_coaching_output(
-        parsed_json, spans_by_id, transcript_id, meeting_id, turn_map
+        parsed_json, spans_by_id, transcript_id, meeting_id, turn_map, effective_target
     )
     resp.strengths = strengths
     resp.focus = focus
@@ -98,7 +101,7 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
 
     # ── Pattern snapshot with per-pattern quotes and coaching ──────────────
     snapshot_items = resolve_pattern_snapshot(
-        parsed_json, spans_by_id, transcript_id, meeting_id, turn_map
+        parsed_json, spans_by_id, transcript_id, meeting_id, turn_map, effective_target
     )
     resp.pattern_snapshot = snapshot_items if snapshot_items else None
 
@@ -123,6 +126,7 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
                 transcript_id,
                 meeting_id,
                 turn_map,
+                effective_target,
             )
             resp.experiment_detection = ExperimentDetectionWithQuotes(
                 experiment_id=detection.get("experiment_id", ""),

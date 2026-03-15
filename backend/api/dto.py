@@ -53,6 +53,7 @@ class QuoteObject(BaseModel):
     span_id: Optional[str]
     start_timestamp: Optional[str] = None
     meeting_label: Optional[str] = None
+    is_target_speaker: Optional[bool] = None
 
 
 class CoachingItemWithQuotes(BaseModel):
