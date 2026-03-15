@@ -71,6 +71,13 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
         resp.error = {"code": "PARSE_ERROR", "message": "Run output could not be decoded."}
         return resp
 
+    # Prefer the target_speaker_label from the LLM output context — it is
+    # guaranteed to match the speaker labels used in the transcript turns.
+    # Fall back to the Airtable field if the context is missing.
+    context_label = parsed_json.get("context", {}).get("target_speaker_label")
+    if context_label:
+        resp.target_speaker_label = context_label
+
     # Build spans lookup
     spans_by_id = build_spans_lookup(parsed_json)
 
