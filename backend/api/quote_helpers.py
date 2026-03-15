@@ -3,6 +3,7 @@ api/quote_helpers.py — Shared helpers for resolving evidence_span_ids into Quo
 
 Used by routes_runs.py (single meeting) and routes_coachee.py (baseline pack).
 """
+import logging
 from __future__ import annotations
 
 import json
@@ -91,6 +92,12 @@ def resolve_quotes(
             is_multi_speaker = len(span_speakers) > 1
 
         if is_multi_speaker:
+            _logger = logging.getLogger(__name__)
+            _logger.info(
+                "multi-speaker span %s: norm_target=%r, speakers=%s",
+                es_id, norm_target,
+                [(tid, turn_map[tid].speaker_label) for tid in range(turn_start, turn_end + 1) if tid in turn_map],
+            )
             for tid in range(turn_start, turn_end + 1):
                 turn = turn_map.get(tid)
                 if not turn:
@@ -122,12 +129,9 @@ def resolve_quotes(
                 turn = turn_map.get(turn_start)
                 if turn and turn.start_time_sec is not None:
                     start_ts = format_timestamp(turn.start_time_sec)
-            # Single-speaker span: determine target status from the span's speaker
-            is_target_single: Optional[bool] = None
-            if norm_target is not None and turn_map and isinstance(turn_start, int):
-                turn = turn_map.get(turn_start)
-                if turn:
-                    is_target_single = turn.speaker_label.strip().lower() == norm_target
+            # Single-speaker spans are selected by the LLM as evidence for a
+            # specific pattern — leave is_target_speaker as None so the
+            # frontend falls back to its default (target) styling.
             quotes.append(
                 QuoteObject(
                     speaker_label=None,
@@ -136,7 +140,6 @@ def resolve_quotes(
                     transcript_id=transcript_id,
                     span_id=es_id,
                     start_timestamp=start_ts,
-                    is_target_speaker=is_target_single,
                 )
             )
     return quotes
