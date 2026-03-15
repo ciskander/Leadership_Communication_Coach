@@ -213,7 +213,7 @@ function RecentRunCard({ run, editMode, selected, onToggle }: {
         <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${run.gate1_pass ? 'bg-cv-teal-500' : 'bg-cv-red-400'}`} />
       )}
       <div className="min-w-0 space-y-0.5">
-        <p className="text-sm font-semibold text-cv-stone-800 truncate">
+        <p className="text-sm font-semibold text-cv-stone-800 truncate font-serif">
           {isBaseline ? STRINGS.clientDashboard.baselinePackTitle : (title || STRINGS.common.meetingAnalysis)}
         </p>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-cv-stone-400">
@@ -507,7 +507,7 @@ export default function ClientDashboard() {
       {summary && summary.recent_runs.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400">
+            <h2 className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 font-sans">
               {STRINGS.clientDashboard.recentAnalyses}
             </h2>
             <div className="flex items-center gap-2">
