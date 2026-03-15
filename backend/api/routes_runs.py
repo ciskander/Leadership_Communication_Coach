@@ -4,6 +4,7 @@ api/routes_runs.py — Run status polling and result retrieval with quote resolu
 from __future__ import annotations
 
 import json
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends
@@ -80,6 +81,12 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
 
     # Use context label for quote-level is_target_speaker marking
     effective_target = context_label or target_speaker_label
+
+    logger = logging.getLogger(__name__)
+    logger.info(
+        "run %s: airtable_label=%r  context_label=%r  effective_target=%r",
+        run_id, target_speaker_label, context_label, effective_target,
+    )
 
     # Build spans lookup
     spans_by_id = build_spans_lookup(parsed_json)
