@@ -25,10 +25,13 @@ export function EvidenceQuote({ quote, targetSpeaker }: EvidenceQuoteProps) {
     attribution = quote.start_timestamp;
   }
 
+  const normTarget = targetSpeaker?.trim().toLowerCase() || null;
+  const normLabel  = quote.speaker_label?.trim().toLowerCase() || null;
+
   const isOtherSpeaker =
-    targetSpeaker != null &&
-    quote.speaker_label != null &&
-    quote.speaker_label !== targetSpeaker;
+    normTarget != null &&
+    normLabel != null &&
+    normLabel !== normTarget;
 
   const blockStyles = isOtherSpeaker
     ? 'border-l-[3px] border-cv-stone-300 pl-4 pr-3 py-2.5 my-2 bg-cv-warm-100 rounded-r'
