@@ -491,7 +491,7 @@ export default function ProgressPage() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto space-y-8">
       <OnboardingTip tipId="progress" message={STRINGS.onboarding.tipProgress} />
 
       {/* Header */}

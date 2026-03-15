@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
@@ -7,9 +8,6 @@ import { STRINGS } from '@/config/strings';
 import { resetOnboarding } from '@/lib/onboarding';
 
 // ─── Icon helper ─────────────────────────────────────────────────────────────
-// All icons use a 24×24 stroke viewport. One or two path strings per icon.
-// This keeps the NavItem type simple (icon: string | string[]) while producing
-// clean, weight-consistent SVG output.
 
 function NavIcon({ paths, className = '' }: { paths: string | string[]; className?: string }) {
   const pathArr = typeof paths === 'string' ? [paths] : paths;
@@ -87,16 +85,15 @@ const navItems: NavItem[] = [
 ];
 
 // ─── Role badge colour ramp ───────────────────────────────────────────────────
-// Uses cv-* tokens from tailwind.tokens.ts
 const roleColors: Record<string, { dot: string; label: string }> = {
   coachee: { dot: 'bg-cv-teal-500',   label: 'text-cv-teal-700'  },
   coach:   { dot: 'bg-blue-500',      label: 'text-[#1E3A5F]'    },
   admin:   { dot: 'bg-cv-amber-500',  label: 'text-cv-amber-700' },
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Shared nav content (used by both desktop sidebar and mobile drawer) ─────
 
-export function Sidebar() {
+function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { user }   = useAuth();
   const pathname   = usePathname();
   const router     = useRouter();
@@ -105,8 +102,7 @@ export function Sidebar() {
   const colors = roleColors[user?.role ?? 'coachee'];
 
   return (
-    <aside className="w-52 min-h-screen bg-cv-warm-50 border-r border-cv-warm-200 flex flex-col">
-
+    <>
       {/* ── Role badge ── */}
       <div className="px-5 pt-5 pb-4">
         <div className="flex items-center gap-2">
@@ -131,6 +127,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onNavigate}
               className={[
                 'flex items-center gap-2.5 px-3 py-2.5 rounded text-sm transition-all duration-150',
                 active
@@ -153,12 +150,12 @@ export function Sidebar() {
         {user?.role === 'coachee' && (
           <button
             onClick={() => {
+              onNavigate?.();
               resetOnboarding();
               router.push('/client/welcome');
             }}
             className="flex items-center gap-1.5 text-2xs text-cv-stone-400 hover:text-cv-teal-600 transition-colors"
           >
-            {/* Question-circle icon */}
             <svg
               viewBox="0 0 20 20"
               fill="currentColor"
@@ -179,6 +176,77 @@ export function Sidebar() {
           {STRINGS.brand.sidebarHint}
         </p>
       </div>
+    </>
+  );
+}
+
+// ─── Desktop sidebar ─────────────────────────────────────────────────────────
+
+export function Sidebar() {
+  return (
+    <aside className="hidden md:flex w-52 min-h-screen bg-cv-warm-50 border-r border-cv-warm-200 flex-col">
+      <SidebarContent />
     </aside>
+  );
+}
+
+// ─── Mobile drawer ───────────────────────────────────────────────────────────
+
+export function MobileMenuButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="md:hidden p-1.5 -ml-1.5 rounded text-cv-stone-500 hover:bg-cv-warm-100 transition-colors"
+      aria-label="Open navigation menu"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="w-5 h-5">
+        <path d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+  );
+}
+
+export function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const pathname = usePathname();
+
+  // Close drawer on route change
+  useEffect(() => {
+    onClose();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  // Prevent body scroll when open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = ''; };
+    }
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-40 md:hidden">
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-black/30" onClick={onClose} />
+
+      {/* Drawer panel */}
+      <aside className="fixed inset-y-0 left-0 w-64 bg-cv-warm-50 shadow-xl flex flex-col animate-slide-in-left">
+        {/* Close button */}
+        <div className="flex justify-end px-3 pt-3">
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded text-cv-stone-400 hover:bg-cv-warm-100 transition-colors"
+            aria-label="Close navigation menu"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="w-5 h-5">
+              <path d="M6 6l12 12M6 18L18 6" />
+            </svg>
+          </button>
+        </div>
+
+        <SidebarContent onNavigate={onClose} />
+      </aside>
+    </div>
   );
 }

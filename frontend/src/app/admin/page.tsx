@@ -35,7 +35,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       <h1 className="text-2xl font-semibold text-cv-stone-900 font-serif">{STRINGS.admin.heading}</h1>
 
       <div className="bg-white rounded border border-cv-warm-200 overflow-hidden">

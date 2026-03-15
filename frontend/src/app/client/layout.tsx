@@ -20,7 +20,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         <Navbar />
         <div className="flex flex-1">
           <Sidebar />
-          <main className="flex-1 p-6 bg-cv-warm-50 overflow-y-auto">{children}</main>
+          <main className="flex-1 px-4 py-4 md:p-6 bg-cv-warm-50 overflow-y-auto">{children}</main>
         </div>
       </div>
     </AuthContext.Provider>

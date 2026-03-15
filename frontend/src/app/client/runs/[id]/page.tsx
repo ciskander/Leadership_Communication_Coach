@@ -122,7 +122,7 @@ export default function RunResultsPage() {
   const canDelete  = meta !== null && !isBaseline;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 py-2">
+    <div className="max-w-5xl mx-auto space-y-5 py-2">
 
       {showConfirm && (
         <ConfirmDeleteModal

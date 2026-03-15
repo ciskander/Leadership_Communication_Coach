@@ -351,7 +351,7 @@ export default function ClientDashboard() {
   ).length;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 py-2">
+    <div className="max-w-5xl mx-auto space-y-6 py-2">
       {showConfirm && (
         <ConfirmDeleteModal
           count={selected.size}

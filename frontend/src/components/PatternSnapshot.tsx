@@ -208,7 +208,7 @@ function PatternCard({ pattern, targetSpeaker }: { pattern: PatternSnapshotItem;
     : (isPerfectScore ? [] : quotes);
 
   return (
-    <div className="bg-white border border-cv-warm-200 rounded overflow-hidden">
+    <div className={`bg-white border border-cv-warm-200 rounded overflow-hidden${expanded ? ' sm:col-span-2' : ''}`}>
       {/* ── Card header row ── */}
       <button
         type="button"
