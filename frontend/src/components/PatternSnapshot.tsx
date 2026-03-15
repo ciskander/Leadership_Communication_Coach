@@ -383,6 +383,15 @@ function PatternCard({
     ? quotes.filter((q) => q.span_id === rewriteSpanId)
     : (isPerfectScore ? [] : quotes);
 
+  // For zero-score and mixed-no-split paths: ensure the quote shown above the
+  // suggested rewrite is the one matching rewrite_for_span_id, not just quotes[0].
+  const rewriteTargetQuote = rewriteSpanId
+    ? quotes.find((q) => q.span_id === rewriteSpanId) ?? quotes[0]
+    : quotes[0];
+  const remainingQuotes = rewriteTargetQuote
+    ? quotes.filter((q) => q !== rewriteTargetQuote)
+    : quotes.slice(1);
+
   // Determine if we should show sparkline for this pattern
   const showSparkline = !!trend && trend.points.length >= 2;
 
@@ -516,10 +525,10 @@ function PatternCard({
                 {hasCoaching && (
                   <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{pattern.coaching_note}</p>
                 )}
-                {hasQuotes && (
+                {hasQuotes && rewriteTargetQuote && (
                   <div>
                     <SectionLabel text={STRINGS.common.forExampleYouSaid} />
-                    <EvidenceQuote quote={quotes[0]} targetSpeaker={targetSpeaker} />
+                    <EvidenceQuote quote={rewriteTargetQuote} targetSpeaker={targetSpeaker} />
                   </div>
                 )}
                 {pattern.suggested_rewrite && (
@@ -528,10 +537,10 @@ function PatternCard({
                     <SuggestedRewrite text={pattern.suggested_rewrite} />
                   </div>
                 )}
-                {quotes.length > 1 && (
+                {remainingQuotes.length > 0 && (
                   <div className="mt-2">
                     <SectionLabel text={STRINGS.common.otherMoments} />
-                    <EvidenceQuoteList quotes={quotes.slice(1)} targetSpeaker={targetSpeaker} />
+                    <EvidenceQuoteList quotes={remainingQuotes} targetSpeaker={targetSpeaker} />
                   </div>
                 )}
               </div>
@@ -561,10 +570,10 @@ function PatternCard({
               {hasCoaching && (
                 <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{pattern.coaching_note}</p>
               )}
-              {hasQuotes && (
+              {hasQuotes && rewriteTargetQuote && (
                 <div>
                   <SectionLabel text={STRINGS.common.forExampleYouSaid} />
-                  <EvidenceQuote quote={quotes[0]} targetSpeaker={targetSpeaker} />
+                  <EvidenceQuote quote={rewriteTargetQuote} targetSpeaker={targetSpeaker} />
                 </div>
               )}
               {pattern.suggested_rewrite && (
@@ -573,10 +582,10 @@ function PatternCard({
                   <SuggestedRewrite text={pattern.suggested_rewrite} />
                 </div>
               )}
-              {quotes.length > 1 && (
+              {remainingQuotes.length > 0 && (
                 <div className="mt-2">
                   <SectionLabel text={STRINGS.common.otherMoments} />
-                  <EvidenceQuoteList quotes={quotes.slice(1)} targetSpeaker={targetSpeaker} />
+                  <EvidenceQuoteList quotes={remainingQuotes} targetSpeaker={targetSpeaker} />
                 </div>
               )}
             </div>
