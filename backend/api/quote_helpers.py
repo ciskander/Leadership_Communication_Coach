@@ -3,8 +3,9 @@ api/quote_helpers.py — Shared helpers for resolving evidence_span_ids into Quo
 
 Used by routes_runs.py (single meeting) and routes_coachee.py (baseline pack).
 """
-import logging
 from __future__ import annotations
+
+import logging
 
 import json
 from typing import Optional
