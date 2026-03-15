@@ -368,7 +368,7 @@ function ExperimentPageInner() {
   const hasOptions     = rankedItems.length > 0;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 py-2">
+    <div className="max-w-4xl mx-auto space-y-5 py-2">
       <OnboardingTip tipId="experiment" message={STRINGS.onboarding.tipExperiment} />
 
       {/* Page heading */}

@@ -405,7 +405,7 @@ export default function CoachDashboard() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 py-2">
+    <div className="max-w-6xl mx-auto space-y-6 py-2">
       {showModal && (
         <AddCoacheeModal onClose={() => setShowModal(false)} onAdded={handleAdded} />
       )}

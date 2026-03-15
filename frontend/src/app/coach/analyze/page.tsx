@@ -118,7 +118,7 @@ function CoachAnalyzePage() {
   if (runId) {
     const selectedCoachee = coachees.find((c) => c.id === selectedCoacheeId);
     return (
-      <div className="max-w-3xl mx-auto space-y-6 py-2">
+      <div className="max-w-5xl mx-auto space-y-6 py-2">
         <div>
           <Link
             href={selectedCoacheeId ? `/coach/coachees/${selectedCoacheeId}` : '/coach'}

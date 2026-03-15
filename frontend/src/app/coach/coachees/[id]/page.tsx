@@ -539,7 +539,7 @@ export default function CoacheeDetailPage() {
   const cardCls = 'bg-white rounded border border-cv-warm-200 p-5';
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8 py-2">
+    <div className="max-w-5xl mx-auto space-y-8 py-2">
       {/* Back + header */}
       <div>
         <Link href="/coach" className="text-sm text-cv-stone-500 hover:text-cv-stone-700 transition-colors">

@@ -387,7 +387,7 @@ export default function BaselineDetailPage() {
   const meetings = pack.meetings ?? [];
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 py-2">
+    <div className="max-w-5xl mx-auto space-y-6 py-2">
 
       {/* Page header */}
       <div className="flex items-center justify-between">
