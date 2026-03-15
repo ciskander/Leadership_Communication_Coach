@@ -67,3 +67,46 @@ export function EvidenceQuote({ quote, targetSpeaker }: EvidenceQuoteProps) {
     </blockquote>
   );
 }
+
+// ─── List with span-group separators ─────────────────────────────────────────
+
+interface EvidenceQuoteListProps {
+  quotes: QuoteObject[];
+  targetSpeaker?: string | null;
+}
+
+/**
+ * EvidenceQuoteList — renders a list of quotes, grouped by span_id.
+ * A thin horizontal separator is placed between different evidence-span groups.
+ * Quotes within the same span (multi-speaker turns) are NOT separated.
+ */
+export function EvidenceQuoteList({ quotes, targetSpeaker }: EvidenceQuoteListProps) {
+  if (quotes.length === 0) return null;
+
+  // Group consecutive quotes by span_id, preserving order.
+  const groups: QuoteObject[][] = [];
+  let currentSpanId: string | null | undefined;
+  for (const q of quotes) {
+    if (groups.length === 0 || q.span_id !== currentSpanId) {
+      groups.push([q]);
+      currentSpanId = q.span_id;
+    } else {
+      groups[groups.length - 1].push(q);
+    }
+  }
+
+  return (
+    <>
+      {groups.map((group, gi) => (
+        <div key={gi}>
+          {gi > 0 && (
+            <hr className="border-t border-cv-warm-200 my-3" />
+          )}
+          {group.map((q, qi) => (
+            <EvidenceQuote key={qi} quote={q} targetSpeaker={targetSpeaker} />
+          ))}
+        </div>
+      ))}
+    </>
+  );
+}

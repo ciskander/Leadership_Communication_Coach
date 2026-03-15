@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { PatternSnapshotItem } from '@/lib/types';
-import { EvidenceQuote } from './EvidenceQuote';
+import { EvidenceQuote, EvidenceQuoteList } from './EvidenceQuote';
 import { STRINGS } from '@/config/strings';
 
 // ─── Pattern icons (inline SVG — replaces STRINGS.patternIcons emoji) ─────────
@@ -265,7 +265,7 @@ function PatternCard({ pattern, targetSpeaker }: { pattern: PatternSnapshotItem;
               {hasNotes && (
                 <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{pattern.notes}</p>
               )}
-              {quotes.map((q, i) => <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />)}
+              <EvidenceQuoteList quotes={quotes} targetSpeaker={targetSpeaker} />
             </div>
           )}
 
@@ -278,7 +278,7 @@ function PatternCard({ pattern, targetSpeaker }: { pattern: PatternSnapshotItem;
                   {hasNotes && (
                     <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{pattern.notes}</p>
                   )}
-                  {successQuotes.map((q, i) => <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />)}
+                  <EvidenceQuoteList quotes={successQuotes} targetSpeaker={targetSpeaker} />
                 </div>
               )}
               <div>
@@ -301,7 +301,7 @@ function PatternCard({ pattern, targetSpeaker }: { pattern: PatternSnapshotItem;
                 {improvementQuotes.length > 1 && (
                   <div className="mt-2">
                     <SectionLabel text={STRINGS.common.otherMoments} />
-                    {improvementQuotes.slice(1).map((q, i) => <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />)}
+                    <EvidenceQuoteList quotes={improvementQuotes.slice(1)} targetSpeaker={targetSpeaker} />
                   </div>
                 )}
               </div>
@@ -337,7 +337,7 @@ function PatternCard({ pattern, targetSpeaker }: { pattern: PatternSnapshotItem;
                 {quotes.length > 1 && (
                   <div className="mt-2">
                     <SectionLabel text={STRINGS.common.otherMoments} />
-                    {quotes.slice(1).map((q, i) => <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />)}
+                    <EvidenceQuoteList quotes={quotes.slice(1)} targetSpeaker={targetSpeaker} />
                   </div>
                 )}
               </div>
@@ -382,7 +382,7 @@ function PatternCard({ pattern, targetSpeaker }: { pattern: PatternSnapshotItem;
               {quotes.length > 1 && (
                 <div className="mt-2">
                   <SectionLabel text={STRINGS.common.otherMoments} />
-                  {quotes.slice(1).map((q, i) => <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />)}
+                  <EvidenceQuoteList quotes={quotes.slice(1)} targetSpeaker={targetSpeaker} />
                 </div>
               )}
             </div>

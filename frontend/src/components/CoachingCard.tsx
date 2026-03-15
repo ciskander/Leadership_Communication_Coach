@@ -1,5 +1,5 @@
 import type { CoachingItem, MicroExperiment } from '@/lib/types';
-import { EvidenceQuote } from './EvidenceQuote';
+import { EvidenceQuote, EvidenceQuoteList } from './EvidenceQuote';
 import { STRINGS } from '@/config/strings';
 
 // ─── Shared sub-components ───────────────────────────────────────────────────
@@ -76,9 +76,7 @@ export function CoachingCard({ strengths, focus, microExperiment, targetSpeaker 
               <div key={s.pattern_id} className="px-5 py-4 space-y-2">
                 <PatternLabel id={s.pattern_id} />
                 <p className="text-sm text-cv-stone-700 leading-relaxed">{s.message}</p>
-                {(s.quotes ?? []).map((q, i) => (
-                  <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />
-                ))}
+                <EvidenceQuoteList quotes={s.quotes ?? []} targetSpeaker={targetSpeaker} />
               </div>
             ))}
           </div>
@@ -106,9 +104,7 @@ export function CoachingCard({ strengths, focus, microExperiment, targetSpeaker 
               <div className="space-y-3 mt-1">
                 <div>
                   <SectionLabel text={STRINGS.common.forExampleYouSaid} />
-                  {focus.quotes.map((q, i) => (
-                    <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />
-                  ))}
+                  <EvidenceQuoteList quotes={focus.quotes} targetSpeaker={targetSpeaker} />
                 </div>
 
                 {focus.suggested_rewrite && (
@@ -121,9 +117,7 @@ export function CoachingCard({ strengths, focus, microExperiment, targetSpeaker 
                 {(focus.additional_quotes ?? []).length > 0 && (
                   <div>
                     <SectionLabel text={STRINGS.common.otherMoments} />
-                    {focus.additional_quotes!.map((q, i) => (
-                      <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />
-                    ))}
+                    <EvidenceQuoteList quotes={focus.additional_quotes!} targetSpeaker={targetSpeaker} />
                   </div>
                 )}
               </div>
@@ -170,9 +164,7 @@ export function CoachingCard({ strengths, focus, microExperiment, targetSpeaker 
             </div>
 
             {/* Evidence quotes */}
-            {(microExperiment.quotes ?? []).map((q, i) => (
-              <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />
-            ))}
+            <EvidenceQuoteList quotes={microExperiment.quotes ?? []} targetSpeaker={targetSpeaker} />
           </div>
         </section>
       )}
