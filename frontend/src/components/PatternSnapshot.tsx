@@ -249,16 +249,17 @@ function TrendDelta({ delta }: { delta: number }) {
 
 // ─── Trend sparkline (mini Recharts line) ────────────────────────────────────
 
-const SPARKLINE_TEAL = '#0F6E56';
-const SPARKLINE_RED  = '#EF4444';
-const SPARKLINE_GRAY = '#A8A29E';
+const SPARKLINE_TEAL  = '#0F6E56';
+const SPARKLINE_AMBER = '#D97706';
+const SPARKLINE_RED   = '#EF4444';
 
 function TrendSparkline({ trend }: { trend: PatternTrendData }) {
-  const color = trend.delta > STABLE_THRESHOLD
+  // Color based on current score (same thresholds as RatioBar)
+  const color = trend.currentScore >= 75
     ? SPARKLINE_TEAL
-    : trend.delta < -STABLE_THRESHOLD
-      ? SPARKLINE_RED
-      : SPARKLINE_GRAY;
+    : trend.currentScore >= 50
+      ? SPARKLINE_AMBER
+      : SPARKLINE_RED;
 
   const data = trend.points.map((v, i) => ({ v, i }));
   const lastIdx = data.length - 1;
