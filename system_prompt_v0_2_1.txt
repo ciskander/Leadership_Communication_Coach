@@ -93,6 +93,7 @@ For conversational_balance where balance_assessment is over_indexed or under_ind
 
 For insufficient_signal or not_evaluable patterns:
 - coaching_note, suggested_rewrite, rewrite_for_span_id should be omitted.
+- evidence_span_ids must be an empty array. Do not attach evidence spans to patterns that lack sufficient signal or are not evaluable.
 
 Numeric evaluable patterns (all except conversational_balance):
 - evaluable_status must be "evaluable"
@@ -211,6 +212,7 @@ FINAL SILENT SELF-CHECK
 15b) For each evaluable numeric pattern_snapshot item where numerator > 0, notes is present (1-2 sentence positive observation).
 15c) For conversational_balance with balance_assessment=balanced, notes is present (1-2 sentence positive observation).
 16) For each pattern_snapshot item where numerator == denominator, coaching_note, suggested_rewrite, and rewrite_for_span_id are omitted or null.
+16b) For each insufficient_signal or not_evaluable pattern_snapshot item, evidence_span_ids is an empty array.
 17) If experiment detection attempt=partial, coaching_note, suggested_rewrite, and rewrite_for_span_id are all present and non-null.
 18) If experiment detection attempt=yes or attempt=no, coaching_note, suggested_rewrite, and rewrite_for_span_id are null.
 

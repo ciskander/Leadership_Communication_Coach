@@ -289,6 +289,12 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
                         f"{path}.{forbidden}",
                         f"{status} item must not have {forbidden}.",
                     ))
+            if item.get("evidence_span_ids"):
+                issues.append(_warn(
+                    "NON_EVALUABLE_HAS_EVIDENCE",
+                    f"{path}.evidence_span_ids",
+                    f"{status} item should have empty evidence_span_ids.",
+                ))
 
         # evidence_span_ids reference check
         for es_id in item.get("evidence_span_ids", []):

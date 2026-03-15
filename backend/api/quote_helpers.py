@@ -227,8 +227,11 @@ def resolve_pattern_snapshot(
     raw_snapshot = parsed_json.get("pattern_snapshot") or []
     snapshot_items: list[PatternSnapshotItem] = []
     for ps in raw_snapshot:
+        # Skip resolving quotes for non-evaluable patterns — they should not
+        # have evidence spans, but some older model outputs include them.
+        es_ids = ps.get("evidence_span_ids", []) if ps.get("evaluable_status") == "evaluable" else []
         ps_quotes = resolve_quotes(
-            ps.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_map, target_speaker_label
+            es_ids, spans_by_id, transcript_id, meeting_id, turn_map, target_speaker_label
         )
         snapshot_items.append(PatternSnapshotItem(
             pattern_id=ps.get("pattern_id", ""),
