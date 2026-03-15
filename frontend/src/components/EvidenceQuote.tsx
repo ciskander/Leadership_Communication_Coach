@@ -25,13 +25,20 @@ export function EvidenceQuote({ quote, targetSpeaker }: EvidenceQuoteProps) {
     attribution = quote.start_timestamp;
   }
 
-  const normTarget = targetSpeaker?.trim().toLowerCase() || null;
-  const normLabel  = quote.speaker_label?.trim().toLowerCase() || null;
-
-  const isOtherSpeaker =
-    normTarget != null &&
-    normLabel != null &&
-    normLabel !== normTarget;
+  // Prefer the backend-computed is_target_speaker flag (set during quote
+  // resolution where the transcript turn map is available).  Fall back to
+  // a client-side label comparison for backwards compatibility.
+  let isOtherSpeaker = false;
+  if (quote.is_target_speaker != null) {
+    isOtherSpeaker = !quote.is_target_speaker;
+  } else {
+    const normTarget = targetSpeaker?.trim().toLowerCase() || null;
+    const normLabel  = quote.speaker_label?.trim().toLowerCase() || null;
+    isOtherSpeaker =
+      normTarget != null &&
+      normLabel != null &&
+      normLabel !== normTarget;
+  }
 
   const blockStyles = isOtherSpeaker
     ? 'border-l-[3px] border-cv-stone-300 pl-4 pr-3 py-2.5 my-2 bg-cv-warm-100 rounded-r'

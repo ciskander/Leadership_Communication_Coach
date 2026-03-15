@@ -284,11 +284,12 @@ async def get_baseline_pack(
                     meeting_info["meeting_id"] = sub_meeting_id
                     sub_turn_map = build_turn_map(at_client, sub_transcript_id)
 
+                    sub_target_label = sub_parsed.get("context", {}).get("target_speaker_label")
                     sub_strengths, sub_focus, _ = resolve_coaching_output(
-                        sub_parsed, sub_spans, sub_transcript_id, sub_meeting_id, sub_turn_map
+                        sub_parsed, sub_spans, sub_transcript_id, sub_meeting_id, sub_turn_map, sub_target_label
                     )
                     sub_pattern_snapshot = resolve_pattern_snapshot(
-                        sub_parsed, sub_spans, sub_transcript_id, sub_meeting_id, sub_turn_map
+                        sub_parsed, sub_spans, sub_transcript_id, sub_meeting_id, sub_turn_map, sub_target_label
                     )
 
                     meeting_info["sub_run_strengths"] = [s.model_dump() for s in sub_strengths]
