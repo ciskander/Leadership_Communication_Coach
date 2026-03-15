@@ -69,7 +69,7 @@ def resolve_quotes(
     target_speaker_label: Optional[str] = None,
 ) -> list[QuoteObject]:
     quotes: list[QuoteObject] = []
-    norm_target = target_speaker_label.strip().lower() if target_speaker_label else None
+    norm_target = target_speaker_label.replace("\\_", "_").strip().lower() if target_speaker_label else None
     for es_id in evidence_span_ids:
         span = spans_by_id.get(es_id)
         if not span:
@@ -86,7 +86,7 @@ def resolve_quotes(
             and isinstance(turn_end, int)
         ):
             span_speakers = {
-                turn_map[tid].speaker_label
+                turn_map[tid].speaker_label.replace("\\_", "_")
                 for tid in range(turn_start, turn_end + 1)
                 if tid in turn_map
             }
@@ -111,7 +111,7 @@ def resolve_quotes(
                 # Determine if this turn is from the target speaker
                 is_target: Optional[bool] = None
                 if norm_target is not None:
-                    is_target = turn.speaker_label.strip().lower() == norm_target
+                    is_target = turn.speaker_label.replace("\\_", "_").strip().lower() == norm_target
                 quotes.append(
                     QuoteObject(
                         speaker_label=turn.speaker_label,
