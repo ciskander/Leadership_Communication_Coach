@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useRunPoller } from '@/hooks/useRunPoller';
 import { CoachingCard } from './CoachingCard';
-import { PatternSnapshot } from './PatternSnapshot';
+import { PatternSnapshot, buildTrendData } from './PatternSnapshot';
+import type { PatternTrendData } from './PatternSnapshot';
 import { ExperimentTracker } from './ExperimentTracker';
 import { api } from '@/lib/api';
 import type { Experiment, ActiveExperiment, PatternSnapshotItem } from '@/lib/types';
@@ -28,6 +29,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
   const [acceptedExpId, setAcceptedExpId] = useState<string | null>(null);
   const [acceptLoading, setAcceptLoading] = useState(false);
   const [activeExpData, setActiveExpData] = useState<ActiveExperiment | null>(null);
+  const [trendData, setTrendData] = useState<Record<string, PatternTrendData> | undefined>(undefined);
 
   // Restore human confirmation state from the backend (survives refresh).
   useEffect(() => {
@@ -63,6 +65,14 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           .then(setActiveExpData)
           .catch(() => {});
       }
+
+      // Fetch trend data for sparklines (non-blocking, best-effort)
+      api.getClientProgress()
+        .then((progress) => {
+          const trends = buildTrendData(progress.pattern_history, progress.trend_window_size);
+          setTrendData(Object.keys(trends).length > 0 ? trends : undefined);
+        })
+        .catch(() => {});
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run?.status]);
@@ -453,7 +463,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
             {STRINGS.runStatusPoller.patternSnapshot}
           </p>
-          <PatternSnapshot patterns={run.pattern_snapshot} targetSpeaker={targetSpeaker} />
+          <PatternSnapshot patterns={run.pattern_snapshot} targetSpeaker={targetSpeaker} trendData={trendData} />
         </section>
       )}
     </div>

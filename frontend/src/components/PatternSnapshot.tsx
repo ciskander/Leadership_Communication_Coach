@@ -1,9 +1,105 @@
 'use client';
 
 import { useState } from 'react';
-import type { PatternSnapshotItem } from '@/lib/types';
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import type { PatternSnapshotItem, RunHistoryPoint } from '@/lib/types';
 import { EvidenceQuote, EvidenceQuoteList } from './EvidenceQuote';
 import { STRINGS } from '@/config/strings';
+
+// ─── Trend data types ────────────────────────────────────────────────────────
+
+export interface PatternTrendData {
+  /** Rolling-average data points for the sparkline, in chronological order (0-100). */
+  points: number[];
+  /** Current score (latest rolling average), 0-100. */
+  currentScore: number;
+  /** Baseline average score, 0-100. */
+  baselineAvg: number;
+  /** Delta: currentScore - baselineAvg. */
+  delta: number;
+}
+
+// ─── Build trend data from progress history ──────────────────────────────────
+
+const STABLE_THRESHOLD = 2; // delta within +/- this value is considered "stable"
+
+export function buildTrendData(
+  history: RunHistoryPoint[],
+  windowSize: number,
+): Record<string, PatternTrendData> {
+  const baselineRuns = history.filter((r) => r.is_baseline);
+  const postBaselineRuns = history.filter((r) => !r.is_baseline);
+
+  if (baselineRuns.length === 0 || postBaselineRuns.length === 0) return {};
+
+  // Collect all pattern IDs across history
+  const allPatternIds = new Set<string>();
+  for (const run of history) {
+    for (const p of run.patterns) allPatternIds.add(p.pattern_id);
+  }
+
+  const result: Record<string, PatternTrendData> = {};
+
+  for (const pid of Array.from(allPatternIds)) {
+    // Compute baseline average (aggregate num/den across all baseline runs)
+    let blNum = 0, blDen = 0;
+    for (const run of baselineRuns) {
+      const p = run.patterns.find((x) => x.pattern_id === pid);
+      if (p) {
+        const den = p.opportunity_count ?? 0;
+        const num = den > 0 ? Math.round(p.ratio * den) : 0;
+        blNum += num;
+        blDen += den;
+      }
+    }
+    const baselineAvg = blDen > 0 ? Math.round((blNum / blDen) * 100) : null;
+    if (baselineAvg == null) continue;
+
+    // Build per-run numerator/denominator data for rolling average
+    const runData: { num: number; den: number; ratio: number }[] = [];
+    for (const run of history) {
+      const p = run.patterns.find((x) => x.pattern_id === pid);
+      if (p) {
+        const den = p.opportunity_count ?? 0;
+        const num = den > 0 ? Math.round(p.ratio * den) : 0;
+        runData.push({ num, den, ratio: p.ratio });
+      } else {
+        runData.push({ num: 0, den: 0, ratio: 0 });
+      }
+    }
+
+    // Compute rolling average points
+    const points: number[] = [];
+    for (let idx = 0; idx < history.length; idx++) {
+      let totalNum = 0, totalDen = 0, ratioSum = 0, ratioCount = 0;
+      const start = Math.max(0, idx - windowSize + 1);
+      for (let j = start; j <= idx; j++) {
+        const d = runData[j];
+        if (d.den > 0 || d.ratio > 0) {
+          totalNum += d.num;
+          totalDen += d.den;
+          ratioSum += d.ratio;
+          ratioCount++;
+        }
+      }
+      const val = totalDen > 0
+        ? Math.round((totalNum / totalDen) * 100)
+        : ratioCount > 0
+          ? Math.round((ratioSum / ratioCount) * 100)
+          : null;
+      if (val != null) points.push(val);
+    }
+
+    if (points.length < 2) continue;
+
+    const currentScore = points[points.length - 1];
+    const delta = currentScore - baselineAvg;
+
+    result[pid] = { points, currentScore, baselineAvg, delta };
+  }
+
+  return result;
+}
 
 // ─── Pattern icons (inline SVG — replaces STRINGS.patternIcons emoji) ─────────
 
@@ -127,7 +223,79 @@ function BalanceBadge({ assessment }: { assessment: string }) {
   );
 }
 
-// ─── Ratio bar ────────────────────────────────────────────────────────────────
+// ─── Trend indicator (delta arrow + label) ───────────────────────────────────
+
+function TrendDelta({ delta }: { delta: number }) {
+  if (Math.abs(delta) <= STABLE_THRESHOLD) {
+    return (
+      <span className="text-sm text-cv-stone-400 font-medium ml-1.5">
+        &mdash; {STRINGS.trendSparkline.stable}
+      </span>
+    );
+  }
+  if (delta > 0) {
+    return (
+      <span className="text-sm text-cv-teal-600 font-semibold ml-1.5">
+        &uarr; +{delta}
+      </span>
+    );
+  }
+  return (
+    <span className="text-sm text-cv-red-500 font-semibold ml-1.5">
+      &darr; {delta}
+    </span>
+  );
+}
+
+// ─── Trend sparkline (mini Recharts line) ────────────────────────────────────
+
+const SPARKLINE_TEAL = '#0F6E56';
+const SPARKLINE_RED  = '#EF4444';
+const SPARKLINE_GRAY = '#A8A29E';
+
+function TrendSparkline({ trend }: { trend: PatternTrendData }) {
+  const color = trend.delta > STABLE_THRESHOLD
+    ? SPARKLINE_TEAL
+    : trend.delta < -STABLE_THRESHOLD
+      ? SPARKLINE_RED
+      : SPARKLINE_GRAY;
+
+  const data = trend.points.map((v, i) => ({ v, i }));
+  const lastIdx = data.length - 1;
+
+  return (
+    <div className="mt-1" style={{ height: 32 }}>
+      <ResponsiveContainer width="100%" height={32}>
+        <LineChart data={data} margin={{ top: 4, right: 6, left: 6, bottom: 4 }}>
+          <Line
+            type="monotone"
+            dataKey="v"
+            stroke={color}
+            strokeWidth={1.5}
+            dot={(props: any) => {
+              if (props.index !== lastIdx) return <g key={props.index} />;
+              return (
+                <circle
+                  key={props.index}
+                  cx={props.cx}
+                  cy={props.cy}
+                  r={3.5}
+                  fill={color}
+                  stroke="white"
+                  strokeWidth={1.5}
+                />
+              );
+            }}
+            activeDot={false}
+            isAnimationActive={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+// ─── Ratio bar (fallback when no trend data) ────────────────────────────────
 
 function RatioBar({ ratio }: { ratio: number }) {
   const pct = Math.round(ratio * 100);
@@ -169,7 +337,15 @@ function Chevron({ open }: { open: boolean }) {
 
 // ─── Individual pattern card ──────────────────────────────────────────────────
 
-function PatternCard({ pattern, targetSpeaker }: { pattern: PatternSnapshotItem; targetSpeaker: string | null }) {
+function PatternCard({
+  pattern,
+  targetSpeaker,
+  trend,
+}: {
+  pattern: PatternSnapshotItem;
+  targetSpeaker: string | null;
+  trend?: PatternTrendData;
+}) {
   const [expanded, setExpanded] = useState(false);
 
   const quotes                  = pattern.quotes ?? [];
@@ -207,6 +383,9 @@ function PatternCard({ pattern, targetSpeaker }: { pattern: PatternSnapshotItem;
     ? quotes.filter((q) => q.span_id === rewriteSpanId)
     : (isPerfectScore ? [] : quotes);
 
+  // Determine if we should show sparkline for this pattern
+  const showSparkline = !!trend && trend.points.length >= 2;
+
   return (
     <div className={`bg-white border border-cv-warm-200 rounded overflow-hidden${expanded ? ' sm:col-span-2' : ''}`}>
       {/* ── Card header row ── */}
@@ -240,10 +419,25 @@ function PatternCard({ pattern, targetSpeaker }: { pattern: PatternSnapshotItem;
 
         {/* Score row */}
         {pattern.evaluable_status === 'evaluable' && pattern.ratio != null ? (
-          <RatioBar ratio={pattern.ratio} />
+          showSparkline ? (
+            <div className="mt-1">
+              <div className="flex items-baseline">
+                <span className="text-xl font-bold tabular-nums text-cv-stone-800">
+                  {trend!.currentScore}%
+                </span>
+                <TrendDelta delta={trend!.delta} />
+              </div>
+              <TrendSparkline trend={trend!} />
+            </div>
+          ) : (
+            <RatioBar ratio={pattern.ratio} />
+          )
         ) : pattern.evaluable_status === 'evaluable' && pattern.balance_assessment ? (
-          <div className="mt-1">
+          <div className="mt-1 flex items-center gap-2">
             <BalanceBadge assessment={pattern.balance_assessment} />
+            {trend && trend.points.length >= 2 && (
+              <TrendDelta delta={trend.delta} />
+            )}
           </div>
         ) : (
           <span className="text-xs text-cv-stone-400 capitalize">
@@ -399,13 +593,19 @@ function PatternCard({ pattern, targetSpeaker }: { pattern: PatternSnapshotItem;
 interface PatternSnapshotProps {
   patterns: PatternSnapshotItem[];
   targetSpeaker?: string | null;
+  trendData?: Record<string, PatternTrendData>;
 }
 
-export function PatternSnapshot({ patterns, targetSpeaker }: PatternSnapshotProps) {
+export function PatternSnapshot({ patterns, targetSpeaker, trendData }: PatternSnapshotProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {patterns.map((p) => (
-        <PatternCard key={p.pattern_id} pattern={p} targetSpeaker={targetSpeaker ?? null} />
+        <PatternCard
+          key={p.pattern_id}
+          pattern={p}
+          targetSpeaker={targetSpeaker ?? null}
+          trend={trendData?.[p.pattern_id]}
+        />
       ))}
     </div>
   );

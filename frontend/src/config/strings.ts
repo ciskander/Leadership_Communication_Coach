@@ -149,6 +149,11 @@ export const STRINGS = {
     unclear: 'Unclear',
   } as Record<string, string>,
 
+  // ── Trend sparkline labels ──────────────────────────────────────────────────
+  trendSparkline: {
+    stable: 'Stable',
+  },
+
   // ── Evaluable status labels ─────────────────────────────────────────────────
   evaluableStatus: {
     insufficient_signal: 'Insufficient signal',
