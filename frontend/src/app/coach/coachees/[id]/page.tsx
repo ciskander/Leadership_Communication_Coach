@@ -219,6 +219,20 @@ function PatternTrendsCompact({
       ) : (
         (() => {
           const meetingsUntil = Math.max(0, 3 - postBaselineCount);
+
+          // Build pattern-grouped data: one row per pattern, one column per run
+          const RUN_COLORS = ['#A8A29E', '#0F6E56', '#D97706', '#2563eb'];
+          const runLabels = chartData.map((p) => p.label as string);
+          const patternBarData = visiblePatterns.map((pid) => {
+            const row: Record<string, string | number | null> = {
+              pattern: STRINGS.patternLabels[pid] ?? pid,
+            };
+            for (const cp of chartData) {
+              row[cp.label as string] = (cp[rawKey(pid)] as number) ?? null;
+            }
+            return row;
+          });
+
           return (
             <>
               {meetingsUntil > 0 && (
@@ -227,20 +241,21 @@ function PatternTrendsCompact({
                 </div>
               )}
               <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
+                <BarChart data={patternBarData} margin={{ top: 4, right: 16, left: 0, bottom: 30 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#EDE8E3" vertical={false} />
-                  <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#A8A29E' }} tickLine={false} />
+                  <XAxis dataKey="pattern" tick={{ fontSize: 9, fill: '#A8A29E' }} tickLine={false} angle={-30} textAnchor="end" interval={0} />
                   <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={axisStyle} tickLine={false} axisLine={false} />
                   <Tooltip
                     cursor={{ fill: '#F7F4F0' }}
-                    content={({ active, payload, label }: any) => {
+                    content={({ active, payload }: any) => {
                       if (!active || !payload?.length) return null;
+                      const patternName = payload[0]?.payload?.pattern;
                       return (
-                        <div className="bg-white border border-cv-warm-200 rounded shadow-lg p-2 text-xs min-w-[160px]">
-                          <p className="font-semibold text-cv-stone-700 mb-1">{label}</p>
+                        <div className="bg-white border border-cv-warm-200 rounded shadow-lg p-2 text-xs min-w-[140px]">
+                          <p className="font-semibold text-cv-stone-700 mb-1">{patternName}</p>
                           {payload.map((entry: any) => (
                             <div key={entry.dataKey} className="flex justify-between gap-3">
-                              <span style={{ color: entry.color }}>{STRINGS.patternLabels[entry.dataKey.replace(/_raw$/, '')] ?? entry.dataKey}</span>
+                              <span style={{ color: entry.fill }}>{entry.dataKey}</span>
                               <span className="font-medium">{entry.value != null ? `${entry.value}%` : '—'}</span>
                             </div>
                           ))}
@@ -248,39 +263,50 @@ function PatternTrendsCompact({
                       );
                     }}
                   />
-                  {visiblePatterns.map((pid) => {
-                    const isExp = pid === experimentPatternId;
-                    return (
-                      <Bar key={pid} dataKey={rawKey(pid)} fill={patternColor(pid)} radius={[4, 4, 0, 0]}
-                        maxBarSize={28} opacity={isExp ? 1 : 0.8}
-                        stroke={isExp ? patternColor(pid) : undefined} strokeWidth={isExp ? 2 : 0}
-                      />
-                    );
-                  })}
+                  {runLabels.map((label, i) => (
+                    <Bar key={label} dataKey={label} fill={RUN_COLORS[i % RUN_COLORS.length]}
+                      radius={[4, 4, 0, 0]} maxBarSize={28}
+                      opacity={i === 0 ? 0.6 : 0.9}
+                    />
+                  ))}
                 </BarChart>
               </ResponsiveContainer>
+
+              {/* Run legend */}
+              <div className="flex flex-wrap gap-2.5 mt-3">
+                {runLabels.map((label, i) => (
+                  <span key={label} className="flex items-center text-xs text-cv-stone-600">
+                    <span className="inline-block w-2.5 h-2.5 rounded-full mr-1 shrink-0"
+                      style={{ background: RUN_COLORS[i % RUN_COLORS.length], opacity: i === 0 ? 0.6 : 0.9 }}
+                    />
+                    {label}
+                  </span>
+                ))}
+              </div>
             </>
           );
         })()
       )}
 
-      {/* Legend */}
-      <div className="flex flex-wrap gap-2.5 mt-3">
-        {visiblePatterns.map((pid) => {
-          const isExp = pid === experimentPatternId;
-          return (
-            <span key={pid} className={`flex items-center text-xs ${isExp ? 'font-semibold text-cv-stone-900' : 'text-cv-stone-600'}`}>
-              <span className="inline-block w-2.5 h-2.5 rounded-full mr-1 shrink-0" style={{ background: patternColor(pid) }} />
-              {STRINGS.patternLabels[pid] ?? pid}
-              {isExp && (
-                <span className="ml-1 text-[9px] font-semibold uppercase tracking-wide bg-cv-teal-100 text-cv-teal-700 px-1 py-0.5 rounded-full leading-none">
-                  Exp
-                </span>
-              )}
-            </span>
-          );
-        })}
-      </div>
+      {/* Pattern legend — line chart only (bar chart has its own run legend) */}
+      {showLineChart && (
+        <div className="flex flex-wrap gap-2.5 mt-3">
+          {visiblePatterns.map((pid) => {
+            const isExp = pid === experimentPatternId;
+            return (
+              <span key={pid} className={`flex items-center text-xs ${isExp ? 'font-semibold text-cv-stone-900' : 'text-cv-stone-600'}`}>
+                <span className="inline-block w-2.5 h-2.5 rounded-full mr-1 shrink-0" style={{ background: patternColor(pid) }} />
+                {STRINGS.patternLabels[pid] ?? pid}
+                {isExp && (
+                  <span className="ml-1 text-[9px] font-semibold uppercase tracking-wide bg-cv-teal-100 text-cv-teal-700 px-1 py-0.5 rounded-full leading-none">
+                    Exp
+                  </span>
+                )}
+              </span>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

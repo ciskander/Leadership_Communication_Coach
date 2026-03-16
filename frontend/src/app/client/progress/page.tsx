@@ -295,6 +295,21 @@ function PatternTrendsChart({
         <>
           {(() => {
             const meetingsUntil = 3 - postBaselineCount;
+
+            // Build pattern-grouped data: one row per pattern, one column per run
+            const RUN_COLORS = ['#A8A29E', '#0F6E56', '#D97706', '#2563eb']; // baseline=stone, then teal/amber/blue
+            const runLabels = chartData.map((p) => p.label as string);
+            const patternBarData = visiblePatterns.map((pid) => {
+              const row: Record<string, string | number | null> = {
+                pattern: STRINGS.patternLabels[pid] ?? pid,
+                pid,
+              };
+              for (const cp of chartData) {
+                row[cp.label as string] = (cp[rawKey(pid)] as number) ?? null;
+              }
+              return row;
+            });
+
             return (
               <>
                 {/* "N meetings until trends" nudge */}
@@ -305,49 +320,77 @@ function PatternTrendsChart({
                   {STRINGS.progressPage.meetingsUntilTrends(meetingsUntil)}
                 </div>
                 <ResponsiveContainer width="100%" height={240}>
-                  <BarChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
+                  <BarChart data={patternBarData} margin={{ top: 4, right: 16, left: 0, bottom: 40 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#EDE8E3" vertical={false} />
-                    <XAxis dataKey="label" tick={axisStyle} tickLine={false} />
+                    <XAxis dataKey="pattern" tick={axisStyle} tickLine={false} angle={-30} textAnchor="end" interval={0} />
                     <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={axisStyle} tickLine={false} axisLine={false} />
-                    <Tooltip content={renderCustomTooltip} cursor={{ fill: '#F7F4F0' }} />
-                    {visiblePatterns.map((pid) => {
-                      const isExp = pid === experimentPatternId;
-                      return (
-                        <Bar key={pid} dataKey={rawKey(pid)} fill={patternColor(pid)} radius={[4, 4, 0, 0]}
-                          maxBarSize={36} opacity={isExp ? 1 : 0.75}
-                          stroke={isExp ? patternColor(pid) : undefined} strokeWidth={isExp ? 2 : 0}
-                        />
-                      );
-                    })}
+                    <Tooltip
+                      cursor={{ fill: '#F7F4F0' }}
+                      content={({ active, payload }: any) => {
+                        if (!active || !payload?.length) return null;
+                        const patternName = payload[0]?.payload?.pattern;
+                        return (
+                          <div className="bg-white border border-cv-warm-200 rounded shadow-lg p-3 text-sm min-w-[180px]">
+                            <p className="font-semibold text-cv-stone-700 mb-1.5">{patternName}</p>
+                            {payload.map((entry: any) => (
+                              <div key={entry.dataKey} className="flex justify-between gap-4">
+                                <span style={{ color: entry.fill }} className="text-xs">{entry.dataKey}</span>
+                                <span className="text-xs font-medium tabular-nums">{entry.value != null ? `${entry.value}%` : '—'}</span>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }}
+                    />
+                    {runLabels.map((label, i) => (
+                      <Bar key={label} dataKey={label} fill={RUN_COLORS[i % RUN_COLORS.length]}
+                        radius={[4, 4, 0, 0]} maxBarSize={36}
+                        opacity={i === 0 ? 0.6 : 0.9}
+                      />
+                    ))}
                   </BarChart>
                 </ResponsiveContainer>
+
+                {/* Run legend (replaces pattern legend for bar chart) */}
+                <div className="flex flex-wrap gap-3 mt-4">
+                  {runLabels.map((label, i) => (
+                    <span key={label} className="flex items-center text-sm text-cv-stone-700">
+                      <span className="inline-block w-3 h-3 rounded-full mr-1.5 shrink-0"
+                        style={{ background: RUN_COLORS[i % RUN_COLORS.length], opacity: i === 0 ? 0.6 : 0.9 }}
+                      />
+                      {label}
+                    </span>
+                  ))}
+                </div>
               </>
             );
           })()}
         </>
       )}
 
-      {/* Pattern legend */}
-      <div className="flex flex-wrap gap-3 mt-4">
-        {visiblePatterns.map((pid) => {
-          const isExp = pid === experimentPatternId;
-          return (
-            <span key={pid} className={`flex items-center text-sm ${isExp ? 'font-semibold text-cv-stone-900' : 'text-cv-stone-700'}`}>
-              <span
-                className={`inline-block rounded-full mr-1.5 shrink-0 ${isExp ? 'w-3.5 h-3.5 ring-2 ring-offset-1 ring-current' : 'w-3 h-3'}`}
-                style={{ background: patternColor(pid) }}
-              />
-              {STRINGS.patternLabels[pid] ?? pid}
-              {isExp && (
-                <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide bg-cv-teal-100 text-cv-teal-700 px-1.5 py-0.5 rounded-full leading-none">
-                  {STRINGS.progressPage.experimentBadge}
-                </span>
-              )}
-              <InfoPopover patternId={pid} hoverColor={patternColor(pid)} />
-            </span>
-          );
-        })}
-      </div>
+      {/* Pattern legend — line chart only (bar chart has its own run legend) */}
+      {showLineChart && (
+        <div className="flex flex-wrap gap-3 mt-4">
+          {visiblePatterns.map((pid) => {
+            const isExp = pid === experimentPatternId;
+            return (
+              <span key={pid} className={`flex items-center text-sm ${isExp ? 'font-semibold text-cv-stone-900' : 'text-cv-stone-700'}`}>
+                <span
+                  className={`inline-block rounded-full mr-1.5 shrink-0 ${isExp ? 'w-3.5 h-3.5 ring-2 ring-offset-1 ring-current' : 'w-3 h-3'}`}
+                  style={{ background: patternColor(pid) }}
+                />
+                {STRINGS.patternLabels[pid] ?? pid}
+                {isExp && (
+                  <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide bg-cv-teal-100 text-cv-teal-700 px-1.5 py-0.5 rounded-full leading-none">
+                    {STRINGS.progressPage.experimentBadge}
+                  </span>
+                )}
+                <InfoPopover patternId={pid} hoverColor={patternColor(pid)} />
+              </span>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
