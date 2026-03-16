@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import type { PatternSnapshotItem, RunHistoryPoint } from '@/lib/types';
 import { EvidenceQuote, EvidenceQuoteList } from './EvidenceQuote';
@@ -197,23 +198,41 @@ const PATTERN_ICONS: Record<string, JSX.Element> = {
 
 function InfoPopover({ patternId }: { patternId: string }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  const updatePos = useCallback(() => {
+    if (!btnRef.current) return;
+    const r = btnRef.current.getBoundingClientRect();
+    setPos({ top: r.top, left: r.right + 6 });
+  }, []);
 
   useEffect(() => {
     if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    updatePos();
+    const dismiss = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (btnRef.current?.contains(t) || popoverRef.current?.contains(t)) return;
+      setOpen(false);
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
+    document.addEventListener('mousedown', dismiss);
+    window.addEventListener('scroll', updatePos, true);
+    window.addEventListener('resize', updatePos);
+    return () => {
+      document.removeEventListener('mousedown', dismiss);
+      window.removeEventListener('scroll', updatePos, true);
+      window.removeEventListener('resize', updatePos);
+    };
+  }, [open, updatePos]);
 
   const explanation = STRINGS.patternExplanations[patternId];
   if (!explanation) return null;
 
   return (
-    <span className="relative inline-block" ref={ref}>
+    <>
       <button
+        ref={btnRef}
         onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
         className="ml-1 text-cv-stone-400 hover:text-cv-stone-600 transition-colors align-middle leading-none"
         aria-label="Pattern explanation"
@@ -223,12 +242,17 @@ function InfoPopover({ patternId }: { patternId: string }) {
           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
         </svg>
       </button>
-      {open && (
-        <div className="absolute z-50 left-5 top-0 w-64 bg-white border border-cv-warm-200 rounded shadow-lg p-3 text-sm text-cv-stone-700 leading-snug">
+      {open && pos && createPortal(
+        <div
+          ref={popoverRef}
+          className="fixed z-[9999] w-64 bg-white border border-cv-warm-200 rounded shadow-lg p-3 text-sm text-cv-stone-700 leading-snug"
+          style={{ top: pos.top, left: pos.left }}
+        >
           {explanation}
-        </div>
+        </div>,
+        document.body,
       )}
-    </span>
+    </>
   );
 }
 
