@@ -41,11 +41,12 @@ _BATCH_SIZE: int = 200
 
 # Timeout for each cleanup LLM call (seconds).
 # With max_retries=0 on the client, this is a hard per-request cap.
-_CLEANUP_TIMEOUT: float = 30.0
+# 60s accommodates larger batches (150+ items) through Anthropic models.
+_CLEANUP_TIMEOUT: float = 60.0
 
 # Total wall-clock budget for the entire cleanup operation (seconds).
 # If we exceed this, skip remaining batches rather than blocking the response.
-_TOTAL_BUDGET: float = 35.0
+_TOTAL_BUDGET: float = 65.0
 
 # Simple in-memory cache: hash(quote_text + abbreviate) -> cleaned_text.
 # Survives for the lifetime of the process, cleared on restart.
@@ -159,7 +160,7 @@ def _call_cleanup_batch_openai(
                 ),
             },
         ],
-        max_completion_tokens=8192,
+        max_completion_tokens=16384,
         response_format={"type": "json_object"},
         temperature=0.0,
     )
@@ -209,7 +210,7 @@ def _call_cleanup_batch_anthropic(
                 ),
             },
         ],
-        max_tokens=8192,
+        max_tokens=16384,
     )
 
     raw = ""
