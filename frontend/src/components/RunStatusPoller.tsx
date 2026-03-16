@@ -43,8 +43,10 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
   // Prefer the experiment detail embedded in the run response (avoids a
   // separate API call that can silently fail). Fall back to the dedicated
   // endpoint only when the run response doesn't include the detail.
+  // Note: we fetch this data even when gate1_pass is false, because the
+  // backend still returns full analysis data and the UI should display it.
   useEffect(() => {
-    if (run?.status === 'complete' && run?.gate1_pass === true) {
+    if (run?.status === 'complete') {
       const activeExpStatus = (
         run.experiment_tracking as Record<string, unknown> | null
       )?.active_experiment as Record<string, unknown> | null;
@@ -126,26 +128,6 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         >
           {STRINGS.common.retry}
         </button>
-      </div>
-    );
-  }
-
-  if (run.status === 'complete' && run.gate1_pass === false) {
-    return (
-      <div className="bg-white rounded border border-amber-200 p-6 space-y-3">
-        <div className="flex items-center gap-3">
-          <svg viewBox="0 0 16 16" fill="none" className="w-5 h-5 shrink-0 text-cv-amber-600" aria-hidden="true"><path d="M8 1L1 14h14L8 1z" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round"/><path d="M8 6v4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/><circle cx="8" cy="12" r="0.5" fill="currentColor"/></svg>
-          <p className="text-sm font-semibold text-amber-800">{STRINGS.runStatusPoller.qualityCheckFailed}</p>
-        </div>
-        <p className="text-sm text-stone-600 leading-relaxed">
-          {STRINGS.runStatusPoller.qualityCheckDesc}
-        </p>
-        <Link
-          href="/client/analyze"
-          className="inline-block text-sm px-4 py-2 bg-emerald-600 text-white rounded font-medium hover:bg-emerald-700 transition-colors"
-        >
-          {STRINGS.runStatusPoller.tryAnotherTranscript}
-        </Link>
       </div>
     );
   }
@@ -434,14 +416,24 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
   return (
     <div className="space-y-6">
-      {/* Success banner */}
-      <div className="bg-emerald-50 border border-emerald-200 rounded px-5 py-3.5 flex items-center gap-3">
-        <svg viewBox="0 0 16 16" fill="none" className="w-5 h-5 shrink-0 text-cv-teal-600" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth={1.4}/><path d="M5 8l2 2 4-4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"/></svg>
-        <div>
-          <p className="text-sm font-semibold text-emerald-800">{STRINGS.runStatusPoller.analysisComplete}</p>
-          <p className="text-xs text-emerald-600">{STRINGS.runStatusPoller.analysisFeedback}</p>
+      {/* Status banner */}
+      {run.gate1_pass === false ? (
+        <div className="bg-amber-50 border border-amber-200 rounded px-5 py-3.5 flex items-start gap-3">
+          <svg viewBox="0 0 16 16" fill="none" className="w-5 h-5 shrink-0 text-cv-amber-600 mt-0.5" aria-hidden="true"><path d="M8 1L1 14h14L8 1z" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round"/><path d="M8 6v4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/><circle cx="8" cy="12" r="0.5" fill="currentColor"/></svg>
+          <div>
+            <p className="text-sm font-semibold text-amber-800">{STRINGS.runStatusPoller.qualityCheckFailed}</p>
+            <p className="text-xs text-amber-600">{STRINGS.runStatusPoller.qualityCheckDesc}</p>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-emerald-50 border border-emerald-200 rounded px-5 py-3.5 flex items-center gap-3">
+          <svg viewBox="0 0 16 16" fill="none" className="w-5 h-5 shrink-0 text-cv-teal-600" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth={1.4}/><path d="M5 8l2 2 4-4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <div>
+            <p className="text-sm font-semibold text-emerald-800">{STRINGS.runStatusPoller.analysisComplete}</p>
+            <p className="text-xs text-emerald-600">{STRINGS.runStatusPoller.analysisFeedback}</p>
+          </div>
+        </div>
+      )}
 
       <CoachingCard
         strengths={run.strengths}
