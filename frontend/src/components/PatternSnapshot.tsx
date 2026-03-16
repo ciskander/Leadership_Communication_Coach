@@ -26,15 +26,25 @@ const STABLE_THRESHOLD = 2; // delta within +/- this value is considered "stable
 export function buildTrendData(
   history: RunHistoryPoint[],
   windowSize: number,
+  upToRunId?: string,
 ): Record<string, PatternTrendData> {
-  const baselineRuns = history.filter((r) => r.is_baseline);
-  const postBaselineRuns = history.filter((r) => !r.is_baseline);
+  // If upToRunId is provided, only include history up to and including that run.
+  let scopedHistory = history;
+  if (upToRunId) {
+    const idx = history.findIndex((r) => r.run_id === upToRunId);
+    if (idx !== -1) {
+      scopedHistory = history.slice(0, idx + 1);
+    }
+  }
+
+  const baselineRuns = scopedHistory.filter((r) => r.is_baseline);
+  const postBaselineRuns = scopedHistory.filter((r) => !r.is_baseline);
 
   if (baselineRuns.length === 0 || postBaselineRuns.length === 0) return {};
 
-  // Collect all pattern IDs across history
+  // Collect all pattern IDs across scoped history
   const allPatternIds = new Set<string>();
-  for (const run of history) {
+  for (const run of scopedHistory) {
     for (const p of run.patterns) allPatternIds.add(p.pattern_id);
   }
 
@@ -57,7 +67,7 @@ export function buildTrendData(
 
     // Build per-run numerator/denominator data for rolling average
     const runData: { num: number; den: number; ratio: number }[] = [];
-    for (const run of history) {
+    for (const run of scopedHistory) {
       const p = run.patterns.find((x) => x.pattern_id === pid);
       if (p) {
         const den = p.opportunity_count ?? 0;
@@ -70,7 +80,7 @@ export function buildTrendData(
 
     // Compute rolling average points
     const points: number[] = [];
-    for (let idx = 0; idx < history.length; idx++) {
+    for (let idx = 0; idx < scopedHistory.length; idx++) {
       let totalNum = 0, totalDen = 0, ratioSum = 0, ratioCount = 0;
       const start = Math.max(0, idx - windowSize + 1);
       for (let j = start; j <= idx; j++) {

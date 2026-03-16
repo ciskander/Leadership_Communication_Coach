@@ -67,9 +67,11 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
       }
 
       // Fetch trend data for sparklines (non-blocking, best-effort)
+      // Scope to baseline through the current run so the sparkline reflects
+      // history up to this meeting, not the full timeline.
       api.getClientProgress()
         .then((progress) => {
-          const trends = buildTrendData(progress.pattern_history, progress.trend_window_size);
+          const trends = buildTrendData(progress.pattern_history, progress.trend_window_size, runId);
           setTrendData(Object.keys(trends).length > 0 ? trends : undefined);
         })
         .catch(() => {});
