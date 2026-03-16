@@ -11,6 +11,7 @@ load_dotenv()
 AIRTABLE_TOKEN: str = os.environ["AIRTABLE_TOKEN"]
 AIRTABLE_BASE_ID: str = os.environ["AIRTABLE_BASE_ID"]
 OPENAI_API_KEY: str = os.environ["OPENAI_API_KEY"]
+ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")  # optional — only needed when using Claude models
 REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 # ── Versioning ────────────────────────────────────────────────────────────────
@@ -26,7 +27,11 @@ OPENAI_CONNECT_TIMEOUT: float = 10.0
 OPENAI_READ_TIMEOUT: float = 90.0
 OPENAI_MAX_CONCURRENCY: int = 3     # semaphore cap per process
 
-# ── Retry policy (shared for OpenAI + Airtable) ───────────────────────────────
+# ── Anthropic ──────────────────────────────────────────────────────────────────
+ANTHROPIC_MAX_TOKENS: int = 16384
+ANTHROPIC_READ_TIMEOUT: float = 120.0  # Claude thinking can take longer
+
+# ── Retry policy (shared for OpenAI + Anthropic + Airtable) ───────────────────
 RETRY_ATTEMPTS: int = 4
 RETRY_BASE_DELAY: float = 1.0       # seconds
 RETRY_MAX_DELAY: float = 30.0

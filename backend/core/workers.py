@@ -88,7 +88,8 @@ from .idempotency import (
     make_run_idempotency_key,
 )
 from .models import MemoryBlock, ValidationIssue, OpenAIResponse
-from .openai_client import call_openai, load_system_prompt
+from .llm_client import call_llm
+from .openai_client import load_system_prompt
 from .prompt_builder import build_baseline_pack_prompt, build_memory_block, build_single_meeting_prompt
 from .transcript_parser import parse_transcript
 
@@ -413,7 +414,7 @@ def process_single_meeting_analysis(
     dev_message = developer_message_override or _load_developer_message_from_config(client, config_links)
 
     # 6b. Call OpenAI
-    openai_resp = call_openai(
+    openai_resp = call_llm(
         system_prompt=sys_prompt,
         developer_message=dev_message,
         user_message=prompt_payload.raw_user_message,
@@ -738,7 +739,7 @@ def process_baseline_pack_build(
     dev_message = developer_message_override or _load_developer_message_from_config(client, config_links)
 
     # 5. Call OpenAI
-    openai_resp = call_openai(
+    openai_resp = call_llm(
         system_prompt=sys_prompt,
         developer_message=dev_message,
         user_message=prompt_payload.raw_user_message,
@@ -1265,7 +1266,7 @@ def process_next_experiment_suggestion(
 
     # 6. Call OpenAI
     try:
-        openai_resp = call_openai(
+        openai_resp = call_llm(
             system_prompt=slim_system_prompt,
             developer_message="",
             user_message=user_message,

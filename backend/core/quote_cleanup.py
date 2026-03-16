@@ -5,6 +5,9 @@ Runs a lightweight LLM call to clean up ASR transcript artifacts in evidence
 quotes before they are displayed to the user. This is separate from the main
 analysis prompt to keep concerns cleanly separated.
 
+Supports both OpenAI and Anthropic providers — the provider is chosen
+automatically based on the QUOTE_CLEANUP_MODEL name.
+
 Cleanup operations:
 - Insert punctuation for clarity (periods, commas, question marks)
 - Remove filler words (um, uh, you know, like) and obvious duplicate words
@@ -22,7 +25,8 @@ from typing import Optional
 
 import openai
 
-from .config import OPENAI_API_KEY
+from .config import OPENAI_API_KEY, ANTHROPIC_API_KEY
+from .llm_client import is_anthropic_model
 
 logger = logging.getLogger(__name__)
 
@@ -63,9 +67,9 @@ For NON-TARGET speaker quotes in multi-speaker spans (marked with "abbreviate": 
 - Keep enough text at the start and end to preserve clear context for what the target speaker was responding to.
 - If the quote is already short (under ~40 words), do not abbreviate — return it with only the standard cleanup.
 
-Return ONLY a JSON array. No prose, no explanation."""
+Return ONLY a JSON array wrapped in a {"quotes": [...]} object. No prose, no explanation."""
 
-_CLEANUP_USER_TEMPLATE = """Clean up the following transcript quotes. Return a JSON array with the same structure.
+_CLEANUP_USER_TEMPLATE = """Clean up the following transcript quotes. Return a JSON object with a "quotes" key containing the cleaned array.
 
 {quotes_json}"""
 
@@ -76,16 +80,45 @@ def _cache_key(text: str, abbreviate: bool) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()[:16]
 
 
-def _call_cleanup_batch(
+def _parse_cleanup_response(raw: str) -> list[dict]:
+    """Parse the LLM response, handling JSON wrapped in markdown fences."""
+    cleaned = raw.strip()
+    if cleaned.startswith("```"):
+        parts = cleaned.split("```")
+        if len(parts) >= 3:
+            inner = parts[1]
+            if inner.startswith("json"):
+                inner = inner[4:]
+            cleaned = inner.strip()
+
+    parsed = json.loads(cleaned)
+
+    # Handle both {"quotes": [...]} and bare [...] formats
+    if isinstance(parsed, dict):
+        result_list = parsed.get("quotes", parsed.get("results", []))
+    elif isinstance(parsed, list):
+        result_list = parsed
+    else:
+        return []
+
+    return result_list
+
+
+def _call_cleanup_batch_openai(
     batch: list[dict],
-    client: openai.OpenAI,
     effective_model: str,
+    api_key: Optional[str] = None,
 ) -> dict[str, str]:
-    """Send a single batch of quotes to the LLM and return {id: cleaned_text}."""
+    """Send a single batch of quotes to OpenAI and return {id: cleaned_text}."""
     payload = [
         {"id": q["id"], "text": q["text"], "abbreviate": q.get("abbreviate", False)}
         for q in batch
     ]
+
+    client = openai.OpenAI(
+        api_key=api_key or OPENAI_API_KEY,
+        timeout=openai.Timeout(timeout=_CLEANUP_TIMEOUT, connect=5.0),
+    )
 
     response = client.chat.completions.create(
         model=effective_model,
@@ -105,15 +138,55 @@ def _call_cleanup_batch(
     )
 
     raw = response.choices[0].message.content or ""
-    parsed = json.loads(raw)
+    result_list = _parse_cleanup_response(raw)
 
-    # Handle both {"quotes": [...]} and bare [...] formats
-    if isinstance(parsed, dict):
-        result_list = parsed.get("quotes", parsed.get("results", []))
-    elif isinstance(parsed, list):
-        result_list = parsed
-    else:
-        return {}
+    return {
+        item["id"]: item["text"]
+        for item in result_list
+        if item.get("id") and item.get("text")
+    }
+
+
+def _call_cleanup_batch_anthropic(
+    batch: list[dict],
+    effective_model: str,
+    api_key: Optional[str] = None,
+) -> dict[str, str]:
+    """Send a single batch of quotes to Anthropic and return {id: cleaned_text}."""
+    import anthropic
+
+    payload = [
+        {"id": q["id"], "text": q["text"], "abbreviate": q.get("abbreviate", False)}
+        for q in batch
+    ]
+
+    client = anthropic.Anthropic(
+        api_key=api_key or ANTHROPIC_API_KEY,
+        timeout=anthropic.Timeout(timeout=_CLEANUP_TIMEOUT, connect=5.0),
+        max_retries=0,
+    )
+
+    response = client.messages.create(
+        model=effective_model,
+        system=_CLEANUP_SYSTEM_PROMPT,
+        messages=[
+            {
+                "role": "user",
+                "content": _CLEANUP_USER_TEMPLATE.format(
+                    quotes_json=json.dumps(payload, ensure_ascii=False, indent=2)
+                ),
+            },
+        ],
+        max_tokens=8192,
+    )
+
+    raw = ""
+    for block in response.content:
+        if block.type == "text":
+            raw = block.text
+            break
+
+    result_list = _parse_cleanup_response(raw)
 
     return {
         item["id"]: item["text"]
@@ -131,6 +204,8 @@ def cleanup_quotes(
 
     Splits into batches of _BATCH_SIZE, uses an in-memory cache to skip
     previously cleaned quotes, and applies a per-batch timeout.
+
+    Automatically routes to OpenAI or Anthropic based on the model name.
 
     Args:
         quotes: List of dicts with "id", "text", and optionally "abbreviate" keys.
@@ -163,17 +238,17 @@ def cleanup_quotes(
         return cleaned
 
     try:
-        client = openai.OpenAI(
-            api_key=api_key or OPENAI_API_KEY,
-            timeout=openai.Timeout(timeout=_CLEANUP_TIMEOUT, connect=5.0),
-        )
         effective_model = model or CLEANUP_MODEL
+        use_anthropic = is_anthropic_model(effective_model)
 
         # Process in batches
         for i in range(0, len(uncached), _BATCH_SIZE):
             batch = uncached[i : i + _BATCH_SIZE]
             try:
-                batch_result = _call_cleanup_batch(batch, client, effective_model)
+                if use_anthropic:
+                    batch_result = _call_cleanup_batch_anthropic(batch, effective_model, api_key)
+                else:
+                    batch_result = _call_cleanup_batch_openai(batch, effective_model, api_key)
                 # Write results and populate cache
                 for q in batch:
                     qid = q["id"]
@@ -195,10 +270,11 @@ def cleanup_quotes(
             cleaned.setdefault(qid, originals[qid])
 
         logger.info(
-            "Quote cleanup completed: %d/%d quotes cleaned, model=%s",
+            "Quote cleanup completed: %d/%d quotes cleaned, model=%s provider=%s",
             sum(1 for qid in cleaned if cleaned[qid] != originals.get(qid)),
             len(originals),
             effective_model,
+            "anthropic" if use_anthropic else "openai",
         )
         return cleaned
 

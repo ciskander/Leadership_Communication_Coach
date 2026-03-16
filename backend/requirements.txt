@@ -1,5 +1,6 @@
 # ── Prompt 1 core dependencies ────────────────────────────────────────────────
 openai>=1.30.0
+anthropic>=0.40.0
 pyairtable>=2.3.0
 pydantic>=2.6.0
 jsonschema>=4.22.0
