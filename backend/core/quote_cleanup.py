@@ -33,15 +33,19 @@ logger = logging.getLogger(__name__)
 # Use a smaller/cheaper model for cleanup by default.
 CLEANUP_MODEL: str = os.getenv("QUOTE_CLEANUP_MODEL", "gpt-4o-mini")
 
-# Max quotes per LLM batch to avoid token truncation.
-_BATCH_SIZE: int = 10
+# Max quotes per LLM batch. Set high — individual turn texts are short and
+# 50 quotes easily fits within gpt-4o-mini / haiku context.  The previous
+# value of 10 caused 5 sequential API calls for ~41 quotes, creating the
+# timeout cascade.  A single call with all quotes is faster and more reliable.
+_BATCH_SIZE: int = 50
 
 # Timeout for each cleanup LLM call (seconds).
-_CLEANUP_TIMEOUT: float = 15.0
+# With max_retries=0 on the client, this is a hard per-request cap.
+_CLEANUP_TIMEOUT: float = 30.0
 
 # Total wall-clock budget for the entire cleanup operation (seconds).
 # If we exceed this, skip remaining batches rather than blocking the response.
-_TOTAL_BUDGET: float = 20.0
+_TOTAL_BUDGET: float = 35.0
 
 # Simple in-memory cache: hash(quote_text + abbreviate) -> cleaned_text.
 # Survives for the lifetime of the process, cleared on restart.
