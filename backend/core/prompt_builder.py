@@ -21,6 +21,7 @@ _HARD_REMINDERS = """
 Hard reminders:
 - JSON only; no prose/markdown.
 - evaluation_summary: Every one of the 10 pattern_ids must appear in EXACTLY ONE of patterns_evaluated, patterns_insufficient_signal, or patterns_not_evaluable. No pattern may be omitted — including conversational_balance.
+- CRITICAL: evaluation_summary MUST be consistent with pattern_snapshot. A pattern is in patterns_evaluated if and only if its evaluable_status is "evaluable" in pattern_snapshot. A pattern is in patterns_insufficient_signal if and only if its evaluable_status is "insufficient_signal". A pattern is in patterns_not_evaluable if and only if its evaluable_status is "not_evaluable". Any mismatch between these two sections is a hard error.
 - pattern_snapshot must include all 10 pattern IDs in required order.
 - conversational_balance requires balance_assessment and no numeric fields.
 - evidence_spans turn_start_id/turn_end_id must be integers.

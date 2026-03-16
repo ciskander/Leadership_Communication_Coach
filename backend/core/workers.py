@@ -293,8 +293,12 @@ def _persist_run_fields(
         fields[F_RUN_STRENGTHS_PATTERNS] = coaching["strengths_patterns"]
         fields[F_RUN_EXPERIMENT_ID_OUT] = coaching["experiment_id"]
 
-        eval_summary = parsed_json.get("evaluation_summary", {})
-        fields[F_RUN_EVALUATED_COUNT] = len(eval_summary.get("patterns_evaluated", []))
+        # Derive evaluated count from pattern_snapshot (source of truth) rather
+        # than evaluation_summary, which the model sometimes gets wrong.
+        snapshot = parsed_json.get("pattern_snapshot", [])
+        fields[F_RUN_EVALUATED_COUNT] = sum(
+            1 for ps in snapshot if ps.get("evaluable_status") == "evaluable"
+        )
         fields[F_RUN_EVIDENCE_SPAN_COUNT] = len(parsed_json.get("evidence_spans", []))
 
         exp_tracking = parsed_json.get("experiment_tracking", {})

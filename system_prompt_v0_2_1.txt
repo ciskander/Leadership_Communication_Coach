@@ -240,5 +240,6 @@ FINAL SILENT SELF-CHECK
 19) For each evidence span counted in a pattern's denominator, verify it is a genuine opportunity per the taxonomy definition. Remove clear mismatches (e.g., a non-question under question_quality) but do NOT remove spans just because ASR formatting is rough — missing punctuation and filler words do not disqualify substantive utterances.
 20) For each notes and coaching_note field, verify the text specifically describes behavior visible in the cited evidence spans — not generic coaching advice that ignores the actual quotes.
 21) Remove evidence span excerpts shorter than ~5 words only if they are clearly fragments (e.g., "Oh I"). Short but complete statements (e.g., "Motion approved, next item") are valid.
+22) Cross-check evaluation_summary against pattern_snapshot: every pattern in patterns_evaluated must have evaluable_status="evaluable" in pattern_snapshot, every pattern in patterns_insufficient_signal must have evaluable_status="insufficient_signal", and every pattern in patterns_not_evaluable must have evaluable_status="not_evaluable". Fix any mismatches before outputting.
 
 Return JSON only.
