@@ -25,7 +25,6 @@ from .dto import (
 )
 from .errors import error_response
 from .quote_helpers import (
-    apply_quote_cleanup,
     build_spans_lookup,
     build_turn_map,
     resolve_coaching_output,
@@ -262,21 +261,6 @@ async def _build_run_response(run_record: dict, at_client: Optional[AirtableClie
     human_confirm = results_map.get("human_confirm")
     if human_confirm:
         resp.human_confirmation = human_confirm
-
-    # ── Post-processing: clean up ASR artifacts in quote texts ───────────
-    # Runs in a thread to avoid blocking the event loop; uses persistent cache.
-    det_quotes_for_cleanup = (
-        resp.experiment_detection.quotes if resp.experiment_detection else None
-    )
-    await asyncio.to_thread(
-        apply_quote_cleanup,
-        resp.strengths,
-        resp.focus,
-        resp.micro_experiment,
-        resp.pattern_snapshot or [],
-        experiment_detection_quotes=det_quotes_for_cleanup,
-        experiment_detection=resp.experiment_detection,
-    )
 
     return resp
 

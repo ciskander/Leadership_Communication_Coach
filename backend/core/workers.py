@@ -91,7 +91,12 @@ from .models import MemoryBlock, ValidationIssue, OpenAIResponse
 from .llm_client import call_llm
 from .openai_client import load_system_prompt
 from .prompt_builder import build_baseline_pack_prompt, build_memory_block, build_single_meeting_prompt
+from .quote_cleanup import cleanup_parsed_json
 from .transcript_parser import parse_transcript
+
+# Feature flag: mirrors QUOTE_CLEANUP_ENABLED from quote_helpers.py
+import os as _os
+_CLEANUP_ENABLED = _os.getenv("QUOTE_CLEANUP_ENABLED", "0") == "1"
 
 _VALID_MEETING_TYPES = {
     'exec_staff', 'board', 'all_hands', 'cross_functional', 'project_review',
@@ -471,6 +476,16 @@ def process_single_meeting_analysis(
         item.setdefault("evidence_span_ids", [])
 
     _parsed_output = _patch_parsed_output(_parsed_output)
+
+    # 6d. Clean up ASR artifacts in evidence_span excerpts and coaching blurbs.
+    # This mutates _parsed_output in-place so the cleaned text is persisted
+    # to Airtable, eliminating the need for LLM calls on every page load.
+    if _CLEANUP_ENABLED:
+        try:
+            cleanup_parsed_json(_parsed_output)
+        except Exception:
+            logger.warning("Quote cleanup failed in worker; raw text will be persisted", exc_info=True)
+
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
     openai_resp = OpenAIResponse(
         parsed=_parsed_output,
@@ -480,7 +495,7 @@ def process_single_meeting_analysis(
         completion_tokens=openai_resp.completion_tokens,
         total_tokens=openai_resp.total_tokens,
     )
-    
+
     # 7. Gate1 validate
     gate1_result = gate1_validate(openai_resp.raw_text)
 
@@ -776,6 +791,14 @@ def process_baseline_pack_build(
         _exp_track["detection_in_this_meeting"] = None
 
     _parsed_output = _patch_parsed_output(_parsed_output)
+
+    # 5b. Clean up ASR artifacts in baseline pack output
+    if _CLEANUP_ENABLED:
+        try:
+            cleanup_parsed_json(_parsed_output)
+        except Exception:
+            logger.warning("Quote cleanup failed in baseline pack worker; raw text will be persisted", exc_info=True)
+
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
     openai_resp = OpenAIResponse(
         parsed=_parsed_output,

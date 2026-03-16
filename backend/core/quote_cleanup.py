@@ -414,3 +414,106 @@ def cleanup_quotes(
         for qid in originals:
             cleaned.setdefault(qid, originals[qid])
         return cleaned
+
+
+# ── Worker-side cleanup: operates on Parsed JSON dict directly ────────────────
+
+
+def cleanup_parsed_json(parsed: dict, model: Optional[str] = None) -> None:
+    """Clean evidence_span excerpts and coaching blurbs in a Parsed JSON dict.
+
+    Mutates *parsed* in-place so the cleaned text is persisted to Airtable.
+    Called from the Celery worker after LLM analysis completes.
+
+    This handles all text that lives in the Parsed JSON:
+    - evidence_spans[].excerpt  (transcript quotes)
+    - coaching_output.strengths[].message
+    - coaching_output.focus[].message / .suggested_rewrite
+    - pattern_snapshot[].notes / .coaching_note / .suggested_rewrite
+    - experiment_tracking.detection_in_this_meeting.coaching_note / .suggested_rewrite
+    """
+    cleanup_input: list[dict] = []
+
+    # 1. Collect evidence_span excerpts
+    spans = parsed.get("evidence_spans", [])
+    for i, span in enumerate(spans):
+        excerpt = span.get("excerpt")
+        if excerpt:
+            cleanup_input.append({
+                "id": f"span:{i}",
+                "text": excerpt,
+                "category": "transcript_quote",
+            })
+
+    # 2. Collect coaching blurbs
+    coaching = parsed.get("coaching_output", {})
+    for i, s in enumerate(coaching.get("strengths", [])):
+        if s.get("message"):
+            cleanup_input.append({"id": f"str:{i}:msg", "text": s["message"], "category": "coaching_blurb"})
+
+    for i, f in enumerate(coaching.get("focus", [])):
+        if f.get("message"):
+            cleanup_input.append({"id": f"foc:{i}:msg", "text": f["message"], "category": "coaching_blurb"})
+        if f.get("suggested_rewrite"):
+            cleanup_input.append({"id": f"foc:{i}:rw", "text": f["suggested_rewrite"], "category": "coaching_blurb"})
+
+    snapshot = parsed.get("pattern_snapshot", [])
+    for i, ps in enumerate(snapshot):
+        if ps.get("notes"):
+            cleanup_input.append({"id": f"snap:{i}:notes", "text": ps["notes"], "category": "coaching_blurb"})
+        if ps.get("coaching_note"):
+            cleanup_input.append({"id": f"snap:{i}:cn", "text": ps["coaching_note"], "category": "coaching_blurb"})
+        if ps.get("suggested_rewrite"):
+            cleanup_input.append({"id": f"snap:{i}:rw", "text": ps["suggested_rewrite"], "category": "coaching_blurb"})
+
+    exp_track = parsed.get("experiment_tracking", {})
+    detection = exp_track.get("detection_in_this_meeting")
+    if isinstance(detection, dict):
+        if detection.get("coaching_note"):
+            cleanup_input.append({"id": "det:cn", "text": detection["coaching_note"], "category": "coaching_blurb"})
+        if detection.get("suggested_rewrite"):
+            cleanup_input.append({"id": "det:rw", "text": detection["suggested_rewrite"], "category": "coaching_blurb"})
+
+    if not cleanup_input:
+        return
+
+    logger.info("Worker cleanup: %d items to clean", len(cleanup_input))
+    result = cleanup_quotes(cleanup_input, model=model)
+
+    # 3. Write cleaned text back into the parsed dict
+    for i, span in enumerate(spans):
+        key = f"span:{i}"
+        if key in result:
+            span["excerpt"] = result[key]
+
+    for i, s in enumerate(coaching.get("strengths", [])):
+        key = f"str:{i}:msg"
+        if key in result:
+            s["message"] = result[key]
+
+    for i, f in enumerate(coaching.get("focus", [])):
+        msg_key = f"foc:{i}:msg"
+        if msg_key in result:
+            f["message"] = result[msg_key]
+        rw_key = f"foc:{i}:rw"
+        if rw_key in result:
+            f["suggested_rewrite"] = result[rw_key]
+
+    for i, ps in enumerate(snapshot):
+        notes_key = f"snap:{i}:notes"
+        if notes_key in result:
+            ps["notes"] = result[notes_key]
+        cn_key = f"snap:{i}:cn"
+        if cn_key in result:
+            ps["coaching_note"] = result[cn_key]
+        rw_key = f"snap:{i}:rw"
+        if rw_key in result:
+            ps["suggested_rewrite"] = result[rw_key]
+
+    if isinstance(detection, dict):
+        if "det:cn" in result:
+            detection["coaching_note"] = result["det:cn"]
+        if "det:rw" in result:
+            detection["suggested_rewrite"] = result["det:rw"]
+
+    logger.info("Worker cleanup: done, %d items cleaned", len(result))

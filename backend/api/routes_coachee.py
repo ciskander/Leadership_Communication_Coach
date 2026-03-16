@@ -33,7 +33,6 @@ from .dto import (
 )
 from .errors import error_response, invalid_input
 from .quote_helpers import (
-    apply_quote_cleanup,
     build_spans_lookup,
     build_turn_map,
     build_turn_map_from_record,
@@ -301,11 +300,7 @@ async def get_baseline_pack(
             fetched[key] = result
 
     # ── Phase 3: Process sub-runs (resolve quotes) — CPU-bound, no I/O ───
-    # Collect all quotes across sub-runs for a single combined cleanup call.
     meetings = []
-    all_sub_strengths = []
-    all_sub_focus = []
-    all_sub_snapshots = []
 
     for idx, (run_id, tr_id) in enumerate(bpi_meta):
         meeting_info: dict = {
@@ -353,11 +348,6 @@ async def get_baseline_pack(
                     sub_parsed, sub_spans, sub_transcript_id, sub_meeting_id, sub_turn_map, sub_target_label
                 )
 
-                # Defer cleanup — collect for parallel batch
-                all_sub_strengths.append((idx, sub_strengths))
-                all_sub_focus.append((idx, sub_focus))
-                all_sub_snapshots.append((idx, sub_pattern_snapshot))
-
                 meeting_info["_sub_strengths"] = sub_strengths
                 meeting_info["_sub_focus"] = sub_focus
                 meeting_info["_sub_snapshot"] = sub_pattern_snapshot
@@ -366,23 +356,7 @@ async def get_baseline_pack(
 
         meetings.append(meeting_info)
 
-    # ── Phase 4: Quote cleanup for all sub-runs in parallel ─────────────
-    # Each sub-run's quotes are cleaned independently but all three calls
-    # run concurrently.  With the persistent cache, repeat visits are instant.
-    cleanup_futures = []
-    cleanup_indices = []
-    for idx, sub_s, sub_f, sub_snap in (
-        (i, s, f, sn)
-        for (i, s), (_, f), (_, sn) in zip(all_sub_strengths, all_sub_focus, all_sub_snapshots)
-    ):
-        cleanup_futures.append(asyncio.to_thread(
-            apply_quote_cleanup, sub_s, sub_f, None, sub_snap,
-        ))
-        cleanup_indices.append(idx)
-    if cleanup_futures:
-        await asyncio.gather(*cleanup_futures, return_exceptions=True)
-
-    # Serialize meeting data after cleanup has been applied in-place
+    # Serialize meeting data (cleanup already applied in Parsed JSON by worker)
     for m in meetings:
         sub_s = m.pop("_sub_strengths", None)
         sub_f = m.pop("_sub_focus", None)
