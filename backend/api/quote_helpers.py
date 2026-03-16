@@ -6,12 +6,14 @@ Used by routes_runs.py (single meeting) and routes_coachee.py (baseline pack).
 from __future__ import annotations
 
 import logging
+import os
 
 import json
 from typing import Optional
 
 from ..core.airtable_client import AirtableClient
 from ..core.models import Turn
+from ..core.quote_cleanup import cleanup_quotes
 from ..core.transcript_parser import parse_transcript
 from .dto import (
     CoachingItemWithQuotes,
@@ -19,6 +21,9 @@ from .dto import (
     PatternSnapshotItem,
     QuoteObject,
 )
+
+# Feature flag: set QUOTE_CLEANUP_ENABLED=1 to enable post-processing cleanup.
+_CLEANUP_ENABLED = os.getenv("QUOTE_CLEANUP_ENABLED", "0") == "1"
 
 _QUOTE_MAX_CHARS = 2000
 
@@ -254,3 +259,84 @@ def build_spans_lookup(parsed_json: dict) -> dict[str, dict]:
     """Build {evidence_span_id: span_dict} from parsed JSON."""
     evidence_spans: list[dict] = parsed_json.get("evidence_spans", [])
     return {s.get("evidence_span_id", ""): s for s in evidence_spans}
+
+
+# ── Quote cleanup integration ────────────────────────────────────────────────
+
+
+def _collect_quotes_for_cleanup(
+    strengths: list[CoachingItemWithQuotes],
+    focus: Optional[CoachingItemWithQuotes],
+    micro_exp: Optional[MicroExperimentWithQuotes],
+    snapshot_items: list[PatternSnapshotItem],
+    experiment_detection_quotes: Optional[list[QuoteObject]] = None,
+) -> list[QuoteObject]:
+    """Collect all QuoteObjects from the resolved coaching/snapshot output."""
+    all_quotes: list[QuoteObject] = []
+    for s in strengths:
+        all_quotes.extend(s.quotes)
+    if focus:
+        all_quotes.extend(focus.quotes)
+        all_quotes.extend(focus.additional_quotes)
+    if micro_exp:
+        all_quotes.extend(micro_exp.quotes)
+    for snap in snapshot_items:
+        all_quotes.extend(snap.quotes)
+    if experiment_detection_quotes:
+        all_quotes.extend(experiment_detection_quotes)
+    return all_quotes
+
+
+def apply_quote_cleanup(
+    strengths: list[CoachingItemWithQuotes],
+    focus: Optional[CoachingItemWithQuotes],
+    micro_exp: Optional[MicroExperimentWithQuotes],
+    snapshot_items: list[PatternSnapshotItem],
+    experiment_detection_quotes: Optional[list[QuoteObject]] = None,
+) -> None:
+    """Apply post-processing cleanup to all quote texts in-place.
+
+    This function collects all quotes, sends them through the cleanup LLM in a
+    single batch call, then writes the cleaned text back. If cleanup is disabled
+    or fails, quotes are left unchanged.
+    """
+    if not _CLEANUP_ENABLED:
+        return
+
+    all_quotes = _collect_quotes_for_cleanup(
+        strengths, focus, micro_exp, snapshot_items, experiment_detection_quotes
+    )
+    if not all_quotes:
+        return
+
+    # Deduplicate by (span_id, quote_text) to avoid sending the same text twice.
+    # Multiple QuoteObjects may share the same underlying text (e.g., same span
+    # referenced by both pattern_snapshot and coaching_output).
+    seen: dict[str, list[QuoteObject]] = {}
+    cleanup_input: list[dict] = []
+    for idx, q in enumerate(all_quotes):
+        dedup_key = f"{q.span_id}:{q.quote_text}"
+        if dedup_key in seen:
+            seen[dedup_key].append(q)
+            continue
+        seen[dedup_key] = [q]
+        cleanup_input.append({
+            "id": dedup_key,
+            "text": q.quote_text,
+            "abbreviate": q.is_target_speaker is False,  # non-target in multi-speaker
+        })
+
+    if not cleanup_input:
+        return
+
+    logger = logging.getLogger(__name__)
+    logger.info("Running quote cleanup on %d unique quotes", len(cleanup_input))
+
+    cleaned = cleanup_quotes(cleanup_input)
+
+    # Write cleaned text back to all QuoteObjects
+    for dedup_key, quote_list in seen.items():
+        cleaned_text = cleaned.get(dedup_key)
+        if cleaned_text:
+            for q in quote_list:
+                q.quote_text = cleaned_text

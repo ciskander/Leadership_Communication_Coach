@@ -32,6 +32,7 @@ from .dto import (
 )
 from .errors import error_response, invalid_input
 from .quote_helpers import (
+    apply_quote_cleanup,
     build_spans_lookup,
     build_turn_map,
     resolve_coaching_output,
@@ -290,6 +291,11 @@ async def get_baseline_pack(
                     )
                     sub_pattern_snapshot = resolve_pattern_snapshot(
                         sub_parsed, sub_spans, sub_transcript_id, sub_meeting_id, sub_turn_map, sub_target_label
+                    )
+
+                    # Post-processing: clean up ASR artifacts in quote texts
+                    apply_quote_cleanup(
+                        sub_strengths, sub_focus, None, sub_pattern_snapshot
                     )
 
                     meeting_info["sub_run_strengths"] = [s.model_dump() for s in sub_strengths]

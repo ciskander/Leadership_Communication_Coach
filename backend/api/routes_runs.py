@@ -20,6 +20,7 @@ from .dto import (
 )
 from .errors import error_response
 from .quote_helpers import (
+    apply_quote_cleanup,
     build_spans_lookup,
     build_turn_map,
     resolve_coaching_output,
@@ -202,6 +203,18 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
                     resp.human_confirmation = existing.get("fields", {}).get("User Confirmation")
             except Exception:
                 pass
+
+    # ── Post-processing: clean up ASR artifacts in quote texts ───────────
+    det_quotes_for_cleanup = (
+        resp.experiment_detection.quotes if resp.experiment_detection else None
+    )
+    apply_quote_cleanup(
+        resp.strengths,
+        resp.focus,
+        resp.micro_experiment,
+        resp.pattern_snapshot or [],
+        experiment_detection_quotes=det_quotes_for_cleanup,
+    )
 
     return resp
 
