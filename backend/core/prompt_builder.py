@@ -28,7 +28,7 @@ Hard reminders:
 - focus[0] MUST include ALL evidence spans where the pattern opportunity was missed, not just one.
 - focus[0] MUST include a "suggested_rewrite" field: a concrete, reworded version of what the speaker said in the evidence span, demonstrating the coaching advice applied. Write it in the speaker's natural voice, 1-3 sentences.
 - focus[0] MUST include a "rewrite_for_span_id" field set to the evidence_span_id that the suggested_rewrite directly rewrites. The rewrite must match the excerpt in that specific span.
-- CRITICAL: Before finalizing, re-check every evidence span in each pattern's denominator against that pattern's taxonomy definition. Remove any span that does not meet the denominator criteria (e.g., fragments, filler words, off-topic utterances, or non-questions counted under question_quality). Adjust numerator/denominator/ratio after removing invalid spans. If removals push the denominator below min_required_threshold, change evaluable_status to insufficient_signal.
+- Before finalizing, re-check that each evidence span counted in a pattern's denominator is a genuine opportunity per the taxonomy definition. Remove clear mismatches (e.g., a non-question counted under question_quality, or a 2-word fragment). Do NOT remove spans simply because the transcript has rough ASR formatting — read past missing punctuation and filler words to assess the speaker's actual behavior.
 - CRITICAL: Every notes and coaching_note field must specifically reference the behavior observed in the cited evidence spans. Do not write generic observations disconnected from the actual quotes.
 - Choose the rewrite_for_span_id from evidence spans that have enough context for a meaningful rewrite. Avoid rewriting very short or garbled excerpts."""
 
