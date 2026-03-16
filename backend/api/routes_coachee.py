@@ -240,7 +240,13 @@ async def get_baseline_pack(
                 }
             micro_list = coaching.get("micro_experiment", [])
             if micro_list:
-                m = micro_list[0]
+                # Pick the micro_experiment matching the focus pattern;
+                # fall back to the first if no match is found.
+                focus_pid = focus["pattern_id"] if focus else None
+                m = next(
+                    (me for me in micro_list if me.get("pattern_id") == focus_pid),
+                    micro_list[0],
+                )
                 micro_experiment = {
                     "experiment_id": m.get("experiment_id", ""),
                     "title": m.get("title", ""),
