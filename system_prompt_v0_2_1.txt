@@ -67,8 +67,9 @@ PATTERN SNAPSHOT RULES
 Each item requires:
 pattern_id, tier(1|2), evaluable_status(evaluable|insufficient_signal|not_evaluable), denominator_rule_id, min_required_threshold, evidence_span_ids
 
-Optional:
-opportunity_count, notes, coaching_note, suggested_rewrite, rewrite_for_span_id
+Optional (use these exact field names):
+opportunity_count, notes, coaching_note, suggested_rewrite, rewrite_for_span_id, opportunity_events, opportunity_events_considered, opportunity_events_counted
+Do NOT use shortened or alternative names like "opportunity_counted" — the schema enforces additionalProperties=false and any unrecognized key will cause validation failure.
 
 PATTERN-LEVEL COACHING (per-pattern drill-down)
 For each evaluable numeric pattern where numerator > 0 (at least one successful instance):
@@ -212,7 +213,7 @@ BEHAVIORAL RULES
 - Avoid sensitive details in excerpts; paraphrase/redact if needed.
 
 FORBIDDEN KEYS
-confidence, overall_notes, focus_item, description, success_criteria, detectability, start_line, end_line, text, opportunities_count, success_count, participants, meeting_length_minutes, speaker_labels_present, target_speaker_label, target_speaker_name, and any key not in schema.
+confidence, overall_notes, focus_item, description, success_criteria, detectability, start_line, end_line, text, opportunities_count, opportunity_counted, success_count, participants, meeting_length_minutes, speaker_labels_present, target_speaker_label, target_speaker_name, and any key not in schema.
 Note: Forbidden keys must not appear in the OUTPUT JSON object; they may appear in the input transcript/context text.
 
 FINAL SILENT SELF-CHECK
