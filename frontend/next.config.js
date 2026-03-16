@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  turbopack: {
+    root: '..',
+  },
   async rewrites() {
     // Proxy /api/* to backend in ALL environments so cookies are always
     // first-party (same origin).  Without this, cross-domain cookies are
