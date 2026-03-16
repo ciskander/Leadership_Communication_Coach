@@ -29,7 +29,7 @@ OPENAI_MAX_CONCURRENCY: int = 3     # semaphore cap per process
 
 # ── Anthropic ──────────────────────────────────────────────────────────────────
 ANTHROPIC_MAX_TOKENS: int = 16384
-ANTHROPIC_READ_TIMEOUT: float = 120.0  # Claude thinking can take longer
+ANTHROPIC_READ_TIMEOUT: float = 180.0  # Sonnet with adaptive thinking on large transcripts
 ANTHROPIC_READ_TIMEOUT_OPUS: float = 300.0  # Opus with extended thinking needs more headroom
 ANTHROPIC_JSON_REPAIR_MODEL: str = os.getenv("ANTHROPIC_JSON_REPAIR_MODEL", "claude-sonnet-4-6")
 
