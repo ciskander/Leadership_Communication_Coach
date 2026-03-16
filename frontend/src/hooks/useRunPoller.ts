@@ -7,6 +7,11 @@ import type { RunStatus } from '@/lib/types';
 const POLL_INTERVAL_MS = 3000;
 const MAX_POLLS = 60;
 
+// Session-level cache for completed run results. Once a run is complete its
+// data is static, so we can serve it instantly on subsequent navigations
+// instead of hitting the backend again.
+const _completedRunCache = new Map<string, RunStatus>();
+
 export type PollState = 'polling' | 'complete' | 'error' | 'timeout';
 
 interface RunPollerResult {
@@ -26,6 +31,15 @@ export function useRunPoller(runId: string | null): RunPollerResult {
   useEffect(() => {
     if (!runId) return;
 
+    // Serve from cache if this run was already fetched and complete
+    const cached = _completedRunCache.get(runId);
+    if (cached) {
+      setRun(cached);
+      setPollState('complete');
+      setPollCount(0);
+      return;
+    }
+
     let count = 0;
     let cancelled = false;
 
@@ -42,6 +56,10 @@ export function useRunPoller(runId: string | null): RunPollerResult {
 
         if (result.status === 'complete' || result.status === 'error') {
           setPollState(result.status === 'complete' ? 'complete' : 'error');
+          // Cache successful completions for instant re-display
+          if (result.status === 'complete') {
+            _completedRunCache.set(runId, result);
+          }
           return;
         }
 
@@ -68,7 +86,11 @@ export function useRunPoller(runId: string | null): RunPollerResult {
     };
   }, [runId, retryKey]);
 
-  const retry = () => setRetryKey((k) => k + 1);
+  const retry = () => {
+    // Clear cache on manual retry so we get fresh data
+    if (runId) _completedRunCache.delete(runId);
+    setRetryKey((k) => k + 1);
+  };
 
   return { run, pollState, pollCount, retry };
 }

@@ -3,6 +3,7 @@ api/routes_coachee.py — Endpoints for coachee / client users.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from datetime import datetime, timezone
@@ -886,55 +887,109 @@ async def client_summary(
 
     if user.airtable_user_record_id:
         try:
-            user_rec = at_client.get_user(user.airtable_user_record_id)
-            u_fields = user_rec.get("fields", {})
-
-            # Active experiment
-            ae_links = u_fields.get("Active Experiment", [])
-            if ae_links:
-                exp_rec = at_client.get_experiment(ae_links[0])
-                active_exp_resp = _build_experiment_response(exp_rec, at_client)
-
-            # Proposed experiments (max 3)
-            proposed_records = at_client.get_proposed_experiments_for_user(
-                user.airtable_user_record_id, max_records=3
+            # ── Phase 1: fetch user record (needed to determine what else to fetch)
+            user_rec = await asyncio.to_thread(
+                at_client.get_user, user.airtable_user_record_id
             )
-            proposed_exps = [_build_experiment_response(r) for r in proposed_records]
+            u_fields = user_rec.get("fields", {})
+            user_primary_id = u_fields.get("User ID", "")
 
-            # Parked experiments count
-            parked_records = at_client.get_parked_experiments_for_user(user.airtable_user_record_id)
-            parked_count = len(parked_records)
+            # ── Phase 2: launch independent fetches in parallel ───────────
+            ae_links = u_fields.get("Active Experiment", [])
+            bp_links = u_fields.get("Active Baseline Pack", [])
+
+            futures = []
+            future_keys = []
+
+            # Active experiment detail
+            if ae_links:
+                futures.append(asyncio.to_thread(at_client.get_experiment, ae_links[0]))
+                future_keys.append("active_exp")
+
+            # Proposed experiments — pass user_primary_id to skip redundant user fetch
+            futures.append(asyncio.to_thread(
+                at_client.get_proposed_experiments_for_user,
+                user.airtable_user_record_id, 3, user_primary_id,
+            ))
+            future_keys.append("proposed")
+
+            # Parked experiments — pass user_primary_id to skip redundant user fetch
+            futures.append(asyncio.to_thread(
+                at_client.get_parked_experiments_for_user,
+                user.airtable_user_record_id, user_primary_id,
+            ))
+            future_keys.append("parked")
 
             # Baseline pack status
-            bp_links = u_fields.get("Active Baseline Pack", [])
             if bp_links:
                 bp_id = bp_links[0]
-                bp_rec = at_client.get_baseline_pack(bp_links[0])
+                futures.append(asyncio.to_thread(at_client.get_baseline_pack, bp_links[0]))
+                future_keys.append("baseline_pack")
+
+            # Recent runs
+            runs_formula = f"{{Coachee ID}} = '{user.airtable_user_record_id}'"
+            futures.append(asyncio.to_thread(
+                at_client.search_records, "runs", runs_formula, None, 10,
+            ))
+            future_keys.append("runs")
+
+            results = await asyncio.gather(*futures, return_exceptions=True)
+            results_map: dict = {}
+            for key, result in zip(future_keys, results):
+                if isinstance(result, Exception):
+                    logger.warning("client_summary parallel fetch %s failed: %s", key, result)
+                    results_map[key] = None
+                else:
+                    results_map[key] = result
+
+            # ── Process results ───────────────────────────────────────────
+            # Active experiment
+            active_exp_rec = results_map.get("active_exp")
+            if active_exp_rec:
+                active_exp_resp = _build_experiment_response(active_exp_rec, at_client)
+
+            # Proposed experiments
+            proposed_records = results_map.get("proposed") or []
+            proposed_exps = [_build_experiment_response(r) for r in proposed_records]
+
+            # Parked experiments
+            parked_records = results_map.get("parked") or []
+            parked_count = len(parked_records)
+
+            # Baseline pack
+            bp_rec = results_map.get("baseline_pack")
+            if bp_rec:
                 bp_status = bp_rec.get("fields", {}).get("Status")
 
-            # Recent runs (last 10, enriched with transcript metadata)
-            # Excludes single_meeting runs that are sub-runs of a baseline pack
-            runs_formula = f"{{Coachee ID}} = '{user.airtable_user_record_id}'"
-            run_records = at_client.search_records("runs", runs_formula, max_records=10)
+            # ── Recent runs with denormalized transcript metadata ─────────
+            run_records = results_map.get("runs") or []
+
+            # Separate runs that have denormalized metadata from those that
+            # need a transcript lookup (old runs created before denormalization).
+            runs_needing_transcript: list[tuple[dict, str]] = []  # (run_record, transcript_record_id)
+
             for r in run_records:
                 rf = r.get("fields", {})
                 if rf.get("baseline_pack_items"):
                     continue
+
+                # Try denormalized fields first
                 transcript_meta: dict = {}
-                transcript_links = rf.get("Transcript ID", [])
-                if transcript_links:
-                    try:
-                        tr_rec = at_client.get_transcript(transcript_links[0])
-                        trf = tr_rec.get("fields", {})
-                        transcript_meta = {
-                            "title": trf.get("Title"),
-                            "transcript_id": trf.get("Transcript ID"),
-                            "meeting_date": trf.get("Meeting Date"),
-                            "meeting_type": trf.get("Meeting Type"),
-                            "target_role": trf.get("Target Role"),
-                        }
-                    except Exception as te:
-                        logger.warning("Could not fetch transcript for run %s: %s", r["id"], te)
+                has_denormalized = rf.get("Transcript Title") or rf.get("Transcript ID String")
+                if has_denormalized:
+                    transcript_meta = {
+                        "title": rf.get("Transcript Title"),
+                        "transcript_id": rf.get("Transcript ID String"),
+                        "meeting_date": rf.get("Meeting Date"),
+                        "meeting_type": rf.get("Meeting Type"),
+                        "target_role": rf.get("Target Speaker Role"),
+                    }
+                else:
+                    # Need transcript lookup for old runs
+                    transcript_links = rf.get("Transcript ID", [])
+                    if transcript_links:
+                        runs_needing_transcript.append((r, transcript_links[0]))
+
                 run_entry: dict = {
                     "run_id": r["id"],
                     "analysis_type": rf.get("Analysis Type"),
@@ -946,7 +1001,36 @@ async def client_summary(
                 if rf.get("Analysis Type") == "baseline_pack":
                     bp_run_links = rf.get("baseline_packs (Last Run)", [])
                     run_entry["baseline_pack_id"] = bp_run_links[0] if bp_run_links else None
-                recent_runs.append(run_entry)            # Sort newest meeting date first; runs with no date go to the end
+                recent_runs.append(run_entry)
+
+            # Fetch transcript metadata for old runs in parallel
+            if runs_needing_transcript:
+                tr_futures = [
+                    asyncio.to_thread(at_client.get_transcript, tr_id)
+                    for _, tr_id in runs_needing_transcript
+                ]
+                tr_results = await asyncio.gather(*tr_futures, return_exceptions=True)
+                # Build a map of run_id -> transcript metadata
+                run_id_to_meta: dict[str, dict] = {}
+                for (run_rec, _), tr_result in zip(runs_needing_transcript, tr_results):
+                    if isinstance(tr_result, Exception):
+                        logger.warning("Could not fetch transcript for run %s: %s", run_rec["id"], tr_result)
+                        continue
+                    trf = tr_result.get("fields", {})
+                    run_id_to_meta[run_rec["id"]] = {
+                        "title": trf.get("Title"),
+                        "transcript_id": trf.get("Transcript ID"),
+                        "meeting_date": trf.get("Meeting Date"),
+                        "meeting_type": trf.get("Meeting Type"),
+                        "target_role": trf.get("Target Role"),
+                    }
+                # Patch the run entries
+                for entry in recent_runs:
+                    meta = run_id_to_meta.get(entry["run_id"])
+                    if meta:
+                        entry.update(meta)
+
+            # Sort newest meeting date first; runs with no date go to the end
             recent_runs.sort(
                 key=lambda x: (x.get("meeting_date") is None, x.get("meeting_date") or ""),
                 reverse=True,

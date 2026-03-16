@@ -102,6 +102,13 @@ F_RUN_EXPERIMENT_INSTANTIATED = "Experiment Instantiated?"
 F_RUN_ATTEMPT_EVENT_CREATED = "Attempt Event Created?"
 F_RUN_ACTIVE_EXPERIMENT = "Active Experiment"   # Link to experiments table
 
+# Denormalized transcript metadata (written at run creation time to avoid
+# per-run transcript lookups in the client summary endpoint).
+F_RUN_TRANSCRIPT_TITLE = "Transcript Title"
+F_RUN_TRANSCRIPT_ID_STR = "Transcript ID String"  # human-readable e.g. "T-0042"
+F_RUN_MEETING_DATE = "Meeting Date"
+F_RUN_MEETING_TYPE = "Meeting Type"
+
 # validation_issues
 F_VI_ISSUE_ID = "Issue ID"
 F_VI_RUN = "Run ID"                          # Link
@@ -384,13 +391,20 @@ class AirtableClient:
             return None
         return self.get_experiment(exp_links[0])
 
-    def get_proposed_experiments_for_user(self, user_record_id: str, max_records: int = 3) -> list[dict]:
-        """Return proposed experiments for a user, most recent first."""
-        # User is a linked record field; ARRAYJOIN in a formula returns the primary
-        # field values of linked records (e.g. "U-0001"), not Airtable record IDs.
-        # Fetch the user's primary field value first so the FIND matches correctly.
-        user_rec = self.get_record(AT_TABLE_USERS, user_record_id)
-        user_primary_id = user_rec.get("fields", {}).get(F_USER_USER_ID, "")
+    def get_proposed_experiments_for_user(
+        self,
+        user_record_id: str,
+        max_records: int = 3,
+        user_primary_id: Optional[str] = None,
+    ) -> list[dict]:
+        """Return proposed experiments for a user, most recent first.
+
+        Pass *user_primary_id* when you already have the user's primary field
+        value (e.g. "U-0001") to avoid a redundant get_record round-trip.
+        """
+        if not user_primary_id:
+            user_rec = self.get_record(AT_TABLE_USERS, user_record_id)
+            user_primary_id = user_rec.get("fields", {}).get(F_USER_USER_ID, "")
         if not user_primary_id:
             return []
         formula = (
@@ -484,10 +498,19 @@ class AirtableClient:
         self.set_active_experiment_for_user(user_record_id, experiment_record_id)
         return self.get_experiment(experiment_record_id)
 
-    def get_parked_experiments_for_user(self, user_record_id: str) -> list[dict]:
-        """Return parked experiments for a user, most recently parked first."""
-        user_rec = self.get_record(AT_TABLE_USERS, user_record_id)
-        user_primary_id = user_rec.get("fields", {}).get(F_USER_USER_ID, "")
+    def get_parked_experiments_for_user(
+        self,
+        user_record_id: str,
+        user_primary_id: Optional[str] = None,
+    ) -> list[dict]:
+        """Return parked experiments for a user, most recently parked first.
+
+        Pass *user_primary_id* when you already have the user's primary field
+        value to avoid a redundant get_record round-trip.
+        """
+        if not user_primary_id:
+            user_rec = self.get_record(AT_TABLE_USERS, user_record_id)
+            user_primary_id = user_rec.get("fields", {}).get(F_USER_USER_ID, "")
         if not user_primary_id:
             return []
         formula = (

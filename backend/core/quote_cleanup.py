@@ -50,9 +50,78 @@ _CLEANUP_TIMEOUT: float = 15.0
 # If we exceed this, skip remaining batches rather than blocking the response.
 _TOTAL_BUDGET: float = 20.0
 
-# Simple in-memory cache: hash(quote_text + abbreviate) -> cleaned_text.
-# Survives for the lifetime of the process, cleared on restart.
-_cache: dict[str, str] = {}
+# ── Persistent cache (PostgreSQL-backed, survives deploys) ────────────────────
+# Falls back to in-memory dict if DB is unavailable.
+_mem_cache: dict[str, str] = {}
+_db_cache_ready = False
+
+
+def _init_cache_table() -> None:
+    """Create the quote_cleanup_cache table if it doesn't exist."""
+    global _db_cache_ready
+    if _db_cache_ready:
+        return
+    try:
+        from ..auth.sqlite_db import get_conn
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS quote_cleanup_cache (
+                        cache_key   TEXT PRIMARY KEY,
+                        cleaned     TEXT NOT NULL,
+                        created_at  TIMESTAMPTZ DEFAULT NOW()
+                    );
+                """)
+            conn.commit()
+        _db_cache_ready = True
+    except Exception:
+        logger.debug("Could not init quote_cleanup_cache table; using in-memory only", exc_info=True)
+
+
+def _cache_get(key: str) -> Optional[str]:
+    """Look up a cached cleanup result. Checks in-memory first, then DB."""
+    if key in _mem_cache:
+        return _mem_cache[key]
+    _init_cache_table()
+    if not _db_cache_ready:
+        return None
+    try:
+        from ..auth.sqlite_db import get_conn
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT cleaned FROM quote_cleanup_cache WHERE cache_key = %s", (key,))
+                row = cur.fetchone()
+                if row:
+                    val = row["cleaned"]
+                    _mem_cache[key] = val  # warm in-memory layer
+                    return val
+    except Exception:
+        pass
+    return None
+
+
+def _cache_put_batch(items: list[tuple[str, str]]) -> None:
+    """Persist multiple cache entries. Best-effort — failures are non-fatal."""
+    for key, val in items:
+        _mem_cache[key] = val
+    _init_cache_table()
+    if not _db_cache_ready or not items:
+        return
+    try:
+        from ..auth.sqlite_db import get_conn
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                # Use INSERT ... ON CONFLICT for upsert
+                for key, val in items:
+                    cur.execute(
+                        """INSERT INTO quote_cleanup_cache (cache_key, cleaned)
+                           VALUES (%s, %s)
+                           ON CONFLICT (cache_key) DO UPDATE SET cleaned = EXCLUDED.cleaned""",
+                        (key, val),
+                    )
+            conn.commit()
+    except Exception:
+        logger.debug("Failed to persist cleanup cache entries", exc_info=True)
 
 _CLEANUP_SYSTEM_PROMPT = """You are a transcript quote cleanup assistant. You will receive a JSON array of objects, each with "id", "text", and a "category" field. Apply cleanup rules based on the category.
 
@@ -237,8 +306,9 @@ def cleanup_quotes(
 ) -> dict[str, str]:
     """Clean up a batch of quote texts via lightweight LLM calls.
 
-    Splits into batches of _BATCH_SIZE, uses an in-memory cache to skip
-    previously cleaned quotes, and applies a per-batch timeout.
+    Splits into batches of _BATCH_SIZE, uses a persistent DB cache (with
+    in-memory warm layer) to skip previously cleaned quotes, and applies a
+    per-batch timeout.
 
     Automatically routes to OpenAI or Anthropic based on the model name.
 
@@ -257,12 +327,13 @@ def cleanup_quotes(
     originals = {q["id"]: q["text"] for q in quotes}
     cleaned: dict[str, str] = {}
 
-    # Check cache first, build list of uncached quotes
+    # Check persistent cache first, build list of uncached quotes
     uncached: list[dict] = []
     for q in quotes:
         ck = _cache_key(q["text"], q.get("abbreviate", False))
-        if ck in _cache:
-            cleaned[q["id"]] = _cache[ck]
+        cached_val = _cache_get(ck)
+        if cached_val is not None:
+            cleaned[q["id"]] = cached_val
         else:
             uncached.append(q)
 
@@ -280,6 +351,7 @@ def cleanup_quotes(
         t0 = _time.monotonic()
 
         # Process in batches, respecting the total time budget
+        new_cache_entries: list[tuple[str, str]] = []
         for i in range(0, len(uncached), _BATCH_SIZE):
             elapsed = _time.monotonic() - t0
             if elapsed > _TOTAL_BUDGET:
@@ -296,13 +368,13 @@ def cleanup_quotes(
                     batch_result = _call_cleanup_batch_anthropic(batch, effective_model, api_key)
                 else:
                     batch_result = _call_cleanup_batch_openai(batch, effective_model, api_key)
-                # Write results and populate cache
+                # Write results and collect cache entries
                 for q in batch:
                     qid = q["id"]
                     if qid in batch_result:
                         cleaned[qid] = batch_result[qid]
                         ck = _cache_key(q["text"], q.get("abbreviate", False))
-                        _cache[ck] = batch_result[qid]
+                        new_cache_entries.append((ck, batch_result[qid]))
                     # else: will be filled from originals below
             except Exception:
                 logger.warning(
@@ -311,6 +383,10 @@ def cleanup_quotes(
                     exc_info=True,
                 )
                 # This batch fails; remaining batches still get attempted.
+
+        # Persist all new cache entries in one batch
+        if new_cache_entries:
+            _cache_put_batch(new_cache_entries)
 
         # Fill in any missing IDs with originals
         for qid in originals:

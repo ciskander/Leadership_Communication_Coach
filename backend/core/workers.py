@@ -77,6 +77,10 @@ from .airtable_client import (
     F_EXP_LAST_ATTEMPT_MODEL,
     F_EXP_LAST_ATTEMPT_DATE,
     F_RUN_ACTIVE_EXPERIMENT,
+    F_RUN_TRANSCRIPT_TITLE,
+    F_RUN_TRANSCRIPT_ID_STR,
+    F_RUN_MEETING_DATE,
+    F_RUN_MEETING_TYPE,
 )
 from .config import CONFIG_VERSION
 from .gate1_validator import validate as gate1_validate
@@ -254,7 +258,11 @@ def _persist_run_fields(
     analysis_type: str,
     idempotency_key: str,
     coachee_id: str,
-    user_record_id: Optional[str] = None,    
+    user_record_id: Optional[str] = None,
+    transcript_title: Optional[str] = None,
+    transcript_id_str: Optional[str] = None,
+    meeting_date: Optional[str] = None,
+    meeting_type: Optional[str] = None,
 ) -> dict:
     """Create the run record in Airtable and return it."""
     fields: dict = {
@@ -307,6 +315,17 @@ def _persist_run_fields(
         fields[F_RUN_EXPERIMENT_STATUS_MODEL] = active_exp.get("status")
         if detection and isinstance(detection, dict):
             fields[F_RUN_ATTEMPT_MODEL] = detection.get("attempt")
+
+    # Denormalized transcript metadata — avoids per-run transcript lookups
+    # in the client summary endpoint.
+    if transcript_title:
+        fields[F_RUN_TRANSCRIPT_TITLE] = transcript_title
+    if transcript_id_str:
+        fields[F_RUN_TRANSCRIPT_ID_STR] = transcript_id_str
+    if meeting_date:
+        fields[F_RUN_MEETING_DATE] = meeting_date
+    if meeting_type:
+        fields[F_RUN_MEETING_TYPE] = meeting_type
 
     return client.create_run(fields)
 
@@ -505,7 +524,11 @@ def process_single_meeting_analysis(
         analysis_type=analysis_type,
         idempotency_key=idem_key,
         coachee_id=coachee_id,
-        user_record_id=user_record_id or None,        
+        user_record_id=user_record_id or None,
+        transcript_title=tr_fields.get("Title"),
+        transcript_id_str=transcript_id_str,
+        meeting_date=meeting_date,
+        meeting_type=meeting_type,
     )
     run_record_id = run_record["id"]
 
