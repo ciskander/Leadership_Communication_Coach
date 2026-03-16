@@ -83,13 +83,49 @@ def _build_allowed_keys_map(schema: dict) -> dict[str, set[str]]:
 _ALLOWED_KEYS = _build_allowed_keys_map(_SCHEMA)
 
 
-def _strip_extra_keys(obj: dict, allowed: set[str], path: str) -> int:
-    """Remove keys not in the allowed set.  Returns count of keys removed."""
+def _best_match(key: str, allowed: set[str], max_distance: int = 5) -> str | None:
+    """Find the best fuzzy match for an unrecognized key among allowed keys.
+
+    Uses Levenshtein edit distance. Returns the closest allowed key if the
+    distance is within max_distance, otherwise None. Ties are broken by
+    shorter distance; among ties, alphabetical order.
+    """
+    from difflib import SequenceMatcher
+
+    key_lower = key.lower()
+    best: tuple[float, str] | None = None  # (similarity_ratio, candidate)
+    for candidate in allowed:
+        ratio = SequenceMatcher(None, key_lower, candidate.lower()).ratio()
+        if best is None or ratio > best[0]:
+            best = (ratio, candidate)
+    # Require at least 60% similarity
+    if best and best[0] >= 0.6:
+        return best[1]
+    return None
+
+
+def _fix_extra_keys(obj: dict, allowed: set[str], path: str) -> int:
+    """Rename or remove keys not in the allowed set.  Returns count of fixes.
+
+    If an unrecognized key closely matches an allowed key that isn't already
+    present, the value is moved to the correct key name (preserving data).
+    Otherwise, the key is stripped.
+    """
     extra = set(obj.keys()) - allowed
+    fixes = 0
     for key in extra:
-        logger.warning("Sanitiser: stripping unrecognized key %r at %s", key, path)
-        del obj[key]
-    return len(extra)
+        match = _best_match(key, allowed)
+        if match and match not in obj:
+            logger.warning(
+                "Sanitiser: renaming unrecognized key %r → %r at %s",
+                key, match, path,
+            )
+            obj[match] = obj.pop(key)
+        else:
+            logger.warning("Sanitiser: stripping unrecognized key %r at %s", key, path)
+            del obj[key]
+        fixes += 1
+    return fixes
 
 
 def _sanitise_output(data: dict) -> int:
@@ -103,57 +139,57 @@ def _sanitise_output(data: dict) -> int:
     fixes = 0
 
     # ── Strip unrecognized keys from all schema-controlled objects ────────
-    fixes += _strip_extra_keys(data, _ALLOWED_KEYS.get("ROOT", set()), "$")
+    fixes += _fix_extra_keys(data, _ALLOWED_KEYS.get("ROOT", set()), "$")
 
     if "meta" in data and isinstance(data["meta"], dict):
-        fixes += _strip_extra_keys(data["meta"], _ALLOWED_KEYS.get("Meta", set()), "$.meta")
+        fixes += _fix_extra_keys(data["meta"], _ALLOWED_KEYS.get("Meta", set()), "$.meta")
 
     if "context" in data and isinstance(data["context"], dict):
         # Determine which context schema applies
         ctx_keys = _ALLOWED_KEYS.get("SingleMeetingContext", set()) | _ALLOWED_KEYS.get("BaselinePackContext", set())
-        fixes += _strip_extra_keys(data["context"], ctx_keys, "$.context")
+        fixes += _fix_extra_keys(data["context"], ctx_keys, "$.context")
 
     if "evaluation_summary" in data and isinstance(data["evaluation_summary"], dict):
-        fixes += _strip_extra_keys(data["evaluation_summary"], _ALLOWED_KEYS.get("EvaluationSummary", set()), "$.evaluation_summary")
+        fixes += _fix_extra_keys(data["evaluation_summary"], _ALLOWED_KEYS.get("EvaluationSummary", set()), "$.evaluation_summary")
 
     if "coaching_output" in data and isinstance(data["coaching_output"], dict):
         co = data["coaching_output"]
-        fixes += _strip_extra_keys(co, _ALLOWED_KEYS.get("CoachingOutput", set()), "$.coaching_output")
+        fixes += _fix_extra_keys(co, _ALLOWED_KEYS.get("CoachingOutput", set()), "$.coaching_output")
         ci_keys = _ALLOWED_KEYS.get("CoachingItem", set())
         for i, s in enumerate(co.get("strengths", [])):
             if isinstance(s, dict):
-                fixes += _strip_extra_keys(s, ci_keys, f"$.coaching_output.strengths[{i}]")
+                fixes += _fix_extra_keys(s, ci_keys, f"$.coaching_output.strengths[{i}]")
         for i, f in enumerate(co.get("focus", [])):
             if isinstance(f, dict):
-                fixes += _strip_extra_keys(f, ci_keys, f"$.coaching_output.focus[{i}]")
+                fixes += _fix_extra_keys(f, ci_keys, f"$.coaching_output.focus[{i}]")
         me_keys = _ALLOWED_KEYS.get("MicroExperiment", set())
         for i, m in enumerate(co.get("micro_experiment", [])):
             if isinstance(m, dict):
-                fixes += _strip_extra_keys(m, me_keys, f"$.coaching_output.micro_experiment[{i}]")
+                fixes += _fix_extra_keys(m, me_keys, f"$.coaching_output.micro_experiment[{i}]")
 
     ps_keys = _ALLOWED_KEYS.get("PatternMeasurementBase", set())
     oe_keys = _ALLOWED_KEYS.get("OpportunityEvent", set())
     for i, item in enumerate(data.get("pattern_snapshot", [])):
         if isinstance(item, dict):
-            fixes += _strip_extra_keys(item, ps_keys, f"$.pattern_snapshot[{i}]")
+            fixes += _fix_extra_keys(item, ps_keys, f"$.pattern_snapshot[{i}]")
             for j, event in enumerate(item.get("opportunity_events", []) or []):
                 if isinstance(event, dict):
-                    fixes += _strip_extra_keys(event, oe_keys, f"$.pattern_snapshot[{i}].opportunity_events[{j}]")
+                    fixes += _fix_extra_keys(event, oe_keys, f"$.pattern_snapshot[{i}].opportunity_events[{j}]")
 
     es_keys = _ALLOWED_KEYS.get("EvidenceSpan", set())
     for i, span in enumerate(data.get("evidence_spans", [])):
         if isinstance(span, dict):
-            fixes += _strip_extra_keys(span, es_keys, f"$.evidence_spans[{i}]")
+            fixes += _fix_extra_keys(span, es_keys, f"$.evidence_spans[{i}]")
 
     if "experiment_tracking" in data and isinstance(data["experiment_tracking"], dict):
         et = data["experiment_tracking"]
-        fixes += _strip_extra_keys(et, _ALLOWED_KEYS.get("ExperimentTracking", set()), "$.experiment_tracking")
+        fixes += _fix_extra_keys(et, _ALLOWED_KEYS.get("ExperimentTracking", set()), "$.experiment_tracking")
         ae = et.get("active_experiment")
         if isinstance(ae, dict):
-            fixes += _strip_extra_keys(ae, _ALLOWED_KEYS.get("ActiveExperiment", set()), "$.experiment_tracking.active_experiment")
+            fixes += _fix_extra_keys(ae, _ALLOWED_KEYS.get("ActiveExperiment", set()), "$.experiment_tracking.active_experiment")
         det = et.get("detection_in_this_meeting")
         if isinstance(det, dict):
-            fixes += _strip_extra_keys(det, _ALLOWED_KEYS.get("ExperimentDetection", set()), "$.experiment_tracking.detection_in_this_meeting")
+            fixes += _fix_extra_keys(det, _ALLOWED_KEYS.get("ExperimentDetection", set()), "$.experiment_tracking.detection_in_this_meeting")
 
     # ── Fix known LLM enum confusions in opportunity_events ──────────────
     for item in data.get("pattern_snapshot", []):
