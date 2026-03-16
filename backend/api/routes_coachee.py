@@ -1008,8 +1008,12 @@ async def client_summary(
             if active_exp_rec:
                 active_exp_resp = _build_experiment_response(active_exp_rec, at_client)
 
-            # Proposed experiments
+            # Proposed experiments — sort so the baseline-pack-linked experiment
+            # (the one matching the focus pattern) appears first.
             proposed_records = results_map.get("proposed") or []
+            proposed_records.sort(
+                key=lambda r: (0 if r.get("fields", {}).get("Baseline Pack") else 1),
+            )
             proposed_exps = [_build_experiment_response(r) for r in proposed_records]
 
             # Parked experiments
