@@ -935,7 +935,13 @@ def instantiate_experiment_from_run(
         logger.warning("Run %s has no micro_experiment in coaching_output", run_id)
         return None
 
-    micro = micro_list[0]
+    # Pick the micro_experiment matching the focus pattern; fall back to first.
+    focus_list = coaching.get("focus", [])
+    focus_pid = focus_list[0].get("pattern_id") if focus_list else None
+    micro = next(
+        (m for m in micro_list if m.get("pattern_id") == focus_pid),
+        micro_list[0],
+    ) if focus_pid else micro_list[0]
     exp_id = micro.get("experiment_id")
     title = micro.get("title", "")
     instruction = micro.get("instruction", "")
