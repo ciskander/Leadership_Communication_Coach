@@ -422,7 +422,10 @@ def process_single_meeting_analysis(
     sys_prompt = system_prompt_override or _load_system_prompt_from_config(client, config_links)
     dev_message = developer_message_override or _load_developer_message_from_config(client, config_links)
 
-    # 6b. Call OpenAI
+    # 6a. Mark run_request as processing so the frontend knows work has started
+    client.update_run_request_status(run_request_id, "processing")
+
+    # 6b. Call LLM
     openai_resp = call_llm(
         system_prompt=sys_prompt,
         developer_message=dev_message,

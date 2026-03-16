@@ -69,6 +69,7 @@ export default function AnalyzePage() {
   const [name, setName]                           = useState('');
   const [role, setRole]                           = useState<TargetRole | ''>('');
   const [submitting, setSubmitting]               = useState(false);
+  const [submitLabel, setSubmitLabel]             = useState(STRINGS.analyzePage.startingAnalysis);
   const [error, setError]                         = useState<string | null>(null);
   const [speakerPreviews, setSpeakerPreviews]     = useState<Record<string, string[]>>({});
   const [needsSpeakerPick, setNeedsSpeakerPick]   = useState(false);
@@ -135,12 +136,16 @@ export default function AnalyzePage() {
       }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : STRINGS.analyzePage.failedToEnqueue);
+      setSubmitLabel(STRINGS.analyzePage.startingAnalysis);
       setSubmitting(false);
     }
   };
 
   const pollRunRequest = async (rrId: string) => {
     let count = 0;
+    let processing = false;
+    const MAX_QUEUED_POLLS = 30;        // 30 × 2s = 60s waiting for worker pickup
+    const MAX_PROCESSING_POLLS = 150;   // 150 × 2s = 300s for LLM analysis
     const poll = async () => {
       count++;
       try {
@@ -151,16 +156,31 @@ export default function AnalyzePage() {
         }
         if (status.status === 'error') {
           setError(STRINGS.analyzePage.analysisFailedToStart);
+          setSubmitLabel(STRINGS.analyzePage.startingAnalysis);
           setSubmitting(false);
           return;
         }
-        if (count < 30) setTimeout(poll, 2000);
+        if (status.status === 'processing') {
+          if (!processing) {
+            processing = true;
+            count = 0; // reset counter once analysis is confirmed in progress
+            setSubmitLabel(STRINGS.analyzePage.analysisInProgress);
+          }
+        }
+        const limit = processing ? MAX_PROCESSING_POLLS : MAX_QUEUED_POLLS;
+        if (count < limit) setTimeout(poll, 2000);
         else {
-          setError(STRINGS.analyzePage.timedOutWaiting);
+          setError(
+            processing
+              ? STRINGS.analyzePage.analysisStillRunning
+              : STRINGS.analyzePage.timedOutWaiting,
+          );
+          setSubmitLabel(STRINGS.analyzePage.startingAnalysis);
           setSubmitting(false);
         }
       } catch {
         setError(STRINGS.analyzePage.failedToPollStatus);
+        setSubmitLabel(STRINGS.analyzePage.startingAnalysis);
         setSubmitting(false);
       }
     };
@@ -301,7 +321,7 @@ export default function AnalyzePage() {
         {submitting ? (
           <span className="flex items-center justify-center gap-2">
             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            {STRINGS.analyzePage.startingAnalysis}
+            {submitLabel}
           </span>
         ) : (
           <span className="flex items-center justify-center gap-2">

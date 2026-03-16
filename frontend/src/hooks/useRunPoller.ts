@@ -5,7 +5,7 @@ import { api } from '@/lib/api';
 import type { RunStatus } from '@/lib/types';
 
 const POLL_INTERVAL_MS = 3000;
-const MAX_POLLS = 60;
+const MAX_POLLS = 120; // 120 × 3s = 360s — accommodates Opus-class models with extended thinking
 
 // Session-level cache for completed run results. Once a run is complete its
 // data is static, so we can serve it instantly on subsequent navigations

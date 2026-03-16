@@ -352,10 +352,12 @@ export const STRINGS = {
     selectRole: 'Select role…',
     submitBtn: 'Analyze Meeting →',
     startingAnalysis: 'Starting analysis…',
+    analysisInProgress: 'Analyzing your meeting…',
     // Errors
     failedToEnqueue: 'Failed to enqueue',
     analysisFailedToStart: 'Analysis failed to start.',
     timedOutWaiting: 'Timed out waiting for analysis to start.',
+    analysisStillRunning: 'Analysis is taking longer than expected. Please check back shortly — your results will appear on the dashboard when ready.',
     failedToPollStatus: 'Failed to poll status.',
   },
 
