@@ -465,12 +465,14 @@ async def enqueue_analysis_alias(
 async def get_proposed_experiments(
     user: UserAuth = Depends(get_current_user),
 ):
-    """Return proposed experiments for the current user, most recent first (max 3)."""
+    """Return proposed experiments for the current user, focus-pattern first (max 3)."""
     if not user.airtable_user_record_id:
         return []
     at_client = AirtableClient()
     try:
         records = at_client.get_proposed_experiments_for_user(user.airtable_user_record_id)
+        # Sort so the baseline-pack-linked experiment (focus pattern) appears first
+        records.sort(key=lambda r: (0 if r.get("fields", {}).get("Baseline Pack") else 1))
         return [_build_experiment_response(r) for r in records]
     except Exception as e:
         logger.warning("Error fetching proposed experiments: %s", e)
