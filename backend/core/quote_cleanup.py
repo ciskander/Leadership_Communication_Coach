@@ -39,6 +39,10 @@ _BATCH_SIZE: int = 10
 # Timeout for each cleanup LLM call (seconds).
 _CLEANUP_TIMEOUT: float = 15.0
 
+# Total wall-clock budget for the entire cleanup operation (seconds).
+# If we exceed this, skip remaining batches rather than blocking the response.
+_TOTAL_BUDGET: float = 20.0
+
 # Simple in-memory cache: hash(quote_text + abbreviate) -> cleaned_text.
 # Survives for the lifetime of the process, cleared on restart.
 _cache: dict[str, str] = {}
@@ -118,6 +122,7 @@ def _call_cleanup_batch_openai(
     client = openai.OpenAI(
         api_key=api_key or OPENAI_API_KEY,
         timeout=openai.Timeout(timeout=_CLEANUP_TIMEOUT, connect=5.0),
+        max_retries=0,  # No SDK-internal retries — we handle failure at batch level
     )
 
     response = client.chat.completions.create(
@@ -134,7 +139,6 @@ def _call_cleanup_batch_openai(
         max_completion_tokens=8192,
         response_format={"type": "json_object"},
         temperature=0.0,
-        timeout=_CLEANUP_TIMEOUT,
     )
 
     raw = response.choices[0].message.content or ""
@@ -238,11 +242,23 @@ def cleanup_quotes(
         return cleaned
 
     try:
+        import time as _time
+
         effective_model = model or CLEANUP_MODEL
         use_anthropic = is_anthropic_model(effective_model)
+        t0 = _time.monotonic()
 
-        # Process in batches
+        # Process in batches, respecting the total time budget
         for i in range(0, len(uncached), _BATCH_SIZE):
+            elapsed = _time.monotonic() - t0
+            if elapsed > _TOTAL_BUDGET:
+                logger.warning(
+                    "Quote cleanup: total budget %.1fs exceeded (%.1fs elapsed); "
+                    "skipping remaining %d quotes",
+                    _TOTAL_BUDGET, elapsed, len(uncached) - i,
+                )
+                break
+
             batch = uncached[i : i + _BATCH_SIZE]
             try:
                 if use_anthropic:
