@@ -973,19 +973,23 @@ async def client_summary(
                 if rf.get("baseline_pack_items"):
                     continue
 
-                # Try denormalized fields first
-                transcript_meta: dict = {}
-                has_denormalized = rf.get("Transcript Title") or rf.get("Transcript ID String")
-                if has_denormalized:
-                    transcript_meta = {
-                        "title": rf.get("Transcript Title"),
-                        "transcript_id": rf.get("Transcript ID String"),
-                        "meeting_date": rf.get("Meeting Date"),
-                        "meeting_type": rf.get("Meeting Type"),
-                        "target_role": rf.get("Target Speaker Role"),
-                    }
-                else:
-                    # Need transcript lookup for old runs
+                # Read transcript metadata from lookup fields and run fields.
+                # Lookup fields (Title, Transcript ID) return single-element
+                # arrays; Meeting Date and Meeting Type are plain text fields
+                # written by the worker.
+                title_lookup = rf.get("Title (from Transcript ID)", [])
+                tid_lookup = rf.get("Transcript ID (from Transcript)", [])
+                transcript_meta: dict = {
+                    "title": title_lookup[0] if isinstance(title_lookup, list) and title_lookup else None,
+                    "transcript_id": tid_lookup[0] if isinstance(tid_lookup, list) and tid_lookup else None,
+                    "meeting_date": rf.get("Meeting Date"),
+                    "meeting_type": rf.get("Meeting Type"),
+                    "target_role": rf.get("Target Speaker Role"),
+                }
+                # For old runs that predate the Meeting Date/Type fields,
+                # fall back to a transcript lookup.
+                has_metadata = transcript_meta["title"] or transcript_meta["transcript_id"]
+                if not has_metadata:
                     transcript_links = rf.get("Transcript ID", [])
                     if transcript_links:
                         runs_needing_transcript.append((r, transcript_links[0]))

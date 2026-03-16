@@ -102,10 +102,13 @@ F_RUN_EXPERIMENT_INSTANTIATED = "Experiment Instantiated?"
 F_RUN_ATTEMPT_EVENT_CREATED = "Attempt Event Created?"
 F_RUN_ACTIVE_EXPERIMENT = "Active Experiment"   # Link to experiments table
 
-# Denormalized transcript metadata (written at run creation time to avoid
-# per-run transcript lookups in the client summary endpoint).
-F_RUN_TRANSCRIPT_TITLE = "Transcript Title"
-F_RUN_TRANSCRIPT_ID_STR = "Transcript ID String"  # human-readable e.g. "T-0042"
+# Transcript metadata on the Runs table.
+# Title and Transcript ID are Airtable lookup fields (auto-populated from
+# the linked transcript record — returned as single-element arrays).
+# Meeting Date and Meeting Type are single-line text fields written by the
+# worker at run creation time.
+F_RUN_TRANSCRIPT_TITLE_LOOKUP = "Title (from Transcript ID)"
+F_RUN_TRANSCRIPT_ID_LOOKUP = "Transcript ID (from Transcript)"
 F_RUN_MEETING_DATE = "Meeting Date"
 F_RUN_MEETING_TYPE = "Meeting Type"
 

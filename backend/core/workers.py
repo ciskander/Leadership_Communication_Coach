@@ -77,8 +77,6 @@ from .airtable_client import (
     F_EXP_LAST_ATTEMPT_MODEL,
     F_EXP_LAST_ATTEMPT_DATE,
     F_RUN_ACTIVE_EXPERIMENT,
-    F_RUN_TRANSCRIPT_TITLE,
-    F_RUN_TRANSCRIPT_ID_STR,
     F_RUN_MEETING_DATE,
     F_RUN_MEETING_TYPE,
 )
@@ -259,8 +257,6 @@ def _persist_run_fields(
     idempotency_key: str,
     coachee_id: str,
     user_record_id: Optional[str] = None,
-    transcript_title: Optional[str] = None,
-    transcript_id_str: Optional[str] = None,
     meeting_date: Optional[str] = None,
     meeting_type: Optional[str] = None,
 ) -> dict:
@@ -316,12 +312,9 @@ def _persist_run_fields(
         if detection and isinstance(detection, dict):
             fields[F_RUN_ATTEMPT_MODEL] = detection.get("attempt")
 
-    # Denormalized transcript metadata — avoids per-run transcript lookups
-    # in the client summary endpoint.
-    if transcript_title:
-        fields[F_RUN_TRANSCRIPT_TITLE] = transcript_title
-    if transcript_id_str:
-        fields[F_RUN_TRANSCRIPT_ID_STR] = transcript_id_str
+    # Meeting metadata — avoids per-run transcript lookups in the client
+    # summary endpoint.  Title and Transcript ID are Airtable lookup fields
+    # that auto-populate from the linked transcript record.
     if meeting_date:
         fields[F_RUN_MEETING_DATE] = meeting_date
     if meeting_type:
@@ -525,8 +518,6 @@ def process_single_meeting_analysis(
         idempotency_key=idem_key,
         coachee_id=coachee_id,
         user_record_id=user_record_id or None,
-        transcript_title=tr_fields.get("Title"),
-        transcript_id_str=transcript_id_str,
         meeting_date=meeting_date,
         meeting_type=meeting_type,
     )
