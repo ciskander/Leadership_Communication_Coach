@@ -37,7 +37,7 @@ CLEANUP_MODEL: str = os.getenv("QUOTE_CLEANUP_MODEL", "gpt-4o-mini")
 # 50 quotes easily fits within gpt-4o-mini / haiku context.  The previous
 # value of 10 caused 5 sequential API calls for ~41 quotes, creating the
 # timeout cascade.  A single call with all quotes is faster and more reliable.
-_BATCH_SIZE: int = 50
+_BATCH_SIZE: int = 200
 
 # Timeout for each cleanup LLM call (seconds).
 # With max_retries=0 on the client, this is a hard per-request cap.
