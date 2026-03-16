@@ -69,7 +69,7 @@ export default function AnalyzePage() {
   const [name, setName]                           = useState('');
   const [role, setRole]                           = useState<TargetRole | ''>('');
   const [submitting, setSubmitting]               = useState(false);
-  const [submitLabel, setSubmitLabel]             = useState(STRINGS.analyzePage.startingAnalysis);
+  const [submitLabel, setSubmitLabel]             = useState<string>(STRINGS.analyzePage.startingAnalysis);
   const [error, setError]                         = useState<string | null>(null);
   const [speakerPreviews, setSpeakerPreviews]     = useState<Record<string, string[]>>({});
   const [needsSpeakerPick, setNeedsSpeakerPick]   = useState(false);
