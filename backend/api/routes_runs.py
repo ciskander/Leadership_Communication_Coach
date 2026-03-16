@@ -1,8 +1,13 @@
 """
 api/routes_runs.py — Run status polling and result retrieval with quote resolution.
+
+Performance: Airtable calls are parallelized via asyncio.to_thread + gather.
+Quote cleanup runs in a background thread so it doesn't block the response when
+the persistent cache misses.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from typing import Optional
@@ -29,9 +34,50 @@ from .quote_helpers import (
 )
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
-def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = None) -> RunStatusResponse:
+def _fetch_experiment_detail(
+    at_client: AirtableClient, exp_record_id: str
+) -> tuple[Optional[dict], list[dict]]:
+    """Fetch experiment record, attempt counts, and events in minimal calls.
+
+    Returns (experiment_record_or_None, event_list).
+    """
+    try:
+        exp_rec = at_client.get_experiment(exp_record_id)
+        ef = exp_rec.get("fields", {})
+        attempt_count, meeting_count = at_client.count_experiment_attempts_and_meetings(exp_rec["id"])
+        exp_rec["_attempt_count"] = attempt_count
+        exp_rec["_meeting_count"] = meeting_count
+
+        exp_primary_id = ef.get("Experiment ID", "")
+        events: list[dict] = []
+        if exp_primary_id:
+            events_formula = f"FIND('{exp_primary_id}', ARRAYJOIN({{Experiment}}))"
+            events = at_client.search_records(
+                "experiment_events", events_formula, max_records=10,
+            )
+        return exp_rec, events
+    except Exception:
+        return None, []
+
+
+def _fetch_human_confirmation(
+    at_client: AirtableClient, run_id: str, exp_id: str
+) -> Optional[str]:
+    """Look up existing human confirmation for this run+experiment."""
+    idem_key = f"human:{run_id}:{exp_id}"
+    try:
+        existing = at_client.find_experiment_event_by_idempotency_key(idem_key)
+        if existing:
+            return existing.get("fields", {}).get("User Confirmation")
+    except Exception:
+        pass
+    return None
+
+
+async def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = None) -> RunStatusResponse:
     fields = run_record.get("fields", {})
     run_id = run_record["id"]
 
@@ -83,22 +129,63 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
     # Use context label for quote-level is_target_speaker marking
     effective_target = context_label or target_speaker_label
 
-    logger = logging.getLogger(__name__)
     logger.info(
         "run %s: airtable_label=%r  context_label=%r  effective_target=%r",
         run_id, target_speaker_label, context_label, effective_target,
     )
 
-    # Build spans lookup
+    # Build spans lookup (pure computation, fast)
     spans_by_id = build_spans_lookup(parsed_json)
 
     transcript_links = fields.get("Transcript ID", [])
     transcript_id = transcript_links[0] if isinstance(transcript_links, list) and transcript_links else None
     meeting_id = parsed_json.get("context", {}).get("meeting_id")
 
-    # Build turn map for timestamp display and multi-speaker expansion
-    turn_map = build_turn_map(at_client, transcript_id) if at_client else {}
+    # ── Determine what parallel fetches we need ───────────────────────────
+    exp_tracking = parsed_json.get("experiment_tracking")
+    active_exp = (exp_tracking.get("active_experiment") or {}) if exp_tracking else {}
+    exp_id_str = active_exp.get("experiment_id")
+    if exp_id_str and exp_id_str != "EXP-000000":
+        _links = fields.get("Active Experiment", [])
+        if _links:
+            active_exp["experiment_record_id"] = _links[0]
 
+    exp_record_id = active_exp.get("experiment_record_id") if active_exp.get("status") == "active" else None
+    exp_id_for_idem = active_exp.get("experiment_id") if exp_tracking else None
+
+    # ── Launch parallel Airtable fetches ──────────────────────────────────
+    # 1. Transcript (for turn map) — always needed for completed runs
+    # 2. Experiment detail + events — needed when active experiment exists
+    # 3. Human confirmation lookup — needed when experiment tracking active
+    futures = []
+    future_keys = []
+
+    if at_client and transcript_id:
+        futures.append(asyncio.to_thread(build_turn_map, at_client, transcript_id))
+        future_keys.append("turn_map")
+
+    if at_client and exp_record_id:
+        futures.append(asyncio.to_thread(_fetch_experiment_detail, at_client, exp_record_id))
+        future_keys.append("exp_detail")
+
+    if at_client and exp_id_for_idem:
+        futures.append(asyncio.to_thread(_fetch_human_confirmation, at_client, run_id, exp_id_for_idem))
+        future_keys.append("human_confirm")
+
+    # Run all Airtable fetches concurrently
+    results_map: dict = {}
+    if futures:
+        results = await asyncio.gather(*futures, return_exceptions=True)
+        for key, result in zip(future_keys, results):
+            if isinstance(result, Exception):
+                logger.warning("Parallel fetch %s failed: %s", key, result)
+                results_map[key] = None
+            else:
+                results_map[key] = result
+
+    turn_map = results_map.get("turn_map") or {}
+
+    # ── Resolve quotes (pure computation using fetched data) ──────────────
     # Coaching output with resolved quotes
     strengths, focus, micro_exp = resolve_coaching_output(
         parsed_json, spans_by_id, transcript_id, meeting_id, turn_map, effective_target
@@ -107,7 +194,7 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
     resp.focus = focus
     resp.micro_experiment = micro_exp
 
-    # ── Pattern snapshot with per-pattern quotes and coaching ──────────────
+    # Pattern snapshot with per-pattern quotes and coaching
     snapshot_items = resolve_pattern_snapshot(
         parsed_json, spans_by_id, transcript_id, meeting_id, turn_map, effective_target
     )
@@ -116,15 +203,7 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
     resp.evaluation_summary = parsed_json.get("evaluation_summary")
 
     # ── Experiment tracking ────────────────────────────────────────────────
-    exp_tracking = parsed_json.get("experiment_tracking")
     if exp_tracking:
-        active_exp = exp_tracking.get("active_experiment") or {}
-        exp_id_str = active_exp.get("experiment_id")
-        if exp_id_str and exp_id_str != "EXP-000000":
-            _links = fields.get("Active Experiment", [])
-            if _links:
-                active_exp["experiment_record_id"] = _links[0]
-
         # Build typed experiment detection with quotes and coaching
         detection = exp_tracking.get("detection_in_this_meeting")
         if isinstance(detection, dict):
@@ -150,65 +229,47 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
 
     resp.experiment_tracking = exp_tracking
 
-    # ── Fetch full experiment detail + events for inline rendering ─────────
-    if at_client and exp_tracking:
-        active_exp = exp_tracking.get("active_experiment") or {}
-        exp_record_id = active_exp.get("experiment_record_id")
-        if exp_record_id and active_exp.get("status") == "active":
-            try:
-                exp_rec = at_client.get_experiment(exp_record_id)
-                ef = exp_rec.get("fields", {})
-                attempt_count, meeting_count = at_client.count_experiment_attempts_and_meetings(exp_rec["id"])
-                resp.active_experiment_detail = ExperimentResponse(
-                    experiment_record_id=exp_rec["id"],
-                    experiment_id=ef.get("Experiment ID", ""),
-                    title=ef.get("Title", ""),
-                    instruction=ef.get("Instructions") or ef.get("Instruction", ""),
-                    success_marker=ef.get("Success Marker") or ef.get("Success Criteria", ""),
-                    pattern_id=ef.get("Pattern ID", ""),
-                    status=ef.get("Status", ""),
-                    created_at=exp_rec.get("createdTime"),
-                    attempt_count=attempt_count,
-                    meeting_count=meeting_count,
-                    started_at=ef.get("Started At"),
-                    ended_at=ef.get("Ended At"),
-                )
-                exp_primary_id = ef.get("Experiment ID", "")
-                if exp_primary_id:
-                    events_formula = f"FIND('{exp_primary_id}', ARRAYJOIN({{Experiment}}))"
-                    event_records = at_client.search_records(
-                        "experiment_events", events_formula, max_records=10,
-                    )
-                    resp.active_experiment_events = [
-                        {
-                            "event_id": er["id"],
-                            "attempt": er.get("fields", {}).get("Attempt Enum"),
-                            "meeting_date": er.get("fields", {}).get("Meeting Date"),
-                            "human_confirmed": er.get("fields", {}).get("User Confirmation"),
-                            "notes": er.get("fields", {}).get("Notes"),
-                        }
-                        for er in event_records
-                    ]
-            except Exception:
-                pass  # Non-fatal — frontend falls back to separate API call
+    # ── Apply parallel fetch results for experiment detail ─────────────────
+    exp_detail_result = results_map.get("exp_detail")
+    if exp_detail_result and exp_detail_result[0]:
+        exp_rec, event_records = exp_detail_result
+        ef = exp_rec.get("fields", {})
+        resp.active_experiment_detail = ExperimentResponse(
+            experiment_record_id=exp_rec["id"],
+            experiment_id=ef.get("Experiment ID", ""),
+            title=ef.get("Title", ""),
+            instruction=ef.get("Instructions") or ef.get("Instruction", ""),
+            success_marker=ef.get("Success Marker") or ef.get("Success Criteria", ""),
+            pattern_id=ef.get("Pattern ID", ""),
+            status=ef.get("Status", ""),
+            created_at=exp_rec.get("createdTime"),
+            attempt_count=exp_rec.get("_attempt_count"),
+            meeting_count=exp_rec.get("_meeting_count"),
+            started_at=ef.get("Started At"),
+            ended_at=ef.get("Ended At"),
+        )
+        resp.active_experiment_events = [
+            {
+                "event_id": er["id"],
+                "attempt": er.get("fields", {}).get("Attempt Enum"),
+                "meeting_date": er.get("fields", {}).get("Meeting Date"),
+                "human_confirmed": er.get("fields", {}).get("User Confirmation"),
+                "notes": er.get("fields", {}).get("Notes"),
+            }
+            for er in event_records
+        ]
 
-        # Look up whether the user already submitted a human confirmation for
-        # this run, so the frontend can restore the override state on refresh.
-        exp_id_for_idem = (exp_tracking.get("active_experiment") or {}).get("experiment_id")
-        if at_client and exp_id_for_idem:
-            idem_key = f"human:{run_id}:{exp_id_for_idem}"
-            try:
-                existing = at_client.find_experiment_event_by_idempotency_key(idem_key)
-                if existing:
-                    resp.human_confirmation = existing.get("fields", {}).get("User Confirmation")
-            except Exception:
-                pass
+    human_confirm = results_map.get("human_confirm")
+    if human_confirm:
+        resp.human_confirmation = human_confirm
 
     # ── Post-processing: clean up ASR artifacts in quote texts ───────────
+    # Runs in a thread to avoid blocking the event loop; uses persistent cache.
     det_quotes_for_cleanup = (
         resp.experiment_detection.quotes if resp.experiment_detection else None
     )
-    apply_quote_cleanup(
+    await asyncio.to_thread(
+        apply_quote_cleanup,
         resp.strengths,
         resp.focus,
         resp.micro_experiment,
@@ -251,7 +312,7 @@ async def get_run(
                 if not cur.fetchone():
                     return error_response("FORBIDDEN", "You do not have access to this run.", 403)
 
-    return _build_run_response(run_record, at_client)
+    return await _build_run_response(run_record, at_client)
 
 
 @router.get("/api/run_requests/{rr_id}", response_model=RunRequestStatusResponse)
