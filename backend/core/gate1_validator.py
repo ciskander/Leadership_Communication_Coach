@@ -191,6 +191,36 @@ def _sanitise_output(data: dict) -> int:
         if isinstance(det, dict):
             fixes += _fix_extra_keys(det, _ALLOWED_KEYS.get("ExperimentDetection", set()), "$.experiment_tracking.detection_in_this_meeting")
 
+    # ── Normalise experiment_id format ─────────────────────────────────────
+    # The LLM sometimes generates IDs like "EXP-260316-01" instead of the
+    # required "EXP-NNNNNN" format.  Extract digits and zero-pad to 6.
+    _exp_id_re = _ID_PATTERNS["experiment_id"]
+    def _fix_exp_id(obj: dict, field: str, path: str) -> int:
+        val = obj.get(field)
+        if val and isinstance(val, str) and not _exp_id_re.match(val):
+            digits = re.sub(r"[^0-9]", "", val)
+            if digits:
+                normalised = f"EXP-{digits[:6].zfill(6)}"
+                logger.warning("Sanitiser: experiment_id %r → %r at %s", val, normalised, path)
+                obj[field] = normalised
+                return 1
+        return 0
+
+    # micro_experiment items
+    for i, m in enumerate((data.get("coaching_output") or {}).get("micro_experiment", [])):
+        if isinstance(m, dict):
+            fixes += _fix_exp_id(m, "experiment_id", f"$.coaching_output.micro_experiment[{i}].experiment_id")
+
+    # experiment_tracking.active_experiment
+    ae = (data.get("experiment_tracking") or {}).get("active_experiment")
+    if isinstance(ae, dict):
+        fixes += _fix_exp_id(ae, "experiment_id", "$.experiment_tracking.active_experiment.experiment_id")
+
+    # experiment_tracking.detection_in_this_meeting
+    det = (data.get("experiment_tracking") or {}).get("detection_in_this_meeting")
+    if isinstance(det, dict):
+        fixes += _fix_exp_id(det, "experiment_id", "$.experiment_tracking.detection_in_this_meeting.experiment_id")
+
     # ── Fix known LLM enum confusions in opportunity_events ──────────────
     for item in data.get("pattern_snapshot", []):
         for event in item.get("opportunity_events", []) or []:
