@@ -54,8 +54,9 @@ const rawKey = (pid: string) => `${pid}_raw`;
 
 // ─── Info popover ─────────────────────────────────────────────────────────────
 
-function InfoPopover({ patternId }: { patternId: string }) {
+function InfoPopover({ patternId, hoverColor }: { patternId: string; hoverColor?: string }) {
   const [open, setOpen] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -71,7 +72,10 @@ function InfoPopover({ patternId }: { patternId: string }) {
     <span className="relative inline-block" ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="ml-1 text-cv-stone-400 hover:text-cv-teal-600 transition-colors align-middle leading-none"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className="ml-1 text-cv-stone-400 transition-colors align-middle leading-none"
+        style={hovered && hoverColor ? { color: hoverColor } : undefined}
         aria-label="Pattern explanation"
         type="button"
       >
@@ -320,7 +324,7 @@ function PatternTrendsChart({
                   {STRINGS.progressPage.experimentBadge}
                 </span>
               )}
-              <InfoPopover patternId={pid} />
+              <InfoPopover patternId={pid} hoverColor={patternColor(pid)} />
             </span>
           );
         })}
@@ -401,7 +405,7 @@ function PastExperimentCard({
               <span className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400">{STRINGS.progressPage.pattern}</span>
               <p className="font-medium text-cv-stone-800 mt-0.5 flex items-center">
                 {STRINGS.patternLabels[pid] ?? pid}
-                <InfoPopover patternId={pid} />
+                <InfoPopover patternId={pid} hoverColor={color} />
               </p>
             </div>
             {dateRange && (
