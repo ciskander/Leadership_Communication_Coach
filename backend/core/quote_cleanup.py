@@ -33,22 +33,23 @@ logger = logging.getLogger(__name__)
 # Use a smaller/cheaper model for cleanup by default.
 CLEANUP_MODEL: str = os.getenv("QUOTE_CLEANUP_MODEL", "gpt-4o-mini")
 
-# Max quotes per LLM batch. Set high — individual turn texts are short and
-# 50 quotes easily fits within gpt-4o-mini / haiku context.  The previous
-# value of 10 caused 5 sequential API calls for ~41 quotes, creating the
-# timeout cascade.  A single call with all quotes is faster and more reliable.
-_BATCH_SIZE: int = 200
+# Max quotes per LLM batch.  gpt-4o-mini needs to generate a JSON response
+# containing each cleaned quote.  With 25-50 quotes in a single batch the
+# output generation regularly exceeds 15s.  Smaller batches (≤15) complete
+# reliably within the timeout and can be retried individually on failure.
+_BATCH_SIZE: int = 15
 
 # Timeout for each cleanup LLM call (seconds).
-# With max_retries=0 on the client, this is a hard per-request cap.
-# IMPORTANT: This runs inside the /api/runs response handler. Railway's
-# proxy has a ~30s timeout, and we need headroom for Airtable calls and
-# quote resolution (~5-10s). Keep this well under 20s.
-_CLEANUP_TIMEOUT: float = 15.0
+# With _BATCH_SIZE=15, gpt-4o-mini typically completes in 5-10s.
+_CLEANUP_TIMEOUT: float = 20.0
 
 # Total wall-clock budget for the entire cleanup operation (seconds).
-# If we exceed this, skip remaining batches rather than blocking the response.
-_TOTAL_BUDGET: float = 20.0
+# This runs inside the /api/runs response handler which shares Railway's ~30s
+# proxy timeout with Airtable fetches (~5s).  Keep the budget under 25s.
+_TOTAL_BUDGET: float = 25.0
+
+# How many times to retry a single batch on timeout before giving up.
+_MAX_RETRIES: int = 1
 
 # ── Persistent cache (PostgreSQL-backed, survives deploys) ────────────────────
 # Falls back to in-memory dict if DB is unavailable.
@@ -363,26 +364,33 @@ def cleanup_quotes(
                 break
 
             batch = uncached[i : i + _BATCH_SIZE]
-            try:
-                if use_anthropic:
-                    batch_result = _call_cleanup_batch_anthropic(batch, effective_model, api_key)
-                else:
-                    batch_result = _call_cleanup_batch_openai(batch, effective_model, api_key)
-                # Write results and collect cache entries
-                for q in batch:
-                    qid = q["id"]
-                    if qid in batch_result:
-                        cleaned[qid] = batch_result[qid]
-                        ck = _cache_key(q["text"], q.get("abbreviate", False))
-                        new_cache_entries.append((ck, batch_result[qid]))
-                    # else: will be filled from originals below
-            except Exception:
-                logger.warning(
-                    "Quote cleanup batch %d-%d failed; skipping",
-                    i, i + len(batch),
-                    exc_info=True,
-                )
-                # This batch fails; remaining batches still get attempted.
+            batch_result: dict[str, str] = {}
+            for attempt in range(_MAX_RETRIES + 1):
+                try:
+                    if use_anthropic:
+                        batch_result = _call_cleanup_batch_anthropic(batch, effective_model, api_key)
+                    else:
+                        batch_result = _call_cleanup_batch_openai(batch, effective_model, api_key)
+                    break  # success
+                except Exception:
+                    if attempt < _MAX_RETRIES:
+                        logger.info(
+                            "Quote cleanup batch %d-%d attempt %d failed; retrying",
+                            i, i + len(batch), attempt + 1,
+                        )
+                    else:
+                        logger.warning(
+                            "Quote cleanup batch %d-%d failed after %d attempts; skipping",
+                            i, i + len(batch), _MAX_RETRIES + 1,
+                            exc_info=True,
+                        )
+            # Write results and collect cache entries
+            for q in batch:
+                qid = q["id"]
+                if qid in batch_result:
+                    cleaned[qid] = batch_result[qid]
+                    ck = _cache_key(q["text"], q.get("abbreviate", False))
+                    new_cache_entries.append((ck, batch_result[qid]))
 
         # Persist all new cache entries in one batch
         if new_cache_entries:

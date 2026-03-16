@@ -46,6 +46,14 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _is_airtable_not_found(exc: Exception) -> bool:
+    """Return True if the exception represents an Airtable 404 (record not found)."""
+    from requests.exceptions import HTTPError
+    if isinstance(exc, HTTPError) and exc.response is not None:
+        return exc.response.status_code == 404
+    return False
+
+
 # ── Request bodies ────────────────────────────────────────────────────────────
 
 class CreateBaselinePackBody(BaseModel):
@@ -145,8 +153,11 @@ async def build_baseline_pack(
     at_client = AirtableClient()
     try:
         bp_rec = at_client.get_baseline_pack(bp_id)
-    except Exception:
-        return error_response("NOT_FOUND", "Baseline pack not found.", 404)
+    except Exception as exc:
+        if _is_airtable_not_found(exc):
+            return error_response("NOT_FOUND", "Baseline pack not found.", 404)
+        logger.exception("build_baseline_pack: failed to fetch pack %s", bp_id)
+        return error_response("INTERNAL_ERROR", "Failed to load baseline pack. Please try again.", 500)
 
     # Ownership check: coachees can only build their own packs.
     if user.role == "coachee":
@@ -170,8 +181,11 @@ async def get_baseline_pack(
     at_client = AirtableClient()
     try:
         bp_rec = at_client.get_baseline_pack(bp_id)
-    except Exception:
-        return error_response("NOT_FOUND", "Baseline pack not found.", 404)
+    except Exception as exc:
+        if _is_airtable_not_found(exc):
+            return error_response("NOT_FOUND", "Baseline pack not found.", 404)
+        logger.exception("get_baseline_pack: failed to fetch pack %s", bp_id)
+        return error_response("INTERNAL_ERROR", "Failed to load baseline pack. Please try again.", 500)
 
     # Ownership check: coachees can only view their own packs.
     if user.role == "coachee":
