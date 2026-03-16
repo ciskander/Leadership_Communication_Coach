@@ -22,7 +22,7 @@ from .config import (
     ANTHROPIC_MAX_TOKENS,
     ANTHROPIC_READ_TIMEOUT,
     ANTHROPIC_READ_TIMEOUT_OPUS,
-    RETRY_ATTEMPTS,
+    ANTHROPIC_RETRY_ATTEMPTS,
     RETRY_BASE_DELAY,
     RETRY_MAX_DELAY,
 )
@@ -194,11 +194,11 @@ def call_anthropic(
     messages = [{"role": "user", "content": user_message}]
 
     last_exc: Optional[Exception] = None
-    for attempt in range(RETRY_ATTEMPTS):
+    for attempt in range(ANTHROPIC_RETRY_ATTEMPTS):
         try:
             logger.info(
                 "Anthropic call attempt %d/%d model=%s",
-                attempt + 1, RETRY_ATTEMPTS, effective_model,
+                attempt + 1, ANTHROPIC_RETRY_ATTEMPTS, effective_model,
             )
             response = client.messages.create(
                 model=effective_model,
