@@ -961,38 +961,17 @@ async def client_summary(
             if bp_rec:
                 bp_status = bp_rec.get("fields", {}).get("Status")
 
-            # ── Recent runs with denormalized transcript metadata ─────────
+            # ── Recent runs — transcript metadata from lookup fields ─────
             run_records = results_map.get("runs") or []
 
-            # Separate runs that have denormalized metadata from those that
-            # need a transcript lookup (old runs created before denormalization).
-            runs_needing_transcript: list[tuple[dict, str]] = []  # (run_record, transcript_record_id)
+            def _first(val: object) -> object:
+                """Extract scalar from Airtable lookup field (single-element array)."""
+                return val[0] if isinstance(val, list) and val else val if not isinstance(val, list) else None
 
             for r in run_records:
                 rf = r.get("fields", {})
                 if rf.get("baseline_pack_items"):
                     continue
-
-                # Read transcript metadata from lookup fields and run fields.
-                # Lookup fields (Title, Transcript ID) return single-element
-                # arrays; Meeting Date and Meeting Type are plain text fields
-                # written by the worker.
-                title_lookup = rf.get("Title (from Transcript ID)", [])
-                tid_lookup = rf.get("Transcript ID (from Transcript)", [])
-                transcript_meta: dict = {
-                    "title": title_lookup[0] if isinstance(title_lookup, list) and title_lookup else None,
-                    "transcript_id": tid_lookup[0] if isinstance(tid_lookup, list) and tid_lookup else None,
-                    "meeting_date": rf.get("Meeting Date"),
-                    "meeting_type": rf.get("Meeting Type"),
-                    "target_role": rf.get("Target Speaker Role"),
-                }
-                # For old runs that predate the Meeting Date/Type fields,
-                # fall back to a transcript lookup.
-                has_metadata = transcript_meta["title"] or transcript_meta["transcript_id"]
-                if not has_metadata:
-                    transcript_links = rf.get("Transcript ID", [])
-                    if transcript_links:
-                        runs_needing_transcript.append((r, transcript_links[0]))
 
                 run_entry: dict = {
                     "run_id": r["id"],
@@ -1000,39 +979,16 @@ async def client_summary(
                     "gate1_pass": rf.get("Gate1 Pass"),
                     "focus_pattern": rf.get("Focus Pattern"),
                     "created_at": r.get("createdTime"),
-                    **transcript_meta,
+                    "title": _first(rf.get("Title (from Transcript ID)")),
+                    "transcript_id": _first(rf.get("Transcript ID (from Transcript)")),
+                    "meeting_date": _first(rf.get("Meeting Date (from Transcript ID)")),
+                    "meeting_type": _first(rf.get("Meeting Type (from Transcript ID)")),
+                    "target_role": rf.get("Target Speaker Role"),
                 }
                 if rf.get("Analysis Type") == "baseline_pack":
                     bp_run_links = rf.get("baseline_packs (Last Run)", [])
                     run_entry["baseline_pack_id"] = bp_run_links[0] if bp_run_links else None
                 recent_runs.append(run_entry)
-
-            # Fetch transcript metadata for old runs in parallel
-            if runs_needing_transcript:
-                tr_futures = [
-                    asyncio.to_thread(at_client.get_transcript, tr_id)
-                    for _, tr_id in runs_needing_transcript
-                ]
-                tr_results = await asyncio.gather(*tr_futures, return_exceptions=True)
-                # Build a map of run_id -> transcript metadata
-                run_id_to_meta: dict[str, dict] = {}
-                for (run_rec, _), tr_result in zip(runs_needing_transcript, tr_results):
-                    if isinstance(tr_result, Exception):
-                        logger.warning("Could not fetch transcript for run %s: %s", run_rec["id"], tr_result)
-                        continue
-                    trf = tr_result.get("fields", {})
-                    run_id_to_meta[run_rec["id"]] = {
-                        "title": trf.get("Title"),
-                        "transcript_id": trf.get("Transcript ID"),
-                        "meeting_date": trf.get("Meeting Date"),
-                        "meeting_type": trf.get("Meeting Type"),
-                        "target_role": trf.get("Target Role"),
-                    }
-                # Patch the run entries
-                for entry in recent_runs:
-                    meta = run_id_to_meta.get(entry["run_id"])
-                    if meta:
-                        entry.update(meta)
 
             # Sort newest meeting date first; runs with no date go to the end
             recent_runs.sort(

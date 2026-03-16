@@ -77,8 +77,6 @@ from .airtable_client import (
     F_EXP_LAST_ATTEMPT_MODEL,
     F_EXP_LAST_ATTEMPT_DATE,
     F_RUN_ACTIVE_EXPERIMENT,
-    F_RUN_MEETING_DATE,
-    F_RUN_MEETING_TYPE,
 )
 from .config import CONFIG_VERSION
 from .gate1_validator import validate as gate1_validate
@@ -257,8 +255,6 @@ def _persist_run_fields(
     idempotency_key: str,
     coachee_id: str,
     user_record_id: Optional[str] = None,
-    meeting_date: Optional[str] = None,
-    meeting_type: Optional[str] = None,
 ) -> dict:
     """Create the run record in Airtable and return it."""
     fields: dict = {
@@ -311,14 +307,6 @@ def _persist_run_fields(
         fields[F_RUN_EXPERIMENT_STATUS_MODEL] = active_exp.get("status")
         if detection and isinstance(detection, dict):
             fields[F_RUN_ATTEMPT_MODEL] = detection.get("attempt")
-
-    # Meeting metadata — avoids per-run transcript lookups in the client
-    # summary endpoint.  Title and Transcript ID are Airtable lookup fields
-    # that auto-populate from the linked transcript record.
-    if meeting_date:
-        fields[F_RUN_MEETING_DATE] = meeting_date
-    if meeting_type:
-        fields[F_RUN_MEETING_TYPE] = meeting_type
 
     return client.create_run(fields)
 
@@ -518,8 +506,6 @@ def process_single_meeting_analysis(
         idempotency_key=idem_key,
         coachee_id=coachee_id,
         user_record_id=user_record_id or None,
-        meeting_date=meeting_date,
-        meeting_type=meeting_type,
     )
     run_record_id = run_record["id"]
 
