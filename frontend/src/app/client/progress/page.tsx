@@ -54,10 +54,13 @@ const rawKey = (pid: string) => `${pid}_raw`;
 
 // ─── Info popover ─────────────────────────────────────────────────────────────
 
+const HOVER_DELAY_MS = 400;
+
 function InfoPopover({ patternId, hoverColor }: { patternId: string; hoverColor?: string }) {
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -68,12 +71,26 @@ function InfoPopover({ patternId, hoverColor }: { patternId: string; hoverColor?
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
+  const handleMouseEnter = () => {
+    setHovered(true);
+    hoverTimer.current = setTimeout(() => setOpen(true), HOVER_DELAY_MS);
+  };
+
+  const handleMouseLeave = () => {
+    setHovered(false);
+    if (hoverTimer.current) { clearTimeout(hoverTimer.current); hoverTimer.current = null; }
+  };
+
+  useEffect(() => {
+    return () => { if (hoverTimer.current) clearTimeout(hoverTimer.current); };
+  }, []);
+
   return (
     <span className="relative inline-block" ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         className="ml-1 text-cv-stone-400 transition-colors align-middle leading-none"
         style={hovered && hoverColor ? { color: hoverColor } : undefined}
         aria-label="Pattern explanation"

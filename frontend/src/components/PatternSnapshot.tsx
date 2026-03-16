@@ -196,10 +196,13 @@ const PATTERN_ICONS: Record<string, JSX.Element> = {
 
 // ─── Info popover ─────────────────────────────────────────────────────────────
 
+const HOVER_DELAY_MS = 400;
+
 function InfoPopover({ patternId }: { patternId: string }) {
   const [open, setOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
   const updatePos = useCallback(() => {
@@ -226,6 +229,18 @@ function InfoPopover({ patternId }: { patternId: string }) {
     };
   }, [open, updatePos]);
 
+  useEffect(() => {
+    return () => { if (hoverTimer.current) clearTimeout(hoverTimer.current); };
+  }, []);
+
+  const handleMouseEnter = () => {
+    hoverTimer.current = setTimeout(() => setOpen(true), HOVER_DELAY_MS);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimer.current) { clearTimeout(hoverTimer.current); hoverTimer.current = null; }
+  };
+
   const explanation = STRINGS.patternExplanations[patternId];
   if (!explanation) return null;
 
@@ -234,6 +249,8 @@ function InfoPopover({ patternId }: { patternId: string }) {
       <button
         ref={btnRef}
         onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         className="ml-1 text-cv-stone-400 hover:text-cv-stone-600 transition-colors align-middle leading-none"
         aria-label="Pattern explanation"
         type="button"
