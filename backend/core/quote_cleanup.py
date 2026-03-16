@@ -41,12 +41,14 @@ _BATCH_SIZE: int = 200
 
 # Timeout for each cleanup LLM call (seconds).
 # With max_retries=0 on the client, this is a hard per-request cap.
-# 60s accommodates larger batches (150+ items) through Anthropic models.
-_CLEANUP_TIMEOUT: float = 60.0
+# IMPORTANT: This runs inside the /api/runs response handler. Railway's
+# proxy has a ~30s timeout, and we need headroom for Airtable calls and
+# quote resolution (~5-10s). Keep this well under 20s.
+_CLEANUP_TIMEOUT: float = 15.0
 
 # Total wall-clock budget for the entire cleanup operation (seconds).
 # If we exceed this, skip remaining batches rather than blocking the response.
-_TOTAL_BUDGET: float = 65.0
+_TOTAL_BUDGET: float = 20.0
 
 # Simple in-memory cache: hash(quote_text + abbreviate) -> cleaned_text.
 # Survives for the lifetime of the process, cleared on restart.
