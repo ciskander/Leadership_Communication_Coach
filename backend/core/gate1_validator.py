@@ -64,19 +64,102 @@ _VALID_COUNT_DECISION = {"counted", "excluded"}
 _VALID_SUCCESS = {"yes", "no", "na"}
 
 
+def _build_allowed_keys_map(schema: dict) -> dict[str, set[str]]:
+    """Extract allowed property names for each schema definition that has additionalProperties=false.
+
+    Returns a mapping from definition name → set of allowed property keys.
+    Also includes "ROOT" for the top-level schema.
+    """
+    defs = schema.get("$defs", schema.get("definitions", {}))
+    allowed: dict[str, set[str]] = {}
+    for name, defn in defs.items():
+        if defn.get("additionalProperties") is False and "properties" in defn:
+            allowed[name] = set(defn["properties"].keys())
+    if schema.get("additionalProperties") is False and "properties" in schema:
+        allowed["ROOT"] = set(schema["properties"].keys())
+    return allowed
+
+
+_ALLOWED_KEYS = _build_allowed_keys_map(_SCHEMA)
+
+
+def _strip_extra_keys(obj: dict, allowed: set[str], path: str) -> int:
+    """Remove keys not in the allowed set.  Returns count of keys removed."""
+    extra = set(obj.keys()) - allowed
+    for key in extra:
+        logger.warning("Sanitiser: stripping unrecognized key %r at %s", key, path)
+        del obj[key]
+    return len(extra)
+
+
 def _sanitise_output(data: dict) -> int:
     """
-    Correct known LLM enum confusions in-place.  Returns the number of fixes applied.
+    Correct known LLM output issues in-place.  Returns the number of fixes applied.
 
-    The model occasionally swaps enum values between adjacent fields in
-    opportunity_events (e.g. puts "counted" in target_control).
+    1. Strip unrecognized keys from every object (prevents additionalProperties
+       validation failures from hallucinated field names).
+    2. Fix known LLM enum confusions in opportunity_events.
     """
     fixes = 0
+
+    # ── Strip unrecognized keys from all schema-controlled objects ────────
+    fixes += _strip_extra_keys(data, _ALLOWED_KEYS.get("ROOT", set()), "$")
+
+    if "meta" in data and isinstance(data["meta"], dict):
+        fixes += _strip_extra_keys(data["meta"], _ALLOWED_KEYS.get("Meta", set()), "$.meta")
+
+    if "context" in data and isinstance(data["context"], dict):
+        # Determine which context schema applies
+        ctx_keys = _ALLOWED_KEYS.get("SingleMeetingContext", set()) | _ALLOWED_KEYS.get("BaselinePackContext", set())
+        fixes += _strip_extra_keys(data["context"], ctx_keys, "$.context")
+
+    if "evaluation_summary" in data and isinstance(data["evaluation_summary"], dict):
+        fixes += _strip_extra_keys(data["evaluation_summary"], _ALLOWED_KEYS.get("EvaluationSummary", set()), "$.evaluation_summary")
+
+    if "coaching_output" in data and isinstance(data["coaching_output"], dict):
+        co = data["coaching_output"]
+        fixes += _strip_extra_keys(co, _ALLOWED_KEYS.get("CoachingOutput", set()), "$.coaching_output")
+        ci_keys = _ALLOWED_KEYS.get("CoachingItem", set())
+        for i, s in enumerate(co.get("strengths", [])):
+            if isinstance(s, dict):
+                fixes += _strip_extra_keys(s, ci_keys, f"$.coaching_output.strengths[{i}]")
+        for i, f in enumerate(co.get("focus", [])):
+            if isinstance(f, dict):
+                fixes += _strip_extra_keys(f, ci_keys, f"$.coaching_output.focus[{i}]")
+        me_keys = _ALLOWED_KEYS.get("MicroExperiment", set())
+        for i, m in enumerate(co.get("micro_experiment", [])):
+            if isinstance(m, dict):
+                fixes += _strip_extra_keys(m, me_keys, f"$.coaching_output.micro_experiment[{i}]")
+
+    ps_keys = _ALLOWED_KEYS.get("PatternMeasurementBase", set())
+    oe_keys = _ALLOWED_KEYS.get("OpportunityEvent", set())
+    for i, item in enumerate(data.get("pattern_snapshot", [])):
+        if isinstance(item, dict):
+            fixes += _strip_extra_keys(item, ps_keys, f"$.pattern_snapshot[{i}]")
+            for j, event in enumerate(item.get("opportunity_events", []) or []):
+                if isinstance(event, dict):
+                    fixes += _strip_extra_keys(event, oe_keys, f"$.pattern_snapshot[{i}].opportunity_events[{j}]")
+
+    es_keys = _ALLOWED_KEYS.get("EvidenceSpan", set())
+    for i, span in enumerate(data.get("evidence_spans", [])):
+        if isinstance(span, dict):
+            fixes += _strip_extra_keys(span, es_keys, f"$.evidence_spans[{i}]")
+
+    if "experiment_tracking" in data and isinstance(data["experiment_tracking"], dict):
+        et = data["experiment_tracking"]
+        fixes += _strip_extra_keys(et, _ALLOWED_KEYS.get("ExperimentTracking", set()), "$.experiment_tracking")
+        ae = et.get("active_experiment")
+        if isinstance(ae, dict):
+            fixes += _strip_extra_keys(ae, _ALLOWED_KEYS.get("ActiveExperiment", set()), "$.experiment_tracking.active_experiment")
+        det = et.get("detection_in_this_meeting")
+        if isinstance(det, dict):
+            fixes += _strip_extra_keys(det, _ALLOWED_KEYS.get("ExperimentDetection", set()), "$.experiment_tracking.detection_in_this_meeting")
+
+    # ── Fix known LLM enum confusions in opportunity_events ──────────────
     for item in data.get("pattern_snapshot", []):
         for event in item.get("opportunity_events", []) or []:
             tc = event.get("target_control")
             if tc is not None and tc not in _VALID_TARGET_CONTROL:
-                # "counted"/"excluded" in target_control → infer "yes"/"no"
                 inferred = "yes" if tc == "counted" else "no" if tc == "excluded" else "unclear"
                 logger.warning(
                     "Sanitiser: target_control %r → %r (event %s)",
@@ -106,7 +189,7 @@ def _sanitise_output(data: dict) -> int:
                 fixes += 1
 
     if fixes:
-        logger.info("Sanitiser applied %d fix(es) to opportunity_events.", fixes)
+        logger.info("Sanitiser applied %d fix(es) total.", fixes)
     return fixes
 
 
