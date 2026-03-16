@@ -20,6 +20,7 @@ from .config import (
     ANTHROPIC_API_KEY,
     ANTHROPIC_MAX_TOKENS,
     ANTHROPIC_READ_TIMEOUT,
+    ANTHROPIC_READ_TIMEOUT_OPUS,
     RETRY_ATTEMPTS,
     RETRY_BASE_DELAY,
     RETRY_MAX_DELAY,
@@ -29,10 +30,17 @@ from .models import OpenAIResponse  # reused as provider-agnostic response type
 logger = logging.getLogger(__name__)
 
 
-def _make_client(api_key: Optional[str] = None) -> anthropic.Anthropic:
+def _timeout_for_model(model: str) -> float:
+    """Return the appropriate read timeout for the given model."""
+    if "opus" in model.lower():
+        return ANTHROPIC_READ_TIMEOUT_OPUS
+    return ANTHROPIC_READ_TIMEOUT
+
+
+def _make_client(api_key: Optional[str] = None, model: str = "") -> anthropic.Anthropic:
     return anthropic.Anthropic(
         api_key=api_key or ANTHROPIC_API_KEY,
-        timeout=anthropic.Timeout(timeout=ANTHROPIC_READ_TIMEOUT, connect=10.0),
+        timeout=anthropic.Timeout(timeout=_timeout_for_model(model), connect=10.0),
         max_retries=0,  # we handle retries ourselves for consistency with OpenAI path
     )
 
@@ -83,8 +91,8 @@ def call_anthropic(
     Raises:
         anthropic.APIError: After all retries exhausted.
     """
-    client = _make_client(api_key)
     effective_model = model or "claude-sonnet-4-6"
+    client = _make_client(api_key, model=effective_model)
     effective_max_tokens = max_tokens or ANTHROPIC_MAX_TOKENS
 
     combined_system = _build_system_message(system_prompt, developer_message)
