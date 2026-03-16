@@ -115,6 +115,7 @@ COACHING OUTPUT (STRICT CARDINALITY)
 - focus: array exactly 1 item of {pattern_id,message,evidence_span_ids,suggested_rewrite,rewrite_for_span_id}
 - micro_experiment: array exactly 1 item of {experiment_id,title,instruction,success_marker,pattern_id,evidence_span_ids}
 - evidence_span_ids in ALL coaching_output items must contain at least one span ID. Never output an empty array. If the focus or strength observation is about a recurring pattern rather than a single moment, cite the span that best illustrates it — prefer the micro_experiment's span for the same pattern_id if no other span is available.
+- Exception: if the pattern_id is conversational_balance, evidence_span_ids MUST be an empty array []. This pattern is assessed holistically and cannot be demonstrated by individual quotes.
 - The excerpt field in evidence_spans must be a verbatim quote from the transcript, never a summary or paraphrase. If the relevant evidence spans multiple speaker turns, concatenate them with speaker labels (e.g., "Chris: … / Samir: …"). Trim with ellipsis (…) if needed to stay under 2000 characters.
 
 FOCUS ITEM EVIDENCE AND REWRITE RULES

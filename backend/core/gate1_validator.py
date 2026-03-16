@@ -544,10 +544,12 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
         ))
 
     # evidence_span_ids must be non-empty and valid for coaching items
+    # Exception: conversational_balance is holistic — evidence_span_ids should be empty
     for key, items in [("strengths", strengths), ("focus", focus), ("micro_experiment", micro_experiment)]:
         for i, item in enumerate(items):
             es_ids = item.get("evidence_span_ids", [])
-            if not es_ids:
+            is_conv_balance = item.get("pattern_id") == "conversational_balance"
+            if not es_ids and not is_conv_balance:
                 issues.append(_err(
                     "COACHING_EMPTY_ES_IDS",
                     f"coaching_output.{key}[{i}].evidence_span_ids",
