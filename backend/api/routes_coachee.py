@@ -36,6 +36,7 @@ from .quote_helpers import (
     apply_quote_cleanup,
     build_spans_lookup,
     build_turn_map,
+    build_turn_map_from_record,
     resolve_coaching_output,
     resolve_pattern_snapshot,
 )
@@ -180,7 +181,7 @@ async def get_baseline_pack(
 ):
     at_client = AirtableClient()
     try:
-        bp_rec = at_client.get_baseline_pack(bp_id)
+        bp_rec = await asyncio.to_thread(at_client.get_baseline_pack, bp_id)
     except Exception as exc:
         if _is_airtable_not_found(exc):
             return error_response("NOT_FOUND", "Baseline pack not found.", 404)
@@ -195,17 +196,33 @@ async def get_baseline_pack(
 
     bf = bp_rec.get("fields", {})
 
-    strengths, focus, micro_experiment, pattern_snapshot = [], None, None, []
+    # ── Phase 1: Fetch aggregate run + pack items in parallel ─────────────
     last_run_links = bf.get("Last Run", [])
+    phase1_futures = []
+    phase1_keys = []
     if last_run_links:
+        phase1_futures.append(asyncio.to_thread(at_client.get_run, last_run_links[0]))
+        phase1_keys.append("agg_run")
+    phase1_futures.append(asyncio.to_thread(at_client.get_baseline_pack_items, bp_id))
+    phase1_keys.append("bpi_records")
+
+    phase1_results = await asyncio.gather(*phase1_futures, return_exceptions=True)
+    phase1_map: dict = {}
+    for key, result in zip(phase1_keys, phase1_results):
+        if isinstance(result, Exception):
+            logger.warning("get_baseline_pack phase1 %s failed: %s", key, result)
+            phase1_map[key] = None
+        else:
+            phase1_map[key] = result
+
+    # ── Parse aggregate run coaching data ─────────────────────────────────
+    strengths, focus, micro_experiment, pattern_snapshot = [], None, None, []
+    agg_run_rec = phase1_map.get("agg_run")
+    if agg_run_rec:
         try:
-            run_rec = at_client.get_run(last_run_links[0])
-            parsed_json_str = run_rec.get("fields", {}).get("Parsed JSON") or "{}"
+            parsed_json_str = agg_run_rec.get("fields", {}).get("Parsed JSON") or "{}"
             parsed = json.loads(parsed_json_str)
 
-            # Baseline aggregate runs receive only slim meeting summaries —
-            # NOT raw transcripts — so evidence_spans contain no real quotes.
-            # Extract coaching text fields only; quotes come from sub-runs.
             coaching = parsed.get("coaching_output", {})
             strengths = [
                 {"pattern_id": s.get("pattern_id", ""), "message": s.get("message", ""), "quotes": []}
@@ -233,7 +250,6 @@ async def get_baseline_pack(
                     "pattern_id": m.get("pattern_id", ""),
                     "quotes": [],
                 }
-            # Pattern snapshot: extract text fields only, no quote resolution
             raw_snapshot = parsed.get("pattern_snapshot") or []
             pattern_snapshot = [
                 {
@@ -255,72 +271,128 @@ async def get_baseline_pack(
         except Exception:
             pass
 
-    # Fetch constituent meetings from baseline pack items
+    # ── Phase 2: Fetch all sub-run records + transcripts in parallel ──────
+    bpi_records = phase1_map.get("bpi_records") or []
+    # Collect all Airtable record IDs we need to fetch
+    sub_fetch_futures = []
+    sub_fetch_keys = []
+    bpi_meta = []  # parallel array of (run_link, transcript_link) per bpi
+    for bpi in bpi_records:
+        bpif = bpi.get("fields", {})
+        run_links = bpif.get("Run", [])
+        transcript_links = bpif.get("Transcript", [])
+        run_id = run_links[0] if run_links else None
+        tr_id = transcript_links[0] if transcript_links else None
+        bpi_meta.append((run_id, tr_id))
+        if run_id:
+            sub_fetch_futures.append(asyncio.to_thread(at_client.get_run, run_id))
+            sub_fetch_keys.append(("run", len(bpi_meta) - 1))
+        if tr_id:
+            sub_fetch_futures.append(asyncio.to_thread(at_client.get_transcript, tr_id))
+            sub_fetch_keys.append(("transcript", len(bpi_meta) - 1))
+
+    sub_fetch_results = await asyncio.gather(*sub_fetch_futures, return_exceptions=True) if sub_fetch_futures else []
+    # Index results by (type, bpi_index)
+    fetched: dict[tuple, object] = {}
+    for key, result in zip(sub_fetch_keys, sub_fetch_results):
+        if isinstance(result, Exception):
+            logger.warning("get_baseline_pack: sub-fetch %s failed: %s", key, result)
+        else:
+            fetched[key] = result
+
+    # ── Phase 3: Process sub-runs (resolve quotes) — CPU-bound, no I/O ───
+    # Collect all quotes across sub-runs for a single combined cleanup call.
     meetings = []
-    try:
-        bpi_records = at_client.get_baseline_pack_items(bp_id)
-        for bpi in bpi_records:
-            bpif = bpi.get("fields", {})
-            run_links = bpif.get("Run", [])
-            transcript_links = bpif.get("Transcript", [])
-            meeting_info: dict = {
-                "run_id": run_links[0] if run_links else None,
-                "title": None,
-                "meeting_date": None,
-                "meeting_type": None,
-                "target_role": None,
-                "sub_run_strengths": [],
-                "sub_run_focus": None,
-                "sub_run_pattern_snapshot": [],
-            }
-            if transcript_links:
-                try:
-                    tr_rec = at_client.get_transcript(transcript_links[0])
-                    trf = tr_rec.get("fields", {})
-                    meeting_info.update({
-                        "title": trf.get("Title"),
-                        "meeting_date": trf.get("Meeting Date"),
-                        "meeting_type": trf.get("Meeting Type"),
-                        "target_role": trf.get("Target Role"),
-                    })
-                except Exception as te:
-                    logger.warning("get_baseline_pack: could not fetch transcript %s: %s", transcript_links[0] if transcript_links else "?", te)
-            if run_links:
-                try:
-                    sub_run_rec = at_client.get_run(run_links[0])
-                    sub_fields = sub_run_rec.get("fields", {})
-                    sub_parsed_str = sub_fields.get("Parsed JSON") or "{}"
-                    sub_parsed = json.loads(sub_parsed_str)
+    all_sub_strengths = []
+    all_sub_focus = []
+    all_sub_snapshots = []
 
-                    # Resolve sub-run evidence spans with transcript turn map
-                    sub_spans = build_spans_lookup(sub_parsed)
-                    sub_transcript_links = sub_fields.get("Transcript ID", [])
-                    sub_transcript_id = sub_transcript_links[0] if isinstance(sub_transcript_links, list) and sub_transcript_links else None
-                    sub_meeting_id = sub_parsed.get("context", {}).get("meeting_id")
-                    meeting_info["meeting_id"] = sub_meeting_id
-                    sub_turn_map = build_turn_map(at_client, sub_transcript_id)
+    for idx, (run_id, tr_id) in enumerate(bpi_meta):
+        meeting_info: dict = {
+            "run_id": run_id,
+            "title": None,
+            "meeting_date": None,
+            "meeting_type": None,
+            "target_role": None,
+            "sub_run_strengths": [],
+            "sub_run_focus": None,
+            "sub_run_pattern_snapshot": [],
+        }
 
-                    sub_target_label = sub_parsed.get("context", {}).get("target_speaker_label")
-                    sub_strengths, sub_focus, _ = resolve_coaching_output(
-                        sub_parsed, sub_spans, sub_transcript_id, sub_meeting_id, sub_turn_map, sub_target_label
-                    )
-                    sub_pattern_snapshot = resolve_pattern_snapshot(
-                        sub_parsed, sub_spans, sub_transcript_id, sub_meeting_id, sub_turn_map, sub_target_label
-                    )
+        tr_rec = fetched.get(("transcript", idx))
+        if tr_rec:
+            trf = tr_rec.get("fields", {})
+            meeting_info.update({
+                "title": trf.get("Title"),
+                "meeting_date": trf.get("Meeting Date"),
+                "meeting_type": trf.get("Meeting Type"),
+                "target_role": trf.get("Target Role"),
+            })
 
-                    # Post-processing: clean up ASR artifacts in quote texts
-                    apply_quote_cleanup(
-                        sub_strengths, sub_focus, None, sub_pattern_snapshot
-                    )
+        sub_run_rec = fetched.get(("run", idx))
+        if sub_run_rec:
+            try:
+                sub_fields = sub_run_rec.get("fields", {})
+                sub_parsed_str = sub_fields.get("Parsed JSON") or "{}"
+                sub_parsed = json.loads(sub_parsed_str)
 
-                    meeting_info["sub_run_strengths"] = [s.model_dump() for s in sub_strengths]
-                    meeting_info["sub_run_focus"] = sub_focus.model_dump() if sub_focus else None
-                    meeting_info["sub_run_pattern_snapshot"] = [p.model_dump() for p in sub_pattern_snapshot]
-                except Exception as se:
-                    logger.warning("get_baseline_pack: could not fetch sub-run %s: %s", run_links[0], se)
-            meetings.append(meeting_info)
-    except Exception as e:
-        logger.warning("get_baseline_pack: could not fetch pack items for %s: %s", bp_id, e)
+                sub_spans = build_spans_lookup(sub_parsed)
+                sub_transcript_links = sub_fields.get("Transcript ID", [])
+                sub_transcript_id = sub_transcript_links[0] if isinstance(sub_transcript_links, list) and sub_transcript_links else None
+                sub_meeting_id = sub_parsed.get("context", {}).get("meeting_id")
+                meeting_info["meeting_id"] = sub_meeting_id
+
+                # Build turn map from the already-fetched transcript (no extra API call)
+                sub_turn_map = build_turn_map_from_record(tr_rec) if tr_rec else {}
+
+                sub_target_label = sub_parsed.get("context", {}).get("target_speaker_label")
+                sub_strengths, sub_focus, _ = resolve_coaching_output(
+                    sub_parsed, sub_spans, sub_transcript_id, sub_meeting_id, sub_turn_map, sub_target_label
+                )
+                sub_pattern_snapshot = resolve_pattern_snapshot(
+                    sub_parsed, sub_spans, sub_transcript_id, sub_meeting_id, sub_turn_map, sub_target_label
+                )
+
+                # Defer cleanup — collect for parallel batch
+                all_sub_strengths.append((idx, sub_strengths))
+                all_sub_focus.append((idx, sub_focus))
+                all_sub_snapshots.append((idx, sub_pattern_snapshot))
+
+                meeting_info["_sub_strengths"] = sub_strengths
+                meeting_info["_sub_focus"] = sub_focus
+                meeting_info["_sub_snapshot"] = sub_pattern_snapshot
+            except Exception as se:
+                logger.warning("get_baseline_pack: sub-run %s processing failed: %s", run_id, se)
+
+        meetings.append(meeting_info)
+
+    # ── Phase 4: Quote cleanup for all sub-runs in parallel ─────────────
+    # Each sub-run's quotes are cleaned independently but all three calls
+    # run concurrently.  With the persistent cache, repeat visits are instant.
+    cleanup_futures = []
+    cleanup_indices = []
+    for idx, sub_s, sub_f, sub_snap in (
+        (i, s, f, sn)
+        for (i, s), (_, f), (_, sn) in zip(all_sub_strengths, all_sub_focus, all_sub_snapshots)
+    ):
+        cleanup_futures.append(asyncio.to_thread(
+            apply_quote_cleanup, sub_s, sub_f, None, sub_snap,
+        ))
+        cleanup_indices.append(idx)
+    if cleanup_futures:
+        await asyncio.gather(*cleanup_futures, return_exceptions=True)
+
+    # Serialize meeting data after cleanup has been applied in-place
+    for m in meetings:
+        sub_s = m.pop("_sub_strengths", None)
+        sub_f = m.pop("_sub_focus", None)
+        sub_snap = m.pop("_sub_snapshot", None)
+        if sub_s:
+            m["sub_run_strengths"] = [s.model_dump() for s in sub_s]
+        if sub_f:
+            m["sub_run_focus"] = sub_f.model_dump()
+        if sub_snap:
+            m["sub_run_pattern_snapshot"] = [p.model_dump() for p in sub_snap]
 
     # Annotate aggregate quotes with meeting labels for attribution
     mid_to_label: dict[str, str] = {}

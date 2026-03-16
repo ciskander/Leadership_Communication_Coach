@@ -48,6 +48,14 @@ def build_turn_map(
         return {}
     try:
         tr_record = at_client.get_transcript(transcript_record_id)
+        return build_turn_map_from_record(tr_record)
+    except Exception:
+        return {}
+
+
+def build_turn_map_from_record(tr_record: dict) -> dict[int, Turn]:
+    """Build a turn map from an already-fetched transcript record."""
+    try:
         tr_fields = tr_record.get("fields", {})
         transcript_text = (
             tr_fields.get("Transcript (extracted)")
@@ -59,7 +67,7 @@ def build_turn_map(
         parsed = parse_transcript(
             data=transcript_text.encode("utf-8"),
             filename="transcript.txt",
-            source_id=tr_fields.get("Transcript ID") or transcript_record_id,
+            source_id=tr_fields.get("Transcript ID") or tr_record.get("id", ""),
         )
         return {t.turn_id: t for t in parsed.turns}
     except Exception:
