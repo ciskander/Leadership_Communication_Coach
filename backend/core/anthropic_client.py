@@ -18,6 +18,7 @@ import anthropic
 
 from .config import (
     ANTHROPIC_API_KEY,
+    ANTHROPIC_JSON_REPAIR_MODEL,
     ANTHROPIC_MAX_TOKENS,
     ANTHROPIC_READ_TIMEOUT,
     ANTHROPIC_READ_TIMEOUT_OPUS,
@@ -68,6 +69,99 @@ def _build_system_message(system_prompt: str, developer_message: str) -> str:
         "─── TAXONOMY & EVALUATION RUBRICS (apply these strictly) ───\n\n"
         f"{developer_message}"
     )
+
+
+def _extract_json(raw_text: str) -> dict:
+    """Try progressively harder strategies to extract JSON from raw model output.
+
+    Strategy order:
+      1. Direct parse (model returned clean JSON)
+      2. Strip markdown fences (```json ... ```)
+      3. Find outermost { ... } braces (handles prose preamble/postamble)
+
+    Raises json.JSONDecodeError if all strategies fail.
+    """
+    text = raw_text.strip()
+
+    # Strategy 1: direct parse
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    # Strategy 2: strip markdown fences
+    if "```" in text:
+        parts = text.split("```")
+        for part in parts[1::2]:  # odd-indexed parts are inside fences
+            inner = part.strip()
+            if inner.lower().startswith("json"):
+                inner = inner[4:].strip()
+            try:
+                return json.loads(inner)
+            except json.JSONDecodeError:
+                continue
+
+    # Strategy 3: find outermost braces
+    first_brace = text.find("{")
+    last_brace = text.rfind("}")
+    if first_brace != -1 and last_brace > first_brace:
+        try:
+            return json.loads(text[first_brace:last_brace + 1])
+        except json.JSONDecodeError:
+            pass
+
+    # All strategies failed — raise with the original text
+    raise json.JSONDecodeError(
+        "No valid JSON found after all extraction strategies",
+        text[:200],
+        0,
+    )
+
+
+def _repair_json_via_llm(raw_text: str, api_key: Optional[str] = None) -> dict:
+    """Send malformed output to a fast model for JSON extraction.
+
+    Uses ANTHROPIC_JSON_REPAIR_MODEL (default: claude-sonnet-4-6) with a short
+    timeout. This is a reformatting task, not a reasoning task.
+
+    Raises ValueError if repair also fails.
+    """
+    repair_model = ANTHROPIC_JSON_REPAIR_MODEL
+    logger.info("Attempting JSON repair via %s", repair_model)
+
+    repair_client = anthropic.Anthropic(
+        api_key=api_key or ANTHROPIC_API_KEY,
+        timeout=anthropic.Timeout(timeout=60.0, connect=10.0),
+        max_retries=0,
+    )
+
+    repair_response = repair_client.messages.create(
+        model=repair_model,
+        system=(
+            "You are a JSON extraction tool. The user will provide text that "
+            "contains a JSON object. Extract ONLY the JSON object and return it "
+            "with no other text, no markdown fences, no explanation. "
+            "Do not modify any values — only fix structural issues "
+            "(missing commas, trailing commas, unescaped quotes)."
+        ),
+        messages=[{"role": "user", "content": raw_text}],
+        max_tokens=ANTHROPIC_MAX_TOKENS,
+    )
+
+    repair_text = ""
+    for block in repair_response.content:
+        if block.type == "text":
+            repair_text = block.text
+            break
+
+    try:
+        parsed = _extract_json(repair_text)
+        logger.info("JSON repair succeeded via %s", repair_model)
+        return parsed
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            f"JSON repair via {repair_model} also failed: {repair_text[:200]}"
+        ) from exc
 
 
 def call_anthropic(
@@ -126,19 +220,16 @@ def call_anthropic(
                     f"Anthropic returned empty response content (stop_reason={response.stop_reason})"
                 )
 
-            # Strip markdown fences if present (Claude sometimes wraps JSON)
-            cleaned = raw_text.strip()
-            if cleaned.startswith("```"):
-                parts = cleaned.split("```")
-                # Take the first code block content
-                if len(parts) >= 3:
-                    inner = parts[1]
-                    # Remove optional language tag (e.g., "json\n")
-                    if inner.startswith("json"):
-                        inner = inner[4:]
-                    cleaned = inner.strip()
-
-            parsed = json.loads(cleaned)
+            # Extract JSON — tries direct parse, fence stripping, brace matching
+            try:
+                parsed = _extract_json(raw_text)
+            except json.JSONDecodeError:
+                # Layer 2: one repair call via a fast model
+                logger.warning(
+                    "JSON extraction failed on attempt %d; raw_text[:200]=%s",
+                    attempt + 1, raw_text[:200],
+                )
+                parsed = _repair_json_via_llm(raw_text, api_key)
 
             usage = response.usage
             return OpenAIResponse(
@@ -187,11 +278,13 @@ def call_anthropic(
                 attempt + 1, wait,
             )
             time.sleep(wait)
-        except json.JSONDecodeError as exc:
-            # JSON parse failure is not retryable — the model returned bad output
-            raise ValueError(
-                f"Anthropic returned non-JSON response: {raw_text[:200]}"
-            ) from exc
+        except (json.JSONDecodeError, ValueError) as exc:
+            # Extraction + repair both failed — not retryable
+            logger.error(
+                "Anthropic JSON extraction and repair failed on attempt %d: %s; raw_text[:500]=%s",
+                attempt + 1, exc, raw_text[:500],
+            )
+            raise
         except Exception:
             raise
 
