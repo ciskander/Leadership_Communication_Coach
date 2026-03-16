@@ -8,7 +8,7 @@ import { api } from '@/lib/api';
 import type { CoacheeSummary, Experiment, ClientProgress, RunStatus, RunHistoryPoint } from '@/lib/types';
 import { ExperimentTracker } from '@/components/ExperimentTracker';
 import {
-  LineChart, Line, BarChart, Bar, Cell,
+  LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine,
 } from 'recharts';
@@ -78,7 +78,9 @@ function buildChartData(
   return history.map((run, idx) => {
     const point: ChartPoint = {
       date:       run.meeting_date ?? '',
-      label:      run.meeting_date ? fmtDate(run.meeting_date) : 'Unknown',
+      label:      run.is_baseline
+                    ? STRINGS.progressPage.baseline
+                    : run.meeting_date ? fmtDate(run.meeting_date) : 'Unknown',
       isBaseline: run.is_baseline,
     };
     for (const pid of visiblePatterns) {
@@ -216,11 +218,6 @@ function PatternTrendsCompact({
         </ResponsiveContainer>
       ) : (
         (() => {
-          const latest  = [...history].reverse().find((r) => !r.is_baseline) ?? history[history.length - 1];
-          const barData = visiblePatterns.map((pid) => {
-            const p = latest.patterns.find((x) => x.pattern_id === pid);
-            return { name: STRINGS.patternLabels[pid] ?? pid, score: p ? Math.round(p.ratio * 100) : 0, pid };
-          });
           const meetingsUntil = Math.max(0, 3 - postBaselineCount);
           return (
             <>
@@ -230,15 +227,36 @@ function PatternTrendsCompact({
                 </div>
               )}
               <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={barData} margin={{ top: 4, right: 16, left: 0, bottom: 30 }}>
+                <BarChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#EDE8E3" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#A8A29E' }} tickLine={false} angle={-30} textAnchor="end" interval={0} />
+                  <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#A8A29E' }} tickLine={false} />
                   <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={axisStyle} tickLine={false} axisLine={false} />
-                  <Bar dataKey="score" radius={[4, 4, 0, 0]} maxBarSize={36}>
-                    {barData.map((entry) => (
-                      <Cell key={entry.pid} fill={patternColor(entry.pid)} opacity={0.8} />
-                    ))}
-                  </Bar>
+                  <Tooltip
+                    cursor={{ fill: '#F7F4F0' }}
+                    content={({ active, payload, label }: any) => {
+                      if (!active || !payload?.length) return null;
+                      return (
+                        <div className="bg-white border border-cv-warm-200 rounded shadow-lg p-2 text-xs min-w-[160px]">
+                          <p className="font-semibold text-cv-stone-700 mb-1">{label}</p>
+                          {payload.map((entry: any) => (
+                            <div key={entry.dataKey} className="flex justify-between gap-3">
+                              <span style={{ color: entry.color }}>{STRINGS.patternLabels[entry.dataKey.replace(/_raw$/, '')] ?? entry.dataKey}</span>
+                              <span className="font-medium">{entry.value != null ? `${entry.value}%` : '—'}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }}
+                  />
+                  {visiblePatterns.map((pid) => {
+                    const isExp = pid === experimentPatternId;
+                    return (
+                      <Bar key={pid} dataKey={rawKey(pid)} fill={patternColor(pid)} radius={[4, 4, 0, 0]}
+                        maxBarSize={28} opacity={isExp ? 1 : 0.8}
+                        stroke={isExp ? patternColor(pid) : undefined} strokeWidth={isExp ? 2 : 0}
+                      />
+                    );
+                  })}
                 </BarChart>
               </ResponsiveContainer>
             </>

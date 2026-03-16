@@ -9,7 +9,6 @@ import {
   Line,
   BarChart,
   Bar,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -138,7 +137,9 @@ function buildChartData(
   return history.map((run, idx) => {
     const point: ChartPoint = {
       date:       run.meeting_date ?? '',
-      label:      run.meeting_date ? fmtDate(run.meeting_date) : 'Unknown',
+      label:      run.is_baseline
+                    ? STRINGS.progressPage.baseline
+                    : run.meeting_date ? fmtDate(run.meeting_date) : 'Unknown',
       isBaseline: run.is_baseline,
     };
 
@@ -213,20 +214,26 @@ function PatternTrendsChart({
   const chartData     = useMemo(() => buildChartData(history, allPatterns, trendWindowSize), [history, allPatterns, trendWindowSize]);
   const baselinePoint = useMemo(() => chartData.find((p) => p.isBaseline), [chartData]);
 
-  // Custom tooltip
+  // Custom tooltip — works for both line chart (trend + raw entries) and bar chart (raw-only)
   const renderCustomTooltip = useCallback(({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     const trendEntries = payload.filter((e: any) => !e.dataKey.endsWith('_raw'));
-    if (!trendEntries.length) return null;
+    const rawOnlyEntries = payload.filter((e: any) => e.dataKey.endsWith('_raw'));
+    // Bar chart: only _raw entries; line chart: trend entries with optional raw detail
+    const entries = trendEntries.length > 0 ? trendEntries : rawOnlyEntries;
+    if (!entries.length) return null;
     return (
       <div className="bg-white border border-cv-warm-200 rounded shadow-lg p-3 text-sm min-w-[200px]">
         <p className="font-semibold text-cv-stone-700 mb-1.5">{label}</p>
-        {trendEntries.map((entry: any) => {
-          const rawEntry = payload.find((e: any) => e.dataKey === rawKey(entry.dataKey));
-          const rawVal   = rawEntry?.value;
+        {entries.map((entry: any) => {
+          const patternId = entry.dataKey.replace(/_raw$/, '');
+          const rawEntry = trendEntries.length > 0
+            ? payload.find((e: any) => e.dataKey === rawKey(patternId))
+            : null;
+          const rawVal = rawEntry?.value;
           return (
             <div key={entry.dataKey} className="flex justify-between gap-4">
-              <span style={{ color: entry.color }} className="text-xs">{STRINGS.patternLabels[entry.dataKey] ?? entry.dataKey}</span>
+              <span style={{ color: entry.color }} className="text-xs">{STRINGS.patternLabels[patternId] ?? patternId}</span>
               <span className="text-xs font-medium tabular-nums">
                 {entry.value != null ? `${entry.value}%` : '—'}
                 {rawVal != null && rawVal !== entry.value && (
@@ -287,11 +294,6 @@ function PatternTrendsChart({
       ) : (
         <>
           {(() => {
-            const latest  = [...history].reverse().find((r) => !r.is_baseline) ?? history[history.length - 1];
-            const barData = visiblePatterns.map((pid) => {
-              const p = latest.patterns.find((x) => x.pattern_id === pid);
-              return { name: STRINGS.patternLabels[pid] ?? pid, score: p ? Math.round(p.ratio * 100) : 0, pid };
-            });
             const meetingsUntil = 3 - postBaselineCount;
             return (
               <>
@@ -303,20 +305,20 @@ function PatternTrendsChart({
                   {STRINGS.progressPage.meetingsUntilTrends(meetingsUntil)}
                 </div>
                 <ResponsiveContainer width="100%" height={240}>
-                  <BarChart data={barData} margin={{ top: 4, right: 16, left: 0, bottom: 40 }}>
+                  <BarChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#EDE8E3" vertical={false} />
-                    <XAxis dataKey="name" tick={axisStyle} tickLine={false} angle={-30} textAnchor="end" interval={0} />
+                    <XAxis dataKey="label" tick={axisStyle} tickLine={false} />
                     <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={axisStyle} tickLine={false} axisLine={false} />
-                    <Tooltip formatter={(v: number | undefined) => [`${v ?? 0}%`, STRINGS.progressPage.score]} cursor={{ fill: '#F7F4F0' }} />
-                    <Bar dataKey="score" radius={[4, 4, 0, 0]} maxBarSize={48}>
-                      {barData.map((entry) => {
-                        const isExp = entry.pid === experimentPatternId;
-                        const color = patternColor(entry.pid);
-                        return (
-                          <Cell key={entry.pid} fill={color} stroke={isExp ? color : undefined} strokeWidth={isExp ? 2 : 0} opacity={isExp ? 1 : 0.75} />
-                        );
-                      })}
-                    </Bar>
+                    <Tooltip content={renderCustomTooltip} cursor={{ fill: '#F7F4F0' }} />
+                    {visiblePatterns.map((pid) => {
+                      const isExp = pid === experimentPatternId;
+                      return (
+                        <Bar key={pid} dataKey={rawKey(pid)} fill={patternColor(pid)} radius={[4, 4, 0, 0]}
+                          maxBarSize={36} opacity={isExp ? 1 : 0.75}
+                          stroke={isExp ? patternColor(pid) : undefined} strokeWidth={isExp ? 2 : 0}
+                        />
+                      );
+                    })}
                   </BarChart>
                 </ResponsiveContainer>
               </>
