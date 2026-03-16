@@ -214,6 +214,7 @@ def _build_run_response(run_record: dict, at_client: Optional[AirtableClient] = 
         resp.micro_experiment,
         resp.pattern_snapshot or [],
         experiment_detection_quotes=det_quotes_for_cleanup,
+        experiment_detection=resp.experiment_detection,
     )
 
     return resp

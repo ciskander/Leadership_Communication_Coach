@@ -51,23 +51,22 @@ _TOTAL_BUDGET: float = 35.0
 # Survives for the lifetime of the process, cleared on restart.
 _cache: dict[str, str] = {}
 
-_CLEANUP_SYSTEM_PROMPT = """You are a transcript quote cleanup assistant. Your job is to lightly clean up quotes from automatic speech recognition (ASR) transcripts to improve readability.
+_CLEANUP_SYSTEM_PROMPT = """You are a transcript quote cleanup assistant. You will receive a JSON array of objects, each with "id", "text", and a "category" field. Apply cleanup rules based on the category.
 
-You will receive a JSON array of quote objects. For each quote, apply ONLY these cleanup operations:
-
+CATEGORY: "transcript_quote"
+These are raw quotes from automatic speech recognition (ASR) transcripts. Apply ONLY these operations:
 1. PUNCTUATION: Insert periods, commas, question marks, and other punctuation where clearly needed for readability. Capitalize the first word of sentences.
 2. FILLER REMOVAL: Remove filler words (um, uh, er, ah, you know, I mean, like when used as filler) ONLY when they add no meaning.
 3. DUPLICATE REMOVAL: Remove obviously duplicated words or phrases caused by speech disfluency (e.g., "from the from the" → "from the").
 4. SINGLE QUOTES: Where a word or phrase is clearly being referenced as a title, label, or named concept, wrap it in single quotes for clarity (e.g., Engine 17 → 'Engine 17' when it is being named as a specific thing, but NOT when it is part of natural speech like "I drove Engine 17").
 
-STRICT RULES — DO NOT VIOLATE:
+Strict rules for transcript_quote:
 - Do NOT paraphrase, reword, or substitute any words.
 - Do NOT add words that were not in the original (except punctuation marks and single quotes).
 - Do NOT remove words that carry meaning — only remove clear filler and exact duplicates.
 - Do NOT change the speaker's phrasing, vocabulary, or sentence structure.
 - Do NOT correct grammar (e.g., do not fix subject-verb agreement or tense).
 - If a quote is too short or garbled to meaningfully clean up, return it unchanged.
-- Preserve the exact JSON structure. Return a JSON array with the same number of objects.
 
 For NON-TARGET speaker quotes in multi-speaker spans (marked with "abbreviate": true):
 - Keep the first ~1-2 sentences and the last ~1-2 sentences of the quote.
@@ -75,7 +74,22 @@ For NON-TARGET speaker quotes in multi-speaker spans (marked with "abbreviate": 
 - Keep enough text at the start and end to preserve clear context for what the target speaker was responding to.
 - If the quote is already short (under ~40 words), do not abbreviate — return it with only the standard cleanup.
 
-Return ONLY a JSON array wrapped in a {"quotes": [...]} object. No prose, no explanation."""
+CATEGORY: "coaching_blurb"
+These are AI-generated coaching observations that may reference what the speaker said in the meeting. Apply ONLY these operations:
+1. INLINE QUOTES: When the text references something the speaker said (e.g., phrases like "such as do we split EP-118" or "your statement I think we should move on"), wrap the referenced speech in single quotes and add appropriate terminal punctuation inside the quotes (e.g., 'do we split EP-118?' or 'I think we should move on.').
+2. PUNCTUATION: Insert or fix punctuation for clarity where clearly needed.
+3. GRAMMAR: Fix minor grammar issues only if they are clearly errors (e.g., missing articles, broken sentence structure). Do NOT rephrase or rewrite.
+
+Strict rules for coaching_blurb:
+- Do NOT change the meaning or substantive content of the coaching observation.
+- Do NOT rewrite sentences or change vocabulary — only add quotes and punctuation.
+- Do NOT add coaching advice that was not in the original text.
+- If no inline speech references are present, return the text with only minor punctuation fixes or unchanged.
+
+GLOBAL RULES:
+- Preserve the exact JSON structure. Return a JSON array with the same number of objects.
+- Use only single quotes (') around referenced speech — never double quotes.
+- Return ONLY a JSON array wrapped in a {"quotes": [...]} object. No prose, no explanation."""
 
 _CLEANUP_USER_TEMPLATE = """Clean up the following transcript quotes. Return a JSON object with a "quotes" key containing the cleaned array.
 
@@ -119,7 +133,12 @@ def _call_cleanup_batch_openai(
 ) -> dict[str, str]:
     """Send a single batch of quotes to OpenAI and return {id: cleaned_text}."""
     payload = [
-        {"id": q["id"], "text": q["text"], "abbreviate": q.get("abbreviate", False)}
+        {
+            "id": q["id"],
+            "text": q["text"],
+            "abbreviate": q.get("abbreviate", False),
+            "category": q.get("category", "transcript_quote"),
+        }
         for q in batch
     ]
 
@@ -164,7 +183,12 @@ def _call_cleanup_batch_anthropic(
     import anthropic
 
     payload = [
-        {"id": q["id"], "text": q["text"], "abbreviate": q.get("abbreviate", False)}
+        {
+            "id": q["id"],
+            "text": q["text"],
+            "abbreviate": q.get("abbreviate", False),
+            "category": q.get("category", "transcript_quote"),
+        }
         for q in batch
     ]
 

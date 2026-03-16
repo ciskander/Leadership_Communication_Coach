@@ -17,6 +17,7 @@ from ..core.quote_cleanup import cleanup_quotes
 from ..core.transcript_parser import parse_transcript
 from .dto import (
     CoachingItemWithQuotes,
+    ExperimentDetectionWithQuotes,
     MicroExperimentWithQuotes,
     PatternSnapshotItem,
     QuoteObject,
@@ -287,18 +288,97 @@ def _collect_quotes_for_cleanup(
     return all_quotes
 
 
+def _collect_coaching_blurbs(
+    strengths: list[CoachingItemWithQuotes],
+    focus: Optional[CoachingItemWithQuotes],
+    micro_exp: Optional[MicroExperimentWithQuotes],
+    snapshot_items: list[PatternSnapshotItem],
+    experiment_detection: Optional[ExperimentDetectionWithQuotes] = None,
+) -> list[dict]:
+    """Collect coaching text fields for cleanup as {id, text, category} dicts.
+
+    Each item gets a unique id so we can write the cleaned text back to the
+    correct DTO field. Returns only non-empty text fields.
+    """
+    blurbs: list[dict] = []
+
+    for i, s in enumerate(strengths):
+        if s.message:
+            blurbs.append({"id": f"str:{i}:message", "text": s.message, "category": "coaching_blurb"})
+
+    if focus:
+        if focus.message:
+            blurbs.append({"id": "focus:message", "text": focus.message, "category": "coaching_blurb"})
+        if focus.suggested_rewrite:
+            blurbs.append({"id": "focus:rewrite", "text": focus.suggested_rewrite, "category": "coaching_blurb"})
+
+    for i, snap in enumerate(snapshot_items):
+        if snap.notes:
+            blurbs.append({"id": f"snap:{i}:notes", "text": snap.notes, "category": "coaching_blurb"})
+        if snap.coaching_note:
+            blurbs.append({"id": f"snap:{i}:coaching_note", "text": snap.coaching_note, "category": "coaching_blurb"})
+        if snap.suggested_rewrite:
+            blurbs.append({"id": f"snap:{i}:rewrite", "text": snap.suggested_rewrite, "category": "coaching_blurb"})
+
+    if experiment_detection:
+        if experiment_detection.coaching_note:
+            blurbs.append({"id": "det:coaching_note", "text": experiment_detection.coaching_note, "category": "coaching_blurb"})
+        if experiment_detection.suggested_rewrite:
+            blurbs.append({"id": "det:rewrite", "text": experiment_detection.suggested_rewrite, "category": "coaching_blurb"})
+
+    return blurbs
+
+
+def _apply_blurb_results(
+    cleaned: dict[str, str],
+    strengths: list[CoachingItemWithQuotes],
+    focus: Optional[CoachingItemWithQuotes],
+    snapshot_items: list[PatternSnapshotItem],
+    experiment_detection: Optional[ExperimentDetectionWithQuotes] = None,
+) -> None:
+    """Write cleaned coaching blurb text back to DTO objects in-place."""
+    for i, s in enumerate(strengths):
+        key = f"str:{i}:message"
+        if key in cleaned:
+            s.message = cleaned[key]
+
+    if focus:
+        if "focus:message" in cleaned:
+            focus.message = cleaned["focus:message"]
+        if "focus:rewrite" in cleaned:
+            focus.suggested_rewrite = cleaned["focus:rewrite"]
+
+    for i, snap in enumerate(snapshot_items):
+        key_notes = f"snap:{i}:notes"
+        key_cn = f"snap:{i}:coaching_note"
+        key_rw = f"snap:{i}:rewrite"
+        if key_notes in cleaned:
+            snap.notes = cleaned[key_notes]
+        if key_cn in cleaned:
+            snap.coaching_note = cleaned[key_cn]
+        if key_rw in cleaned:
+            snap.suggested_rewrite = cleaned[key_rw]
+
+    if experiment_detection:
+        if "det:coaching_note" in cleaned:
+            experiment_detection.coaching_note = cleaned["det:coaching_note"]
+        if "det:rewrite" in cleaned:
+            experiment_detection.suggested_rewrite = cleaned["det:rewrite"]
+
+
 def apply_quote_cleanup(
     strengths: list[CoachingItemWithQuotes],
     focus: Optional[CoachingItemWithQuotes],
     micro_exp: Optional[MicroExperimentWithQuotes],
     snapshot_items: list[PatternSnapshotItem],
     experiment_detection_quotes: Optional[list[QuoteObject]] = None,
+    experiment_detection: Optional[ExperimentDetectionWithQuotes] = None,
 ) -> None:
-    """Apply post-processing cleanup to all quote texts in-place.
+    """Apply post-processing cleanup to all quote texts and coaching blurbs in-place.
 
-    This function collects all quotes, sends them through the cleanup LLM in a
-    single batch call, then writes the cleaned text back. If cleanup is disabled
-    or fails, quotes are left unchanged.
+    This function collects all transcript quotes and coaching blurbs, sends them
+    through the cleanup LLM in a single batch call, then writes the cleaned text
+    back. If cleanup is disabled or fails, texts are left unchanged.
     """
     if not _CLEANUP_ENABLED:
         return
@@ -306,15 +386,12 @@ def apply_quote_cleanup(
     all_quotes = _collect_quotes_for_cleanup(
         strengths, focus, micro_exp, snapshot_items, experiment_detection_quotes
     )
-    if not all_quotes:
-        return
 
-    # Deduplicate by (span_id, quote_text) to avoid sending the same text twice.
-    # Multiple QuoteObjects may share the same underlying text (e.g., same span
-    # referenced by both pattern_snapshot and coaching_output).
+    # Deduplicate transcript quotes by (span_id, quote_text) to avoid sending
+    # the same text twice.
     seen: dict[str, list[QuoteObject]] = {}
     cleanup_input: list[dict] = []
-    for idx, q in enumerate(all_quotes):
+    for q in all_quotes:
         dedup_key = f"{q.span_id}:{q.quote_text}"
         if dedup_key in seen:
             seen[dedup_key].append(q)
@@ -324,13 +401,24 @@ def apply_quote_cleanup(
             "id": dedup_key,
             "text": q.quote_text,
             "abbreviate": q.is_target_speaker is False,  # non-target in multi-speaker
+            "category": "transcript_quote",
         })
+
+    # Collect coaching blurbs (messages, notes, coaching_notes, rewrites)
+    blurb_items = _collect_coaching_blurbs(
+        strengths, focus, micro_exp, snapshot_items, experiment_detection
+    )
+    cleanup_input.extend(blurb_items)
 
     if not cleanup_input:
         return
 
     logger = logging.getLogger(__name__)
-    logger.info("Running quote cleanup on %d unique quotes", len(cleanup_input))
+    logger.info(
+        "Running cleanup on %d transcript quotes + %d coaching blurbs",
+        len(cleanup_input) - len(blurb_items),
+        len(blurb_items),
+    )
 
     cleaned = cleanup_quotes(cleanup_input)
 
@@ -340,3 +428,6 @@ def apply_quote_cleanup(
         if cleaned_text:
             for q in quote_list:
                 q.quote_text = cleaned_text
+
+    # Write cleaned text back to coaching blurb fields
+    _apply_blurb_results(cleaned, strengths, focus, snapshot_items, experiment_detection)
