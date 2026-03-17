@@ -275,14 +275,14 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           }
         : confirmState === 'done' && confirmedValue
         ? {
-            icon: <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0 text-cv-teal-600" aria-hidden="true"><path d="M11.5 1.5l3 3-9 9H2.5v-3l9-9z" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round"/><path d="M9.5 3.5l3 3" stroke="currentColor" strokeWidth={1.4}/></svg>,
+            icon: <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0 text-cv-teal-600" aria-hidden="true"><path d="M6 1v5L2 14h12L10 6V1" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round"/><path d="M4.5 1h7" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg>,
             bgColor: 'bg-emerald-50',
             labelColor: 'text-emerald-800',
             label: STRINGS.runStatusPoller.userConfirmedAttempt,
             desc: null,
           }
         : {
-            icon: <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0 text-stone-400" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth={1.4}/><path d="M6 6h4M6 10h4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg>,
+            icon: <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0 text-stone-400" aria-hidden="true"><path d="M6 1v5L2 14h12L10 6V1" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round"/><path d="M4.5 1h7" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg>,
             bgColor: 'bg-stone-50',
             labelColor: 'text-stone-700',
             label: STRINGS.runStatusPoller.noAttemptDetected,
@@ -353,7 +353,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                 <div className="flex gap-2 pt-1">
                   <button
                     onClick={() => handleConfirm(true)}
-                    className="px-4 py-2 bg-emerald-600 text-white rounded text-xs font-semibold hover:bg-emerald-700 transition-colors"
+                    className="px-4 py-2 bg-cv-teal-700 text-white rounded text-xs font-semibold hover:bg-cv-teal-800 transition-colors"
                   >
                     {STRINGS.runStatusPoller.yesITriedIt}
                   </button>
@@ -386,7 +386,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         </section>
 
         {/* Full experiment tracker */}
-        <h2 className="text-base font-semibold text-stone-800 mt-2">{STRINGS.runStatusPoller.currentExperiment}</h2>
+        <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mt-2">{STRINGS.runStatusPoller.currentExperiment}</p>
         {activeExpData?.experiment ? (
           <ExperimentTracker
             experiment={activeExpData.experiment}
@@ -426,7 +426,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           </div>
         </div>
       ) : (
-        <div className="bg-emerald-50 border border-emerald-200 rounded px-5 py-3.5 flex items-center gap-3">
+        <div className="bg-emerald-50 border border-cv-teal-700 rounded px-5 py-3.5 flex items-center gap-3">
           <svg viewBox="0 0 16 16" fill="none" className="w-5 h-5 shrink-0 text-cv-teal-600" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth={1.4}/><path d="M5 8l2 2 4-4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"/></svg>
           <div>
             <p className="text-sm font-semibold text-emerald-800">{STRINGS.runStatusPoller.analysisComplete}</p>

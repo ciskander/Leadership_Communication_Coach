@@ -384,7 +384,12 @@ export default function BaselineDetailPage() {
   const isBuilding = pack.status === 'draft' || pack.status === 'building' || pack.status === 'intake';
   const isReady = pack.status === 'baseline_ready' || pack.status === 'completed';
   const isError = pack.status === 'error' || timedOut;
-  const meetings = pack.meetings ?? [];
+  const meetings = [...(pack.meetings ?? [])].sort((a, b) => {
+    if (!a.meeting_date && !b.meeting_date) return 0;
+    if (!a.meeting_date) return 1;
+    if (!b.meeting_date) return -1;
+    return new Date(a.meeting_date).getTime() - new Date(b.meeting_date).getTime();
+  });
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 py-2">
@@ -452,10 +457,14 @@ export default function BaselineDetailPage() {
       {isReady && (
         <>
           {/* Success banner */}
-          <div className="bg-cv-teal-50 border border-cv-teal-100 rounded px-5 py-4 flex items-center gap-3">
-            <div className="w-1.5 h-8 rounded-full bg-cv-teal-400 flex-shrink-0" />
+          <div className="bg-cv-teal-50 border border-cv-teal-700 rounded px-5 py-4 flex items-center gap-3">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0 text-cv-teal-700" aria-hidden="true">
+              <path d="M12 2L3 7L12 12L21 7L12 2Z" />
+              <path d="M3 12L12 17L21 12" />
+              <path d="M3 17L12 22L21 17" />
+            </svg>
             <div>
-              <p className="text-sm font-medium text-cv-teal-800">
+              <p className="text-sm font-semibold text-cv-teal-800">
                 {STRINGS.baselineDetail.completeTitle}
               </p>
               <p className="text-sm text-cv-teal-400 font-light mt-0.5">
@@ -488,7 +497,12 @@ export default function BaselineDetailPage() {
           )}
 
           {/* Experiment section */}
-          <ExperimentSection />
+          <section>
+            <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-4">
+              {STRINGS.runStatusPoller.currentExperiment}
+            </p>
+            <ExperimentSection />
+          </section>
 
           {/* Aggregate pattern snapshot */}
           {pack.pattern_snapshot && pack.pattern_snapshot.length > 0 && (

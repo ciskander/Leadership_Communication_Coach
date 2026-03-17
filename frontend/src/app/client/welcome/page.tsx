@@ -8,7 +8,7 @@ const S = STRINGS.onboarding;
 
 // Icon paths matching the sidebar nav (24×24 stroke viewport)
 const stepIcons: string[][] = [
-  // layers — Baseline Pack
+  // layers — Baseline Analysis
   [
     'M12 2L3 7L12 12L21 7L12 2Z',
     'M3 12L12 17L21 12',

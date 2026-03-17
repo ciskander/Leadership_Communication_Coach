@@ -135,7 +135,7 @@ export default function RunResultsPage() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold text-cv-stone-900 font-serif">{pageTitle}</h1>
+          <h1 className="font-serif text-2xl text-cv-stone-900">{pageTitle}</h1>
 
           {meta ? (
             <div className="mt-2 space-y-1.5">
