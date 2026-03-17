@@ -70,6 +70,13 @@ const config: Config = {
             700: '#162D4A',  // hover
           },
 
+          // ── Blue — informational accents, evidence quotes ─────────────
+          blue: {
+            50:  '#EFF6FF',  // light info background
+            100: '#DBEAFE',  // info border
+            600: '#2563EB',  // chart accent
+          },
+
           // ── Red — errors, destructive actions ────────────────────────────
           red: {
             50:  '#FDF2F2',  // ← added

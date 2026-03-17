@@ -484,7 +484,7 @@ export default function BaselineDetailPage() {
 
           {/* Hint to check individual meeting sections */}
           {meetings.length > 0 && (
-            <div className="bg-cv-teal-50 border border-cv-teal-100 rounded px-4 py-3 flex items-start gap-2.5">
+            <div className="bg-cv-blue-50 border border-cv-blue-100 rounded px-4 py-3 flex items-start gap-2.5">
               <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 text-cv-navy-600 shrink-0 mt-0.5" aria-hidden="true">
                 <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth={1.4} />
                 <path d="M8 7v4.5" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" />
