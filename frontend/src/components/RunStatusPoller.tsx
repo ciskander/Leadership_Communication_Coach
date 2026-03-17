@@ -289,6 +289,32 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
     return (
       <div className="space-y-4">
+        {/* Current experiment tracker — shown first for context */}
+        <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mt-2 mb-4">{STRINGS.runStatusPoller.currentExperiment}</p>
+        {activeExpData?.experiment ? (
+          <ExperimentTracker
+            experiment={activeExpData.experiment}
+            events={activeExpData.recent_events}
+            onComplete={() => router.push('/client/experiment?action=completed')}
+            onPark={() => router.push('/client/experiment?action=parked')}
+          />
+        ) : (
+          // Fallback while data is loading or if fetch failed
+          <div className="bg-white rounded border border-cv-warm-200 p-5 space-y-3">
+            <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest">
+              {STRINGS.runStatusPoller.yourExperiment}
+            </p>
+            <div className="flex gap-3 flex-wrap">
+              <Link
+                href="/client/experiment"
+                className="px-5 py-2.5 bg-cv-teal-600 text-cv-teal-50 rounded text-sm font-medium hover:bg-cv-teal-800 transition-colors"
+              >
+                {STRINGS.runStatusPoller.viewOnMyExperiment}
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Detection banner */}
         <section className="bg-white rounded border border-cv-warm-200 overflow-hidden">
           <div className={`flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-100 ${attemptConfig.bgColor}`}>
@@ -439,32 +465,6 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
             </p>
           </div>
         </section>
-
-        {/* Full experiment tracker */}
-        <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mt-2 mb-4">{STRINGS.runStatusPoller.currentExperiment}</p>
-        {activeExpData?.experiment ? (
-          <ExperimentTracker
-            experiment={activeExpData.experiment}
-            events={activeExpData.recent_events}
-            onComplete={() => router.push('/client/experiment?action=completed')}
-            onPark={() => router.push('/client/experiment?action=parked')}
-          />
-        ) : (
-          // Fallback while data is loading or if fetch failed
-          <div className="bg-white rounded border border-cv-warm-200 p-5 space-y-3">
-            <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest">
-              {STRINGS.runStatusPoller.yourExperiment}
-            </p>
-            <div className="flex gap-3 flex-wrap">
-              <Link
-                href="/client/experiment"
-                className="px-5 py-2.5 bg-cv-teal-600 text-cv-teal-50 rounded text-sm font-medium hover:bg-cv-teal-800 transition-colors"
-              >
-                {STRINGS.runStatusPoller.viewOnMyExperiment}
-              </Link>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
