@@ -273,6 +273,16 @@ async def get_baseline_pack(
                 }
                 for ps in raw_snapshot
             ]
+
+            # Guardrail: filter out strengths whose pattern score is below 50%
+            ratio_by_pattern = {
+                ps.get("pattern_id"): ps.get("ratio")
+                for ps in raw_snapshot
+            }
+            strengths = [
+                s for s in strengths
+                if (ratio_by_pattern.get(s["pattern_id"]) or 0) >= 0.5
+            ]
         except Exception:
             pass
 

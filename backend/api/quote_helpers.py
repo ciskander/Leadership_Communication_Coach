@@ -175,8 +175,17 @@ def resolve_coaching_output(
     """Resolve coaching_output strengths, focus, and micro_experiment with quotes."""
     coaching = parsed_json.get("coaching_output", {})
 
+    # Build a ratio lookup from pattern_snapshot to filter low-score strengths
+    ratio_by_pattern = {
+        ps.get("pattern_id"): ps.get("ratio")
+        for ps in parsed_json.get("pattern_snapshot", [])
+    }
+
     strengths: list[CoachingItemWithQuotes] = []
     for s in coaching.get("strengths", []):
+        # Guardrail: skip strengths whose pattern score is below 50%
+        if (ratio_by_pattern.get(s.get("pattern_id")) or 0) < 0.5:
+            continue
         quotes = resolve_quotes(s.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_map, target_speaker_label)
         strengths.append(
             CoachingItemWithQuotes(
