@@ -111,7 +111,7 @@ insufficient_signal or not_evaluable:
 - never include numerator/denominator/ratio
 
 COACHING OUTPUT (STRICT CARDINALITY)
-- strengths: array 0..2 items of {pattern_id,message,evidence_span_ids}. Only select patterns with ratio >= 0.5 as strengths. If no pattern meets this threshold, return an empty strengths array.
+- strengths: array 0..2 items of {pattern_id,message,evidence_span_ids}. Only select patterns with ratio >= 0.5 as strengths. If no pattern meets this threshold, return an empty strengths array. When multiple patterns qualify, choose the top 2 by strength of signal: prefer patterns with both a high ratio and a higher denominator. A pattern scored 3/3 is a much stronger strength than 1/1 — rank candidates by ratio * denominator to break ties.
 - focus: array exactly 1 item of {pattern_id,message,evidence_span_ids,suggested_rewrite,rewrite_for_span_id}
 - micro_experiment: array exactly 1 item of {experiment_id,title,instruction,success_marker,pattern_id,evidence_span_ids}
 - evidence_span_ids in ALL coaching_output items must contain at least one span ID. Never output an empty array. If the focus or strength observation is about a recurring pattern rather than a single moment, cite the span that best illustrates it — prefer the micro_experiment's span for the same pattern_id if no other span is available.
