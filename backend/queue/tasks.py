@@ -11,12 +11,32 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
+import anthropic
 from celery import Task
 from celery.exceptions import MaxRetriesExceededError
 
 from .celery_app import celery_app
 
 logger = logging.getLogger(__name__)
+
+
+def _is_retryable(exc: Exception) -> bool:
+    """Return True only for transient errors worth retrying.
+
+    Non-retryable cases (fail immediately):
+    - 400 billing/credit errors
+    - 401 authentication errors
+    - 403 permission errors
+    - Any other 4xx client error (except 429 rate limit)
+    """
+    if isinstance(exc, anthropic.RateLimitError):
+        return True
+    if isinstance(exc, anthropic.APIStatusError):
+        return exc.status_code in {429, 500, 502, 503, 504, 529}
+    if isinstance(exc, (anthropic.APITimeoutError, anthropic.APIConnectionError)):
+        return True
+    # Unknown errors: retry to be safe
+    return True
 
 
 class BaseWorkerTask(Task):
@@ -64,6 +84,12 @@ def enqueue_single_meeting(self, run_request_id: str) -> str:
         except Exception:
             pass
 
+        if not _is_retryable(exc):
+            logger.error(
+                "Non-retryable error for run_request %s: %s", run_request_id, exc
+            )
+            raise
+
         try:
             raise self.retry(exc=exc)
         except MaxRetriesExceededError:
@@ -101,6 +127,12 @@ def enqueue_baseline_pack_build(self, baseline_pack_id: str) -> str:
         except Exception:
             pass
 
+        if not _is_retryable(exc):
+            logger.error(
+                "Non-retryable error for baseline pack %s: %s", baseline_pack_id, exc
+            )
+            raise
+
         try:
             raise self.retry(exc=exc)
         except MaxRetriesExceededError:
@@ -133,6 +165,14 @@ def enqueue_next_experiment_suggestion(self, user_record_id: str) -> Optional[st
         logger.exception(
             "Next experiment suggestion failed for user %s", user_record_id
         )
+
+        if not _is_retryable(exc):
+            logger.error(
+                "Non-retryable error for experiment suggestion (user %s): %s",
+                user_record_id, exc,
+            )
+            raise
+
         try:
             raise self.retry(exc=exc)
         except MaxRetriesExceededError:
