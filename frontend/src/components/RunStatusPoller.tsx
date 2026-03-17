@@ -315,11 +315,13 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                   ))}
                 </div>
 
-                {/* Coaching for partial attempts */}
-                {attempt === 'partial' && detection?.coaching_note && (
+                {/* Coaching note (partial or full attempts) */}
+                {detection?.coaching_note && (
                   <div>
                     <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                      {STRINGS.runStatusPoller.whatWorkedMissing}
+                      {attempt === 'partial'
+                        ? STRINGS.runStatusPoller.whatWorkedMissing
+                        : STRINGS.runStatusPoller.coachsNote}
                     </p>
                     <p className="text-sm text-cv-stone-700 leading-relaxed">
                       {detection.coaching_note}
@@ -327,7 +329,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                   </div>
                 )}
 
-                {attempt === 'partial' && detection?.suggested_rewrite && (
+                {detection?.suggested_rewrite && (
                   <div>
                     <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
                       {STRINGS.common.nextTimeTry}
