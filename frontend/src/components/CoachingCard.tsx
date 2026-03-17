@@ -85,9 +85,9 @@ export function CoachingCard({ strengths, focus, microExperiment, targetSpeaker 
 
       {/* ── Focus ────────────────────────────────────────────────────────── */}
       {focus && (
-        <section className="bg-white rounded border border-cv-amber-750 overflow-hidden">
+        <section className="bg-white rounded border border-cv-amber-800 overflow-hidden">
           {/* Header */}
-          <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-100 bg-cv-amber-750">
+          <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-100 bg-cv-amber-800">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-amber-50 shrink-0" aria-hidden="true">
               <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
               <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
@@ -97,7 +97,7 @@ export function CoachingCard({ strengths, focus, microExperiment, targetSpeaker 
 
           {/* Body */}
           <div className="px-5 py-4 space-y-3">
-            <PatternLabel id={focus.pattern_id} className="text-cv-amber-750" />
+            <PatternLabel id={focus.pattern_id} className="text-cv-amber-800" />
             <p className="text-sm text-cv-stone-700 leading-relaxed">{focus.message}</p>
 
             {(focus.quotes ?? []).length > 0 && (
