@@ -17,24 +17,12 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { STRINGS } from '@/config/strings';
+import { S, CHART_COLORS } from '@/config/styles';
 import { OnboardingTip } from '@/components/OnboardingTip';
 
 // ─── Chart color palette — cv-aligned ────────────────────────────────────────
-// Uses hex equivalents of cv-teal, cv-amber, and a small set of harmonious
-// accents. Teal-600 leads as the primary / experiment-focus colour.
 
-const LINE_COLORS = [
-  '#0F6E56', // cv-teal-600 (primary)
-  '#D97706', // cv-amber-600
-  '#2563eb', // blue-600
-  '#7c3aed', // violet-600
-  '#0891b2', // cyan-600
-  '#db2777', // pink-600
-  '#65a30d', // lime-600
-  '#ea580c', // orange-600
-  '#6b7280', // gray-500
-  '#16a34a', // green-600
-];
+const LINE_COLORS = CHART_COLORS;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -271,14 +259,14 @@ function PatternTrendsChart({
     );
   }
 
-  const axisStyle = { fontSize: 11, fill: '#A8A29E' }; // cv-stone-400 hex
+  const axisStyle = { fontSize: 11, fill: S.chartAxisFill };
 
   return (
     <div>
       {showLineChart ? (
         <ResponsiveContainer width="100%" height={280}>
           <LineChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#EDE8E3" />
+            <CartesianGrid strokeDasharray="3 3" stroke={S.chartGrid} />
             <XAxis dataKey="label" tick={axisStyle} tickLine={false} />
             <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={axisStyle} tickLine={false} axisLine={false} />
             <Tooltip content={renderCustomTooltip} />
@@ -300,9 +288,9 @@ function PatternTrendsChart({
             {baselinePoint && (
               <ReferenceLine
                 x={baselinePoint.label}
-                stroke="#A8A29E"
+                stroke={S.chartAxisFill}
                 strokeDasharray="4 4"
-                label={{ value: STRINGS.progressPage.baseline, position: 'insideTopRight', fontSize: 10, fill: '#78716C' }}
+                label={{ value: STRINGS.progressPage.baseline, position: 'insideTopRight', fontSize: 10, fill: '#78716C' }} /* cv-stone-500 */
               />
             )}
           </LineChart>
@@ -313,7 +301,7 @@ function PatternTrendsChart({
             const meetingsUntil = 3 - postBaselineCount;
 
             // Build pattern-grouped data: one row per pattern, one column per run
-            const RUN_COLORS = ['#A8A29E', '#0F6E56', '#D97706', '#2563eb']; // baseline=stone, then teal/amber/blue
+            const RUN_COLORS = [S.chartAxisFill, S.chartTeal, S.chartAmber, CHART_COLORS[2]]; // baseline=stone, then teal/amber/blue
             const runLabels = chartData.map((p) => p.label as string);
             const patternBarData = visiblePatterns.map((pid) => {
               const row: Record<string, string | number | null> = {
@@ -337,11 +325,11 @@ function PatternTrendsChart({
                 </div>
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={patternBarData} margin={{ top: 4, right: 16, left: 0, bottom: 40 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#EDE8E3" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={S.chartGrid} vertical={false} />
                     <XAxis dataKey="pattern" tick={axisStyle} tickLine={false} angle={-30} textAnchor="end" interval={0} />
                     <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={axisStyle} tickLine={false} axisLine={false} />
                     <Tooltip
-                      cursor={{ fill: '#F7F4F0' }}
+                      cursor={{ fill: S.chartCursor }}
                       content={({ active, payload }: any) => {
                         if (!active || !payload?.length) return null;
                         const patternName = payload[0]?.payload?.pattern;
@@ -450,7 +438,7 @@ function PastExperimentCard({
   const color     = LINE_COLORS[0]; // teal-600 for past-exp mini-charts
   const chartData = expHistory.length > 0 ? buildChartData(expHistory, [pid], trendWindowSize) : [];
 
-  const axisStyle = { fontSize: 10, fill: '#A8A29E' };
+  const axisStyle = { fontSize: 10, fill: S.chartAxisFill };
 
   return (
     <div className="border border-cv-warm-200 rounded overflow-hidden">
@@ -514,7 +502,7 @@ function PastExperimentCard({
               </p>
               <ResponsiveContainer width="100%" height={160}>
                 <LineChart data={chartData} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#EDE8E3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke={S.chartGrid} />
                   <XAxis dataKey="label" tick={axisStyle} tickLine={false} />
                   <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={axisStyle} tickLine={false} axisLine={false} />
                   <Tooltip formatter={(v: any) => [v != null ? `${v}%` : '—', STRINGS.patternLabels[pid] ?? pid]} labelStyle={{ fontSize: 11 }} />
@@ -578,7 +566,7 @@ export default function ProgressPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-cv-stone-900 font-serif">
+        <h1 className="font-serif text-2xl text-cv-stone-900">
           {STRINGS.progressPage.heading}
         </h1>
         <p className="text-cv-stone-500 mt-1 text-sm">{STRINGS.progressPage.subtitle}</p>

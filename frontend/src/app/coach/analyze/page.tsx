@@ -126,7 +126,7 @@ function CoachAnalyzePage() {
           >
             ← Back to {selectedCoachee?.display_name ?? 'coachee'}
           </Link>
-          <h1 className="text-2xl font-semibold text-cv-stone-900 font-serif mt-2">
+          <h1 className="font-serif text-2xl text-cv-stone-900 mt-2">
             {STRINGS.common.meetingAnalysis}
           </h1>
           <p className="text-sm text-cv-stone-500 mt-1">
@@ -165,7 +165,7 @@ function CoachAnalyzePage() {
   return (
     <div className="max-w-xl mx-auto space-y-5 py-2">
       <div>
-        <h1 className="text-2xl font-semibold text-cv-stone-900 font-serif">
+        <h1 className="font-serif text-2xl text-cv-stone-900">
           {STRINGS.coachAnalyze.heading}
         </h1>
         <p className="text-sm text-cv-stone-500 mt-1">{STRINGS.coachAnalyze.subtitle}</p>

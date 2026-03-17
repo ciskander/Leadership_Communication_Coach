@@ -591,14 +591,14 @@ export default function CoacheeDetailPage() {
         </Link>
         <div className="flex items-start justify-between mt-2">
           <div>
-            <h1 className="text-2xl font-semibold text-cv-stone-900 font-serif">
+            <h1 className="font-serif text-2xl text-cv-stone-900">
               {data.coachee.display_name ?? data.coachee.email}
             </h1>
             <p className="text-sm text-cv-stone-500">{data.coachee.email}</p>
           </div>
           <Link
             href={`/coach/analyze?coachee=${id}`}
-            className="flex items-center gap-2 px-4 py-2 bg-[#1E3A5F] text-white rounded text-sm font-medium hover:bg-[#162D4A] transition-colors shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-cv-navy-600 text-white rounded text-sm font-medium hover:bg-cv-navy-700 transition-colors shadow-sm"
           >
             <span className="shrink-0"><svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M8 1v3M8 12v3M1 8h3M12 8h3M3.05 3.05l2.12 2.12M10.83 10.83l2.12 2.12M3.05 12.95l2.12-2.12M10.83 5.17l2.12-2.12" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg></span>
             {STRINGS.coacheeDetail.analyzeForCoachee}

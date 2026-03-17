@@ -65,10 +65,10 @@ function getDaysAgo(dateStr: string | undefined): number | null {
 const AVATAR_COLORS = [
   'bg-cv-teal-100 text-cv-teal-700',
   'bg-cv-amber-100 text-cv-amber-700',
-  'bg-blue-100 text-[#1E3A5F]',
-  'bg-violet-100 text-violet-700',
+  'bg-cv-teal-100 text-cv-navy-600',
+  'bg-cv-warm-200 text-cv-stone-700',
   'bg-cv-stone-200 text-cv-stone-700',
-  'bg-rose-100 text-rose-700',
+  'bg-cv-red-100 text-cv-red-700',
 ];
 
 // ─── Coachee card ─────────────────────────────────────────────────────────────
@@ -413,7 +413,7 @@ export default function CoachDashboard() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-cv-stone-900 font-serif">
+          <h1 className="font-serif text-2xl text-cv-stone-900">
             {STRINGS.coachDashboard.heading}
           </h1>
           <p className="text-cv-stone-500 text-sm mt-1">

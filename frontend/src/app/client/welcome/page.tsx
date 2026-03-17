@@ -68,7 +68,7 @@ export default function WelcomePage() {
       </div>
 
       {/* Hero */}
-      <section className="py-10 border-b border-cv-warm-border">
+      <section className="py-10 border-b border-cv-warm-200">
         <p className="text-2xs font-medium tracking-widest uppercase text-cv-teal-400 mb-4">
           {S.welcomeHeading}
         </p>
@@ -82,7 +82,7 @@ export default function WelcomePage() {
       </section>
 
       {/* Steps */}
-      <section className="py-10 border-b border-cv-warm-border">
+      <section className="py-10 border-b border-cv-warm-200">
         <p className="text-2xs font-medium tracking-widest uppercase text-cv-stone-400 mb-7">
           {S.journeyHeading}
         </p>
@@ -110,7 +110,7 @@ export default function WelcomePage() {
       </section>
 
       {/* What to expect */}
-      <section className="py-10 border-b border-cv-warm-border">
+      <section className="py-10 border-b border-cv-warm-200">
         <p className="text-2xs font-medium tracking-widest uppercase text-cv-stone-400 mb-5">
           {S.expectHeading}
         </p>

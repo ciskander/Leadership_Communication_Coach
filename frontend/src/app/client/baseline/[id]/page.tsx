@@ -484,13 +484,13 @@ export default function BaselineDetailPage() {
 
           {/* Hint to check individual meeting sections */}
           {meetings.length > 0 && (
-            <div className="bg-blue-50 border border-blue-100 rounded px-4 py-3 flex items-start gap-2.5">
-              <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 text-[#1E3A5F] shrink-0 mt-0.5" aria-hidden="true">
+            <div className="bg-cv-teal-50 border border-cv-teal-100 rounded px-4 py-3 flex items-start gap-2.5">
+              <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 text-cv-navy-600 shrink-0 mt-0.5" aria-hidden="true">
                 <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth={1.4} />
                 <path d="M8 7v4.5" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" />
                 <circle cx="8" cy="4.5" r="0.75" fill="currentColor" />
               </svg>
-              <p className="text-sm text-[#1E3A5F] leading-relaxed">
+              <p className="text-sm text-cv-navy-600 leading-relaxed">
                 {STRINGS.baselineDetail.aggregateCoachingNote}
               </p>
             </div>
@@ -540,7 +540,7 @@ export default function BaselineDetailPage() {
           <div className="pb-4">
             <Link
               href="/client/analyze"
-              className="inline-flex items-center gap-2 px-5 py-3 bg-[#1E3A5F] text-white rounded text-sm font-medium hover:bg-[#162D4A] transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-3 bg-cv-navy-600 text-white rounded text-sm font-medium hover:bg-cv-navy-700 transition-colors"
             >
               <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M9 3L10.5 7.5L15 9L10.5 10.5L9 15L7.5 10.5L3 9L7.5 7.5L9 3Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/><path d="M19 13L19.75 15.25L22 16L19.75 16.75L19 19L18.25 16.75L16 16L18.25 15.25L19 13Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/></svg>
               {STRINGS.experimentTracker.analyzeMeeting}

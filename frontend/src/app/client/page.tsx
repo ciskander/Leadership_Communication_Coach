@@ -362,7 +362,7 @@ export default function ClientDashboard() {
       )}
 
       <div>
-        <h1 className="text-2xl font-semibold text-cv-stone-900 font-serif">
+        <h1 className="font-serif text-2xl text-cv-stone-900">
           {getGreeting()}{firstName ? `, ${firstName}` : ''}
         </h1>
         <p className="text-cv-stone-500 text-sm mt-1">{STRINGS.clientDashboard.subtitle}</p>
@@ -407,7 +407,7 @@ export default function ClientDashboard() {
         {hasBaseline && !hasExperiment && !hasExperimentOptions && (
           <div className="mt-4 pt-4 border-t border-cv-warm-100 flex items-center justify-between">
             <p className="text-sm text-cv-stone-600">{STRINGS.clientDashboard.baselineReadyAnalyze}</p>
-            <Link href="/client/analyze" className="flex items-center gap-2 text-sm px-4 py-1.5 bg-[#1E3A5F] text-white rounded hover:bg-[#162D4A] transition-colors whitespace-nowrap">
+            <Link href="/client/analyze" className="flex items-center gap-2 text-sm px-4 py-1.5 bg-cv-navy-600 text-white rounded hover:bg-cv-navy-700 transition-colors whitespace-nowrap">
               <span className="shrink-0"><svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M9 3L10.5 7.5L15 9L10.5 10.5L9 15L7.5 10.5L3 9L7.5 7.5L9 3Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/><path d="M19 13L19.75 15.25L22 16L19.75 16.75L19 19L18.25 16.75L16 16L18.25 15.25L19 13Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/></svg></span>
               {STRINGS.clientDashboard.analyzeMeetingArrow}
             </Link>
@@ -493,7 +493,7 @@ export default function ClientDashboard() {
       )}
 
       <div className="flex gap-3">
-        <Link href="/client/analyze" className="flex items-center gap-2 px-5 py-2.5 bg-[#1E3A5F] text-white rounded text-sm font-medium hover:bg-[#162D4A] transition-colors shadow-sm">
+        <Link href="/client/analyze" className="flex items-center gap-2 px-5 py-2.5 bg-cv-navy-600 text-white rounded text-sm font-medium hover:bg-cv-navy-700 transition-colors shadow-sm">
           <span className="shrink-0"><svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M9 3L10.5 7.5L15 9L10.5 10.5L9 15L7.5 10.5L3 9L7.5 7.5L9 3Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/><path d="M19 13L19.75 15.25L22 16L19.75 16.75L19 19L18.25 16.75L16 16L18.25 15.25L19 13Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/></svg></span>
           {STRINGS.clientDashboard.analyzeMeetingBtn}
         </Link>

@@ -196,7 +196,7 @@ export default function AnalyzePage() {
 
       {/* Page heading */}
       <div>
-        <h1 className="text-2xl font-semibold text-cv-stone-900 font-serif">
+        <h1 className="font-serif text-2xl text-cv-stone-900">
           {STRINGS.analyzePage.heading}
         </h1>
         <p className="text-sm text-cv-stone-500 mt-1">{STRINGS.analyzePage.subtitle}</p>
@@ -316,7 +316,7 @@ export default function AnalyzePage() {
       <button
         onClick={handleSubmit}
         disabled={!ready || submitting}
-        className="w-full py-3.5 bg-[#1E3A5F] text-white rounded font-medium text-sm hover:bg-[#162D4A] disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+        className="w-full py-3.5 bg-cv-navy-600 text-white rounded font-medium text-sm hover:bg-cv-navy-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
       >
         {submitting ? (
           <span className="flex items-center justify-center gap-2">

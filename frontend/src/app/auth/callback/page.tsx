@@ -24,14 +24,14 @@ function AuthCallbackInner() {
   }, [router, params]);
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cv-teal-600" />
     </div>
   );
 }
 
 export default function AuthCallbackPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cv-teal-600" /></div>}>
       <AuthCallbackInner />
     </Suspense>
   );

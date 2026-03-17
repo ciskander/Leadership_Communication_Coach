@@ -361,9 +361,9 @@ function TrendDelta({ delta }: { delta: number }) {
 
 // ─── Trend sparkline (mini Recharts line) ────────────────────────────────────
 
-const SPARKLINE_TEAL  = '#0F6E56';
-const SPARKLINE_AMBER = '#D97706';
-const SPARKLINE_RED   = '#EF4444';
+const SPARKLINE_TEAL  = '#0F6E56'; // cv-teal-600
+const SPARKLINE_AMBER = '#D97706'; // cv-amber-600
+const SPARKLINE_RED   = '#E24B4A'; // cv-red-400
 
 function TrendSparkline({ trend }: { trend: PatternTrendData }) {
   // Color based on current score (same thresholds as RatioBar)

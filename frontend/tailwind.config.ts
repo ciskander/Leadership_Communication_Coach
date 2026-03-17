@@ -64,6 +64,12 @@ const config: Config = {
             800: '#6A4010',  // ← added
           },
 
+          // ── Navy — primary action buttons (formerly hardcoded #1E3A5F) ──
+          navy: {
+            600: '#1E3A5F',  // primary CTA
+            700: '#162D4A',  // hover
+          },
+
           // ── Red — errors, destructive actions ────────────────────────────
           red: {
             50:  '#FDF2F2',  // ← added

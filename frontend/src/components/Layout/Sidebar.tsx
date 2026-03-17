@@ -87,7 +87,7 @@ const navItems: NavItem[] = [
 // ─── Role badge colour ramp ───────────────────────────────────────────────────
 const roleColors: Record<string, { dot: string; label: string }> = {
   coachee: { dot: 'bg-cv-teal-500',   label: 'text-cv-teal-700'  },
-  coach:   { dot: 'bg-blue-500',      label: 'text-[#1E3A5F]'    },
+  coach:   { dot: 'bg-cv-navy-600',      label: 'text-cv-navy-600'    },
   admin:   { dot: 'bg-cv-amber-500',  label: 'text-cv-amber-700' },
 };
 
