@@ -14,6 +14,7 @@ from typing import Optional
 import anthropic
 from celery import Task
 from celery.exceptions import MaxRetriesExceededError
+from requests.exceptions import HTTPError
 
 from .celery_app import celery_app
 
@@ -35,6 +36,9 @@ def _is_retryable(exc: Exception) -> bool:
         return exc.status_code in {429, 500, 502, 503, 504, 529}
     if isinstance(exc, (anthropic.APITimeoutError, anthropic.APIConnectionError)):
         return True
+    # Airtable / requests HTTP errors: only retry on server errors and rate limits
+    if isinstance(exc, HTTPError) and exc.response is not None:
+        return exc.response.status_code in {429, 500, 502, 503, 504}
     # Unknown errors: retry to be safe
     return True
 
