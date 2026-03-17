@@ -912,19 +912,34 @@ async def confirm_experiment_attempt(
     attempt_value = "yes" if body.confirmed else "no"
     user_confirmation_value = "confirmed_attempt" if body.confirmed else "confirmed_no_attempt"
 
-    fields: dict = {
-        "Experiment": [experiment_record_id],
-        "Run": [body.run_id],
-        "Attempt Enum": attempt_value,
-        "User Confirmation": user_confirmation_value,
-        "Idempotency Key": idem_key,
-    }
-    if user.airtable_user_record_id:
-        fields["User"] = [user.airtable_user_record_id]
-    if meeting_date:
-        fields["Meeting Date"] = meeting_date
+    # Check if the worker already created an automatic event for this run.
+    # If so, update it in place instead of creating a duplicate row.
+    from ..core.idempotency import make_experiment_event_key
+    auto_idem_key = make_experiment_event_key(body.run_id, exp_id)
+    auto_event = at_client.find_experiment_event_by_idempotency_key(auto_idem_key)
 
-    event_rec = at_client.create_experiment_event(fields)
+    if auto_event:
+        at_client.update_record("experiment_events", auto_event["id"], {
+            "Attempt Enum": attempt_value,
+            "User Confirmation": user_confirmation_value,
+            "Idempotency Key": idem_key,
+        })
+        event_record_id_result = auto_event["id"]
+    else:
+        fields: dict = {
+            "Experiment": [experiment_record_id],
+            "Run": [body.run_id],
+            "Attempt Enum": attempt_value,
+            "User Confirmation": user_confirmation_value,
+            "Idempotency Key": idem_key,
+        }
+        if user.airtable_user_record_id:
+            fields["User"] = [user.airtable_user_record_id]
+        if meeting_date:
+            fields["Meeting Date"] = meeting_date
+
+        event_rec = at_client.create_experiment_event(fields)
+        event_record_id_result = event_rec["id"]
 
     if body.confirmed:
         try:
@@ -942,7 +957,7 @@ async def confirm_experiment_attempt(
     )
 
     return HumanConfirmResponse(
-        event_record_id=event_rec["id"],
+        event_record_id=event_record_id_result,
         experiment_record_id=experiment_record_id,
         confirmed=body.confirmed,
     )
