@@ -240,6 +240,7 @@ export const STRINGS = {
     experimentReady: 'Your experiment is ready',
     fromTranscript: 'From the transcript',
     whatYouSaid: 'What you said',
+    whatYouDidWell: 'What you did well',
     whatWorkedMissing: 'What worked and what was missing',
     coachsNote: "Coach's note",
     currentExperiment: 'Current Experiment',

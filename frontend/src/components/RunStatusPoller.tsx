@@ -9,7 +9,7 @@ import type { PatternTrendData } from './PatternSnapshot';
 import { ExperimentTracker } from './ExperimentTracker';
 import { api } from '@/lib/api';
 import type { Experiment, ActiveExperiment, PatternSnapshotItem } from '@/lib/types';
-import { EvidenceQuote } from './EvidenceQuote';
+import { EvidenceQuote, EvidenceQuoteList } from './EvidenceQuote';
 import Link from 'next/link';
 import { STRINGS } from '@/config/strings';
 
@@ -303,46 +303,101 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
               <p className="text-sm text-cv-stone-700 leading-relaxed">{attemptConfig.desc}</p>
             )}
 
-            {/* Evidence quotes from the transcript */}
-            {attempt !== 'no' && detectionQuotes.length > 0 && (
+            {/* Evidence quotes — full attempts: simple list with span separators */}
+            {attempt === 'yes' && detectionQuotes.length > 0 && (
               <div className="space-y-3">
                 <div>
                   <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                    {attempt === 'yes' ? STRINGS.runStatusPoller.fromTranscript : STRINGS.runStatusPoller.whatYouSaid}
+                    {STRINGS.runStatusPoller.fromTranscript}
                   </p>
-                  {detectionQuotes.map((q, i) => (
-                    <EvidenceQuote key={i} quote={q} targetSpeaker={targetSpeaker} />
-                  ))}
+                  <EvidenceQuoteList quotes={detectionQuotes} targetSpeaker={targetSpeaker} />
                 </div>
 
-                {/* Coaching note (partial or full attempts) */}
                 {detection?.coaching_note && (
                   <div>
                     <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                      {attempt === 'partial'
-                        ? STRINGS.runStatusPoller.whatWorkedMissing
-                        : STRINGS.runStatusPoller.coachsNote}
+                      {STRINGS.runStatusPoller.coachsNote}
                     </p>
                     <p className="text-sm text-cv-stone-700 leading-relaxed">
                       {detection.coaching_note}
                     </p>
                   </div>
                 )}
-
-                {detection?.suggested_rewrite && (
-                  <div>
-                    <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                      {STRINGS.common.nextTimeTry}
-                    </p>
-                    <blockquote className="border-l-4 border-cv-teal-700 pl-4 py-1 my-2 bg-cv-teal-50 rounded-r-md">
-                      <p className="text-sm text-cv-stone-700 italic">
-                        &ldquo;{detection.suggested_rewrite}&rdquo;
-                      </p>
-                    </blockquote>
-                  </div>
-                )}
               </div>
             )}
+
+            {/* Evidence quotes — partial attempts: split by rewrite_for_span_id */}
+            {attempt === 'partial' && detectionQuotes.length > 0 && (() => {
+              const rewriteSpanId = detection?.rewrite_for_span_id;
+              const successQuotes = rewriteSpanId
+                ? detectionQuotes.filter(q => q.span_id !== rewriteSpanId)
+                : detectionQuotes;
+              const rewriteGroupQuotes = rewriteSpanId
+                ? detectionQuotes.filter(q => q.span_id === rewriteSpanId)
+                : [];
+              const rewriteQuote = rewriteGroupQuotes.length > 0 ? rewriteGroupQuotes[0] : null;
+              const otherRewriteQuotes = rewriteGroupQuotes.slice(1);
+
+              return (
+                <div className="space-y-3">
+                  {/* What you did well — quotes not linked to the rewrite */}
+                  {successQuotes.length > 0 && (
+                    <div>
+                      <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                        {STRINGS.runStatusPoller.whatYouDidWell}
+                      </p>
+                      <EvidenceQuoteList quotes={successQuotes} targetSpeaker={targetSpeaker} />
+                    </div>
+                  )}
+
+                  {/* What worked and what was missing — coaching note */}
+                  {detection?.coaching_note && (
+                    <div>
+                      <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                        {STRINGS.runStatusPoller.whatWorkedMissing}
+                      </p>
+                      <p className="text-sm text-cv-stone-700 leading-relaxed">
+                        {detection.coaching_note}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* For example, you said — the specific rewrite-target quote */}
+                  {rewriteQuote && (
+                    <div>
+                      <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                        {STRINGS.common.forExampleYouSaid}
+                      </p>
+                      <EvidenceQuote quote={rewriteQuote} targetSpeaker={targetSpeaker} />
+                    </div>
+                  )}
+
+                  {/* Next time, try something like — suggested rewrite */}
+                  {detection?.suggested_rewrite && (
+                    <div>
+                      <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                        {STRINGS.common.nextTimeTry}
+                      </p>
+                      <blockquote className="border-l-4 border-cv-teal-700 pl-4 py-1 my-2 bg-cv-teal-50 rounded-r-md">
+                        <p className="text-sm text-cv-stone-700 italic">
+                          &ldquo;{detection.suggested_rewrite}&rdquo;
+                        </p>
+                      </blockquote>
+                    </div>
+                  )}
+
+                  {/* Other moments — remaining quotes in the rewrite group */}
+                  {otherRewriteQuotes.length > 0 && (
+                    <div>
+                      <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                        {STRINGS.common.otherMoments}
+                      </p>
+                      <EvidenceQuoteList quotes={otherRewriteQuotes} targetSpeaker={targetSpeaker} />
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Missed detection prompt */}
             {attempt === 'no' && confirmState === 'idle' && (
