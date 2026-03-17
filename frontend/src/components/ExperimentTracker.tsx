@@ -154,26 +154,22 @@ export function ExperimentTracker({
           <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1.5">
             {STRINGS.experimentTracker.attemptHistory}
           </p>
-          <p className="text-sm text-cv-stone-600 leading-relaxed">
-            {summaryText()}
-          </p>
 
-          {/* Expandable accordion */}
-          {sortedEvents.length > 0 && (
-            <div className="mt-2">
+          {sortedEvents.length > 0 ? (
+            <>
               <button
                 onClick={() => setHistoryOpen(!historyOpen)}
-                className="flex items-center gap-1.5 text-xs text-cv-stone-400 hover:text-cv-stone-600 transition-colors"
+                className="w-full flex items-center justify-between gap-2 text-sm text-cv-stone-600 leading-relaxed hover:text-cv-stone-800 transition-colors"
               >
+                <span>{summaryText()}</span>
                 <svg
                   viewBox="0 0 16 16"
                   fill="none"
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${historyOpen ? 'rotate-180' : ''}`}
+                  className={`w-3.5 h-3.5 shrink-0 text-cv-stone-400 transition-transform duration-200 ${historyOpen ? 'rotate-180' : ''}`}
                   aria-hidden="true"
                 >
                   <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                {historyOpen ? STRINGS.baselineDetail.collapse : STRINGS.baselineDetail.expand}
               </button>
 
               {historyOpen && (
@@ -213,7 +209,11 @@ export function ExperimentTracker({
                   })}
                 </ul>
               )}
-            </div>
+            </>
+          ) : (
+            <p className="text-sm text-cv-stone-600 leading-relaxed">
+              {summaryText()}
+            </p>
           )}
         </div>
 
