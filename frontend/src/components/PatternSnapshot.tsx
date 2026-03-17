@@ -662,18 +662,38 @@ function PatternCard({
           )}
 
           {/* Conversational balance — balanced */}
-          {isConversationalBalance && isBalanced && hasNotes && (
-            <div>
-              <SectionLabel text={STRINGS.common.whatYouDidWell} />
-              <p className="text-sm text-cv-stone-700 leading-relaxed">{pattern.notes}</p>
+          {isConversationalBalance && isBalanced && (hasNotes || hasQuotes) && (
+            <div className="space-y-3">
+              {hasNotes && (
+                <div>
+                  <SectionLabel text={STRINGS.common.whatYouDidWell} />
+                  <p className="text-sm text-cv-stone-700 leading-relaxed">{pattern.notes}</p>
+                </div>
+              )}
+              {hasQuotes && (
+                <EvidenceQuoteList quotes={quotes} targetSpeaker={targetSpeaker} />
+              )}
             </div>
           )}
 
           {/* Conversational balance — off-balance */}
-          {isConversationalBalance && !isBalanced && hasCoaching && (
-            <div>
-              <SectionLabel text={STRINGS.common.observation} />
-              <p className="text-sm text-cv-stone-700 leading-relaxed">{pattern.coaching_note}</p>
+          {isConversationalBalance && !isBalanced && (hasCoaching || hasQuotes) && (
+            <div className="space-y-3">
+              {hasCoaching && (
+                <div>
+                  <SectionLabel text={STRINGS.common.observation} />
+                  <p className="text-sm text-cv-stone-700 leading-relaxed">{pattern.coaching_note}</p>
+                </div>
+              )}
+              {hasQuotes && (
+                <EvidenceQuoteList quotes={quotes} targetSpeaker={targetSpeaker} />
+              )}
+              {pattern.suggested_rewrite && (
+                <div>
+                  <SectionLabel text={STRINGS.common.nextTimeTry} />
+                  <SuggestedRewrite text={pattern.suggested_rewrite} />
+                </div>
+              )}
             </div>
           )}
 

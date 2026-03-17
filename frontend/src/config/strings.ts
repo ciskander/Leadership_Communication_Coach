@@ -241,6 +241,7 @@ export const STRINGS = {
     fromTranscript: 'From the transcript',
     whatYouSaid: 'What you said',
     whatWorkedMissing: 'What worked and what was missing',
+    coachsNote: "Coach's note",
     currentExperiment: 'Current Experiment',
     yourExperiment: 'Your experiment',
     viewOnMyExperiment: 'View on My Experiment →',
