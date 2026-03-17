@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 
 import json
 from typing import Optional
@@ -27,6 +28,16 @@ from .dto import (
 _CLEANUP_ENABLED = os.getenv("QUOTE_CLEANUP_ENABLED", "0") == "1"
 
 _QUOTE_MAX_CHARS = 2000
+
+# Matches a leading "Speaker_Label: " prefix that the LLM sometimes bakes into
+# single-speaker excerpts.  Handles common formats like "Chris:", "SPEAKER_00:",
+# "Dr. Smith:", etc.
+_SPEAKER_PREFIX_RE = re.compile(r"^[A-Za-z0-9_.'\-]+(?:\s+[A-Za-z0-9_.'\-]+)?:\s+", re.UNICODE)
+
+
+def _strip_speaker_prefix(excerpt: str) -> str:
+    """Remove a leading 'Speaker: ' prefix from a single-speaker excerpt."""
+    return _SPEAKER_PREFIX_RE.sub("", excerpt, count=1)
 
 
 def format_timestamp(seconds: float) -> str:
@@ -138,7 +149,7 @@ def resolve_quotes(
                     )
                 )
         else:
-            excerpt = (span.get("excerpt") or "")[:_QUOTE_MAX_CHARS]
+            excerpt = _strip_speaker_prefix((span.get("excerpt") or ""))[:_QUOTE_MAX_CHARS]
             start_ts: Optional[str] = None
             if turn_map and isinstance(turn_start, int):
                 turn = turn_map.get(turn_start)
