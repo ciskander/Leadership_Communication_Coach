@@ -261,7 +261,20 @@ function ExperimentPageInner() {
       .finally(() => setSeedLoading(false));
   }
 
-  useEffect(() => { fetchOptions(); }, []);
+  useEffect(() => {
+    fetchOptions();
+
+    // When arriving from RunStatusPoller after completing/parking an experiment,
+    // the ?action= param signals that we should immediately start polling for
+    // the next proposed experiment (the Celery task is already in-flight).
+    const inboundAction = searchParams.get('action');
+    if (inboundAction === 'completed' || inboundAction === 'parked') {
+      setLastAction(inboundAction);
+      setBackfillRetries(0);
+      resetPoller();
+      startPolling();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isBackfilling = !!(
     options &&

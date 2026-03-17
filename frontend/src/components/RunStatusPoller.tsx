@@ -178,7 +178,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
     setCompleteState('loading');
     try {
       await api.completeExperiment(expId);
-      router.push('/client/experiment');
+      router.push('/client/experiment?action=completed');
     } catch {
       setCompleteState('idle');
     }
@@ -389,8 +389,8 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           <ExperimentTracker
             experiment={activeExpData.experiment}
             events={activeExpData.recent_events}
-            onComplete={() => router.push('/client/experiment')}
-            onPark={() => router.push('/client/experiment')}
+            onComplete={() => router.push('/client/experiment?action=completed')}
+            onPark={() => router.push('/client/experiment?action=parked')}
           />
         ) : (
           // Fallback while data is loading or if fetch failed
