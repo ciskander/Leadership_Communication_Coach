@@ -200,9 +200,11 @@ const HOVER_DELAY_MS = 400;
 
 function InfoPopover({ patternId }: { patternId: string }) {
   const [open, setOpen] = useState(false);
+  const [pinned, setPinned] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
   const updatePos = useCallback(() => {
@@ -218,6 +220,7 @@ function InfoPopover({ patternId }: { patternId: string }) {
       const t = e.target as Node;
       if (btnRef.current?.contains(t) || popoverRef.current?.contains(t)) return;
       setOpen(false);
+      setPinned(false);
     };
     document.addEventListener('mousedown', dismiss);
     window.addEventListener('scroll', updatePos, true);
@@ -230,15 +233,32 @@ function InfoPopover({ patternId }: { patternId: string }) {
   }, [open, updatePos]);
 
   useEffect(() => {
-    return () => { if (hoverTimer.current) clearTimeout(hoverTimer.current); };
+    return () => {
+      if (hoverTimer.current) clearTimeout(hoverTimer.current);
+      if (leaveTimer.current) clearTimeout(leaveTimer.current);
+    };
   }, []);
 
   const handleMouseEnter = () => {
+    if (leaveTimer.current) { clearTimeout(leaveTimer.current); leaveTimer.current = null; }
     hoverTimer.current = setTimeout(() => setOpen(true), HOVER_DELAY_MS);
   };
 
   const handleMouseLeave = () => {
     if (hoverTimer.current) { clearTimeout(hoverTimer.current); hoverTimer.current = null; }
+    if (!pinned) {
+      leaveTimer.current = setTimeout(() => setOpen(false), 200);
+    }
+  };
+
+  const handlePopoverEnter = () => {
+    if (leaveTimer.current) { clearTimeout(leaveTimer.current); leaveTimer.current = null; }
+  };
+
+  const handlePopoverLeave = () => {
+    if (!pinned) {
+      leaveTimer.current = setTimeout(() => setOpen(false), 200);
+    }
   };
 
   const explanation = STRINGS.patternExplanations[patternId];
@@ -248,7 +268,7 @@ function InfoPopover({ patternId }: { patternId: string }) {
     <>
       <button
         ref={btnRef}
-        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+        onClick={(e) => { e.stopPropagation(); setPinned((v) => !v); setOpen((v) => !v); }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         className="ml-1 text-cv-stone-400 hover:text-cv-stone-600 transition-colors align-middle leading-none"
@@ -264,6 +284,8 @@ function InfoPopover({ patternId }: { patternId: string }) {
           ref={popoverRef}
           className="fixed z-[9999] w-64 bg-white border border-cv-warm-200 rounded shadow-lg p-3 text-sm text-cv-stone-700 leading-snug"
           style={{ top: pos.top, left: pos.left }}
+          onMouseEnter={handlePopoverEnter}
+          onMouseLeave={handlePopoverLeave}
         >
           {explanation}
         </div>,

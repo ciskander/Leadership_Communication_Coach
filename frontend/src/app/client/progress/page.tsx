@@ -57,14 +57,19 @@ const HOVER_DELAY_MS = 400;
 
 function InfoPopover({ patternId, hoverColor }: { patternId: string; hoverColor?: string }) {
   const [open, setOpen] = useState(false);
+  const [pinned, setPinned] = useState(false);
   const [hovered, setHovered] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+        setPinned(false);
+      }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -72,22 +77,29 @@ function InfoPopover({ patternId, hoverColor }: { patternId: string; hoverColor?
 
   const handleMouseEnter = () => {
     setHovered(true);
+    if (leaveTimer.current) { clearTimeout(leaveTimer.current); leaveTimer.current = null; }
     hoverTimer.current = setTimeout(() => setOpen(true), HOVER_DELAY_MS);
   };
 
   const handleMouseLeave = () => {
     setHovered(false);
     if (hoverTimer.current) { clearTimeout(hoverTimer.current); hoverTimer.current = null; }
+    if (!pinned) {
+      leaveTimer.current = setTimeout(() => setOpen(false), 200);
+    }
   };
 
   useEffect(() => {
-    return () => { if (hoverTimer.current) clearTimeout(hoverTimer.current); };
+    return () => {
+      if (hoverTimer.current) clearTimeout(hoverTimer.current);
+      if (leaveTimer.current) clearTimeout(leaveTimer.current);
+    };
   }, []);
 
   return (
     <span className="relative inline-block" ref={ref}>
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => { setPinned((v) => !v); setOpen((v) => !v); }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         className="ml-1 text-cv-stone-400 transition-colors align-middle leading-none"
@@ -100,7 +112,11 @@ function InfoPopover({ patternId, hoverColor }: { patternId: string; hoverColor?
         </svg>
       </button>
       {open && (
-        <div className="absolute z-50 left-5 top-0 w-64 bg-white border border-cv-warm-200 rounded shadow-lg p-3 text-sm text-cv-stone-700 leading-snug">
+        <div
+          className="absolute z-50 left-5 top-0 w-64 bg-white border border-cv-warm-200 rounded shadow-lg p-3 text-sm text-cv-stone-700 leading-snug"
+          onMouseEnter={() => { if (leaveTimer.current) { clearTimeout(leaveTimer.current); leaveTimer.current = null; } }}
+          onMouseLeave={() => { if (!pinned) { leaveTimer.current = setTimeout(() => setOpen(false), 200); } }}
+        >
           {STRINGS.patternExplanations[patternId] ?? STRINGS.common.noExplanationAvailable}
         </div>
       )}
