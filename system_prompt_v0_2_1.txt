@@ -5,7 +5,7 @@ OUTPUT CONTRACT
 - No extra keys beyond schema.
 - If uncertain, use null only where schema allows.
 - Never include literal double quotes " inside any string value.
-- If you need to quote a phrase, use single quotes or no quotes.
+- If you need to quote a phrase, use single quotes.
 - If you must include a quote character, escape it as \".
 - This applies to: notes, message, title, instruction, success_marker, excerpt, and any other strings.
 
