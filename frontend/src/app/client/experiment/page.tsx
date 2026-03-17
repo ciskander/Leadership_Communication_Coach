@@ -276,11 +276,23 @@ function ExperimentPageInner() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const experiment = data?.experiment;
+  const events     = data?.recent_events ?? [];
+  const hasActive  = !!experiment && experiment.status === 'active';
+
+  // When the page loads (or refreshes) with no active experiment and no options
+  // yet, automatically start polling for proposed experiments.
+  useEffect(() => {
+    if (!loading && !hasActive && pollState === 'idle') {
+      startPolling();
+    }
+  }, [loading, hasActive]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const isBackfilling = !!(
     options &&
     options.ranked.length < 3 &&
     backfillRetries < MAX_BACKFILL_RETRIES &&
-    (options.ranked.length > 0 || lastAction !== null)
+    (options.ranked.length > 0 || lastAction !== null || !hasActive)
   );
 
   useEffect(() => {
@@ -342,10 +354,6 @@ function ExperimentPageInner() {
       </p>
     );
   }
-
-  const experiment = data?.experiment;
-  const events     = data?.recent_events ?? [];
-  const hasActive  = !!experiment && experiment.status === 'active';
 
   // ── Post-action banner ────────────────────────────────────────────────────
   function PostActionBanner() {
