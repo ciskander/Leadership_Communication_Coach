@@ -122,7 +122,7 @@ export default function RunResultsPage() {
   const canDelete  = meta !== null && !isBaseline;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-5 py-2">
+    <div className="max-w-5xl mx-auto space-y-6 py-2">
 
       {showConfirm && (
         <ConfirmDeleteModal
@@ -133,7 +133,7 @@ export default function RunResultsPage() {
       )}
 
       {/* ── Header ── */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
           <h1 className="font-serif text-2xl text-cv-stone-900">{pageTitle}</h1>
 
@@ -166,7 +166,7 @@ export default function RunResultsPage() {
 
         <Link
           href="/client"
-          className="text-sm text-cv-stone-400 hover:text-cv-stone-700 transition-colors shrink-0 mt-1"
+          className="text-sm text-cv-stone-400 hover:text-cv-stone-700 transition-colors shrink-0"
         >
           {STRINGS.nav.dashboard}
         </Link>

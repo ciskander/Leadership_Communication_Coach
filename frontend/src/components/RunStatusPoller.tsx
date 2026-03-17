@@ -85,14 +85,14 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-5">
         <div className="relative">
-          <div className="w-14 h-14 rounded-full border-2 border-stone-100" />
-          <div className="absolute inset-0 w-14 h-14 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+          <div className="w-14 h-14 rounded-full border-2 border-cv-stone-100" />
+          <div className="absolute inset-0 w-14 h-14 rounded-full border-2 border-cv-teal-600 border-t-transparent animate-spin" />
         </div>
         <div className="text-center space-y-1">
-          <p className="text-sm font-medium text-stone-700">
+          <p className="text-sm font-medium text-cv-stone-700">
             {pollCount > 20 ? STRINGS.runStatusPoller.stillWorking : STRINGS.runStatusPoller.analysing}
           </p>
-          <p className="text-xs text-stone-400">{STRINGS.runStatusPoller.usuallyTakes}</p>
+          <p className="text-xs text-cv-stone-400">{STRINGS.runStatusPoller.usuallyTakes}</p>
         </div>
       </div>
     );
@@ -100,13 +100,13 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
   if (pollState === 'timeout') {
     return (
-      <div className="bg-white rounded border border-stone-200 p-8 text-center space-y-4">
+      <div className="bg-white rounded border border-cv-warm-200 p-8 text-center space-y-4">
         <div className="flex justify-center"><svg viewBox="0 0 16 16" fill="none" className="w-8 h-8 text-cv-amber-600" aria-hidden="true"><circle cx="8" cy="9" r="6" stroke="currentColor" strokeWidth={1.4}/><path d="M8 6v3.5l2 1.5" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"/><path d="M8 3V1" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg></div>
-        <p className="text-sm font-medium text-stone-700">{STRINGS.runStatusPoller.timeoutTitle}</p>
-        <p className="text-xs text-stone-400">{STRINGS.runStatusPoller.timeoutDesc}</p>
+        <p className="text-sm font-medium text-cv-stone-700">{STRINGS.runStatusPoller.timeoutTitle}</p>
+        <p className="text-xs text-cv-stone-400">{STRINGS.runStatusPoller.timeoutDesc}</p>
         <button
           onClick={retry}
-          className="px-5 py-2.5 bg-emerald-600 text-white rounded text-sm font-medium hover:bg-emerald-700 transition-colors"
+          className="px-5 py-2.5 bg-cv-teal-600 text-white rounded text-sm font-medium hover:bg-cv-teal-800 transition-colors"
         >
           {STRINGS.runStatusPoller.checkAgain}
         </button>
@@ -116,15 +116,15 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
   if (pollState === 'error' || run.status === 'error') {
     return (
-      <div className="bg-white rounded border border-rose-200 p-8 text-center space-y-4">
-        <div className="flex justify-center"><svg viewBox="0 0 16 16" fill="none" className="w-8 h-8 text-rose-500" aria-hidden="true"><path d="M8 1L1 14h14L8 1z" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round"/><path d="M8 6v4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/><circle cx="8" cy="12" r="0.5" fill="currentColor"/></svg></div>
-        <p className="text-sm font-medium text-rose-700">{STRINGS.runStatusPoller.errorTitle}</p>
-        <p className="text-xs text-stone-400">
+      <div className="bg-white rounded border border-cv-red-100 p-8 text-center space-y-4">
+        <div className="flex justify-center"><svg viewBox="0 0 16 16" fill="none" className="w-8 h-8 text-cv-red-400" aria-hidden="true"><path d="M8 1L1 14h14L8 1z" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round"/><path d="M8 6v4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/><circle cx="8" cy="12" r="0.5" fill="currentColor"/></svg></div>
+        <p className="text-sm font-medium text-cv-red-600">{STRINGS.runStatusPoller.errorTitle}</p>
+        <p className="text-xs text-cv-stone-400">
           {run?.error ? JSON.stringify(run.error) : STRINGS.runStatusPoller.errorFallback}
         </p>
         <button
           onClick={retry}
-          className="px-5 py-2.5 bg-emerald-600 text-white rounded text-sm font-medium hover:bg-emerald-700 transition-colors"
+          className="px-5 py-2.5 bg-cv-teal-600 text-white rounded text-sm font-medium hover:bg-cv-teal-800 transition-colors"
         >
           {STRINGS.common.retry}
         </button>
@@ -192,11 +192,11 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
     if (acceptedExpId === exp.experiment_record_id) {
       return (
-        <section className="bg-emerald-50 border border-emerald-200 rounded p-5 flex items-center gap-3">
+        <section className="bg-cv-teal-50 border border-cv-teal-100 rounded p-5 flex items-center gap-3">
           <svg viewBox="0 0 16 16" fill="none" className="w-5 h-5 shrink-0 text-cv-teal-600" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth={1.4}/><path d="M5 8l2 2 4-4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"/></svg>
           <div>
-            <p className="text-sm font-semibold text-emerald-800">{STRINGS.runStatusPoller.experimentAccepted}</p>
-            <Link href="/client" className="text-xs text-emerald-600 hover:text-emerald-800 underline">
+            <p className="text-sm font-medium text-cv-teal-800">{STRINGS.runStatusPoller.experimentAccepted}</p>
+            <Link href="/client" className="text-xs text-cv-teal-600 hover:text-cv-teal-800 underline">
               {STRINGS.runStatusPoller.viewOnDashboard}
             </Link>
           </div>
@@ -205,26 +205,24 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
     }
 
     return (
-      <section className="bg-violet-50 border border-violet-200 rounded p-5 space-y-3">
-        <div className="flex items-center gap-2">
-          <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0 text-violet-600" aria-hidden="true"><path d="M6 1v5L2 14h12L10 6V1" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round"/><path d="M4.5 1h7" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg>
-          <p className="text-sm font-semibold text-violet-800">{STRINGS.runStatusPoller.experimentReady}</p>
-        </div>
+      <section className="bg-white rounded border border-cv-warm-200 p-5 space-y-4">
         <div className="space-y-1">
-          <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+          <span className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest">
             {exp.pattern_id.replace(/_/g, ' ')}
           </span>
-          <p className="text-sm font-semibold text-stone-900 leading-snug">{exp.title}</p>
+          <p className="text-sm font-medium text-cv-stone-900 leading-snug">{exp.title}</p>
         </div>
-        <div className="bg-white rounded p-3">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.whatToDo}</p>
-          <p className="text-xs text-stone-600 leading-relaxed">{exp.instruction}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="bg-cv-warm-100 rounded p-3">
+            <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">{STRINGS.common.whatToDo}</p>
+            <p className="text-xs text-cv-stone-600 font-light leading-relaxed">{exp.instruction}</p>
+          </div>
+          <div className="bg-cv-warm-100 rounded p-3">
+            <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">{STRINGS.common.successLooksLike}</p>
+            <p className="text-xs text-cv-stone-600 font-light leading-relaxed">{exp.success_marker}</p>
+          </div>
         </div>
-        <div className="bg-white rounded p-3">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{STRINGS.common.successLooksLike}</p>
-          <p className="text-xs text-stone-600 leading-relaxed">{exp.success_marker}</p>
-        </div>
-        <div className="flex items-center gap-3 pt-1">
+        <div className="flex items-center gap-3">
           <button
             onClick={async () => {
               if (acceptLoading) return;
@@ -239,11 +237,11 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
               }
             }}
             disabled={acceptLoading}
-            className="px-4 py-2 bg-emerald-600 text-white rounded text-xs font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
+            className="px-4 py-2 bg-cv-teal-600 text-cv-teal-50 rounded text-xs font-medium hover:bg-cv-teal-800 transition-colors disabled:opacity-50"
           >
             {acceptLoading ? STRINGS.common.accepting : STRINGS.common.acceptExperiment}
           </button>
-          <Link href="/client/experiment?expand=1" className="text-xs text-stone-500 hover:text-stone-700 transition-colors">
+          <Link href="/client/experiment?expand=1" className="text-xs text-cv-stone-400 hover:text-cv-stone-600 transition-colors">
             {STRINGS.experimentPage.seeMoreOptions}
           </Link>
         </div>
@@ -260,31 +258,31 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
       attempt === 'yes'
         ? {
             icon: <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0 text-cv-teal-600" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth={1.4}/><path d="M5 8l2 2 4-4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"/></svg>,
-            bgColor: 'bg-emerald-50',
-            labelColor: 'text-emerald-800',
+            bgColor: 'bg-cv-teal-50',
+            labelColor: 'text-cv-teal-800',
             label: STRINGS.runStatusPoller.nicelyDone,
             desc: STRINGS.runStatusPoller.clearAttempts(countAttempts ?? 'multiple'),
           }
         : attempt === 'partial'
         ? {
             icon: <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0 text-cv-amber-600" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth={1.4}/><path d="M5 8h6" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg>,
-            bgColor: 'bg-amber-50',
-            labelColor: 'text-amber-800',
+            bgColor: 'bg-cv-amber-50',
+            labelColor: 'text-cv-amber-800',
             label: STRINGS.runStatusPoller.partialAttemptDetected,
             desc: STRINGS.runStatusPoller.partialAttemptDesc(countAttempts),
           }
         : confirmState === 'done' && confirmedValue
         ? {
             icon: <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0 text-cv-teal-600" aria-hidden="true"><path d="M6 1v5L2 14h12L10 6V1" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round"/><path d="M4.5 1h7" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg>,
-            bgColor: 'bg-emerald-50',
-            labelColor: 'text-emerald-800',
+            bgColor: 'bg-cv-teal-50',
+            labelColor: 'text-cv-teal-800',
             label: STRINGS.runStatusPoller.userConfirmedAttempt,
             desc: null,
           }
         : {
-            icon: <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0 text-stone-400" aria-hidden="true"><path d="M6 1v5L2 14h12L10 6V1" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round"/><path d="M4.5 1h7" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg>,
-            bgColor: 'bg-stone-50',
-            labelColor: 'text-stone-700',
+            icon: <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0 text-cv-stone-400" aria-hidden="true"><path d="M6 1v5L2 14h12L10 6V1" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round"/><path d="M4.5 1h7" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg>,
+            bgColor: 'bg-cv-warm-50',
+            labelColor: 'text-cv-stone-700',
             label: STRINGS.runStatusPoller.noAttemptDetected,
             desc: null,
           };
@@ -292,8 +290,8 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
     return (
       <div className="space-y-4">
         {/* Detection banner */}
-        <section className="bg-white rounded border border-stone-200 overflow-hidden">
-          <div className={`flex items-center gap-2.5 px-5 py-3.5 border-b border-stone-100 ${attemptConfig.bgColor}`}>
+        <section className="bg-white rounded border border-cv-warm-200 overflow-hidden">
+          <div className={`flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-100 ${attemptConfig.bgColor}`}>
             {attemptConfig.icon}
             <h3 className={`text-sm font-semibold ${attemptConfig.labelColor}`}>
               Experiment: {attemptConfig.label}
@@ -302,14 +300,14 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
           <div className="px-5 py-4 space-y-2">
             {attempt !== 'no' && (
-              <p className="text-sm text-stone-700 leading-relaxed">{attemptConfig.desc}</p>
+              <p className="text-sm text-cv-stone-700 leading-relaxed">{attemptConfig.desc}</p>
             )}
 
             {/* Evidence quotes from the transcript */}
             {attempt !== 'no' && detectionQuotes.length > 0 && (
               <div className="space-y-3">
                 <div>
-                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                  <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
                     {attempt === 'yes' ? STRINGS.runStatusPoller.fromTranscript : STRINGS.runStatusPoller.whatYouSaid}
                   </p>
                   {detectionQuotes.map((q, i) => (
@@ -320,10 +318,10 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                 {/* Coaching for partial attempts */}
                 {attempt === 'partial' && detection?.coaching_note && (
                   <div>
-                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                    <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
                       {STRINGS.runStatusPoller.whatWorkedMissing}
                     </p>
-                    <p className="text-sm text-stone-700 leading-relaxed">
+                    <p className="text-sm text-cv-stone-700 leading-relaxed">
                       {detection.coaching_note}
                     </p>
                   </div>
@@ -331,11 +329,11 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
                 {attempt === 'partial' && detection?.suggested_rewrite && (
                   <div>
-                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1.5">
+                    <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
                       {STRINGS.common.nextTimeTry}
                     </p>
-                    <blockquote className="border-l-4 border-cv-teal-700 pl-4 py-1 my-2 bg-emerald-50 rounded-r-md">
-                      <p className="text-sm text-stone-700 italic">
+                    <blockquote className="border-l-4 border-cv-teal-700 pl-4 py-1 my-2 bg-cv-teal-50 rounded-r-md">
+                      <p className="text-sm text-cv-stone-700 italic">
                         &ldquo;{detection.suggested_rewrite}&rdquo;
                       </p>
                     </blockquote>
@@ -347,7 +345,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
             {/* Missed detection prompt */}
             {attempt === 'no' && confirmState === 'idle' && (
               <div className="space-y-2">
-                <p className="text-sm text-stone-700 leading-relaxed">
+                <p className="text-sm text-cv-stone-700 leading-relaxed">
                   {STRINGS.runStatusPoller.missedDetectionPrompt}
                 </p>
                 <div className="flex gap-2 pt-1">
@@ -359,7 +357,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                   </button>
                   <button
                     onClick={() => handleConfirm(false)}
-                    className="px-4 py-2 bg-white border border-stone-300 text-stone-700 rounded text-xs font-semibold hover:bg-stone-50 transition-colors"
+                    className="px-4 py-2 bg-white border border-cv-warm-300 text-cv-stone-700 rounded text-xs font-semibold hover:bg-cv-warm-50 transition-colors"
                   >
                     {STRINGS.runStatusPoller.notThisTime}
                   </button>
@@ -368,25 +366,25 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
             )}
 
             {attempt === 'no' && confirmState === 'loading' && (
-              <p className="text-xs text-stone-400">{STRINGS.common.saving}</p>
+              <p className="text-xs text-cv-stone-400">{STRINGS.common.saving}</p>
             )}
 
             {attempt === 'no' && confirmState === 'done' && (
-              <p className="text-sm text-stone-700 leading-relaxed">
+              <p className="text-sm text-cv-stone-700 leading-relaxed">
                 {confirmedValue
                   ? STRINGS.runStatusPoller.confirmedYes
                   : STRINGS.runStatusPoller.confirmedNo}
               </p>
             )}
 
-            <p className="text-xs text-stone-400">
+            <p className="text-xs text-cv-stone-400">
               Experiment {activeExp?.experiment_id as string}
             </p>
           </div>
         </section>
 
         {/* Full experiment tracker */}
-        <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mt-2">{STRINGS.runStatusPoller.currentExperiment}</p>
+        <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mt-2 mb-4">{STRINGS.runStatusPoller.currentExperiment}</p>
         {activeExpData?.experiment ? (
           <ExperimentTracker
             experiment={activeExpData.experiment}
@@ -396,14 +394,14 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           />
         ) : (
           // Fallback while data is loading or if fetch failed
-          <div className="bg-white rounded border border-stone-200 p-5 space-y-3">
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+          <div className="bg-white rounded border border-cv-warm-200 p-5 space-y-3">
+            <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest">
               {STRINGS.runStatusPoller.yourExperiment}
             </p>
             <div className="flex gap-3 flex-wrap">
               <Link
                 href="/client/experiment"
-                className="px-5 py-2.5 bg-emerald-600 text-white rounded text-sm font-semibold hover:bg-emerald-700 transition-colors"
+                className="px-5 py-2.5 bg-cv-teal-600 text-cv-teal-50 rounded text-sm font-medium hover:bg-cv-teal-800 transition-colors"
               >
                 {STRINGS.runStatusPoller.viewOnMyExperiment}
               </Link>
@@ -418,19 +416,19 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
     <div className="space-y-6">
       {/* Status banner */}
       {run.gate1_pass === false ? (
-        <div className="bg-amber-50 border border-amber-200 rounded px-5 py-3.5 flex items-start gap-3">
+        <div className="bg-cv-amber-50 border border-cv-amber-200 rounded px-5 py-4 flex items-start gap-3">
           <svg viewBox="0 0 16 16" fill="none" className="w-5 h-5 shrink-0 text-cv-amber-600 mt-0.5" aria-hidden="true"><path d="M8 1L1 14h14L8 1z" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round"/><path d="M8 6v4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/><circle cx="8" cy="12" r="0.5" fill="currentColor"/></svg>
           <div>
-            <p className="text-sm font-semibold text-amber-800">{STRINGS.runStatusPoller.qualityCheckFailed}</p>
-            <p className="text-xs text-amber-600">{STRINGS.runStatusPoller.qualityCheckDesc}</p>
+            <p className="text-sm font-semibold text-cv-amber-800">{STRINGS.runStatusPoller.qualityCheckFailed}</p>
+            <p className="text-sm text-cv-amber-600 font-light mt-0.5">{STRINGS.runStatusPoller.qualityCheckDesc}</p>
           </div>
         </div>
       ) : (
-        <div className="bg-emerald-50 border border-cv-teal-700 rounded px-5 py-3.5 flex items-center gap-3">
+        <div className="bg-cv-teal-50 border border-cv-teal-700 rounded px-5 py-4 flex items-center gap-3">
           <svg viewBox="0 0 16 16" fill="none" className="w-5 h-5 shrink-0 text-cv-teal-600" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth={1.4}/><path d="M5 8l2 2 4-4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"/></svg>
           <div>
-            <p className="text-sm font-semibold text-emerald-800">{STRINGS.runStatusPoller.analysisComplete}</p>
-            <p className="text-xs text-emerald-600">{STRINGS.runStatusPoller.analysisFeedback}</p>
+            <p className="text-sm font-semibold text-cv-teal-800">{STRINGS.runStatusPoller.analysisComplete}</p>
+            <p className="text-sm text-cv-teal-400 font-light mt-0.5">{STRINGS.runStatusPoller.analysisFeedback}</p>
           </div>
         </div>
       )}
@@ -454,7 +452,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
       {run.pattern_snapshot && run.pattern_snapshot.length > 0 && (
         <section>
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
+          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-4">
             {STRINGS.runStatusPoller.patternSnapshot}
           </p>
           <PatternSnapshot patterns={run.pattern_snapshot} targetSpeaker={targetSpeaker} trendData={trendData} />
