@@ -401,9 +401,9 @@ export default function BaselineDetailPage() {
         </h1>
         <Link
           href="/client"
-          className="text-xs text-cv-stone-400 tracking-widest uppercase hover:text-cv-stone-600 transition-colors"
+          className="text-sm text-cv-stone-400 hover:text-cv-stone-700 transition-colors shrink-0"
         >
-          ← {STRINGS.nav.dashboard}
+          {STRINGS.nav.dashboard}
         </Link>
       </div>
 

@@ -61,6 +61,7 @@ export function ExperimentTracker({
   onAbandon,
 }: ExperimentTrackerProps) {
   const [actionState, setActionState] = useState<'idle' | 'confirm-park' | 'loading'>('idle');
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const isActive   = experiment.status === 'active';
   const statusCfg  = STATUS_CONFIG[experiment.status] ?? STATUS_CONFIG.active;
@@ -101,47 +102,15 @@ export function ExperimentTracker({
     }
   }
 
-  // ── Analyze-CTA nudge ──────────────────────────────────────────────────────
-  function AnalyzeNudge({ message }: { message: string }) {
-    return (
-      <div className="bg-blue-50 border border-blue-200 rounded px-4 py-3 flex items-center justify-between gap-4">
-        <p className="text-sm text-[#1E3A5F]">{message}</p>
-        <Link
-          href="/client/analyze"
-          className="shrink-0 flex items-center gap-2 text-xs px-3 py-1.5 bg-[#1E3A5F] text-white rounded font-medium hover:bg-[#162D4A] transition-colors"
-        >
-          <span className="shrink-0"><svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M9 3L10.5 7.5L15 9L10.5 10.5L9 15L7.5 10.5L3 9L7.5 7.5L9 3Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/><path d="M19 13L19.75 15.25L22 16L19.75 16.75L19 19L18.25 16.75L16 16L18.25 15.25L19 13Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/></svg></span>
-          {STRINGS.experimentTracker.analyzeMeeting}
-        </Link>
-      </div>
-    );
-  }
-
-  function ProgressNudge() {
-    if (!isActive) return null;
+  // ── Summary text ────────────────────────────────────────────────────────────
+  function summaryText(): string {
     if (meetingsAnalysed === 0) {
-      return <AnalyzeNudge message={STRINGS.experimentTracker.analyzeToStart} />;
+      return STRINGS.experimentTracker.analyzeToStart;
     }
     if (totalAttempted === 0) {
-      return (
-        <div className="space-y-2">
-          <div className="bg-cv-warm-50 border border-cv-warm-200 rounded px-4 py-3">
-            <p className="text-sm text-cv-stone-600">
-              {STRINGS.experimentTracker.noAttemptsYet(meetingsAnalysed)}
-            </p>
-          </div>
-          <AnalyzeNudge message={STRINGS.experimentTracker.analyzeToContinue} />
-        </div>
-      );
+      return STRINGS.experimentTracker.noAttemptsYet(meetingsAnalysed);
     }
-    return (
-      <div className="space-y-2">
-        <p className="text-xs text-cv-stone-400">
-          {STRINGS.experimentTracker.attemptsDetected(totalAttempted, meetingsAnalysed)}
-        </p>
-        <AnalyzeNudge message={STRINGS.experimentTracker.analyzeToContinue} />
-      </div>
-    );
+    return STRINGS.experimentTracker.attemptsDetected(totalAttempted, meetingsAnalysed);
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -180,72 +149,75 @@ export function ExperimentTracker({
           </div>
         </div>
 
-        {/* Stats headline */}
-        {meetingsAnalysed > 0 && (
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-cv-teal-50 rounded p-3 text-center">
-              <p className="text-2xl font-bold text-cv-teal-600">{successCount}</p>
-              <p className="text-xs text-cv-stone-500 mt-0.5">{STRINGS.experimentTracker.fullAttempts}</p>
-            </div>
-            <div className="bg-cv-amber-50 rounded p-3 text-center">
-              <p className="text-2xl font-bold text-cv-amber-500">{partialCount}</p>
-              <p className="text-xs text-cv-stone-500 mt-0.5">{STRINGS.experimentTracker.partial}</p>
-            </div>
-            <div className="bg-cv-warm-100 rounded p-3 text-center">
-              <p className="text-2xl font-bold text-cv-stone-400">{meetingsAnalysed}</p>
-              <p className="text-xs text-cv-stone-500 mt-0.5">{STRINGS.experimentTracker.meetings}</p>
-            </div>
-          </div>
-        )}
+        {/* Attempt history */}
+        <div>
+          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1.5">
+            {STRINGS.experimentTracker.attemptHistory}
+          </p>
+          <p className="text-sm text-cv-stone-600 leading-relaxed">
+            {summaryText()}
+          </p>
 
-        {/* Timeline */}
-        {sortedEvents.length > 0 && (
-          <div>
-            <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-2.5">
-              {STRINGS.experimentTracker.attemptHistory}
-            </p>
-            <ul className="space-y-1.5">
-              {sortedEvents.map((ev, i) => {
-                const cfg       = ATTEMPT_CONFIG[ev.attempt ?? 'no'] ?? ATTEMPT_CONFIG.no;
-                const humanCfg  = ev.human_confirmed ? HUMAN_PILL_CONFIG[ev.human_confirmed] : undefined;
-                const displayDate = ev.meeting_date || ev.created_at;
+          {/* Expandable accordion */}
+          {sortedEvents.length > 0 && (
+            <div className="mt-2">
+              <button
+                onClick={() => setHistoryOpen(!historyOpen)}
+                className="flex items-center gap-1.5 text-xs text-cv-stone-400 hover:text-cv-stone-600 transition-colors"
+              >
+                <svg
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${historyOpen ? 'rotate-180' : ''}`}
+                  aria-hidden="true"
+                >
+                  <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {historyOpen ? STRINGS.baselineDetail.collapse : STRINGS.baselineDetail.expand}
+              </button>
 
-                return (
-                  <li
-                    key={ev.event_id ?? ev.id ?? i}
-                    className={`flex items-center gap-2 rounded px-3 py-2 ${cfg.bg}`}
-                  >
-                    <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot}`} />
-                    <span className={`text-xs font-semibold ${cfg.color}`}>{cfg.label}</span>
+              {historyOpen && (
+                <ul className="space-y-1.5 mt-2">
+                  {sortedEvents.map((ev, i) => {
+                    const cfg       = ATTEMPT_CONFIG[ev.attempt ?? 'no'] ?? ATTEMPT_CONFIG.no;
+                    const humanCfg  = ev.human_confirmed ? HUMAN_PILL_CONFIG[ev.human_confirmed] : undefined;
+                    const displayDate = ev.meeting_date || ev.created_at;
 
-                    {humanCfg && (
-                      <span
-                        className={`text-xs font-medium px-2 py-0.5 rounded-full bg-white border ${humanCfg.border} ${humanCfg.color}`}
-                        title={STRINGS.humanConfirmation.tooltip}
+                    return (
+                      <li
+                        key={ev.event_id ?? ev.id ?? i}
+                        className={`flex items-center gap-2 rounded px-3 py-2 ${cfg.bg}`}
                       >
-                        {humanCfg.label}
-                      </span>
-                    )}
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot}`} />
+                        <span className={`text-xs font-semibold ${cfg.color}`}>{cfg.label}</span>
 
-                    {displayDate && (
-                      <span className="text-xs text-cv-stone-400 ml-auto shrink-0 tabular-nums">
-                        {new Date(displayDate).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                      </span>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        )}
+                        {humanCfg && (
+                          <span
+                            className={`text-xs font-medium px-2 py-0.5 rounded-full bg-white border ${humanCfg.border} ${humanCfg.color}`}
+                            title={STRINGS.humanConfirmation.tooltip}
+                          >
+                            {humanCfg.label}
+                          </span>
+                        )}
 
-        {/* Analyze nudge */}
-        <ProgressNudge />
+                        {displayDate && (
+                          <span className="text-xs text-cv-stone-400 ml-auto shrink-0 tabular-nums">
+                            {new Date(displayDate).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                          </span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
 
-        {/* Actions */}
+        {/* CTA buttons */}
         {isActive && (
           <div className="pt-1 space-y-2">
             {actionState === 'confirm-park' ? (
@@ -270,7 +242,14 @@ export function ExperimentTracker({
                 </div>
               </div>
             ) : (
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
+                <Link
+                  href="/client/analyze"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-[#1E3A5F] text-white rounded text-sm font-medium hover:bg-[#162D4A] transition-colors"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M9 3L10.5 7.5L15 9L10.5 10.5L9 15L7.5 10.5L3 9L7.5 7.5L9 3Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/><path d="M19 13L19.75 15.25L22 16L19.75 16.75L19 19L18.25 16.75L16 16L18.25 15.25L19 13Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  {STRINGS.experimentTracker.analyzeMeeting}
+                </Link>
                 <button
                   onClick={handleComplete}
                   disabled={actionState === 'loading'}
