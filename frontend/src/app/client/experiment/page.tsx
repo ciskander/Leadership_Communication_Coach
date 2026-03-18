@@ -39,7 +39,7 @@ function timeAgo(dateStr: string | null): string {
 /** Shared inset box used in proposed + parked cards */
 function InsetBox({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="bg-cv-warm-50 border border-cv-warm-200 rounded p-3">
+    <div className="bg-cv-warm-50 border border-cv-warm-300 rounded p-3">
       <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1">
         {label}
       </p>
@@ -83,7 +83,7 @@ function ProposedExperimentCard({
   }
 
   return (
-    <div className="bg-white rounded border border-cv-warm-200 p-5 space-y-3">
+    <div className="bg-white rounded border border-cv-stone-400 p-5 space-y-3">
       <div className="space-y-1">
         <PatternLabel id={experiment.pattern_id} />
         <p className="text-sm font-semibold text-cv-stone-900 leading-snug font-serif">
@@ -469,7 +469,7 @@ function ExperimentPageInner() {
                   {rankedItems.length > 1 && (
                     <button
                       onClick={() => setShowMore(true)}
-                      className="mt-3 w-full py-2.5 bg-cv-warm-50 border border-cv-warm-200 text-cv-stone-600 rounded text-sm font-medium hover:bg-cv-warm-100 transition-colors"
+                      className="mt-3 w-full py-2.5 bg-cv-warm-50 border border-cv-warm-300 text-cv-stone-600 rounded text-sm font-medium hover:bg-cv-warm-100 transition-colors"
                     >
                       {STRINGS.experimentPage.seeMoreOptions}
                     </button>

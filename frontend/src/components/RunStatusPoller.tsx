@@ -100,7 +100,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
   if (pollState === 'timeout') {
     return (
-      <div className="bg-white rounded border border-cv-warm-200 p-8 text-center space-y-4">
+      <div className="bg-white rounded border border-cv-warm-300 p-8 text-center space-y-4">
         <div className="flex justify-center"><svg viewBox="0 0 16 16" fill="none" className="w-8 h-8 text-cv-amber-600" aria-hidden="true"><circle cx="8" cy="9" r="6" stroke="currentColor" strokeWidth={1.4}/><path d="M8 6v3.5l2 1.5" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"/><path d="M8 3V1" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg></div>
         <p className="text-sm font-medium text-cv-stone-700">{STRINGS.runStatusPoller.timeoutTitle}</p>
         <p className="text-xs text-cv-stone-400">{STRINGS.runStatusPoller.timeoutDesc}</p>
@@ -205,7 +205,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
     }
 
     return (
-      <section className="bg-white rounded border border-cv-warm-200 p-5 space-y-4">
+      <section className="bg-white rounded border border-cv-warm-300 p-5 space-y-4">
         <div className="space-y-1">
           <span className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest">
             {exp.pattern_id.replace(/_/g, ' ')}
@@ -305,7 +305,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           />
         ) : (
           // Fallback while data is loading or if fetch failed
-          <div className="bg-white rounded border border-cv-warm-200 p-5 space-y-3">
+          <div className="bg-white rounded border border-cv-warm-300 p-5 space-y-3">
             <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest">
               {STRINGS.runStatusPoller.yourExperiment}
             </p>
@@ -321,8 +321,8 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         )}
 
         {/* Detection banner */}
-        <section className="bg-white rounded border border-cv-warm-200 overflow-hidden">
-          <div className={`flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-100 ${attemptConfig.bgColor}`}>
+        <section className="bg-white rounded border border-cv-stone-400 overflow-hidden">
+          <div className={`flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 ${attemptConfig.bgColor}`}>
             {attemptConfig.icon}
             <h3 className={`text-sm font-semibold ${attemptConfig.labelColor}`}>
               Experiment: {attemptConfig.label}
