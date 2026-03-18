@@ -510,7 +510,7 @@ export function PatternCard({
   const showSparkline = !!trend && trend.points.length >= 2;
 
   return (
-    <div className={`bg-white border border-cv-stone-700 rounded overflow-hidden${expanded ? ' sm:col-span-2' : ''}`}>
+    <div className={`bg-white border border-cv-stone-500 rounded overflow-hidden${expanded ? ' sm:col-span-2' : ''}`}>
       {/* ── Card header row ── */}
       <button
         type="button"
