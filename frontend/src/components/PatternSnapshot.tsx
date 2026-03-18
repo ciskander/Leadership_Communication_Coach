@@ -450,7 +450,7 @@ function Chevron({ open }: { open: boolean }) {
 
 // ─── Individual pattern card ──────────────────────────────────────────────────
 
-function PatternCard({
+export function PatternCard({
   pattern,
   targetSpeaker,
   trend,
@@ -717,12 +717,19 @@ interface PatternSnapshotProps {
   patterns: PatternSnapshotItem[];
   targetSpeaker?: string | null;
   trendData?: Record<string, PatternTrendData>;
+  excludePatternIds?: string[];
 }
 
-export function PatternSnapshot({ patterns, targetSpeaker, trendData }: PatternSnapshotProps) {
+export function PatternSnapshot({ patterns, targetSpeaker, trendData, excludePatternIds }: PatternSnapshotProps) {
+  const filtered = excludePatternIds?.length
+    ? patterns.filter((p) => !excludePatternIds.includes(p.pattern_id))
+    : patterns;
+
+  if (filtered.length === 0) return null;
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {patterns.map((p) => (
+      {filtered.map((p) => (
         <PatternCard
           key={p.pattern_id}
           pattern={p}

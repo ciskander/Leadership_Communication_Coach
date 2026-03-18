@@ -234,6 +234,9 @@ export const STRINGS = {
     analysisComplete: 'Analysis complete',
     analysisFeedback: "Here's your personalised coaching feedback",
     patternSnapshot: 'Pattern snapshot',
+    otherPatterns: 'Coaching output for other patterns',
+    showDetails: 'Show details',
+    hideDetails: 'Hide details',
     // Experiment tracking
     experimentAccepted: 'Experiment accepted — good luck!',
     viewOnDashboard: 'View on dashboard →',
@@ -399,6 +402,7 @@ export const STRINGS = {
     completeTitle: 'Baseline analysis complete',
     completeSubtitle: 'Your communication patterns have been mapped across three meetings',
     yourBaseline: 'Your communication baseline',
+    otherPatterns: 'Coaching output for other patterns',
     meetingsInBaseline: 'Meetings in this baseline',
     coachingOutput: 'Coaching output',
     patternScores: 'Pattern scores',

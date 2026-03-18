@@ -1,5 +1,7 @@
-import type { CoachingItem, MicroExperiment } from '@/lib/types';
-import { EvidenceQuote, EvidenceQuoteList } from './EvidenceQuote';
+import type { CoachingItem, MicroExperiment, PatternSnapshotItem } from '@/lib/types';
+import { EvidenceQuoteList } from './EvidenceQuote';
+import { PatternCard } from './PatternSnapshot';
+import type { PatternTrendData } from './PatternSnapshot';
 import { STRINGS } from '@/config/strings';
 
 // ─── Shared sub-components ───────────────────────────────────────────────────
@@ -22,20 +24,6 @@ function PatternLabel({ id, className = 'text-cv-teal-600' }: { id: string; clas
   );
 }
 
-/**
- * SuggestedRewrite — visually distinct from EvidenceQuote (teal-50 fill vs warm-50),
- * signals "a better version" rather than "what you said."
- */
-function SuggestedRewrite({ text }: { text: string }) {
-  return (
-    <blockquote className="border-l-[3px] border-cv-teal-700 pl-4 pr-3 py-2.5 bg-cv-teal-50 rounded-r my-2">
-      <p className="text-sm text-cv-stone-700 italic leading-relaxed">
-        &ldquo;{text}&rdquo;
-      </p>
-    </blockquote>
-  );
-}
-
 /** Inset box used in the micro-experiment body */
 function InsetBox({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -53,9 +41,23 @@ interface CoachingCardProps {
   focus: CoachingItem | null;
   microExperiment: MicroExperiment | null;
   targetSpeaker?: string | null;
+  patternSnapshot?: PatternSnapshotItem[] | null;
+  trendData?: Record<string, PatternTrendData>;
 }
 
-export function CoachingCard({ strengths, focus, microExperiment, targetSpeaker }: CoachingCardProps) {
+export function CoachingCard({
+  strengths,
+  focus,
+  microExperiment,
+  targetSpeaker,
+  patternSnapshot,
+  trendData,
+}: CoachingCardProps) {
+  /** Look up the PatternSnapshotItem for a given pattern_id. */
+  function findPatternCard(patternId: string): PatternSnapshotItem | undefined {
+    return patternSnapshot?.find((p) => p.pattern_id === patternId);
+  }
+
   return (
     <div className="space-y-4">
 
@@ -72,13 +74,26 @@ export function CoachingCard({ strengths, focus, microExperiment, targetSpeaker 
 
           {/* Body */}
           <div className="divide-y divide-cv-warm-100">
-            {strengths.map((s) => (
-              <div key={s.pattern_id} className="px-5 py-4 space-y-2">
-                <PatternLabel id={s.pattern_id} />
-                <p className="text-sm text-cv-stone-700 leading-relaxed">{s.message}</p>
-                <EvidenceQuoteList quotes={s.quotes ?? []} targetSpeaker={targetSpeaker} />
-              </div>
-            ))}
+            {strengths.map((s) => {
+              const card = findPatternCard(s.pattern_id);
+              return (
+                <div key={s.pattern_id} className="px-5 py-4">
+                  <div className={card ? 'grid grid-cols-1 lg:grid-cols-2 gap-4 items-start' : ''}>
+                    <div className="space-y-2">
+                      <PatternLabel id={s.pattern_id} />
+                      <p className="text-sm text-cv-stone-700 leading-relaxed">{s.message}</p>
+                    </div>
+                    {card && (
+                      <PatternCard
+                        pattern={card}
+                        targetSpeaker={targetSpeaker ?? null}
+                        trend={trendData?.[s.pattern_id]}
+                      />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
@@ -96,32 +111,25 @@ export function CoachingCard({ strengths, focus, microExperiment, targetSpeaker 
           </div>
 
           {/* Body */}
-          <div className="px-5 py-4 space-y-3">
-            <PatternLabel id={focus.pattern_id} className="text-cv-amber-800" />
-            <p className="text-sm text-cv-stone-700 leading-relaxed">{focus.message}</p>
-
-            {(focus.quotes ?? []).length > 0 && (
-              <div className="space-y-3 mt-1">
-                <div>
-                  <SectionLabel text={STRINGS.common.forExampleYouSaid} />
-                  <EvidenceQuoteList quotes={focus.quotes} targetSpeaker={targetSpeaker} />
+          <div className="px-5 py-4">
+            {(() => {
+              const card = findPatternCard(focus.pattern_id);
+              return (
+                <div className={card ? 'grid grid-cols-1 lg:grid-cols-2 gap-4 items-start' : ''}>
+                  <div className="space-y-2">
+                    <PatternLabel id={focus.pattern_id} className="text-cv-amber-800" />
+                    <p className="text-sm text-cv-stone-700 leading-relaxed">{focus.message}</p>
+                  </div>
+                  {card && (
+                    <PatternCard
+                      pattern={card}
+                      targetSpeaker={targetSpeaker ?? null}
+                      trend={trendData?.[focus.pattern_id]}
+                    />
+                  )}
                 </div>
-
-                {focus.suggested_rewrite && (
-                  <div>
-                    <SectionLabel text={STRINGS.common.nextTimeTry} />
-                    <SuggestedRewrite text={focus.suggested_rewrite} />
-                  </div>
-                )}
-
-                {(focus.additional_quotes ?? []).length > 0 && (
-                  <div>
-                    <SectionLabel text={STRINGS.common.otherMoments} />
-                    <EvidenceQuoteList quotes={focus.additional_quotes!} targetSpeaker={targetSpeaker} />
-                  </div>
-                )}
-              </div>
-            )}
+              );
+            })()}
           </div>
         </section>
       )}

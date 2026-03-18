@@ -252,7 +252,12 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
   // ── Experiment section ─────────────────────────────────────────────────────
 
   function ExperimentSection() {
+    const [detailOpen, setDetailOpen] = useState(false);
     if (!hasActiveExp) return null;
+
+    const hasDetails =
+      (attempt === 'yes' && detectionQuotes.length > 0) ||
+      (attempt === 'partial' && detectionQuotes.length > 0);
 
     const attemptConfig =
       attempt === 'yes'
@@ -325,107 +330,136 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           </div>
 
           <div className="px-5 py-4 space-y-2">
+            {/* Status blurb — always visible */}
             {attempt !== 'no' && (
               <p className="text-sm text-cv-stone-700 leading-relaxed">{attemptConfig.desc}</p>
             )}
 
-            {/* Evidence quotes — full attempts: simple list with span separators */}
-            {attempt === 'yes' && detectionQuotes.length > 0 && (
-              <div className="space-y-3">
-                <div>
-                  <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                    {STRINGS.runStatusPoller.fromTranscript}
-                  </p>
-                  <EvidenceQuoteList quotes={detectionQuotes} targetSpeaker={targetSpeaker} />
-                </div>
-
-                {detection?.coaching_note && (
-                  <div>
-                    <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                      {STRINGS.runStatusPoller.coachsNote}
-                    </p>
-                    <p className="text-sm text-cv-stone-700 leading-relaxed">
-                      {detection.coaching_note}
-                    </p>
-                  </div>
-                )}
-              </div>
+            {/* Toggle for evidence details */}
+            {hasDetails && (
+              <button
+                type="button"
+                onClick={() => setDetailOpen(!detailOpen)}
+                className="flex items-center gap-1.5 text-xs text-cv-stone-400 hover:text-cv-stone-600 transition-colors pt-1"
+              >
+                <svg
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${detailOpen ? 'rotate-180' : ''}`}
+                  aria-hidden="true"
+                >
+                  <path d="M5 8l5 5 5-5" />
+                </svg>
+                {detailOpen ? STRINGS.runStatusPoller.hideDetails : STRINGS.runStatusPoller.showDetails}
+              </button>
             )}
 
-            {/* Evidence quotes — partial attempts: split by rewrite_for_span_id */}
-            {attempt === 'partial' && detectionQuotes.length > 0 && (() => {
-              const rewriteSpanId = detection?.rewrite_for_span_id;
-              const successQuotes = rewriteSpanId
-                ? detectionQuotes.filter(q => q.span_id !== rewriteSpanId)
-                : detectionQuotes;
-              const rewriteGroupQuotes = rewriteSpanId
-                ? detectionQuotes.filter(q => q.span_id === rewriteSpanId)
-                : [];
-              const rewriteQuote = rewriteGroupQuotes.length > 0 ? rewriteGroupQuotes[0] : null;
-              const otherRewriteQuotes = rewriteGroupQuotes.slice(1);
-
-              return (
-                <div className="space-y-3">
-                  {/* What you did well — quotes not linked to the rewrite */}
-                  {successQuotes.length > 0 && (
+            {/* Collapsible evidence details */}
+            {detailOpen && (
+              <>
+                {/* Evidence quotes — full attempts: simple list with span separators */}
+                {attempt === 'yes' && detectionQuotes.length > 0 && (
+                  <div className="space-y-3 pt-2">
                     <div>
                       <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                        {STRINGS.runStatusPoller.whatYouDidWell}
+                        {STRINGS.runStatusPoller.fromTranscript}
                       </p>
-                      <EvidenceQuoteList quotes={successQuotes} targetSpeaker={targetSpeaker} />
+                      <EvidenceQuoteList quotes={detectionQuotes} targetSpeaker={targetSpeaker} />
                     </div>
-                  )}
 
-                  {/* What worked and what was missing — coaching note */}
-                  {detection?.coaching_note && (
-                    <div>
-                      <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                        {STRINGS.runStatusPoller.whatWorkedMissing}
-                      </p>
-                      <p className="text-sm text-cv-stone-700 leading-relaxed">
-                        {detection.coaching_note}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* For example, you said — the specific rewrite-target quote */}
-                  {rewriteQuote && (
-                    <div>
-                      <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                        {STRINGS.common.forExampleYouSaid}
-                      </p>
-                      <EvidenceQuote quote={rewriteQuote} targetSpeaker={targetSpeaker} />
-                    </div>
-                  )}
-
-                  {/* Next time, try something like — suggested rewrite */}
-                  {detection?.suggested_rewrite && (
-                    <div>
-                      <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                        {STRINGS.common.nextTimeTry}
-                      </p>
-                      <blockquote className="border-l-4 border-cv-teal-700 pl-4 py-1 my-2 bg-cv-teal-50 rounded-r-md">
-                        <p className="text-sm text-cv-stone-700 italic">
-                          &ldquo;{detection.suggested_rewrite}&rdquo;
+                    {detection?.coaching_note && (
+                      <div>
+                        <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                          {STRINGS.runStatusPoller.coachsNote}
                         </p>
-                      </blockquote>
-                    </div>
-                  )}
+                        <p className="text-sm text-cv-stone-700 leading-relaxed">
+                          {detection.coaching_note}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                  {/* Other moments — remaining quotes in the rewrite group */}
-                  {otherRewriteQuotes.length > 0 && (
-                    <div>
-                      <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                        {STRINGS.common.otherMoments}
-                      </p>
-                      <EvidenceQuoteList quotes={otherRewriteQuotes} targetSpeaker={targetSpeaker} />
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
+                {/* Evidence quotes — partial attempts: split by rewrite_for_span_id */}
+                {attempt === 'partial' && detectionQuotes.length > 0 && (() => {
+                  const rewriteSpanId = detection?.rewrite_for_span_id;
+                  const successQuotes = rewriteSpanId
+                    ? detectionQuotes.filter(q => q.span_id !== rewriteSpanId)
+                    : detectionQuotes;
+                  const rewriteGroupQuotes = rewriteSpanId
+                    ? detectionQuotes.filter(q => q.span_id === rewriteSpanId)
+                    : [];
+                  const rewriteQuote = rewriteGroupQuotes.length > 0 ? rewriteGroupQuotes[0] : null;
+                  const otherRewriteQuotes = rewriteGroupQuotes.slice(1);
 
-            {/* Missed detection prompt */}
+                  return (
+                    <div className="space-y-3 pt-2">
+                      {/* What you did well — quotes not linked to the rewrite */}
+                      {successQuotes.length > 0 && (
+                        <div>
+                          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                            {STRINGS.runStatusPoller.whatYouDidWell}
+                          </p>
+                          <EvidenceQuoteList quotes={successQuotes} targetSpeaker={targetSpeaker} />
+                        </div>
+                      )}
+
+                      {/* What worked and what was missing — coaching note */}
+                      {detection?.coaching_note && (
+                        <div>
+                          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                            {STRINGS.runStatusPoller.whatWorkedMissing}
+                          </p>
+                          <p className="text-sm text-cv-stone-700 leading-relaxed">
+                            {detection.coaching_note}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* For example, you said — the specific rewrite-target quote */}
+                      {rewriteQuote && (
+                        <div>
+                          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                            {STRINGS.common.forExampleYouSaid}
+                          </p>
+                          <EvidenceQuote quote={rewriteQuote} targetSpeaker={targetSpeaker} />
+                        </div>
+                      )}
+
+                      {/* Next time, try something like — suggested rewrite */}
+                      {detection?.suggested_rewrite && (
+                        <div>
+                          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                            {STRINGS.common.nextTimeTry}
+                          </p>
+                          <blockquote className="border-l-4 border-cv-teal-700 pl-4 py-1 my-2 bg-cv-teal-50 rounded-r-md">
+                            <p className="text-sm text-cv-stone-700 italic">
+                              &ldquo;{detection.suggested_rewrite}&rdquo;
+                            </p>
+                          </blockquote>
+                        </div>
+                      )}
+
+                      {/* Other moments — remaining quotes in the rewrite group */}
+                      {otherRewriteQuotes.length > 0 && (
+                        <div>
+                          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                            {STRINGS.common.otherMoments}
+                          </p>
+                          <EvidenceQuoteList quotes={otherRewriteQuotes} targetSpeaker={targetSpeaker} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </>
+            )}
+
+            {/* Missed detection prompt — always visible (requires user action) */}
             {attempt === 'no' && confirmState === 'idle' && (
               <div className="space-y-2">
                 <p className="text-sm text-cv-stone-700 leading-relaxed">
@@ -501,20 +535,33 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
             ? null
             : run.micro_experiment
         }
+        patternSnapshot={run.pattern_snapshot}
+        trendData={trendData}
       />
 
       <ProposedExperimentSection />
 
       <ExperimentSection />
 
-      {run.pattern_snapshot && run.pattern_snapshot.length > 0 && (
-        <section>
-          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-4">
-            {STRINGS.runStatusPoller.patternSnapshot}
-          </p>
-          <PatternSnapshot patterns={run.pattern_snapshot} targetSpeaker={targetSpeaker} trendData={trendData} />
-        </section>
-      )}
+      {run.pattern_snapshot && run.pattern_snapshot.length > 0 && (() => {
+        const usedPatternIds = [
+          ...run.strengths.map((s) => s.pattern_id),
+          ...(run.focus ? [run.focus.pattern_id] : []),
+        ];
+        return (
+          <section>
+            <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-4">
+              {STRINGS.runStatusPoller.otherPatterns}
+            </p>
+            <PatternSnapshot
+              patterns={run.pattern_snapshot}
+              targetSpeaker={targetSpeaker}
+              trendData={trendData}
+              excludePatternIds={usedPatternIds}
+            />
+          </section>
+        );
+      })()}
     </div>
   );
 }
