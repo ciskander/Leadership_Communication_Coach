@@ -488,22 +488,23 @@ export function PatternCard({
   const isMixedScore = hasMissedOpportunities && pattern.numerator != null && pattern.numerator > 0;
 
   const rewriteSpanId   = pattern.rewrite_for_span_id;
-  const canSplitQuotes  = isMixedScore && !!rewriteSpanId;
-  const successQuotes   = canSplitQuotes
-    ? quotes.filter((q) => q.span_id !== rewriteSpanId)
-    : (isPerfectScore ? quotes : []);
-  const improvementQuotes = canSplitQuotes
-    ? quotes.filter((q) => q.span_id === rewriteSpanId)
-    : (isPerfectScore ? [] : quotes);
+  const successSpanIds  = new Set(pattern.success_span_ids ?? []);
 
-  // For zero-score and mixed-no-split paths: ensure the quote shown above the
-  // suggested rewrite is the one matching rewrite_for_span_id, not just quotes[0].
+  // Split quotes into three groups using success_span_ids from the LLM:
+  // 1. rewriteTargetQuote — the missed-opportunity quote paired with suggested_rewrite
+  // 2. successQuotes — spans the speaker did well on
+  // 3. otherFailureQuotes — other missed opportunities (excluding the rewrite target)
   const rewriteTargetQuote = rewriteSpanId
-    ? quotes.find((q) => q.span_id === rewriteSpanId) ?? quotes[0]
-    : quotes[0];
-  const remainingQuotes = rewriteTargetQuote
-    ? quotes.filter((q) => q !== rewriteTargetQuote)
-    : quotes.slice(1);
+    ? quotes.find((q) => q.span_id === rewriteSpanId) ?? null
+    : null;
+
+  const successQuotes = quotes.filter(
+    (q) => q.span_id != null && successSpanIds.has(q.span_id)
+  );
+
+  const otherFailureQuotes = quotes.filter(
+    (q) => q.span_id !== rewriteSpanId && !(q.span_id != null && successSpanIds.has(q.span_id))
+  );
 
   // Determine if we should show sparkline for this pattern
   const showSparkline = !!trend && trend.points.length >= 2;
@@ -586,8 +587,8 @@ export function PatternCard({
             </div>
           )}
 
-          {/* Mixed score — splittable */}
-          {isMixedScore && canSplitQuotes && (
+          {/* Mixed score */}
+          {isMixedScore && (
             <>
               {(successQuotes.length > 0 || hasNotes) && (
                 <div>
@@ -595,7 +596,9 @@ export function PatternCard({
                   {hasNotes && (
                     <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{pattern.notes}</p>
                   )}
-                  <EvidenceQuoteList quotes={successQuotes} targetSpeaker={targetSpeaker} />
+                  {successQuotes.length > 0 && (
+                    <EvidenceQuoteList quotes={successQuotes} targetSpeaker={targetSpeaker} />
+                  )}
                 </div>
               )}
               <div>
@@ -603,43 +606,7 @@ export function PatternCard({
                 {hasCoaching && (
                   <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{pattern.coaching_note}</p>
                 )}
-                {improvementQuotes.length > 0 && (
-                  <div>
-                    <SectionLabel text={STRINGS.common.forExampleYouSaid} />
-                    <EvidenceQuote quote={improvementQuotes[0]} targetSpeaker={targetSpeaker} />
-                  </div>
-                )}
-                {pattern.suggested_rewrite && (
-                  <div className="mt-2">
-                    <SectionLabel text={STRINGS.common.nextTimeTry} />
-                    <SuggestedRewrite text={pattern.suggested_rewrite} />
-                  </div>
-                )}
-                {improvementQuotes.length > 1 && (
-                  <div className="mt-2">
-                    <SectionLabel text={STRINGS.common.otherMoments} />
-                    <EvidenceQuoteList quotes={improvementQuotes.slice(1)} targetSpeaker={targetSpeaker} />
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-
-          {/* Mixed score — no split target */}
-          {isMixedScore && !canSplitQuotes && (
-            <>
-              {hasNotes && (
-                <div>
-                  <SectionLabel text={STRINGS.common.whatYouDidWell} />
-                  <p className="text-sm text-cv-stone-700 leading-relaxed">{pattern.notes}</p>
-                </div>
-              )}
-              <div>
-                <SectionLabel text={STRINGS.common.whereYouCanImprove} />
-                {hasCoaching && (
-                  <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{pattern.coaching_note}</p>
-                )}
-                {hasQuotes && rewriteTargetQuote && (
+                {rewriteTargetQuote && (
                   <div>
                     <SectionLabel text={STRINGS.common.forExampleYouSaid} />
                     <EvidenceQuote quote={rewriteTargetQuote} targetSpeaker={targetSpeaker} />
@@ -651,10 +618,10 @@ export function PatternCard({
                     <SuggestedRewrite text={pattern.suggested_rewrite} />
                   </div>
                 )}
-                {remainingQuotes.length > 0 && (
+                {otherFailureQuotes.length > 0 && (
                   <div className="mt-2">
                     <SectionLabel text={STRINGS.common.otherMoments} />
-                    <EvidenceQuoteList quotes={remainingQuotes} targetSpeaker={targetSpeaker} />
+                    <EvidenceQuoteList quotes={otherFailureQuotes} targetSpeaker={targetSpeaker} />
                   </div>
                 )}
               </div>
@@ -684,7 +651,7 @@ export function PatternCard({
               {hasCoaching && (
                 <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{pattern.coaching_note}</p>
               )}
-              {hasQuotes && rewriteTargetQuote && (
+              {rewriteTargetQuote && (
                 <div>
                   <SectionLabel text={STRINGS.common.forExampleYouSaid} />
                   <EvidenceQuote quote={rewriteTargetQuote} targetSpeaker={targetSpeaker} />
@@ -696,10 +663,10 @@ export function PatternCard({
                   <SuggestedRewrite text={pattern.suggested_rewrite} />
                 </div>
               )}
-              {remainingQuotes.length > 0 && (
+              {otherFailureQuotes.length > 0 && (
                 <div className="mt-2">
                   <SectionLabel text={STRINGS.common.otherMoments} />
-                  <EvidenceQuoteList quotes={remainingQuotes} targetSpeaker={targetSpeaker} />
+                  <EvidenceQuoteList quotes={otherFailureQuotes} targetSpeaker={targetSpeaker} />
                 </div>
               )}
             </div>

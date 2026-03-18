@@ -504,6 +504,17 @@ def process_single_meeting_analysis(
                 if match and match.get("coaching_note"):
                     focus_items[0]["message"] = match["coaching_note"]
 
+    # Ensure rewrite_for_span_id is in evidence_span_ids for every pattern,
+    # and that it is NOT in success_evidence_span_ids (it is always a failure).
+    for ps in _parsed_output.get("pattern_snapshot", []):
+        rewrite_span = ps.get("rewrite_for_span_id")
+        es_ids = ps.get("evidence_span_ids", [])
+        if rewrite_span and rewrite_span not in es_ids:
+            es_ids.append(rewrite_span)
+        success_ids = ps.get("success_evidence_span_ids", [])
+        if rewrite_span and rewrite_span in success_ids:
+            success_ids.remove(rewrite_span)
+
     _parsed_output = _patch_parsed_output(_parsed_output)
 
     # 6d. Clean up ASR artifacts in evidence_span excerpts and coaching blurbs.
@@ -818,6 +829,17 @@ def process_baseline_pack_build(
     _exp_track = _parsed_output.get("experiment_tracking", {})
     if not isinstance(_exp_track.get("detection_in_this_meeting"), dict):
         _exp_track["detection_in_this_meeting"] = None
+
+    # Ensure rewrite_for_span_id is in evidence_span_ids for every pattern,
+    # and that it is NOT in success_evidence_span_ids (it is always a failure).
+    for ps in _parsed_output.get("pattern_snapshot", []):
+        rewrite_span = ps.get("rewrite_for_span_id")
+        es_ids = ps.get("evidence_span_ids", [])
+        if rewrite_span and rewrite_span not in es_ids:
+            es_ids.append(rewrite_span)
+        success_ids = ps.get("success_evidence_span_ids", [])
+        if rewrite_span and rewrite_span in success_ids:
+            success_ids.remove(rewrite_span)
 
     _parsed_output = _patch_parsed_output(_parsed_output)
 

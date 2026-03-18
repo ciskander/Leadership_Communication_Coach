@@ -31,7 +31,9 @@ Hard reminders:
 - focus[0] MUST include a "rewrite_for_span_id" field set to the evidence_span_id that the suggested_rewrite directly rewrites. The rewrite must match the excerpt in that specific span.
 - Before finalizing, re-check that each evidence span counted in a pattern's denominator is a genuine opportunity per the taxonomy definition. Remove clear mismatches (e.g., a non-question counted under question_quality, or a 2-word fragment). For question_quality specifically, exclude procedural/technical questions (audio checks, roll call, scheduling logistics) from both numerator and denominator — never quote them as evidence or in coaching. Do NOT remove spans simply because the transcript has rough ASR formatting — read past missing punctuation and filler words to assess the speaker's actual behavior.
 - CRITICAL: Every notes and coaching_note field must specifically reference the behavior observed in the cited evidence spans. Do not write generic observations disconnected from the actual quotes.
-- Choose the rewrite_for_span_id from evidence spans that have enough context for a meaningful rewrite. Avoid rewriting very short or garbled excerpts."""
+- Choose the rewrite_for_span_id from evidence spans that have enough context for a meaningful rewrite. Avoid rewriting very short or garbled excerpts.
+- pattern_snapshot: each pattern's evidence_span_ids MUST include rewrite_for_span_id when present. Include both success and failure evidence spans. Tag successes via success_evidence_span_ids.
+- pattern_snapshot: rewrite_for_span_id must be chosen from a missed-opportunity span (NOT in success_evidence_span_ids). Pick the clearest example for a meaningful rewrite."""
 
 
 def _generate_analysis_id() -> str:
