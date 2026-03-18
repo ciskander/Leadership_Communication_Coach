@@ -494,9 +494,9 @@ export function PatternCard({
   // 1. rewriteTargetQuote — the missed-opportunity quote paired with suggested_rewrite
   // 2. successQuotes — spans the speaker did well on
   // 3. otherFailureQuotes — other missed opportunities (excluding the rewrite target)
-  const rewriteTargetQuote = rewriteSpanId
-    ? quotes.find((q) => q.span_id === rewriteSpanId) ?? null
-    : null;
+  const rewriteTargetQuotes = rewriteSpanId
+    ? quotes.filter((q) => q.span_id === rewriteSpanId)
+    : [];
 
   const successQuotes = quotes.filter(
     (q) => q.span_id != null && successSpanIds.has(q.span_id)
@@ -606,10 +606,10 @@ export function PatternCard({
                 {hasCoaching && (
                   <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{pattern.coaching_note}</p>
                 )}
-                {rewriteTargetQuote && (
+                {rewriteTargetQuotes.length > 0 && (
                   <div>
                     <SectionLabel text={STRINGS.common.forExampleYouSaid} />
-                    <EvidenceQuote quote={rewriteTargetQuote} targetSpeaker={targetSpeaker} />
+                    <EvidenceQuoteList quotes={rewriteTargetQuotes} targetSpeaker={targetSpeaker} />
                   </div>
                 )}
                 {pattern.suggested_rewrite && (
@@ -651,10 +651,10 @@ export function PatternCard({
               {hasCoaching && (
                 <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{pattern.coaching_note}</p>
               )}
-              {rewriteTargetQuote && (
+              {rewriteTargetQuotes.length > 0 && (
                 <div>
                   <SectionLabel text={STRINGS.common.forExampleYouSaid} />
-                  <EvidenceQuote quote={rewriteTargetQuote} targetSpeaker={targetSpeaker} />
+                  <EvidenceQuoteList quotes={rewriteTargetQuotes} targetSpeaker={targetSpeaker} />
                 </div>
               )}
               {pattern.suggested_rewrite && (
