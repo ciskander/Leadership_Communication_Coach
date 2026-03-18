@@ -267,10 +267,13 @@ class AirtableClient:
         formula: str,
         fields: Optional[list[str]] = None,
         max_records: int = 10,
+        sort: Optional[list[str]] = None,
     ) -> list[dict]:
         kwargs: dict = {"formula": formula, "max_records": max_records}
         if fields:
             kwargs["fields"] = fields
+        if sort:
+            kwargs["sort"] = sort
         return list(self._table(table_name).all(**kwargs))
         
     @_retryable
