@@ -219,7 +219,7 @@ async def coachee_summary(
                     logger.warning("coachee_summary: could not fetch proposed experiments for %s", coachee_auth_id)
 
             run_formula = f"{{Coachee ID}} = '{coachee.airtable_user_record_id}'"
-            run_records = at_client.search_records("runs", run_formula, sort=["-Created"])
+            run_records = at_client.search_records("runs", run_formula)
             for r in run_records:
                 rf = r.get("fields", {})
                 # Skip baseline sub-runs
