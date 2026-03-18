@@ -44,9 +44,10 @@ _BATCH_SIZE: int = 15
 _CLEANUP_TIMEOUT: float = 20.0
 
 # Total wall-clock budget for the entire cleanup operation (seconds).
-# This runs inside the /api/runs response handler which shares Railway's ~30s
-# proxy timeout with Airtable fetches (~5s).  Keep the budget under 25s.
-_TOTAL_BUDGET: float = 25.0
+# This runs inside the Celery worker (not the HTTP handler), so we are not
+# constrained by Railway's proxy timeout.  60s comfortably handles 3-4
+# batches of _BATCH_SIZE=15 with gpt-4o-mini (~10-15s per batch).
+_TOTAL_BUDGET: float = 60.0
 
 # How many times to retry a single batch on timeout before giving up.
 _MAX_RETRIES: int = 1
@@ -478,6 +479,7 @@ def cleanup_parsed_json(parsed: dict, model: Optional[str] = None) -> None:
         return
 
     logger.info("Worker cleanup: %d items to clean", len(cleanup_input))
+    cleanup_input_by_id = {q["id"]: q["text"] for q in cleanup_input}
     result = cleanup_quotes(cleanup_input, model=model)
 
     # 3. Write cleaned text back into the parsed dict
@@ -516,4 +518,5 @@ def cleanup_parsed_json(parsed: dict, model: Optional[str] = None) -> None:
         if "det:rw" in result:
             detection["suggested_rewrite"] = result["det:rw"]
 
-    logger.info("Worker cleanup: done, %d items cleaned", len(result))
+    actually_cleaned = sum(1 for qid, text in result.items() if text != cleanup_input_by_id.get(qid))
+    logger.info("Worker cleanup: done, %d/%d items cleaned", actually_cleaned, len(result))
