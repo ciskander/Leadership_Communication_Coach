@@ -68,7 +68,7 @@ Each item requires:
 pattern_id, tier(1|2), evaluable_status(evaluable|insufficient_signal|not_evaluable), denominator_rule_id, min_required_threshold, evidence_span_ids
 
 Optional (use these exact field names):
-opportunity_count, notes, coaching_note, suggested_rewrite, rewrite_for_span_id, opportunity_events, opportunity_events_considered, opportunity_events_counted
+opportunity_count, notes, coaching_note, suggested_rewrite, rewrite_for_span_id, success_evidence_span_ids, opportunity_events, opportunity_events_considered, opportunity_events_counted
 Do NOT use shortened or alternative names like "opportunity_counted" — the schema enforces additionalProperties=false and any unrecognized key will cause validation failure.
 
 PATTERN-LEVEL COACHING (per-pattern drill-down)
@@ -79,6 +79,8 @@ For each evaluable numeric pattern where numerator < denominator (i.e. at least 
 - coaching_note: 1-2 sentence coaching observation explaining what the speaker missed and why it matters. Direct and specific.
 - suggested_rewrite: a concrete, reworded version of what the speaker said at the missed opportunity, demonstrating the pattern applied. Write it in the speaker's natural voice, 1-3 sentences.
 - rewrite_for_span_id: the evidence_span_id whose excerpt the suggested_rewrite directly rewrites. This span ID MUST appear in the pattern's evidence_span_ids.
+- evidence_span_ids: MUST include ALL evidence — both successful demonstrations AND missed opportunities. Include the rewrite_for_span_id in this list.
+- success_evidence_span_ids: subset of evidence_span_ids listing only the span IDs where the speaker demonstrated the pattern successfully. Spans NOT in this list are treated as missed opportunities. rewrite_for_span_id must NOT appear in success_evidence_span_ids (it is always a missed opportunity). Pick the clearest missed-opportunity excerpt for rewrite_for_span_id — one with enough context for a meaningful rewrite.
 
 For evaluable numeric patterns where numerator == denominator (100%):
 - suggested_rewrite and rewrite_for_span_id should be omitted (or null). The evidence_span_ids already show what the speaker did well.

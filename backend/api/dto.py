@@ -98,6 +98,7 @@ class PatternSnapshotItem(BaseModel):
     coaching_note: Optional[str] = None
     suggested_rewrite: Optional[str] = None
     rewrite_for_span_id: Optional[str] = None
+    success_span_ids: list[str] = Field(default_factory=list)
 
 
 class RunStatusResponse(BaseModel):

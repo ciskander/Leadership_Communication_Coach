@@ -280,6 +280,7 @@ def resolve_pattern_snapshot(
             coaching_note=ps.get("coaching_note"),
             suggested_rewrite=ps.get("suggested_rewrite"),
             rewrite_for_span_id=ps.get("rewrite_for_span_id"),
+            success_span_ids=ps.get("success_evidence_span_ids", []),
         ))
     return snapshot_items
 

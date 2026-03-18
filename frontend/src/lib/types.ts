@@ -63,6 +63,7 @@ export interface PatternSnapshotItem {
   coaching_note?: string | null;
   suggested_rewrite?: string | null;
   rewrite_for_span_id?: string | null;
+  success_span_ids?: string[];
 }
 
 export interface RunStatus {

@@ -470,6 +470,14 @@
           },
           "uniqueItems": true
         },
+        "success_evidence_span_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^ES-[0-9]{3}$"
+          },
+          "uniqueItems": true
+        },
         "notes": {
           "type": [
             "string",
