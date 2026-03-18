@@ -155,7 +155,7 @@ def _sanitise_output(data: dict) -> int:
     if "coaching_output" in data and isinstance(data["coaching_output"], dict):
         co = data["coaching_output"]
         fixes += _fix_extra_keys(co, _ALLOWED_KEYS.get("CoachingOutput", set()), "$.coaching_output")
-        ci_keys = _ALLOWED_KEYS.get("CoachingItem", set())
+        ci_keys = _ALLOWED_KEYS.get("HighlightItem", set())
         for i, s in enumerate(co.get("strengths", [])):
             if isinstance(s, dict):
                 fixes += _fix_extra_keys(s, ci_keys, f"$.coaching_output.strengths[{i}]")
