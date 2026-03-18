@@ -41,8 +41,8 @@ export function EvidenceQuote({ quote, targetSpeaker }: EvidenceQuoteProps) {
   }
 
   const blockStyles = isOtherSpeaker
-    ? 'border-l-[3px] border-cv-stone-300 pl-4 pr-3 py-2.5 my-2 bg-cv-warm-100 rounded-r'
-    : 'border-l-[3px] border-cv-navy-600 pl-4 pr-3 py-2.5 my-2 bg-cv-blue-50 rounded-r';
+    ? 'border-l-[2px] border-cv-stone-300 pl-4 pr-3 py-2.5 my-2 bg-cv-warm-100 rounded-r'
+    : 'border-l-[2px] border-cv-navy-600 pl-4 pr-3 py-2.5 my-2 bg-cv-blue-50 rounded-r';
 
   return (
     <blockquote className={blockStyles}>
@@ -100,7 +100,7 @@ export function EvidenceQuoteList({ quotes, targetSpeaker }: EvidenceQuoteListPr
       {groups.map((group, gi) => (
         <div key={gi}>
           {gi > 0 && (
-            <hr className="border-t border-cv-warm-200 my-3" />
+            <hr className="border-t border-cv-warm-300 my-3" />
           )}
           {group.map((q, qi) => (
             <EvidenceQuote key={qi} quote={q} targetSpeaker={targetSpeaker} />
