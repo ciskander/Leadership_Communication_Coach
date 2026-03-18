@@ -510,14 +510,14 @@ export function PatternCard({
   const showSparkline = !!trend && trend.points.length >= 2;
 
   return (
-    <div className={`bg-cv-warm-50 border border-cv-warm-200 rounded overflow-hidden${expanded ? ' sm:col-span-2' : ''}`}>
+    <div className={`bg-cv-warm-50 border border-cv-warm-300 rounded overflow-hidden${expanded ? ' sm:col-span-2' : ''}`}>
       {/* ── Card header row ── */}
       <button
         type="button"
         onClick={() => isExpandable && setExpanded(!expanded)}
         className={[
           'w-full px-4 py-3 text-left',
-          isExpandable ? 'cursor-pointer hover:bg-cv-warm-50 transition-colors' : 'cursor-default',
+          isExpandable ? 'cursor-pointer hover:bg-cv-warm-100 transition-colors' : 'cursor-default',
         ].join(' ')}
       >
         <div className="flex items-center justify-between mb-0.5">
