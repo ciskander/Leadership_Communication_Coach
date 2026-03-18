@@ -225,14 +225,14 @@ function ExperimentSection() {
 
 // ─── Sub-run Pattern Snapshot ─────────────────────────────────────────────────
 
-function SubRunPatternSnapshot({ patterns, targetSpeaker }: { patterns: Record<string, unknown>[]; targetSpeaker?: string | null }) {
+function SubRunPatternSnapshot({ patterns, targetSpeaker, excludePatternIds }: { patterns: Record<string, unknown>[]; targetSpeaker?: string | null; excludePatternIds?: string[] }) {
   return (
     <div className="mt-1">
       <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-3">
-        {STRINGS.baselineDetail.patternScores}
+        {STRINGS.baselineDetail.otherPatterns}
       </p>
       <div className="opacity-90">
-        <PatternSnapshot patterns={patterns as unknown as PatternSnapshotItem[]} targetSpeaker={targetSpeaker} />
+        <PatternSnapshot patterns={patterns as unknown as PatternSnapshotItem[]} targetSpeaker={targetSpeaker} excludePatternIds={excludePatternIds} />
       </div>
     </div>
   );
@@ -311,13 +311,24 @@ function MeetingAccordionCard({
                     focus={(meeting.sub_run_focus ?? null) as CoachingItem | null}
                     microExperiment={null}
                     targetSpeaker={targetSpeaker}
+                    patternSnapshot={meeting.sub_run_pattern_snapshot as unknown as PatternSnapshotItem[]}
                   />
                 </div>
               )}
               {meeting.sub_run_pattern_snapshot &&
-                meeting.sub_run_pattern_snapshot.length > 0 && (
-                  <SubRunPatternSnapshot patterns={meeting.sub_run_pattern_snapshot} targetSpeaker={targetSpeaker} />
-                )}
+                meeting.sub_run_pattern_snapshot.length > 0 && (() => {
+                  const subUsedIds = [
+                    ...((meeting.sub_run_strengths ?? []) as CoachingItem[]).map((s) => s.pattern_id),
+                    ...((meeting.sub_run_focus as CoachingItem | null)?.pattern_id ? [(meeting.sub_run_focus as CoachingItem).pattern_id] : []),
+                  ];
+                  return (
+                    <SubRunPatternSnapshot
+                      patterns={meeting.sub_run_pattern_snapshot}
+                      targetSpeaker={targetSpeaker}
+                      excludePatternIds={subUsedIds}
+                    />
+                  );
+                })()}
             </>
           ) : (
             <p className="text-xs text-cv-stone-400 font-light">
@@ -474,12 +485,12 @@ export default function BaselineDetailPage() {
           </div>
 
           {/* Aggregate coaching — micro_experiment suppressed at baseline */}
-          {/* NOTE: CoachingCard needs its own design pass — see implementation notes */}
           <CoachingCard
             strengths={pack.strengths ?? []}
             focus={pack.focus ?? null}
             microExperiment={null}
             targetSpeaker={pack.target_speaker_label}
+            patternSnapshot={pack.pattern_snapshot as unknown as PatternSnapshotItem[]}
           />
 
           {/* Hint to check individual meeting sections */}
@@ -504,16 +515,25 @@ export default function BaselineDetailPage() {
             <ExperimentSection />
           </section>
 
-          {/* Aggregate pattern snapshot */}
-          {pack.pattern_snapshot && pack.pattern_snapshot.length > 0 && (
-            <section>
-              <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-4">
-                {STRINGS.baselineDetail.yourBaseline}
-              </p>
-              {/* NOTE: PatternSnapshot needs its own design pass — see implementation notes */}
-              <PatternSnapshot patterns={pack.pattern_snapshot as unknown as PatternSnapshotItem[]} targetSpeaker={pack.target_speaker_label} />
-            </section>
-          )}
+          {/* Aggregate pattern snapshot — exclude patterns already shown in coaching card */}
+          {pack.pattern_snapshot && pack.pattern_snapshot.length > 0 && (() => {
+            const usedPatternIds = [
+              ...(pack.strengths ?? []).map((s: CoachingItem) => s.pattern_id),
+              ...(pack.focus ? [pack.focus.pattern_id] : []),
+            ];
+            return (
+              <section>
+                <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-4">
+                  {STRINGS.baselineDetail.otherPatterns}
+                </p>
+                <PatternSnapshot
+                  patterns={pack.pattern_snapshot as unknown as PatternSnapshotItem[]}
+                  targetSpeaker={pack.target_speaker_label}
+                  excludePatternIds={usedPatternIds}
+                />
+              </section>
+            );
+          })()}
 
           {/* Individual meetings as accordions */}
           {meetings.length > 0 && (

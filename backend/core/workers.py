@@ -478,6 +478,32 @@ def process_single_meeting_analysis(
     for item in coaching.get("micro_experiment", []):
         item.setdefault("evidence_span_ids", [])
 
+    # Focus override safety gate: when an active experiment exists, force the
+    # focus pattern_id to match the experiment's pattern_id. The system prompt
+    # instructs the LLM to do this, but we enforce it as a backend guarantee.
+    if active_exp_record_id and memory.active_experiment:
+        expected_pattern = memory.active_experiment.get("pattern_id")
+        focus_items = coaching.get("focus", [])
+        if expected_pattern and focus_items:
+            actual_pattern = focus_items[0].get("pattern_id")
+            if actual_pattern != expected_pattern:
+                logger.warning(
+                    "Focus override: LLM returned '%s' but active experiment requires '%s'",
+                    actual_pattern, expected_pattern,
+                )
+                focus_items[0]["pattern_id"] = expected_pattern
+                # Replace the message with the coaching_note from the matching
+                # pattern_snapshot entry so the text is relevant to the
+                # overridden pattern.
+                snapshot = _parsed_output.get("pattern_snapshot", [])
+                match = next(
+                    (ps for ps in snapshot
+                     if ps.get("pattern_id") == expected_pattern),
+                    None,
+                )
+                if match and match.get("coaching_note"):
+                    focus_items[0]["message"] = match["coaching_note"]
+
     _parsed_output = _patch_parsed_output(_parsed_output)
 
     # 6d. Clean up ASR artifacts in evidence_span excerpts and coaching blurbs.
