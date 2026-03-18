@@ -144,9 +144,7 @@ export default function RunResultsPage() {
               )}
               <div className="flex flex-wrap items-center gap-1.5">
                 {meta.transcript_id && (
-                  <MetaPill>
-                    <span className="font-mono">{meta.transcript_id}</span>
-                  </MetaPill>
+                  <MetaPill>{meta.transcript_id}</MetaPill>
                 )}
                 {meta.meeting_date && (
                   <MetaPill>{fmtDate(meta.meeting_date)}</MetaPill>
@@ -160,7 +158,7 @@ export default function RunResultsPage() {
               </div>
             </div>
           ) : (
-            <p className="text-xs text-cv-stone-400 mt-1 font-mono">{id}</p>
+            <p className="text-xs text-cv-stone-400 mt-1 font-medium">{id}</p>
           )}
         </div>
 

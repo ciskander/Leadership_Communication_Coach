@@ -115,7 +115,7 @@ export function ExperimentTracker({
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="bg-white rounded border border-cv-warm-300 overflow-hidden">
+    <div className="bg-white rounded border border-cv-stone-400 overflow-hidden">
 
       {/* Header */}
       <div className="px-5 py-4 border-b border-cv-warm-300 flex items-start justify-between gap-4">
