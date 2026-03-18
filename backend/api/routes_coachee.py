@@ -224,7 +224,7 @@ async def get_baseline_pack(
 
             coaching = parsed.get("coaching_output", {})
             strengths = [
-                {"pattern_id": s.get("pattern_id", ""), "message": s.get("message", ""), "quotes": []}
+                {"pattern_id": s.get("pattern_id", ""), "message": s.get("message", "")}
                 for s in coaching.get("strengths", [])
             ]
             focus_list = coaching.get("focus", [])
@@ -233,10 +233,6 @@ async def get_baseline_pack(
                 focus = {
                     "pattern_id": f.get("pattern_id", ""),
                     "message": f.get("message", ""),
-                    "quotes": [],
-                    "suggested_rewrite": f.get("suggested_rewrite"),
-                    "rewrite_for_span_id": None,
-                    "additional_quotes": [],
                 }
             micro_list = coaching.get("micro_experiment", [])
             if micro_list:

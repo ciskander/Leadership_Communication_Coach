@@ -17,8 +17,8 @@ from ..core.models import Turn
 from ..core.quote_cleanup import cleanup_quotes
 from ..core.transcript_parser import parse_transcript
 from .dto import (
-    CoachingItemWithQuotes,
     ExperimentDetectionWithQuotes,
+    HighlightItem,
     MicroExperimentWithQuotes,
     PatternSnapshotItem,
     QuoteObject,
@@ -179,11 +179,15 @@ def resolve_coaching_output(
     turn_map: Optional[dict[int, Turn]] = None,
     target_speaker_label: Optional[str] = None,
 ) -> tuple[
-    list[CoachingItemWithQuotes],
-    Optional[CoachingItemWithQuotes],
+    list[HighlightItem],
+    Optional[HighlightItem],
     Optional[MicroExperimentWithQuotes],
 ]:
-    """Resolve coaching_output strengths, focus, and micro_experiment with quotes."""
+    """Resolve coaching_output strengths, focus, and micro_experiment.
+
+    Strengths and focus are lightweight HighlightItems (pattern_id + message only).
+    Detailed evidence, rewrites, and quotes live on pattern_snapshot.
+    """
     coaching = parsed_json.get("coaching_output", {})
 
     # Build a ratio lookup from pattern_snapshot to filter low-score strengths
@@ -192,44 +196,25 @@ def resolve_coaching_output(
         for ps in parsed_json.get("pattern_snapshot", [])
     }
 
-    strengths: list[CoachingItemWithQuotes] = []
+    strengths: list[HighlightItem] = []
     for s in coaching.get("strengths", []):
         # Guardrail: skip strengths whose pattern score is below 50%
         if (ratio_by_pattern.get(s.get("pattern_id")) or 0) < 0.5:
             continue
-        quotes = resolve_quotes(s.get("evidence_span_ids", []), spans_by_id, transcript_id, meeting_id, turn_map, target_speaker_label)
         strengths.append(
-            CoachingItemWithQuotes(
+            HighlightItem(
                 pattern_id=s.get("pattern_id", ""),
                 message=s.get("message", ""),
-                quotes=quotes,
             )
         )
 
-    focus: Optional[CoachingItemWithQuotes] = None
+    focus: Optional[HighlightItem] = None
     focus_list = coaching.get("focus", [])
     if focus_list:
         f = focus_list[0]
-        rewrite_span_id = f.get("rewrite_for_span_id")
-        all_es_ids = f.get("evidence_span_ids", [])
-
-        if rewrite_span_id and rewrite_span_id in all_es_ids:
-            primary_ids = [rewrite_span_id]
-            additional_ids = [eid for eid in all_es_ids if eid != rewrite_span_id]
-        else:
-            primary_ids = all_es_ids[:1]
-            additional_ids = all_es_ids[1:]
-
-        primary_quotes = resolve_quotes(primary_ids, spans_by_id, transcript_id, meeting_id, turn_map, target_speaker_label)
-        additional_quotes = resolve_quotes(additional_ids, spans_by_id, transcript_id, meeting_id, turn_map, target_speaker_label)
-
-        focus = CoachingItemWithQuotes(
+        focus = HighlightItem(
             pattern_id=f.get("pattern_id", ""),
             message=f.get("message", ""),
-            quotes=primary_quotes,
-            suggested_rewrite=f.get("suggested_rewrite"),
-            rewrite_for_span_id=rewrite_span_id,
-            additional_quotes=additional_quotes,
         )
 
     micro_exp: Optional[MicroExperimentWithQuotes] = None
@@ -295,19 +280,12 @@ def build_spans_lookup(parsed_json: dict) -> dict[str, dict]:
 
 
 def _collect_quotes_for_cleanup(
-    strengths: list[CoachingItemWithQuotes],
-    focus: Optional[CoachingItemWithQuotes],
     micro_exp: Optional[MicroExperimentWithQuotes],
     snapshot_items: list[PatternSnapshotItem],
     experiment_detection_quotes: Optional[list[QuoteObject]] = None,
 ) -> list[QuoteObject]:
     """Collect all QuoteObjects from the resolved coaching/snapshot output."""
     all_quotes: list[QuoteObject] = []
-    for s in strengths:
-        all_quotes.extend(s.quotes)
-    if focus:
-        all_quotes.extend(focus.quotes)
-        all_quotes.extend(focus.additional_quotes)
     if micro_exp:
         all_quotes.extend(micro_exp.quotes)
     for snap in snapshot_items:
@@ -318,9 +296,8 @@ def _collect_quotes_for_cleanup(
 
 
 def _collect_coaching_blurbs(
-    strengths: list[CoachingItemWithQuotes],
-    focus: Optional[CoachingItemWithQuotes],
-    micro_exp: Optional[MicroExperimentWithQuotes],
+    strengths: list[HighlightItem],
+    focus: Optional[HighlightItem],
     snapshot_items: list[PatternSnapshotItem],
     experiment_detection: Optional[ExperimentDetectionWithQuotes] = None,
 ) -> list[dict]:
@@ -335,11 +312,8 @@ def _collect_coaching_blurbs(
         if s.message:
             blurbs.append({"id": f"str:{i}:message", "text": s.message, "category": "coaching_blurb"})
 
-    if focus:
-        if focus.message:
-            blurbs.append({"id": "focus:message", "text": focus.message, "category": "coaching_blurb"})
-        if focus.suggested_rewrite:
-            blurbs.append({"id": "focus:rewrite", "text": focus.suggested_rewrite, "category": "coaching_blurb"})
+    if focus and focus.message:
+        blurbs.append({"id": "focus:message", "text": focus.message, "category": "coaching_blurb"})
 
     for i, snap in enumerate(snapshot_items):
         if snap.notes:
@@ -360,8 +334,8 @@ def _collect_coaching_blurbs(
 
 def _apply_blurb_results(
     cleaned: dict[str, str],
-    strengths: list[CoachingItemWithQuotes],
-    focus: Optional[CoachingItemWithQuotes],
+    strengths: list[HighlightItem],
+    focus: Optional[HighlightItem],
     snapshot_items: list[PatternSnapshotItem],
     experiment_detection: Optional[ExperimentDetectionWithQuotes] = None,
 ) -> None:
@@ -374,8 +348,6 @@ def _apply_blurb_results(
     if focus:
         if "focus:message" in cleaned:
             focus.message = cleaned["focus:message"]
-        if "focus:rewrite" in cleaned:
-            focus.suggested_rewrite = cleaned["focus:rewrite"]
 
     for i, snap in enumerate(snapshot_items):
         key_notes = f"snap:{i}:notes"
@@ -396,8 +368,8 @@ def _apply_blurb_results(
 
 
 def apply_quote_cleanup(
-    strengths: list[CoachingItemWithQuotes],
-    focus: Optional[CoachingItemWithQuotes],
+    strengths: list[HighlightItem],
+    focus: Optional[HighlightItem],
     micro_exp: Optional[MicroExperimentWithQuotes],
     snapshot_items: list[PatternSnapshotItem],
     experiment_detection_quotes: Optional[list[QuoteObject]] = None,
@@ -413,7 +385,7 @@ def apply_quote_cleanup(
         return
 
     all_quotes = _collect_quotes_for_cleanup(
-        strengths, focus, micro_exp, snapshot_items, experiment_detection_quotes
+        micro_exp, snapshot_items, experiment_detection_quotes
     )
 
     # Deduplicate transcript quotes by (span_id, quote_text) to avoid sending
@@ -435,7 +407,7 @@ def apply_quote_cleanup(
 
     # Collect coaching blurbs (messages, notes, coaching_notes, rewrites)
     blurb_items = _collect_coaching_blurbs(
-        strengths, focus, micro_exp, snapshot_items, experiment_detection
+        strengths, focus, snapshot_items, experiment_detection
     )
     cleanup_input.extend(blurb_items)
 

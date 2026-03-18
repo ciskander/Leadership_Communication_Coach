@@ -25,10 +25,6 @@ export interface QuoteObject {
 export interface CoachingItem {
   pattern_id: string;
   message: string;
-  quotes: QuoteObject[];
-  suggested_rewrite?: string | null;
-  rewrite_for_span_id?: string | null;
-  additional_quotes?: QuoteObject[];
 }
 
 export interface MicroExperiment {

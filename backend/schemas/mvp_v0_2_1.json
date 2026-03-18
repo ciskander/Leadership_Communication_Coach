@@ -803,13 +803,12 @@
         }
       ]
     },
-    "CoachingItem": {
+    "HighlightItem": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "pattern_id",
-        "message",
-        "evidence_span_ids"
+        "message"
       ],
       "properties": {
         "pattern_id": {
@@ -819,23 +818,6 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 800
-        },
-        "evidence_span_ids": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "pattern": "^ES-[0-9]{3}$"
-          },
-          "uniqueItems": true
-        },
-        "suggested_rewrite": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 1000
-        },
-        "rewrite_for_span_id": {
-          "type": "string",
-          "pattern": "^ES-[0-9]{3}$"
         }
       }
     },
@@ -897,7 +879,7 @@
           "minItems": 0,
           "maxItems": 2,
           "items": {
-            "$ref": "#/$defs/CoachingItem"
+            "$ref": "#/$defs/HighlightItem"
           }
         },
         "focus": {
@@ -905,7 +887,7 @@
           "minItems": 1,
           "maxItems": 1,
           "items": {
-            "$ref": "#/$defs/CoachingItem"
+            "$ref": "#/$defs/HighlightItem"
           }
         },
         "micro_experiment": {

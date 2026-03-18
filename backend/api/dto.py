@@ -56,13 +56,10 @@ class QuoteObject(BaseModel):
     is_target_speaker: Optional[bool] = None
 
 
-class CoachingItemWithQuotes(BaseModel):
+class HighlightItem(BaseModel):
+    """Lightweight coaching highlight for strengths/focus — just pattern_id + message."""
     pattern_id: str
     message: str
-    quotes: list[QuoteObject] = Field(default_factory=list)
-    suggested_rewrite: Optional[str] = None
-    rewrite_for_span_id: Optional[str] = None
-    additional_quotes: list[QuoteObject] = Field(default_factory=list)
 
 
 class MicroExperimentWithQuotes(BaseModel):
@@ -110,8 +107,8 @@ class RunStatusResponse(BaseModel):
     target_speaker_label: Optional[str] = None
     error: Optional[dict] = None
     # Populated when status=complete and gate1_pass=True
-    strengths: list[CoachingItemWithQuotes] = Field(default_factory=list)
-    focus: Optional[CoachingItemWithQuotes] = None
+    strengths: list[HighlightItem] = Field(default_factory=list)
+    focus: Optional[HighlightItem] = None
     micro_experiment: Optional[MicroExperimentWithQuotes] = None
     pattern_snapshot: Optional[list[PatternSnapshotItem]] = None
     evaluation_summary: Optional[dict] = None

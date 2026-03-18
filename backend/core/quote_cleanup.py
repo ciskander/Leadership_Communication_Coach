@@ -455,8 +455,6 @@ def cleanup_parsed_json(parsed: dict, model: Optional[str] = None) -> None:
     for i, f in enumerate(coaching.get("focus", [])):
         if f.get("message"):
             cleanup_input.append({"id": f"foc:{i}:msg", "text": f["message"], "category": "coaching_blurb"})
-        if f.get("suggested_rewrite"):
-            cleanup_input.append({"id": f"foc:{i}:rw", "text": f["suggested_rewrite"], "category": "coaching_blurb"})
 
     snapshot = parsed.get("pattern_snapshot", [])
     for i, ps in enumerate(snapshot):
@@ -497,9 +495,6 @@ def cleanup_parsed_json(parsed: dict, model: Optional[str] = None) -> None:
         msg_key = f"foc:{i}:msg"
         if msg_key in result:
             f["message"] = result[msg_key]
-        rw_key = f"foc:{i}:rw"
-        if rw_key in result:
-            f["suggested_rewrite"] = result[rw_key]
 
     for i, ps in enumerate(snapshot):
         notes_key = f"snap:{i}:notes"

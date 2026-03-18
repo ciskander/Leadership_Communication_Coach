@@ -469,12 +469,8 @@ def process_single_meeting_analysis(
             exp_track["active_experiment"] = {"experiment_id": "EXP-000000", "status": "none"}
             exp_track["detection_in_this_meeting"] = None
             
-    # Coerce missing evidence_span_ids on focus/strengths/micro_experiment items
+    # Coerce missing evidence_span_ids on micro_experiment items
     coaching = _parsed_output.get("coaching_output", {})
-    for item in coaching.get("focus", []):
-        item.setdefault("evidence_span_ids", [])
-    for item in coaching.get("strengths", []):
-        item.setdefault("evidence_span_ids", [])
     for item in coaching.get("micro_experiment", []):
         item.setdefault("evidence_span_ids", [])
 

@@ -543,9 +543,10 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
             f"micro_experiment must have exactly 1 item, got {len(micro_experiment)}.",
         ))
 
-    # evidence_span_ids must be non-empty and valid for coaching items
-    # Exception: conversational_balance is holistic — evidence_span_ids should be empty
-    for key, items in [("strengths", strengths), ("focus", focus), ("micro_experiment", micro_experiment)]:
+    # evidence_span_ids must be non-empty and valid for micro_experiment.
+    # Strengths and focus are now HighlightItems ({pattern_id, message} only).
+    # Exception: conversational_balance is holistic — evidence_span_ids should be empty.
+    for key, items in [("micro_experiment", micro_experiment)]:
         for i, item in enumerate(items):
             es_ids = item.get("evidence_span_ids", [])
             is_conv_balance = item.get("pattern_id") == "conversational_balance"
@@ -562,25 +563,6 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
                         f"coaching_output.{key}[{i}].evidence_span_ids",
                         f"evidence_span_id {es_id} not found in evidence_spans.",
                     ))
-
-    # rewrite_for_span_id must reference one of the focus item's own evidence_span_ids
-    if focus:
-        f = focus[0]
-        rewrite_span = f.get("rewrite_for_span_id")
-        if f.get("suggested_rewrite") and not rewrite_span:
-            issues.append(_err(
-                "REWRITE_SPAN_MISSING",
-                "coaching_output.focus[0].rewrite_for_span_id",
-                "focus item with suggested_rewrite must include rewrite_for_span_id.",
-            ))
-        elif rewrite_span:
-            focus_es_ids = set(f.get("evidence_span_ids", []))
-            if rewrite_span not in focus_es_ids:
-                issues.append(_err(
-                    "REWRITE_SPAN_NOT_IN_FOCUS",
-                    "coaching_output.focus[0].rewrite_for_span_id",
-                    f"rewrite_for_span_id '{rewrite_span}' is not in focus evidence_span_ids.",
-                ))
 
     # ── 3f. Experiment tracking conditional rules ─────────────────────────────
     active_exp = experiment_tracking.get("active_experiment", {}) or {}
