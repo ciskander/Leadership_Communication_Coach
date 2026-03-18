@@ -991,11 +991,10 @@ async def client_summary(
                 futures.append(asyncio.to_thread(at_client.get_baseline_pack, bp_links[0]))
                 future_keys.append("baseline_pack")
 
-            # Recent runs — sort newest-first so the 10-record limit returns the
-            # most recent runs rather than the oldest.
+            # Recent runs — fetch all, sorted newest-first.
             runs_formula = f"{{Coachee ID}} = '{user.airtable_user_record_id}'"
             futures.append(asyncio.to_thread(
-                at_client.search_records, "runs", runs_formula, None, 10,
+                at_client.search_records, "runs", runs_formula,
                 sort=["-Created"],
             ))
             future_keys.append("runs")

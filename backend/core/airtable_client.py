@@ -266,10 +266,12 @@ class AirtableClient:
         table_name: str,
         formula: str,
         fields: Optional[list[str]] = None,
-        max_records: int = 10,
+        max_records: Optional[int] = None,
         sort: Optional[list[str]] = None,
     ) -> list[dict]:
-        kwargs: dict = {"formula": formula, "max_records": max_records}
+        kwargs: dict = {"formula": formula}
+        if max_records is not None:
+            kwargs["max_records"] = max_records
         if fields:
             kwargs["fields"] = fields
         if sort:
