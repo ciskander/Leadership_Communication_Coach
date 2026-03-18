@@ -115,10 +115,10 @@ export function ExperimentTracker({
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="bg-white rounded border border-cv-warm-200 overflow-hidden">
+    <div className="bg-white rounded border border-cv-warm-300 overflow-hidden">
 
       {/* Header */}
-      <div className="px-5 py-4 border-b border-cv-warm-100 flex items-start justify-between gap-4">
+      <div className="px-5 py-4 border-b border-cv-warm-300 flex items-start justify-between gap-4">
         <div className="space-y-0.5 min-w-0">
           <h3 className="font-semibold text-cv-stone-900 leading-snug font-serif">
             {experiment.title}
@@ -135,13 +135,13 @@ export function ExperimentTracker({
 
         {/* Instruction + Success marker */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="bg-cv-warm-50 border border-cv-warm-200 rounded p-3.5">
+          <div className="bg-cv-warm-50 border border-cv-warm-300 rounded p-3.5">
             <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1.5">
               {STRINGS.common.whatToDo}
             </p>
             <p className="text-sm text-cv-stone-700 leading-relaxed">{experiment.instruction}</p>
           </div>
-          <div className="bg-cv-warm-50 border border-cv-warm-200 rounded p-3.5">
+          <div className="bg-cv-warm-50 border border-cv-warm-300 rounded p-3.5">
             <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1.5">
               {STRINGS.common.successLooksLike}
             </p>

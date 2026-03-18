@@ -29,7 +29,7 @@ export const S = {
   // ── Cards & containers ──────────────────────────────────────────────────────
 
   /** Standard card with warm border */
-  card: 'bg-white rounded border border-cv-warm-200',
+  card: 'bg-white rounded border border-cv-warm-300',
 
   // ── Buttons ─────────────────────────────────────────────────────────────────
 

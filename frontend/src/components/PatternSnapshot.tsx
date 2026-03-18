@@ -307,7 +307,7 @@ function SectionLabel({ text }: { text: string }) {
 
 function SuggestedRewrite({ text }: { text: string }) {
   return (
-    <blockquote className="border-l-[3px] border-cv-teal-700 pl-4 pr-3 py-2.5 bg-cv-teal-50 rounded-r my-2">
+    <blockquote className="border-l-[2px] border-cv-teal-700 pl-4 pr-3 py-2.5 bg-cv-teal-50 rounded-r my-2">
       <p className="text-sm text-cv-stone-700 italic leading-relaxed">
         &ldquo;{text}&rdquo;
       </p>
@@ -574,7 +574,7 @@ export function PatternCard({
 
       {/* ── Expanded detail ── */}
       {expanded && (
-        <div className="border-t border-cv-warm-100 px-4 pb-4 pt-3 space-y-3">
+        <div className="border-t border-cv-warm-300 px-4 pb-4 pt-3 space-y-3">
 
           {/* Perfect score */}
           {isPerfectScore && (hasQuotes || hasNotes) && (
