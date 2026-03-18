@@ -826,31 +826,6 @@ async def get_experiment_options(
         for i, (origin, exp) in enumerate(tagged[:3])
     ]
 
-    # If fewer than 3 options and no active experiment, generate more synchronously.
-    # This covers existing users who only got 1 experiment from their baseline pack.
-    if len(ranked) < 3 and not at_client.get_active_experiment_for_user(user.airtable_user_record_id):
-        try:
-            from ..core.workers import process_next_experiment_suggestion
-            process_next_experiment_suggestion(user.airtable_user_record_id, client=at_client)
-            logger.info("get_experiment_options: backfill generation completed for user %s",
-                        user.airtable_user_record_id)
-
-            # Re-query to include the newly created experiments
-            proposed_records = at_client.get_proposed_experiments_for_user(
-                user.airtable_user_record_id, max_records=3
-            )
-            proposed = [_build_experiment_response(r) for r in proposed_records]
-
-            tagged = [("proposed", exp) for exp in proposed] + [("parked", exp) for exp in parked]
-            tagged.sort(key=_sort_key)
-            ranked = [
-                RankedExperimentItem(experiment=exp, origin=origin, rank=i + 1)
-                for i, (origin, exp) in enumerate(tagged[:3])
-            ]
-        except Exception:
-            logger.warning("get_experiment_options: backfill failed for user %s",
-                           user.airtable_user_record_id, exc_info=True)
-
     return ExperimentOptionsResponse(
         proposed=proposed,
         parked=parked,

@@ -1390,7 +1390,7 @@ def process_next_experiment_suggestion(
     # 8. Validate and create experiment records
     required_keys = {"experiment_id", "title", "instruction", "success_marker", "pattern_id"}
     first_record_id: Optional[str] = None
-    seen_patterns: set[str] = set()
+    seen_patterns: set[str] = set(exclude_pattern_ids)
 
     for micro in parsed_response[:num_to_generate]:
         missing = required_keys - micro.keys()
