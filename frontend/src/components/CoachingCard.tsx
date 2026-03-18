@@ -73,7 +73,7 @@ export function CoachingCard({
           </div>
 
           {/* Body */}
-          <div className="divide-y divide-cv-warm-100">
+          <div className="divide-y divide-cv-warm-300">
             {strengths.map((s) => {
               const card = findPatternCard(s.pattern_id);
               return (
