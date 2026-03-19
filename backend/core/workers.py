@@ -1436,102 +1436,146 @@ def process_next_experiment_suggestion(
     except Exception:
         pass
 
-    # 6. Call OpenAI
-    try:
-        openai_resp = call_llm(
-            system_prompt=experiment_system_prompt,
-            developer_message="",
-            user_message=user_message,
-            model=model_name,
-            max_tokens=600 * llm_request_count,
-        )
-    except Exception as exc:
-        logger.error("process_next_experiment_suggestion: OpenAI call failed: %s", exc)
-        return None
-
-    # 7. Parse response — strip accidental markdown fences
-    raw = openai_resp.raw_text.strip()
-    logger.info(
-        "process_next_experiment_suggestion: raw LLM response (first 1500 chars): %.1500s",
-        raw,
-    )
-    if raw.startswith("```"):
-        parts = raw.split("```")
-        raw = parts[1] if len(parts) > 1 else raw
-        if raw.startswith("json"):
-            raw = raw[4:]
-        raw = raw.strip()
-
-    try:
-        parsed_response = json.loads(raw)
-    except Exception as exc:
-        logger.error(
-            "process_next_experiment_suggestion: JSON parse failed: %s | raw: %.500s",
-            exc, raw,
-        )
-        return None
-
-    # Normalise: if a single object was returned, wrap in a list
-    if isinstance(parsed_response, dict):
-        parsed_response = [parsed_response]
-
-    if not isinstance(parsed_response, list):
-        logger.error("process_next_experiment_suggestion: unexpected response type: %s", type(parsed_response))
-        return None
-
-    logger.info(
-        "process_next_experiment_suggestion: LLM returned %d experiments (requested %d, need %d) for user %s | exclude_patterns=%s",
-        len(parsed_response), llm_request_count, num_to_generate, user_record_id,
-        sorted(exclude_pattern_ids),
-    )
-
-    # 8. Validate and create experiment records (cap at num_to_generate valid proposals)
+    # 6-8. Call LLM, parse, and create experiments — retry if we get fewer than needed
     required_keys = {"experiment_id", "title", "instruction", "success_marker", "pattern_id"}
     first_record_id: Optional[str] = None
     created_count = 0
     seen_patterns: set[str] = set(exclude_pattern_ids)
+    max_attempts = 2  # initial call + 1 retry
 
-    for micro in parsed_response:
-        if created_count >= num_to_generate:
+    for attempt in range(max_attempts):
+        remaining = num_to_generate - created_count
+        if remaining <= 0:
             break
-        missing = required_keys - micro.keys()
-        if missing:
-            logger.warning("process_next_experiment_suggestion: skipping proposal with missing fields %s", missing)
-            continue
-        if micro.get("pattern_id") not in _VALID_PATTERNS:
-            logger.warning(
-                "process_next_experiment_suggestion: skipping invalid pattern_id '%s'",
-                micro.get("pattern_id"),
+
+        # On retry, request only the shortfall and exclude already-created patterns
+        if attempt > 0:
+            retry_request_count = min(remaining + 1, len(_VALID_PATTERNS) - len(seen_patterns))
+            retry_request_count = max(retry_request_count, remaining)
+            if retry_request_count <= 0:
+                break
+            extra_exclude = "\nDo NOT propose experiments for these pattern_ids (already created):\n" + \
+                "\n".join(f"  - {pid}" for pid in sorted(seen_patterns))
+            retry_exp_word = "micro-experiment" if retry_request_count == 1 else "micro-experiments"
+            current_user_message = (
+                f"Propose exactly {retry_request_count} {retry_exp_word} for this coachee.\n\n"
+                f"Pattern scores (ratio 0-1, lower = more room to grow, based on recent meetings):\n"
+                f"{pattern_lines}\n"
+                f"{coaching_notes_section}"
+                f"{extra_exclude}"
+                f"{avoid_titles_note}\n\n"
+                f"Pick {retry_request_count} patterns with the highest developmental impact that are not excluded above. "
+                f"You may target ANY of the 10 patterns listed in the taxonomy, including those with no score data yet. "
+                f"Each experiment MUST target a DIFFERENT pattern_id.\n"
+                f"Propose specific, actionable micro-experiments targeting them, "
+                f"grounded in the coaching notes above where available.\n\n"
+                f"IMPORTANT: Your JSON array MUST contain exactly {retry_request_count} experiment objects — no fewer."
             )
-            continue
-        # Enforce distinct patterns
-        if micro["pattern_id"] in seen_patterns:
-            logger.warning("process_next_experiment_suggestion: skipping duplicate pattern_id '%s'", micro["pattern_id"])
-            continue
-        seen_patterns.add(micro["pattern_id"])
+            current_max_tokens = 600 * retry_request_count
+            logger.info(
+                "process_next_experiment_suggestion: retry attempt %d — requesting %d more experiments for user %s",
+                attempt, retry_request_count, user_record_id,
+            )
+        else:
+            current_user_message = user_message
+            current_max_tokens = 600 * llm_request_count
 
-        # 9. Create proposed experiment record
-        exp_fields: dict = {
-            F_EXP_TITLE: micro["title"][:140],
-            F_EXP_INSTRUCTIONS: micro["instruction"][:600],
-            F_EXP_SUCCESS_CRITERIA: micro["success_marker"][:300],
-            F_EXP_SUCCESS_MARKER: micro["success_marker"][:300],
-            F_EXP_PATTERN_ID: micro["pattern_id"],
-            F_EXP_STATUS: "proposed",
-            F_EXP_USER: [user_record_id],
-        }
+        # 6. Call LLM
+        try:
+            openai_resp = call_llm(
+                system_prompt=experiment_system_prompt,
+                developer_message="",
+                user_message=current_user_message,
+                model=model_name,
+                max_tokens=current_max_tokens,
+            )
+        except Exception as exc:
+            logger.error("process_next_experiment_suggestion: OpenAI call failed (attempt %d): %s", attempt, exc)
+            if attempt == 0:
+                return None
+            break
 
-        exp_record = client.create_experiment(exp_fields)
-        exp_record_id = exp_record["id"]
-        created_count += 1
+        # 7. Parse response — strip accidental markdown fences
+        raw = openai_resp.raw_text.strip()
+        logger.info(
+            "process_next_experiment_suggestion: raw LLM response attempt %d (first 1500 chars): %.1500s",
+            attempt, raw,
+        )
+        if raw.startswith("```"):
+            parts = raw.split("```")
+            raw = parts[1] if len(parts) > 1 else raw
+            if raw.startswith("json"):
+                raw = raw[4:]
+            raw = raw.strip()
 
-        if first_record_id is None:
-            first_record_id = exp_record_id
+        try:
+            parsed_response = json.loads(raw)
+        except Exception as exc:
+            logger.error(
+                "process_next_experiment_suggestion: JSON parse failed (attempt %d): %s | raw: %.500s",
+                attempt, exc, raw,
+            )
+            if attempt == 0:
+                return None
+            break
+
+        # Normalise: if a single object was returned, wrap in a list
+        if isinstance(parsed_response, dict):
+            parsed_response = [parsed_response]
+
+        if not isinstance(parsed_response, list):
+            logger.error("process_next_experiment_suggestion: unexpected response type: %s", type(parsed_response))
+            if attempt == 0:
+                return None
+            break
 
         logger.info(
-            "process_next_experiment_suggestion: proposed experiment %s for user %s (pattern: %s)",
-            exp_record_id, user_record_id, micro["pattern_id"],
+            "process_next_experiment_suggestion: LLM returned %d experiments (attempt %d) for user %s",
+            len(parsed_response), attempt, user_record_id,
         )
+
+        # 8. Validate and create experiment records
+        for micro in parsed_response:
+            if created_count >= num_to_generate:
+                break
+            missing = required_keys - micro.keys()
+            if missing:
+                logger.warning("process_next_experiment_suggestion: skipping proposal with missing fields %s", missing)
+                continue
+            if micro.get("pattern_id") not in _VALID_PATTERNS:
+                logger.warning(
+                    "process_next_experiment_suggestion: skipping invalid pattern_id '%s'",
+                    micro.get("pattern_id"),
+                )
+                continue
+            # Enforce distinct patterns
+            if micro["pattern_id"] in seen_patterns:
+                logger.warning("process_next_experiment_suggestion: skipping duplicate pattern_id '%s'", micro["pattern_id"])
+                continue
+            seen_patterns.add(micro["pattern_id"])
+
+            # 9. Create proposed experiment record
+            exp_fields: dict = {
+                F_EXP_TITLE: micro["title"][:140],
+                F_EXP_INSTRUCTIONS: micro["instruction"][:600],
+                F_EXP_SUCCESS_CRITERIA: micro["success_marker"][:300],
+                F_EXP_SUCCESS_MARKER: micro["success_marker"][:300],
+                F_EXP_PATTERN_ID: micro["pattern_id"],
+                F_EXP_STATUS: "proposed",
+                F_EXP_USER: [user_record_id],
+            }
+
+            exp_record = client.create_experiment(exp_fields)
+            exp_record_id = exp_record["id"]
+            created_count += 1
+
+            if first_record_id is None:
+                first_record_id = exp_record_id
+
+            logger.info(
+                "process_next_experiment_suggestion: proposed experiment %s for user %s (pattern: %s)",
+                exp_record_id, user_record_id, micro["pattern_id"],
+            )
 
     if created_count < num_to_generate:
         logger.warning(

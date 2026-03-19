@@ -87,7 +87,9 @@ Experiment focus: Help the coachee calibrate their speaking share — either cre
 OUTPUT FORMAT
 ═══════════════════════════════════════════════════════════════
 
-Return ONLY a valid JSON array of experiment objects. No prose, markdown, code fences, or comments.
+You MUST return a valid JSON array containing the exact number of experiment objects requested.
+The response must start with [ and end with ]. No prose, markdown, code fences, or comments.
+Do NOT return a single JSON object — always return an array, even if only one experiment is requested.
 
 Each object must have exactly these fields:
 - experiment_id: must match ^EXP-[0-9]{6}$ (use 6 random digits, each experiment gets a unique ID)
