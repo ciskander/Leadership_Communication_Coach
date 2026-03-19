@@ -1344,9 +1344,16 @@ def process_next_experiment_suggestion(
     sorted_patterns = sorted(avg_scores.items(), key=lambda x: x[1])
 
     # 4. Build user message with pattern scores, coaching notes, and exclusions
-    pattern_lines = "\n".join(
-        f"  {pid}: {score:.2f}" for pid, score in sorted_patterns
-    ) or "  (no evaluable patterns available)"
+    # Show ALL 10 patterns so the LLM knows it can propose experiments for any of them.
+    # Patterns without scores are still valid targets.
+    pattern_lines_parts: list[str] = []
+    scored_pids = set(avg_scores.keys())
+    for pid, score in sorted_patterns:
+        pattern_lines_parts.append(f"  {pid}: {score:.2f}")
+    for pid in _VALID_PATTERNS:
+        if pid not in scored_pids and pid != "conversational_balance":
+            pattern_lines_parts.append(f"  {pid}: (no data yet — still a valid experiment target)")
+    pattern_lines = "\n".join(pattern_lines_parts) or "  (no evaluable patterns available)"
 
     # Build coaching notes section — include up to 2 most recent notes per pattern
     coaching_notes_lines: list[str] = []
@@ -1403,11 +1410,12 @@ def process_next_experiment_suggestion(
         f"{coaching_notes_section}"
         f"{avoid_patterns_note}"
         f"{avoid_titles_note}\n\n"
-        f"Pick the {llm_request_count} patterns with the highest developmental impact that are not excluded above. "
+        f"Pick {llm_request_count} patterns with the highest developmental impact that are not excluded above. "
+        f"You may target ANY of the 10 patterns listed in the taxonomy, including those with no score data yet. "
         f"Each experiment MUST target a DIFFERENT pattern_id.\n"
         f"Propose specific, actionable micro-experiments targeting them, "
         f"grounded in the coaching notes above where available.\n\n"
-        f"IMPORTANT: Your response MUST contain exactly {llm_request_count} experiment objects in the JSON array."
+        f"IMPORTANT: Your JSON array MUST contain exactly {llm_request_count} experiment objects — no fewer."
     )
 
     # 5. Load system prompt from file and model name from active config
