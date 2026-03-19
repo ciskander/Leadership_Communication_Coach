@@ -558,14 +558,6 @@ def process_single_meeting_analysis(
         if rewrite_span and rewrite_span in success_ids:
             success_ids.remove(rewrite_span)
 
-    # Strip dangling evidence_span_ids from micro_experiment items.
-    # The LLM sometimes references span IDs it didn't include in evidence_spans.
-    _valid_es_ids = {s.get("evidence_span_id") for s in _parsed_output.get("evidence_spans", [])}
-    for me in (_parsed_output.get("coaching_output") or {}).get("micro_experiment", []):
-        es_ids = me.get("evidence_span_ids")
-        if es_ids:
-            me["evidence_span_ids"] = [eid for eid in es_ids if eid in _valid_es_ids]
-
     _parsed_output = _patch_parsed_output(_parsed_output)
 
     # 6d. Clean up ASR artifacts in evidence_span excerpts and coaching blurbs.
