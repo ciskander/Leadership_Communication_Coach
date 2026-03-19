@@ -295,8 +295,8 @@ Hard reminders (baseline_pack):
 - conversational_balance requires balance_assessment and no numeric fields.
 - focus length=1, micro_experiment length=1. Focus and strengths items only need {pattern_id, message}.
 - detection_in_this_meeting MUST be null for baseline_pack.
-- rewrite_for_span_id must reference a span that exists in your output and is NOT in success_evidence_span_ids.
 - CRITICAL: Every notes and coaching_note field must reference specific behaviour from the cited evidence spans. Do not write generic observations.
+- In notes and coaching_note fields, describe behaviour in plain language. Do NOT reference evidence_span_ids (e.g. "ES-005") or meeting_ids (e.g. "M-000153") in the text — these are internal identifiers that are not meaningful to the coachee.
 - Do NOT include opportunity_events, opportunity_events_considered, or opportunity_events_counted for baseline_pack.
 - Do NOT generate new evidence_span_ids. Only use IDs from the input meeting summaries."""
 

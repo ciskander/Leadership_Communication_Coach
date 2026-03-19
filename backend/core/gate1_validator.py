@@ -550,7 +550,7 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
         for i, item in enumerate(items):
             es_ids = item.get("evidence_span_ids", [])
             is_conv_balance = item.get("pattern_id") == "conversational_balance"
-            if not es_ids and not is_conv_balance:
+            if not es_ids and not is_conv_balance and analysis_type != "baseline_pack":
                 issues.append(_err(
                     "COACHING_EMPTY_ES_IDS",
                     f"coaching_output.{key}[{i}].evidence_span_ids",

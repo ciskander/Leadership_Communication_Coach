@@ -875,26 +875,21 @@ def process_baseline_pack_build(
     if not isinstance(_exp_track.get("detection_in_this_meeting"), dict):
         _exp_track["detection_in_this_meeting"] = None
 
-    # Ensure rewrite_for_span_id is in evidence_span_ids for every pattern,
-    # and that it is NOT in success_evidence_span_ids (it is always a failure).
+    # ── Strip evidence-span arrays from baseline-pack aggregate ─────────
+    # The LLM uses spans as *input* (in meeting_summaries) to write grounded
+    # prose, but the *output* span ID arrays have namespace collisions
+    # (ES-001 from meeting A vs meeting B) and are never resolved to quotes
+    # at the aggregate level (the API already returns quotes: []).
+    # Strip them so Gate1 doesn't choke on duplicates or dangling refs.
     for ps in _parsed_output.get("pattern_snapshot", []):
-        rewrite_span = ps.get("rewrite_for_span_id")
-        es_ids = ps.get("evidence_span_ids", [])
-        if rewrite_span and rewrite_span not in es_ids:
-            es_ids.append(rewrite_span)
-        success_ids = ps.get("success_evidence_span_ids", [])
-        if rewrite_span and rewrite_span in success_ids:
-            success_ids.remove(rewrite_span)
+        ps["evidence_span_ids"] = []
+        ps["success_evidence_span_ids"] = []
+        ps["rewrite_for_span_id"] = None
 
-    # Deduplicate span ID arrays.  Baseline packs aggregate evidence from
-    # multiple meetings whose spans share the same ID namespace (ES-001, etc.),
-    # so duplicates are expected.  These arrays are never resolved to quotes at
-    # the aggregate level — quotes are resolved per sub-run — so dedup is safe.
-    for ps in _parsed_output.get("pattern_snapshot", []):
-        for _field in ("evidence_span_ids", "success_evidence_span_ids"):
-            ids = ps.get(_field)
-            if ids and len(ids) != len(set(ids)):
-                ps[_field] = list(dict.fromkeys(ids))
+    for me in (_parsed_output.get("coaching_output") or {}).get("micro_experiment", []):
+        me["evidence_span_ids"] = []
+
+    _parsed_output["evidence_spans"] = []
 
     # ── Rebuild evidence_spans from sub-run source data ────────────────────
     # The LLM is instructed to "pass through" evidence spans from the input,

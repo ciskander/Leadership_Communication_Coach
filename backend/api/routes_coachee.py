@@ -264,9 +264,9 @@ async def get_baseline_pack(
                     "notes": ps.get("notes"),
                     "quotes": [],
                     "coaching_note": ps.get("coaching_note"),
-                    "suggested_rewrite": ps.get("suggested_rewrite"),
-                    "rewrite_for_span_id": ps.get("rewrite_for_span_id"),
-                    "success_span_ids": ps.get("success_evidence_span_ids", []),
+                    "suggested_rewrite": None,
+                    "rewrite_for_span_id": None,
+                    "success_span_ids": [],
                 }
                 for ps in raw_snapshot
             ]
