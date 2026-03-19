@@ -206,8 +206,11 @@ export const api = {
       method: 'POST',
     });
   },
-  getExperimentOptions(): Promise<ExperimentOptions> {
-    return request('/api/client/experiments/options');
+  getExperimentOptions(justParkedExperimentId?: string): Promise<ExperimentOptions> {
+    const params = justParkedExperimentId
+      ? `?just_parked_experiment_id=${encodeURIComponent(justParkedExperimentId)}`
+      : '';
+    return request(`/api/client/experiments/options${params}`);
   },
 
   // Human confirmation of experiment attempt

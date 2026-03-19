@@ -98,7 +98,7 @@ Each object must have exactly these fields:
 
 Rules:
 - Each experiment MUST target a DIFFERENT pattern_id.
-- Order experiments by pattern weakness (weakest pattern first).
+- Order experiments by maximum developmental impact for this coachee — highest impact first. Pattern weakness (low scores) is an important signal, but exercise coaching discretion: consider the coaching notes, the coachee's trajectory, and which behavioural change would create the most leverage right now. A moderately weak pattern with clear, coachable failure modes may be higher impact than the weakest pattern if the coaching notes suggest the coachee is already making partial progress there.
 - Never include literal double quotes inside string values — use single quotes if quoting is needed.
 - Instructions should reference specific behaviours from the coaching notes when available, not generic advice.
 - Write in 2nd person, addressing the coachee directly.

@@ -24,7 +24,7 @@ interface ExperimentTrackerProps {
   events: Event[];
   onUpdate?: () => void;
   onComplete?: () => void;
-  onPark?: () => void;
+  onPark?: (experimentRecordId?: string) => void;
   /** @deprecated Use onPark instead */
   onAbandon?: () => void;
 }
@@ -96,7 +96,7 @@ export function ExperimentTracker({
     setActionState('loading');
     try {
       await api.parkExperiment(experiment.experiment_record_id);
-      (onPark ?? onAbandon) ? (onPark ?? onAbandon)!() : onUpdate?.();
+      onPark ? onPark(experiment.experiment_record_id) : onAbandon ? onAbandon() : onUpdate?.();
     } catch {
       setActionState('idle');
     }

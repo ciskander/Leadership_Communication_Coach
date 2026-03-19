@@ -1200,10 +1200,16 @@ MAX_PARKED = 3
 def process_next_experiment_suggestion(
     user_record_id: str,
     client: Optional[AirtableClient] = None,
+    just_parked_experiment_id: Optional[str] = None,
 ) -> Optional[str]:
     """
     Generate and propose up to 3 micro-experiments for a user after they
     complete or park their current experiment.
+
+    Args:
+        just_parked_experiment_id: If provided, the experiment that was just
+            parked. Stored on proposed records so the options endpoint can
+            demote it from the top-pick slot.
 
     - If user has 3 parked experiments (cap), skip generation entirely.
     - Otherwise, generate enough proposals so that
@@ -1385,14 +1391,18 @@ def process_next_experiment_suggestion(
         if past_titles else ""
     )
 
+    # Request extra experiments as buffer in case some fail validation
+    llm_request_count = min(num_to_generate + 2, len(_VALID_PATTERNS) - len(exclude_pattern_ids))
+    llm_request_count = max(llm_request_count, num_to_generate)
+
     user_message = (
-        f"Propose {num_to_generate} micro-experiment(s) for this coachee.\n\n"
+        f"Propose {llm_request_count} micro-experiment(s) for this coachee.\n\n"
         f"Pattern scores (ratio 0-1, lower = more room to grow, based on recent meetings):\n"
         f"{pattern_lines}\n"
         f"{coaching_notes_section}"
         f"{avoid_patterns_note}"
         f"{avoid_titles_note}\n\n"
-        f"Pick the {num_to_generate} weakest patterns that are not excluded above. "
+        f"Pick the {llm_request_count} patterns with the highest developmental impact that are not excluded above. "
         f"Each experiment MUST target a DIFFERENT pattern_id.\n"
         f"Propose specific, actionable micro-experiments targeting them, "
         f"grounded in the coaching notes above where available."
@@ -1416,7 +1426,7 @@ def process_next_experiment_suggestion(
             developer_message="",
             user_message=user_message,
             model=model_name,
-            max_tokens=600 * num_to_generate,
+            max_tokens=600 * llm_request_count,
         )
     except Exception as exc:
         logger.error("process_next_experiment_suggestion: OpenAI call failed: %s", exc)
@@ -1448,12 +1458,15 @@ def process_next_experiment_suggestion(
         logger.error("process_next_experiment_suggestion: unexpected response type: %s", type(parsed_response))
         return None
 
-    # 8. Validate and create experiment records
+    # 8. Validate and create experiment records (cap at num_to_generate valid proposals)
     required_keys = {"experiment_id", "title", "instruction", "success_marker", "pattern_id"}
     first_record_id: Optional[str] = None
+    created_count = 0
     seen_patterns: set[str] = set(exclude_pattern_ids)
 
-    for micro in parsed_response[:num_to_generate]:
+    for micro in parsed_response:
+        if created_count >= num_to_generate:
+            break
         missing = required_keys - micro.keys()
         if missing:
             logger.warning("process_next_experiment_suggestion: skipping proposal with missing fields %s", missing)
@@ -1483,6 +1496,7 @@ def process_next_experiment_suggestion(
 
         exp_record = client.create_experiment(exp_fields)
         exp_record_id = exp_record["id"]
+        created_count += 1
 
         if first_record_id is None:
             first_record_id = exp_record_id
@@ -1490,6 +1504,12 @@ def process_next_experiment_suggestion(
         logger.info(
             "process_next_experiment_suggestion: proposed experiment %s for user %s (pattern: %s)",
             exp_record_id, user_record_id, micro["pattern_id"],
+        )
+
+    if created_count < num_to_generate:
+        logger.warning(
+            "process_next_experiment_suggestion: only created %d of %d requested experiments for user %s",
+            created_count, num_to_generate, user_record_id,
         )
 
     return first_record_id

@@ -249,25 +249,30 @@ function ExperimentPageInner() {
   const [options, setOptions]             = useState<ExperimentOptions | null>(null);
   const [seedLoading, setSeedLoading]     = useState(true);
   const [lastAction, setLastAction]       = useState<'completed' | 'parked' | null>(null);
+  const [justParkedId, setJustParkedId]   = useState<string | null>(null);
   const searchParams                      = useSearchParams();
   const [showMore, setShowMore]           = useState(searchParams.get('expand') === '1');
   const [backfillRetries, setBackfillRetries] = useState(0);
   const MAX_BACKFILL_RETRIES = 8;
 
-  function fetchOptions() {
-    api.getExperimentOptions()
+  function fetchOptions(parkedId?: string) {
+    const id = parkedId ?? justParkedId ?? undefined;
+    api.getExperimentOptions(id)
       .then(setOptions)
       .catch(() => setOptions(null))
       .finally(() => setSeedLoading(false));
   }
 
   useEffect(() => {
-    fetchOptions();
-
     // When arriving from RunStatusPoller after completing/parking an experiment,
     // the ?action= param signals that we should immediately start polling for
     // the next proposed experiment (the Celery task is already in-flight).
     const inboundAction = searchParams.get('action');
+    const inboundParkedId = searchParams.get('parked_id');
+    if (inboundParkedId) setJustParkedId(inboundParkedId);
+
+    fetchOptions(inboundParkedId ?? undefined);
+
     if (inboundAction === 'completed' || inboundAction === 'parked') {
       setLastAction(inboundAction);
       setBackfillRetries(0);
@@ -325,16 +330,17 @@ function ExperimentPageInner() {
     setLastAction('completed'); setShowMore(false); setBackfillRetries(0);
     resetPoller(); refetch(false); startPolling(); fetchOptions();
   }
-  function handlePark() {
+  function handlePark(parkedExperimentId?: string) {
     setLastAction('parked'); setShowMore(false); setBackfillRetries(0);
-    resetPoller(); refetch(false); startPolling(); fetchOptions();
+    if (parkedExperimentId) setJustParkedId(parkedExperimentId);
+    resetPoller(); refetch(false); startPolling(); fetchOptions(parkedExperimentId);
   }
   function handleAccepted() {
-    setLastAction(null); setShowMore(false); setBackfillRetries(0);
+    setLastAction(null); setJustParkedId(null); setShowMore(false); setBackfillRetries(0);
     resetPoller(); refetch(); fetchOptions();
   }
   function handleResumed() {
-    setLastAction(null); setShowMore(false); resetPoller(); refetch(); fetchOptions();
+    setLastAction(null); setJustParkedId(null); setShowMore(false); resetPoller(); refetch(); fetchOptions();
   }
   function handleDiscarded() { fetchOptions(); }
 

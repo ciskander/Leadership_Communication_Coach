@@ -301,7 +301,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
             experiment={activeExpData.experiment}
             events={activeExpData.recent_events}
             onComplete={() => router.push('/client/experiment?action=completed')}
-            onPark={() => router.push('/client/experiment?action=parked')}
+            onPark={(expId) => router.push(`/client/experiment?action=parked${expId ? `&parked_id=${expId}` : ''}`)}
           />
         ) : (
           // Fallback while data is loading or if fetch failed

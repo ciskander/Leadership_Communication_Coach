@@ -571,7 +571,16 @@ async def complete_experiment(
     at_client.complete_experiment(experiment_record_id, user.airtable_user_record_id)
     logger.info("User %s completed experiment %s", user.airtable_user_record_id, experiment_record_id)
 
-    # Fire-and-forget: generate next experiment suggestion in the background
+    # Clean up stale proposed experiments — context has changed, fresh proposals needed
+    try:
+        stale_proposed = at_client.get_proposed_experiments_for_user(user.airtable_user_record_id)
+        for p in stale_proposed:
+            at_client.delete_experiment(p["id"])
+            logger.info("Cleaned up stale proposed experiment %s after complete", p["id"])
+    except Exception as e:
+        logger.warning("Could not clean up proposed experiments after complete: %s", e)
+
+    # Fire-and-forget: generate next experiment suggestions in the background
     if user.airtable_user_record_id:
         try:
             enqueue_next_experiment_suggestion.delay(user.airtable_user_record_id)
@@ -625,10 +634,23 @@ async def park_experiment(
     at_client.park_experiment(experiment_record_id, user.airtable_user_record_id)
     logger.info("User %s parked experiment %s", user.airtable_user_record_id, experiment_record_id)
 
+    # Clean up stale proposed experiments — context has changed, fresh proposals needed
+    try:
+        stale_proposed = at_client.get_proposed_experiments_for_user(user.airtable_user_record_id)
+        for p in stale_proposed:
+            at_client.delete_experiment(p["id"])
+            logger.info("Cleaned up stale proposed experiment %s after park", p["id"])
+    except Exception as e:
+        logger.warning("Could not clean up proposed experiments after park: %s", e)
+
     # Fire-and-forget: generate next experiment suggestions in the background
+    # Pass the just-parked experiment ID so it can be demoted from top pick
     if user.airtable_user_record_id:
         try:
-            enqueue_next_experiment_suggestion.delay(user.airtable_user_record_id)
+            enqueue_next_experiment_suggestion.delay(
+                user.airtable_user_record_id,
+                just_parked_experiment_id=experiment_record_id,
+            )
             logger.info("Enqueued next experiment suggestion for user %s", user.airtable_user_record_id)
         except Exception as e:
             logger.error("Failed to enqueue next experiment suggestion for user %s: %s", user.airtable_user_record_id, e)
@@ -748,13 +770,16 @@ async def discard_experiment(
 )
 async def get_experiment_options(
     user: UserAuth = Depends(get_current_user),
+    just_parked_experiment_id: Optional[str] = None,
 ):
     """Return all proposed and parked experiments for the selection screen.
 
     Also returns a ``ranked`` list that merges proposed + parked into a
-    single ordered list (up to 3 items), sorted by pattern weakness score
-    (lowest average ratio first) so the frontend can show one unified set
-    of options.
+    single ordered list (up to 3 items), sorted by developmental impact
+    so the frontend can show one unified set of options.
+
+    If ``just_parked_experiment_id`` is provided, that experiment is demoted
+    from the top-pick slot (it can appear 2nd or 3rd, but not 1st).
     """
     if not user.airtable_user_record_id:
         return ExperimentOptionsResponse()
@@ -803,23 +828,32 @@ async def get_experiment_options(
     except Exception:
         logger.warning("get_experiment_options: could not compute pattern scores for ranking")
 
-    # Merge proposed + parked, tag with origin, sort by pattern weakness
-    tagged: list[tuple[str, ExperimentResponse]] = []
-    for exp in proposed:
-        tagged.append(("proposed", exp))
+    # Merge proposed + parked, tag with origin, sort by developmental impact.
+    # Proposed experiments are returned by the LLM in priority order (highest
+    # developmental impact first), so we use their list index as a primary key.
+    # Parked experiments are ranked by pattern weakness score.
+    tagged: list[tuple[str, ExperimentResponse, float]] = []
+    for i, exp in enumerate(proposed):
+        # Use index as sort key to preserve LLM priority ordering
+        tagged.append(("proposed", exp, float(i)))
     for exp in parked:
-        tagged.append(("parked", exp))
+        # Use pattern weakness score; unknown patterns get 0 (highest priority)
+        tagged.append(("parked", exp, pattern_avg.get(exp.pattern_id, 0.0)))
 
-    def _sort_key(item: tuple[str, ExperimentResponse]) -> float:
-        # Lower score = weaker pattern = higher priority.
-        # Patterns not in the map get score 0 (highest priority / unknown).
-        return pattern_avg.get(item[1].pattern_id, 0.0)
+    tagged.sort(key=lambda item: item[2])
 
-    tagged.sort(key=_sort_key)
+    # Demote just-parked experiment from top-pick slot: if it landed at
+    # position 0 and there are other options, swap it to position 1.
+    if (
+        just_parked_experiment_id
+        and len(tagged) > 1
+        and tagged[0][1].experiment_record_id == just_parked_experiment_id
+    ):
+        tagged[0], tagged[1] = tagged[1], tagged[0]
 
     ranked = [
         RankedExperimentItem(experiment=exp, origin=origin, rank=i + 1)
-        for i, (origin, exp) in enumerate(tagged[:3])
+        for i, (origin, exp, _score) in enumerate(tagged[:3])
     ]
 
     return ExperimentOptionsResponse(

@@ -151,10 +151,16 @@ def enqueue_baseline_pack_build(self, baseline_pack_id: str) -> str:
     default_retry_delay=10,
     queue="single_meeting",
 )
-def enqueue_next_experiment_suggestion(self, user_record_id: str) -> Optional[str]:
+def enqueue_next_experiment_suggestion(self, user_record_id: str, just_parked_experiment_id: Optional[str] = None) -> Optional[str]:
     """
     Generate and propose next micro-experiments for a user after they
     complete or park their current experiment.
+
+    Args:
+        user_record_id: The user to generate experiments for.
+        just_parked_experiment_id: If the trigger was a park action, the
+            experiment that was just parked. Used to demote it from the
+            top-pick slot in the options ranking.
 
     Returns:
         First Airtable experiment record ID, or None if skipped (e.g. user
@@ -163,7 +169,10 @@ def enqueue_next_experiment_suggestion(self, user_record_id: str) -> Optional[st
     from ..core.workers import process_next_experiment_suggestion
 
     try:
-        exp_record_id = process_next_experiment_suggestion(user_record_id)
+        exp_record_id = process_next_experiment_suggestion(
+            user_record_id,
+            just_parked_experiment_id=just_parked_experiment_id,
+        )
         return exp_record_id
     except Exception as exc:
         logger.exception(
