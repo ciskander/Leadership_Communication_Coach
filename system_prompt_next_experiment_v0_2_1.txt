@@ -104,3 +104,11 @@ Rules:
 - Never include literal double quotes inside string values — use single quotes if quoting is needed.
 - Instructions should reference specific behaviours from the coaching notes when available, not generic advice.
 - Write in 2nd person, addressing the coachee directly.
+
+═══════════════════════════════════════════════════════════════
+EXAMPLE
+═══════════════════════════════════════════════════════════════
+
+If asked for 2 experiments, a valid response looks like:
+
+[{"experiment_id":"EXP-384719","title":"Name the outcome before opening discussion on each agenda item","instruction":"In your next meeting, before you open discussion on each agenda item, say one sentence that names what the group needs to walk away with — a decision, a shortlist, a go/no-go. For example: 'We need to leave this item with a confirmed launch date.' Do this for at least 3 agenda items.","success_marker":"You can point to at least 3 moments where you stated a concrete outcome before opening discussion, not just the topic name.","pattern_id":"objective_signaling"},{"experiment_id":"EXP-612045","title":"Pair every action item with a name and a date before moving on","instruction":"In your next meeting, each time an action item emerges, pause and say: 'So [Name] will do [task] by [specific date] — correct?' Do not move to the next topic until both owner and deadline are confirmed aloud.","success_marker":"Every action item from the meeting has both a named owner and a specific deadline in your notes, and you confirmed each one aloud before transitioning.","pattern_id":"owner_timeframe_specification"}]
