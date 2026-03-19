@@ -1343,6 +1343,13 @@ def process_next_experiment_suggestion(
     }
     sorted_patterns = sorted(avg_scores.items(), key=lambda x: x[1])
 
+    logger.info(
+        "process_next_experiment_suggestion: %d total runs fetched, %d eligible, "
+        "%d patterns with scores: %s",
+        len(run_records), len(eligible_runs), len(avg_scores),
+        {pid: f"{score:.2f}" for pid, score in sorted_patterns},
+    )
+
     # 4. Build user message with pattern scores, coaching notes, and exclusions
     # Show ALL 10 patterns so the LLM knows it can propose experiments for any of them.
     # Patterns without scores are still valid targets.
