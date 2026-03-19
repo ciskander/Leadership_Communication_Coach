@@ -201,8 +201,12 @@ async def coachee_summary(
                         f")"
                     )
                     prop_records = at_client.search_records("experiments", exp_formula, max_records=3)
-                    # Sort so baseline-pack-linked experiment (focus pattern) appears first
-                    prop_records.sort(key=lambda r: (0 if r.get("fields", {}).get("Baseline Pack") else 1))
+                    # Sort so baseline-pack-linked experiment (focus pattern) appears first,
+                    # then by creation time ascending (worker creates in priority order).
+                    prop_records.sort(key=lambda r: (
+                        0 if r.get("fields", {}).get("Baseline Pack") else 1,
+                        r.get("createdTime", ""),
+                    ))
                     for pe in prop_records:
                         pef = pe.get("fields", {})
                         proposed_experiments.append(ExperimentResponse(

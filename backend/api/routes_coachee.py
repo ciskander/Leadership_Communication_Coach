@@ -478,8 +478,12 @@ async def get_proposed_experiments(
     at_client = AirtableClient()
     try:
         records = at_client.get_proposed_experiments_for_user(user.airtable_user_record_id)
-        # Sort so the baseline-pack-linked experiment (focus pattern) appears first
-        records.sort(key=lambda r: (0 if r.get("fields", {}).get("Baseline Pack") else 1))
+        # Sort so the baseline-pack-linked experiment (focus pattern) appears first,
+        # then by creation time ascending (worker creates in priority order).
+        records.sort(key=lambda r: (
+            0 if r.get("fields", {}).get("Baseline Pack") else 1,
+            r.get("createdTime", ""),
+        ))
         return [_build_experiment_response(r) for r in records]
     except Exception as e:
         logger.warning("Error fetching proposed experiments: %s", e)
@@ -1049,10 +1053,14 @@ async def client_summary(
                 active_exp_resp = _build_experiment_response(active_exp_rec, at_client)
 
             # Proposed experiments — sort so the baseline-pack-linked experiment
-            # (the one matching the focus pattern) appears first.
+            # (the one matching the focus pattern) appears first, then by creation
+            # time ascending (worker creates experiments in priority order).
             proposed_records = results_map.get("proposed") or []
             proposed_records.sort(
-                key=lambda r: (0 if r.get("fields", {}).get("Baseline Pack") else 1),
+                key=lambda r: (
+                    0 if r.get("fields", {}).get("Baseline Pack") else 1,
+                    r.get("createdTime", ""),
+                ),
             )
             proposed_exps = [_build_experiment_response(r) for r in proposed_records]
 
