@@ -89,7 +89,7 @@ from .idempotency import (
 )
 from .models import MemoryBlock, ValidationIssue, OpenAIResponse
 from .llm_client import call_llm
-from .openai_client import load_baseline_system_prompt, load_system_prompt
+from .openai_client import load_baseline_system_prompt, load_next_experiment_system_prompt, load_system_prompt
 from .prompt_builder import build_baseline_pack_prompt, build_memory_block, build_single_meeting_prompt
 from .quote_cleanup import cleanup_parsed_json
 from .transcript_parser import parse_transcript
@@ -1299,22 +1299,35 @@ def process_next_experiment_suggestion(
         if pid:
             parked_pattern_ids.add(pid)
 
-    # 3. Aggregate pattern scores across eligible runs
+    # 3. Aggregate pattern scores and coaching notes across eligible runs
     pattern_scores: dict[str, list[float]] = {}
-    target_role = "participant"
+    # Collect coaching notes per pattern from recent analyses (most recent first)
+    pattern_coaching_notes: dict[str, list[str]] = {}
 
     for r in eligible_runs:
         rf = _extract_fields(r)
-        target_role = rf.get(F_RUN_TARGET_SPEAKER_ROLE) or target_role
         parsed_json_str = rf.get(F_RUN_PARSED_JSON) or "{}"
         try:
             parsed = json.loads(parsed_json_str)
             for p in parsed.get("pattern_snapshot", []):
                 pid = p.get("pattern_id")
-                if pid and p.get("evaluable_status") == "evaluable":
+                if not pid:
+                    continue
+                if p.get("evaluable_status") == "evaluable":
                     ratio = p.get("ratio")
                     if ratio is not None:
                         pattern_scores.setdefault(pid, []).append(float(ratio))
+                # Collect coaching notes regardless of evaluable status
+                coaching_note = p.get("coaching_note")
+                if coaching_note:
+                    pattern_coaching_notes.setdefault(pid, []).append(coaching_note)
+            # Also collect focus message from coaching_output
+            coaching_output = parsed.get("coaching_output", {})
+            for focus_item in (coaching_output.get("focus") or []):
+                fpid = focus_item.get("pattern_id")
+                fmsg = focus_item.get("message")
+                if fpid and fmsg:
+                    pattern_coaching_notes.setdefault(fpid, []).append(fmsg)
         except Exception:
             pass
 
@@ -1324,10 +1337,35 @@ def process_next_experiment_suggestion(
     }
     sorted_patterns = sorted(avg_scores.items(), key=lambda x: x[1])
 
-    # 4. Build prompt asking for multiple experiments
+    # 4. Build user message with pattern scores, coaching notes, and exclusions
     pattern_lines = "\n".join(
         f"  {pid}: {score:.2f}" for pid, score in sorted_patterns
     ) or "  (no evaluable patterns available)"
+
+    # Build coaching notes section — include up to 2 most recent notes per pattern
+    coaching_notes_lines: list[str] = []
+    for pid, _score in sorted_patterns:
+        notes = pattern_coaching_notes.get(pid, [])
+        if notes:
+            # Deduplicate while preserving order (most recent first)
+            seen: set[str] = set()
+            unique_notes: list[str] = []
+            for n in notes:
+                if n not in seen:
+                    seen.add(n)
+                    unique_notes.append(n)
+                if len(unique_notes) >= 2:
+                    break
+            coaching_notes_lines.append(f"  {pid}:")
+            for n in unique_notes:
+                coaching_notes_lines.append(f"    - {n}")
+
+    coaching_notes_section = ""
+    if coaching_notes_lines:
+        coaching_notes_section = (
+            "\nCoaching notes from recent meeting analyses (use these to tailor experiments to the coachee's specific behaviours):\n"
+            + "\n".join(coaching_notes_lines)
+        )
 
     # Build exclusion notes
     exclude_pattern_ids = set(parked_pattern_ids)
@@ -1348,41 +1386,21 @@ def process_next_experiment_suggestion(
     )
 
     user_message = (
-        f"Propose {num_to_generate} micro-experiment(s) for a leadership coaching participant.\n\n"
-        f"Their role: {target_role}\n\n"
+        f"Propose {num_to_generate} micro-experiment(s) for this coachee.\n\n"
         f"Pattern scores (ratio 0-1, lower = more room to grow, based on recent meetings):\n"
         f"{pattern_lines}\n"
+        f"{coaching_notes_section}"
         f"{avoid_patterns_note}"
         f"{avoid_titles_note}\n\n"
         f"Pick the {num_to_generate} weakest patterns that are not excluded above. "
         f"Each experiment MUST target a DIFFERENT pattern_id.\n"
-        f"Propose specific, actionable micro-experiments targeting them.\n\n"
-        f"Return ONLY a JSON array of {num_to_generate} objects, each with exactly these fields:\n"
-        f'{{"experiment_id": "EXP-XXXXXX", "title": "...", "instruction": "...", '
-        f'"success_marker": "...", "pattern_id": "..."}}\n\n'
-        f"Rules:\n"
-        f"- experiment_id: must match ^EXP-[0-9]{{6}}$ (use 6 random digits, each experiment gets a unique ID)\n"
-        f"- title: max 140 characters\n"
-        f"- instruction: max 600 characters, a concrete behavioural instruction "
-        f"the person can act on in their next meeting\n"
-        f"- success_marker: max 300 characters, an observable indicator of success\n"
-        f"- pattern_id: must be one of: agenda_clarity, objective_signaling, "
-        f"turn_allocation, facilitative_inclusion, decision_closure, "
-        f"owner_timeframe_specification, summary_checkback, question_quality, "
-        f"listener_response_quality, conversational_balance\n"
-        f"- Never include literal double quotes inside string values\n"
-        f"- Order by pattern weakness (weakest first)"
+        f"Propose specific, actionable micro-experiments targeting them, "
+        f"grounded in the coaching notes above where available."
     )
 
-    slim_system_prompt = (
-        "You are a leadership coaching assistant. "
-        "Return ONLY a valid JSON array of experiment objects. "
-        "No prose, markdown, code fences, or comments. "
-        "Never include literal double quotes inside string values — "
-        "use single quotes if quoting is needed."
-    )
+    # 5. Load system prompt from file and model name from active config
+    experiment_system_prompt = load_next_experiment_system_prompt()
 
-    # 5. Load model name from active config (best-effort)
     model_name: Optional[str] = None
     try:
         active_cfg = client.get_active_config()
@@ -1394,7 +1412,7 @@ def process_next_experiment_suggestion(
     # 6. Call OpenAI
     try:
         openai_resp = call_llm(
-            system_prompt=slim_system_prompt,
+            system_prompt=experiment_system_prompt,
             developer_message="",
             user_message=user_message,
             model=model_name,
