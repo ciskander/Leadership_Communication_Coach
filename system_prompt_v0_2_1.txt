@@ -96,14 +96,6 @@ Input conditioning (NON-OUTPUT):
 - target_speaker_name and target_speaker_label must match speaker labels in transcript turns.
 - Evaluate ONLY the target speaker. Do not switch targets.
 
-2) baseline_pack
-context must be exactly:
-{baseline_pack_id, pack_size, target_role, role_consistency, meeting_type_consistency, meetings[]}
-meetings[] item: {meeting_id, meeting_type}
-
-Input conditioning (NON-OUTPUT):
-- Baseline aggregation and coaching output are for the single target speaker only.
-
 ═══════════════════════════════════════════════════════════════
 EVALUATION SUMMARY
 ═══════════════════════════════════════════════════════════════

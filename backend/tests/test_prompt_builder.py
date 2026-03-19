@@ -59,7 +59,7 @@ def _make_meetings_meta(meeting_ids: list[str], meeting_type: str = "exec_staff"
 
 
 def _make_meeting_summaries(meeting_ids: list[str]) -> list[dict]:
-    """Minimal slim meeting summary dicts matching _build_slim_meeting_summary output."""
+    """Minimal enriched meeting summary dicts matching _build_slim_meeting_summary output."""
     return [
         {
             "meeting_id": mid,
@@ -73,12 +73,37 @@ def _make_meeting_summaries(meeting_ids: list[str]) -> list[dict]:
                     "numerator": 2,
                     "denominator": 2,
                     "ratio": 1.0,
+                    "evidence_span_ids": ["ES-001"],
+                    "notes": "Strong agenda framing.",
                 }
             ],
-            "coaching_output_compact": {
-                "focus_pattern_id": "decision_closure",
-                "micro_experiment_title": "Close decisions out loud",
+            "coaching_output": {
+                "strengths": [{"pattern_id": "agenda_clarity", "message": "Good work."}],
+                "focus": [{"pattern_id": "decision_closure", "message": "Improve."}],
+                "micro_experiment": {
+                    "title": "Close decisions out loud",
+                    "instruction": "State the decision.",
+                    "success_marker": "Decision stated.",
+                    "pattern_id": "decision_closure",
+                    "evidence_span_ids": ["ES-002"],
+                },
             },
+            "evidence_spans": [
+                {
+                    "evidence_span_id": "ES-001",
+                    "turn_start_id": 1,
+                    "turn_end_id": 1,
+                    "excerpt": "Let us start with the agenda.",
+                    "meeting_id": mid,
+                },
+                {
+                    "evidence_span_id": "ES-002",
+                    "turn_start_id": 5,
+                    "turn_end_id": 5,
+                    "excerpt": "So we will move on.",
+                    "meeting_id": mid,
+                },
+            ],
         }
         for mid in meeting_ids
     ]

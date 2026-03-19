@@ -89,7 +89,7 @@ from .idempotency import (
 )
 from .models import MemoryBlock, ValidationIssue, OpenAIResponse
 from .llm_client import call_llm
-from .openai_client import load_system_prompt
+from .openai_client import load_baseline_system_prompt, load_system_prompt
 from .prompt_builder import build_baseline_pack_prompt, build_memory_block, build_single_meeting_prompt
 from .quote_cleanup import cleanup_parsed_json
 from .transcript_parser import parse_transcript
@@ -147,15 +147,25 @@ def _extract_coaching_from_run(parsed_json: dict) -> dict:
 
 
 def _build_slim_meeting_summary(run_fields: dict, parsed_json: dict) -> dict:
-    """Build the slim meeting summary dict for baseline pack prompt."""
+    """Build an enriched meeting summary dict for baseline pack prompt.
+
+    Includes evidence_spans, per-pattern notes/coaching, and coaching messages
+    so the baseline LLM can select and pass through real evidence rather than
+    fabricating quotes.
+    """
     ctx = parsed_json.get("context", {})
     eval_summary = parsed_json.get("evaluation_summary", {})
     pattern_snapshot = parsed_json.get("pattern_snapshot", [])
     coaching = parsed_json.get("coaching_output", {})
+    evidence_spans = parsed_json.get("evidence_spans", [])
 
-    # Compact pattern snapshot: only key fields
-    slim_snapshot = [
-        {
+    meeting_id = ctx.get("meeting_id")
+
+    # Enriched pattern snapshot: include notes, coaching_note, suggested_rewrite,
+    # rewrite_for_span_id, evidence_span_ids, and success_evidence_span_ids
+    enriched_snapshot = []
+    for p in pattern_snapshot:
+        item: dict = {
             "pattern_id": p.get("pattern_id"),
             "evaluable_status": p.get("evaluable_status"),
             "numerator": p.get("numerator"),
@@ -163,27 +173,63 @@ def _build_slim_meeting_summary(run_fields: dict, parsed_json: dict) -> dict:
             "ratio": p.get("ratio"),
             "balance_assessment": p.get("balance_assessment"),
         }
-        for p in pattern_snapshot
-    ]
+        # Include coaching detail when present
+        for key in ("notes", "coaching_note", "suggested_rewrite",
+                     "rewrite_for_span_id", "evidence_span_ids",
+                     "success_evidence_span_ids"):
+            val = p.get(key)
+            if val is not None:
+                item[key] = val
+        enriched_snapshot.append(item)
 
-    # Compact coaching output
+    # Enriched coaching output: include messages for strengths and focus
+    strengths = coaching.get("strengths") or []
+    focus = coaching.get("focus") or []
     micro = (coaching.get("micro_experiment") or [{}])[0]
-    coaching_compact = {
-        "focus_pattern_id": (coaching.get("focus") or [{}])[0].get("pattern_id"),
-        "micro_experiment_title": micro.get("title"),
-        "micro_experiment_instruction": micro.get("instruction"),
+    coaching_enriched = {
+        "strengths": [
+            {"pattern_id": s.get("pattern_id"), "message": s.get("message")}
+            for s in strengths
+        ],
+        "focus": [
+            {"pattern_id": f.get("pattern_id"), "message": f.get("message")}
+            for f in focus
+        ],
+        "micro_experiment": {
+            "title": micro.get("title"),
+            "instruction": micro.get("instruction"),
+            "success_marker": micro.get("success_marker"),
+            "pattern_id": micro.get("pattern_id"),
+            "evidence_span_ids": micro.get("evidence_span_ids"),
+        },
     }
 
+    # Evidence spans: include all, ensuring meeting_id is stamped on each
+    enriched_spans = []
+    for es in evidence_spans:
+        span: dict = {
+            "evidence_span_id": es.get("evidence_span_id"),
+            "turn_start_id": es.get("turn_start_id"),
+            "turn_end_id": es.get("turn_end_id"),
+            "excerpt": es.get("excerpt"),
+            "meeting_id": es.get("meeting_id") or meeting_id,
+        }
+        speaker_role = es.get("speaker_role")
+        if speaker_role:
+            span["speaker_role"] = speaker_role
+        enriched_spans.append(span)
+
     return {
-        "meeting_id": ctx.get("meeting_id"),
+        "meeting_id": meeting_id,
         "meeting_type": ctx.get("meeting_type"),
         "analysis_id": parsed_json.get("meta", {}).get("analysis_id"),
         "target_speaker_name": run_fields.get(F_RUN_TARGET_SPEAKER_NAME),
         "target_speaker_label": run_fields.get(F_RUN_TARGET_SPEAKER_LABEL),
         "target_role": ctx.get("target_role"),
         "evaluation_summary": eval_summary,
-        "pattern_snapshot": slim_snapshot,
-        "coaching_output_compact": coaching_compact,
+        "pattern_snapshot": enriched_snapshot,
+        "coaching_output": coaching_enriched,
+        "evidence_spans": enriched_spans,
     }
 
 
@@ -790,10 +836,11 @@ def process_baseline_pack_build(
     )
 
     # Get config (use first item's config if available — fall back to active)
-    sys_prompt = system_prompt_override or _load_system_prompt_from_config(client, config_links)
+    # Baseline packs use a dedicated system prompt optimised for synthesis.
+    sys_prompt = system_prompt_override or load_baseline_system_prompt()
     dev_message = developer_message_override or _load_developer_message_from_config(client, config_links)
 
-    # 5. Call OpenAI
+    # 5. Call LLM
     openai_resp = call_llm(
         system_prompt=sys_prompt,
         developer_message=dev_message,

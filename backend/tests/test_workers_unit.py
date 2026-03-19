@@ -221,27 +221,43 @@ class TestBuildSlimMeetingSummary:
         result = _build_slim_meeting_summary(run_fields, parsed_json)
         assert result["target_speaker_name"] == "Alice"
 
-    def test_pattern_snapshot_is_slimmed(self):
+    def test_pattern_snapshot_is_enriched(self):
         run_fields, parsed_json = self._make_inputs()
         result = _build_slim_meeting_summary(run_fields, parsed_json)
         snap = result["pattern_snapshot"]
         assert isinstance(snap, list)
         assert len(snap) == 1
-        # Only key fields should be present in the slim version
         assert "pattern_id" in snap[0]
         assert "evaluable_status" in snap[0]
-        # Full evidence_span_ids should NOT appear in slim snapshot
-        assert "evidence_span_ids" not in snap[0]
 
-    def test_coaching_compact_includes_focus_pattern(self):
+    def test_pattern_snapshot_includes_coaching_fields_when_present(self):
+        run_fields, parsed_json = self._make_inputs()
+        parsed_json["pattern_snapshot"][0]["notes"] = "Good agenda."
+        parsed_json["pattern_snapshot"][0]["evidence_span_ids"] = ["ES-001"]
+        result = _build_slim_meeting_summary(run_fields, parsed_json)
+        snap = result["pattern_snapshot"][0]
+        assert snap["notes"] == "Good agenda."
+        assert snap["evidence_span_ids"] == ["ES-001"]
+
+    def test_coaching_output_includes_focus(self):
         run_fields, parsed_json = self._make_inputs()
         result = _build_slim_meeting_summary(run_fields, parsed_json)
-        assert result["coaching_output_compact"]["focus_pattern_id"] == "decision_closure"
+        assert result["coaching_output"]["focus"][0]["pattern_id"] == "decision_closure"
 
-    def test_coaching_compact_includes_micro_experiment_title(self):
+    def test_coaching_output_includes_micro_experiment_title(self):
         run_fields, parsed_json = self._make_inputs()
         result = _build_slim_meeting_summary(run_fields, parsed_json)
-        assert result["coaching_output_compact"]["micro_experiment_title"] == "Close decisions"
+        assert result["coaching_output"]["micro_experiment"]["title"] == "Close decisions"
+
+    def test_includes_evidence_spans(self):
+        run_fields, parsed_json = self._make_inputs()
+        parsed_json["evidence_spans"] = [
+            {"evidence_span_id": "ES-001", "turn_start_id": 1, "turn_end_id": 1, "excerpt": "Hello."},
+        ]
+        result = _build_slim_meeting_summary(run_fields, parsed_json)
+        assert len(result["evidence_spans"]) == 1
+        assert result["evidence_spans"][0]["evidence_span_id"] == "ES-001"
+        assert result["evidence_spans"][0]["meeting_id"] == "M-000001"
 
     def test_empty_parsed_json_does_not_raise(self):
         result = _build_slim_meeting_summary({}, {})

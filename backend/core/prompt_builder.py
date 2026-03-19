@@ -115,6 +115,24 @@ def build_single_meeting_prompt(
     )
 
 
+_BASELINE_HARD_REMINDERS = """
+
+Hard reminders (baseline_pack):
+- JSON only; no prose/markdown.
+- You are SYNTHESISING pre-analysed meetings — do NOT fabricate evidence. Every evidence_span_id, turn_start_id, turn_end_id, and excerpt in your output must be copied exactly from the input meeting summaries.
+- Every evidence_span MUST include meeting_id. This is required for baseline_pack.
+- evaluation_summary: Every one of the 10 pattern_ids must appear in EXACTLY ONE of patterns_evaluated, patterns_insufficient_signal, or patterns_not_evaluable. Must be consistent with pattern_snapshot evaluable_status.
+- pattern_snapshot must include all 10 pattern IDs in required order.
+- Ratio = MEDIAN of meeting-level ratios. Numerator = SUM of meeting numerators. Denominator = SUM of meeting denominators. The ratio may not equal numerator/denominator — that is expected.
+- conversational_balance requires balance_assessment and no numeric fields.
+- focus length=1, micro_experiment length=1. Focus and strengths items only need {pattern_id, message}.
+- detection_in_this_meeting MUST be null for baseline_pack.
+- rewrite_for_span_id must reference a span that exists in your output and is NOT in success_evidence_span_ids.
+- CRITICAL: Every notes and coaching_note field must reference specific behaviour from the cited evidence spans. Do not write generic observations.
+- Do NOT include opportunity_events, opportunity_events_considered, or opportunity_events_counted for baseline_pack.
+- Do NOT generate new evidence_span_ids. Only use IDs from the input meeting summaries."""
+
+
 def build_baseline_pack_prompt(
     *,
     baseline_pack_id: str,
@@ -123,11 +141,15 @@ def build_baseline_pack_prompt(
     role_consistency: Optional[str],
     meeting_type_consistency: Optional[str],
     meetings_meta: list[dict],  # [{meeting_id, meeting_type, target_speaker_name, target_speaker_label, target_speaker_role}]
-    meeting_summaries: list[dict],  # slim run output dicts
+    meeting_summaries: list[dict],  # enriched run output dicts with evidence_spans
     analysis_id: Optional[str] = None,
 ) -> PromptPayload:
     """
     Build the user message payload for a baseline_pack analysis.
+
+    The meeting_summaries contain enriched single-meeting outputs including
+    evidence_spans, per-pattern notes/coaching, and coaching messages so the
+    LLM can select and pass through real evidence.
     """
     meta = _meta_block("baseline_pack", analysis_id)
 
@@ -148,57 +170,24 @@ def build_baseline_pack_prompt(
         "pack_size": pack_size,
         "meetings": meetings_list_for_context,
         "target_role": effective_role,
+        "role_consistency": role_consistency == "consistent",
+        "meeting_type_consistency": meeting_type_consistency == "consistent",
     }
 
     memory = MemoryBlock()  # always null for baseline pack
-
-    # PACK CONTEXT block (freeform text section in the turns pseudo-payload)
-    pack_context_lines = [
-        "BASELINE PACK INPUT ({} meetings). Task: compute a role-conditioned baseline snapshot using the {} single_meeting analyses below.".format(pack_size, pack_size),
-        "",
-        "AGGREGATION RULES:",
-        "1) For each pattern_id, compute the baseline ratio as the median of the meeting-level ratios across meetings where that pattern is evaluable (not insufficient_signal and not not_evaluable).",
-        "2) If a pattern is insufficient_signal in >=2 meetings, treat it as insufficient_signal in the baseline pack.",
-        "3) Use the baseline snapshot to select: 0\u20132 strengths, exactly 1 focus, exactly 1 micro-experiment (highest leverage).",
-        "4) Baseline pack: do NOT do experiment attempt detection (detection_in_this_meeting must be null).",
-        "5) Per-meeting micro_experiment suggestions are candidates only. For baseline_pack, choose exactly one experiment based on the aggregated baseline snapshot; do not continue any per-meeting experiment.",
-        "IMPORTANT: Only use the information in this pack. Do not invent missing denominators or opportunities.",
-        "",
-        "PACK CONTEXT:",
-        f"- baseline_pack_id: {baseline_pack_id}",
-        f"- pack_size: {pack_size}",
-        f"- target_role: {effective_role}",
-        f"- role_consistency: {role_consistency}",
-        f"- meeting_type_consistency: {meeting_type_consistency}",
-        "- meetings: " + json.dumps(meetings_meta, ensure_ascii=False),
-        "",
-        "MEETING SUMMARIES (each is a JSON object; do not assume missing fields):",
-    ]
-
-    for summary in meeting_summaries:
-        pack_context_lines.append("")
-        pack_context_lines.append(json.dumps(summary, ensure_ascii=False))
-
-    pack_context_text = "\n".join(pack_context_lines)
-
-    # Mimic the exact structure seen in example: transcript.turns is the pack context blob
-    transcript_payload = {
-        "source_id": baseline_pack_id,
-        "turns": [pack_context_text],
-    }
 
     input_payload = {
         "meta": meta,
         "context": context,
         "memory": memory.model_dump(),
-        "transcript": transcript_payload,
+        "meeting_summaries": meeting_summaries,
     }
 
     user_message = (
-        "Analyze and return ONLY one JSON object conforming to mvp.v0.2.1.\n\n"
+        "Synthesize and return ONLY one JSON object conforming to mvp.v0.2.1.\n\n"
         "INPUT_PAYLOAD\n"
         + json.dumps(input_payload, ensure_ascii=False, indent=2)
-        + _HARD_REMINDERS
+        + _BASELINE_HARD_REMINDERS
     )
 
     return PromptPayload(
@@ -206,7 +195,7 @@ def build_baseline_pack_prompt(
         meta=meta,
         context=context,
         memory=memory,
-        transcript_payload=transcript_payload,
+        transcript_payload={"source_id": baseline_pack_id, "meeting_summaries": meeting_summaries},
         raw_user_message=user_message,
     )
 
