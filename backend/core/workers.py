@@ -1188,12 +1188,21 @@ def create_attempt_event_from_run(
 
 # ── Worker 5: process_next_experiment_suggestion ──────────────────────────────
 
-_VALID_PATTERNS = {
-    'agenda_clarity', 'objective_signaling', 'turn_allocation',
-    'facilitative_inclusion', 'decision_closure', 'owner_timeframe_specification',
-    'summary_checkback', 'question_quality', 'listener_response_quality',
-    'conversational_balance',
-}
+def _get_valid_patterns() -> set[str]:
+    """Derive valid pattern IDs from the canonical taxonomy file."""
+    try:
+        from .prompt_builder import extract_pattern_ids
+        return set(extract_pattern_ids())
+    except Exception:
+        logger.warning("Failed to load pattern IDs from taxonomy file; using hardcoded fallback.")
+        return {
+            'agenda_clarity', 'objective_signaling', 'turn_allocation',
+            'facilitative_inclusion', 'decision_closure', 'owner_timeframe_specification',
+            'summary_checkback', 'question_quality', 'listener_response_quality',
+            'conversational_balance',
+        }
+
+_VALID_PATTERNS = _get_valid_patterns()
 
 MAX_PARKED = 3
 
@@ -1719,22 +1728,49 @@ def _load_system_prompt_from_config(client: AirtableClient, config_links: list[s
 
 
 def _load_developer_message_from_config(client: AirtableClient, config_links: list[str]) -> str:
+    """Load taxonomy developer message from canonical file, with Airtable fallback.
+
+    Prefers the file-based version (single source of truth). If the Airtable
+    "Taxonomy Compact Block" is also populated and differs, logs a drift warning.
+    Falls back to Airtable only if the canonical file is unavailable.
+    """
+    # Try canonical file first
+    file_based = ""
+    try:
+        from .prompt_builder import build_developer_message
+        file_based = build_developer_message()
+    except Exception as exc:
+        logger.warning("Failed to load taxonomy from canonical file: %s", exc)
+
+    # Load Airtable version for drift check / fallback
+    airtable_based = ""
     if config_links:
         try:
             cfg = client.get_record("config", config_links[0])
-            tc = _extract_fields(cfg).get("Taxonomy Compact Block")
-            if tc:
-                return tc
+            airtable_based = _extract_fields(cfg).get("Taxonomy Compact Block", "")
         except Exception:
             pass
-    try:
-        cfg = client.get_active_config()
-        if cfg:
-            tc = cfg.get("fields", {}).get("Taxonomy Compact Block")
-            if tc:
-                return tc
-    except Exception:
-        pass
+    if not airtable_based:
+        try:
+            cfg = client.get_active_config()
+            if cfg:
+                airtable_based = cfg.get("fields", {}).get("Taxonomy Compact Block", "")
+        except Exception:
+            pass
+
+    if file_based:
+        if airtable_based and airtable_based.strip() != file_based.strip():
+            logger.warning(
+                "Taxonomy drift detected: Airtable 'Taxonomy Compact Block' differs "
+                "from canonical file. Using file-based version."
+            )
+        return file_based
+
+    # Fallback to Airtable if file is missing/empty
+    if airtable_based:
+        logger.warning("Canonical taxonomy file unavailable; falling back to Airtable.")
+        return airtable_based
+
     return ""
 
 

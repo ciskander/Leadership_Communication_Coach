@@ -3,6 +3,8 @@ Role-conditioned, target-speaker-only, conservative counting.
 
 ────────────────────────────────────────────────────────────────
 
+### BEGIN:CORE_RULES ###
+
 CORE RULES (apply to all patterns)
 
 - Evaluate ONLY the target speaker identified by target_speaker_label.
@@ -28,7 +30,11 @@ Each pattern defines two exclusion categories:
 
 When in doubt, prefer excluding from both. Undercounting is safer than miscounting.
 
+### END:CORE_RULES ###
+
 ────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:agenda_clarity ###
 
 PATTERN 1: agenda_clarity
 
@@ -64,7 +70,16 @@ Minimum threshold:
 Detection note:
 - This pattern is about the opening frame only. Do not score it on mid-meeting behaviors — those belong to objective_signaling.
 
+Experiment guidance:
+- What good looks like: Stating both what the meeting is for AND what a good outcome looks like.
+- Common failure mode: Purpose statement without an outcome frame, or an outcome frame without a purpose statement.
+- Experiment focus: Help the coachee build the habit of stating both elements — purpose and desired outcome — in their opening.
+
+### END:PATTERN:agenda_clarity ###
+
 ────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:objective_signaling ###
 
 PATTERN 2: objective_signaling
 
@@ -102,7 +117,16 @@ Minimum threshold:
 Detection note:
 - agenda_clarity and objective_signaling are related but distinct. agenda_clarity scores the opening frame once. objective_signaling scores purposeful framing at each subsequent transition. Do not double-count the opening moment.
 
+Experiment guidance:
+- What good looks like: Naming why the group is shifting AND what the next topic is meant to accomplish.
+- Common failure mode: Naming the next topic without stating its purpose ("OK, let's move to pricing").
+- Experiment focus: Help the coachee frame transitions with both topic and purpose, not just topic labels.
+
+### END:PATTERN:objective_signaling ###
+
 ────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:turn_allocation ###
 
 PATTERN 3: turn_allocation
 
@@ -133,7 +157,16 @@ Role notes:
 Minimum threshold:
 - 3 opportunities required (fewer in short meetings — use insufficient_signal).
 
+Experiment guidance:
+- What good looks like: Explicitly inviting a specific person or role to speak, redirecting a dominant voice, or using a structured go-around.
+- Common failure mode: General open questions with no named invitee ("Any thoughts?"), or long monologues followed by "any questions?"
+- Experiment focus: Help the coachee name specific people when inviting contributions, rather than using open-floor prompts.
+
+### END:PATTERN:turn_allocation ###
+
 ────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:facilitative_inclusion ###
 
 PATTERN 4: facilitative_inclusion
 
@@ -170,7 +203,16 @@ Minimum threshold:
 Detection note:
 - This pattern requires noticing who has NOT spoken. If the transcript doesn't give enough information to identify underrepresented voices, mark insufficient_signal.
 
+Experiment guidance:
+- What good looks like: Naming a person who hasn't spoken on a topic and explicitly inviting their view, or amplifying a quieter participant's earlier point.
+- Common failure mode: Acknowledging a quiet participant's presence without inviting their input, or relying on open group questions.
+- Experiment focus: Help the coachee notice who hasn't spoken and explicitly invite their perspective by name.
+
+### END:PATTERN:facilitative_inclusion ###
+
 ────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:decision_closure ###
 
 PATTERN 5: decision_closure
 
@@ -204,7 +246,16 @@ Role notes:
 Minimum threshold:
 - 2 target-controlled decision moments required.
 
+Experiment guidance:
+- What good looks like: Stating the decision in concrete terms, naming what was decided, and signaling that the question is closed.
+- Common failure mode: Vague summaries that gesture at alignment ("So we're roughly aligned here"), or deferral without a concrete revisit date.
+- Experiment focus: Help the coachee explicitly name the decision and confirm it is closed before moving on.
+
+### END:PATTERN:decision_closure ###
+
 ────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:owner_timeframe_specification ###
 
 PATTERN 6: owner_timeframe_specification
 
@@ -238,7 +289,16 @@ Role notes:
 Minimum threshold:
 - 2 target-controlled assignment moments required.
 
+Experiment guidance:
+- What good looks like: Stating who owns the action (a specific name) AND when it is due (a specific date or day).
+- Common failure mode: Owner named but no deadline, or deadline given but no owner named.
+- Experiment focus: Help the coachee pair every action item with both a name and a date.
+
+### END:PATTERN:owner_timeframe_specification ###
+
 ────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:summary_checkback ###
 
 PATTERN 7: summary_checkback
 
@@ -271,7 +331,16 @@ Role notes:
 Minimum threshold:
 - 2 opportunities required.
 
+Experiment guidance:
+- What good looks like: Restating what was decided or agreed AND checking for confirmation ("Does that capture it?").
+- Common failure mode: Recap without a check, or check without a recap, or transition with neither.
+- Experiment focus: Help the coachee build the two-part habit: restate, then check.
+
+### END:PATTERN:summary_checkback ###
+
 ────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:question_quality ###
 
 PATTERN 8: question_quality
 
@@ -305,7 +374,16 @@ Minimum threshold:
 Detection note:
 - Short, precise questions that unlock a specific answer score higher than long multi-part questions that invite broad discussion.
 
+Experiment guidance:
+- What good looks like: Questions tied to a specific decision, gap, or action the group needs to resolve.
+- Common failure mode: Open exploratory questions with no decision stake, or multi-part questions that invite broad discussion.
+- Experiment focus: Help the coachee ask shorter, sharper questions that target a specific decision or action.
+
+### END:PATTERN:question_quality ###
+
 ────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:listener_response_quality ###
 
 PATTERN 9: listener_response_quality
 
@@ -339,7 +417,16 @@ Minimum threshold:
 Reliability note:
 - This pattern is harder to score reliably from transcript text alone than other patterns. Short responses may reflect deep listening or none at all. Apply conservative scoring: only score success when the acknowledgment is explicit and verbal. When in doubt, exclude from both numerator and denominator.
 
+Experiment guidance:
+- What good looks like: Explicitly referencing or paraphrasing what was just said before adding their view.
+- Common failure mode: Pivoting immediately to a counter-argument without acknowledging the prior speaker's contribution.
+- Experiment focus: Help the coachee build the habit of naming what they heard before stating their own view.
+
+### END:PATTERN:listener_response_quality ###
+
 ────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:conversational_balance ###
 
 PATTERN 10: conversational_balance
 
@@ -368,7 +455,16 @@ Excluded from assessment entirely:
 Detection note:
 - If the transcript has incomplete or missing speaker labels, mark unclear.
 
+Experiment guidance:
+- What good looks like: A speaking share appropriate to the speaker's role and meeting type. Qualitative — no numeric ratio. Assessment values: over_indexed, balanced, under_indexed, unclear.
+- Common failure mode: Over_indexed: Dominating discussion to the point where others cannot contribute. Under_indexed: Not contributing enough given their role and stake in the topics.
+- Experiment focus: Help the coachee calibrate their speaking share — either creating more space for others or contributing more actively.
+
+### END:PATTERN:conversational_balance ###
+
 ────────────────────────────────────────────────────────────────
+
+### BEGIN:GENERAL_DETECTION_GUIDANCE ###
 
 GENERAL DETECTION GUIDANCE
 
@@ -382,3 +478,5 @@ Role-conditioned floor effects:
 Insufficient signal vs. not_evaluable:
 - insufficient_signal: the pattern is applicable to this role/meeting type, but there were too few target-controlled opportunities to score it (below minimum threshold).
 - not_evaluable: the pattern fundamentally does not apply (e.g., facilitative_inclusion in a 1:1, or a pattern requiring speaker attribution when labels are absent).
+
+### END:GENERAL_DETECTION_GUIDANCE ###

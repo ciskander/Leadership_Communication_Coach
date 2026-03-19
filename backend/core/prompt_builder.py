@@ -1,19 +1,187 @@
 """
 prompt_builder.py — Assembles the OpenAI user message for single_meeting and baseline_pack.
 
-Replicates the exact payload structure observed in the example API calls.
+Also provides taxonomy loading utilities that read from the canonical
+``clearvoice_pattern_taxonomy_v2.1.txt`` file (single source of truth).
 """
 from __future__ import annotations
 
 import json
 import logging
+import re
 from datetime import datetime, timezone
+from functools import lru_cache
+from pathlib import Path
 from typing import Any, Optional
 
 from .config import OUTPUT_MODE, SCHEMA_VERSION, TAXONOMY_VERSION
 from .models import MemoryBlock, ParsedTranscript, PromptPayload
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Taxonomy loading — single source of truth
+# ---------------------------------------------------------------------------
+
+_TAXONOMY_FILE = Path(__file__).resolve().parent.parent.parent / "clearvoice_pattern_taxonomy_v2.1.txt"
+
+_SECTION_BEGIN_RE = re.compile(r"^### BEGIN:(.+?) ###$", re.MULTILINE)
+_SECTION_END_RE_TEMPLATE = "### END:{name} ###"
+
+
+@lru_cache(maxsize=1)
+def _load_taxonomy_raw() -> str:
+    """Read the canonical taxonomy file. Cached after first call."""
+    if not _TAXONOMY_FILE.exists():
+        raise FileNotFoundError(f"Canonical taxonomy file not found at {_TAXONOMY_FILE}")
+    return _TAXONOMY_FILE.read_text(encoding="utf-8")
+
+
+def _extract_section(raw: str, section_name: str) -> str:
+    """Extract content between ``### BEGIN:<name> ###`` and ``### END:<name> ###`` markers.
+
+    Returns the content between the markers (excluding the marker lines themselves),
+    stripped of leading/trailing whitespace.
+    """
+    begin_marker = f"### BEGIN:{section_name} ###"
+    end_marker = f"### END:{section_name} ###"
+
+    begin_idx = raw.find(begin_marker)
+    if begin_idx == -1:
+        raise ValueError(f"Section marker '{begin_marker}' not found in taxonomy file")
+
+    content_start = begin_idx + len(begin_marker)
+    end_idx = raw.find(end_marker, content_start)
+    if end_idx == -1:
+        raise ValueError(f"Section marker '{end_marker}' not found in taxonomy file")
+
+    return raw[content_start:end_idx].strip()
+
+
+def extract_pattern_ids() -> list[str]:
+    """Return ordered list of pattern IDs from the taxonomy file.
+
+    Parses ``### BEGIN:PATTERN:<id> ###`` markers in document order.
+    """
+    raw = _load_taxonomy_raw()
+    ids: list[str] = []
+    for m in _SECTION_BEGIN_RE.finditer(raw):
+        section_name = m.group(1)
+        if section_name.startswith("PATTERN:"):
+            ids.append(section_name[len("PATTERN:"):])
+    if not ids:
+        raise ValueError("No PATTERN sections found in taxonomy file")
+    return ids
+
+
+def build_developer_message() -> str:
+    """Build the full developer message from the canonical taxonomy file.
+
+    Returns the entire taxonomy file content, which is used as the
+    ``developer_message`` for single_meeting and baseline_pack LLM calls.
+    This replaces the Airtable "Taxonomy Compact Block".
+    """
+    return _load_taxonomy_raw().strip()
+
+
+def build_experiment_taxonomy_block() -> str:
+    """Build the experiment-design-focused taxonomy summary.
+
+    For each pattern, extracts from the canonical file:
+    - What it measures
+    - What good looks like (derived from success criteria)
+    - Common failure mode
+    - Experiment focus
+
+    Returns a formatted block matching the structure previously embedded
+    in ``system_prompt_next_experiment_v0_2_1.txt``.
+    """
+    raw = _load_taxonomy_raw()
+    pattern_ids = extract_pattern_ids()
+
+    lines = [
+        "═══════════════════════════════════════════════════════════════",
+        "PATTERN TAXONOMY — EXPERIMENT DESIGN GUIDE",
+        "═══════════════════════════════════════════════════════════════",
+        "",
+        "The following 10 patterns define the coaching taxonomy. Use these definitions to understand what each pattern measures, what good looks like, and what kinds of interventions help.",
+        "",
+    ]
+
+    for pid in pattern_ids:
+        section = _extract_section(raw, f"PATTERN:{pid}")
+        what_it_measures = _extract_field(section, "What it measures:")
+        what_good = _extract_field(section, "What good looks like:")
+        common_failure = _extract_field(section, "Common failure mode:")
+        experiment_focus = _extract_field(section, "Experiment focus:")
+
+        lines.append(f"── {pid} ──")
+        lines.append(f"What it measures: {what_it_measures}")
+        lines.append(f"What good looks like: {what_good}")
+        lines.append(f"Common failure mode: {common_failure}")
+        lines.append(f"Experiment focus: {experiment_focus}")
+        lines.append("")
+
+    return "\n".join(lines).rstrip()
+
+
+def _extract_field(section_text: str, field_label: str) -> str:
+    """Extract a field value from a pattern section.
+
+    Handles two formats:
+    - Single-line after label: ``Field: value``
+    - Next-line with dash: ``Field:\\n- value``
+
+    For multi-line fields under "Experiment guidance:", looks within that sub-block.
+    """
+    # First check inside "Experiment guidance:" block
+    exp_marker = "Experiment guidance:"
+    exp_idx = section_text.find(exp_marker)
+
+    search_text = section_text
+    if field_label in ("What good looks like:", "Common failure mode:", "Experiment focus:") and exp_idx != -1:
+        search_text = section_text[exp_idx:]
+
+    # Find the field label with "- " prefix (inside Experiment guidance block)
+    prefixed_label = f"- {field_label}"
+    idx = search_text.find(prefixed_label)
+    if idx != -1:
+        value_start = idx + len(prefixed_label)
+        # Value runs until the next "- " field or end of block
+        rest = search_text[value_start:]
+        next_field = rest.find("\n- ")
+        if next_field != -1:
+            return rest[:next_field].strip()
+        return rest.strip()
+
+    # Fall back to non-prefixed label
+    idx = search_text.find(field_label)
+    if idx == -1:
+        return ""
+
+    value_start = idx + len(field_label)
+    rest = search_text[value_start:]
+
+    # Check if value is on the same line
+    first_newline = rest.find("\n")
+    if first_newline == -1:
+        return rest.strip()
+
+    same_line = rest[:first_newline].strip()
+    if same_line:
+        return same_line
+
+    # Value is on next line(s), starting with "- "
+    after_newline = rest[first_newline + 1:]
+    if after_newline.startswith("- "):
+        end = after_newline.find("\n\n")
+        if end != -1:
+            return after_newline[2:end].strip()
+        return after_newline[2:].strip()
+
+    return same_line
+
+
 
 # Appended to every user message to reinforce rules the model tends to violate.
 _HARD_REMINDERS = """
