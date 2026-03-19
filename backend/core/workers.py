@@ -891,52 +891,6 @@ def process_baseline_pack_build(
 
     _parsed_output["evidence_spans"] = []
 
-    # ── Rebuild evidence_spans from sub-run source data ────────────────────
-    # The LLM is instructed to "pass through" evidence spans from the input,
-    # but it sometimes drops spans while still referencing them elsewhere
-    # (e.g. in micro_experiment.evidence_span_ids).  Instead of trusting the
-    # LLM's evidence_spans array, we collect every span from the sub-run
-    # inputs and include exactly those that are referenced in the output.
-
-    # 1. Build a lookup of all available spans keyed by (span_id, meeting_id).
-    _all_input_spans: dict[tuple[str, str], dict] = {}
-    for mrd in meeting_run_data:
-        for span in mrd["slim_summary"].get("evidence_spans", []):
-            key = (span.get("evidence_span_id", ""), span.get("meeting_id", ""))
-            _all_input_spans[key] = span
-
-    # 2. Collect every span ID referenced anywhere in the LLM output.
-    _referenced_ids: set[str] = set()
-    for ps in _parsed_output.get("pattern_snapshot", []):
-        _referenced_ids.update(ps.get("evidence_span_ids", []))
-        _referenced_ids.update(ps.get("success_evidence_span_ids", []))
-        rw = ps.get("rewrite_for_span_id")
-        if rw:
-            _referenced_ids.add(rw)
-    for me in (_parsed_output.get("coaching_output") or {}).get("micro_experiment", []):
-        _referenced_ids.update(me.get("evidence_span_ids", []))
-
-    # 3. For each referenced ID, pull matching spans from the input lookup.
-    #    Preserve the order the LLM used (it may matter for display) but fill
-    #    gaps from the source data.
-    _seen: set[tuple[str, str]] = set()
-    _rebuilt_spans: list[dict] = []
-
-    # First pass: keep LLM-ordered spans that exist in source data.
-    for llm_span in _parsed_output.get("evidence_spans", []):
-        key = (llm_span.get("evidence_span_id", ""), llm_span.get("meeting_id", ""))
-        if key in _all_input_spans and key not in _seen:
-            _rebuilt_spans.append(_all_input_spans[key])
-            _seen.add(key)
-
-    # Second pass: add any referenced spans the LLM failed to include.
-    for key, span in _all_input_spans.items():
-        if key[0] in _referenced_ids and key not in _seen:
-            _rebuilt_spans.append(span)
-            _seen.add(key)
-
-    _parsed_output["evidence_spans"] = _rebuilt_spans
-
     _parsed_output = _patch_parsed_output(_parsed_output)
 
     # NOTE: cleanup_parsed_json is intentionally NOT called for baseline packs.
