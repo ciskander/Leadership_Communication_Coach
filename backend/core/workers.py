@@ -1582,9 +1582,20 @@ def process_next_experiment_suggestion(
         for micro in parsed_response:
             if created_count >= num_to_generate:
                 break
+            # Normalise common LLM key-name variations
+            if "instructions" in micro and "instruction" not in micro:
+                micro["instruction"] = micro.pop("instructions")
             missing = required_keys - micro.keys()
             if missing:
                 logger.warning("process_next_experiment_suggestion: skipping proposal with missing fields %s", missing)
+                continue
+            # Reject placeholder / refusal responses
+            instr_text = micro.get("instruction", "")
+            if len(instr_text) < 40 or micro.get("success_marker", "") == "N/A":
+                logger.warning(
+                    "process_next_experiment_suggestion: skipping placeholder experiment (instruction=%d chars, success_marker=%s)",
+                    len(instr_text), micro.get("success_marker", "")[:30],
+                )
                 continue
             if micro.get("pattern_id") not in _VALID_PATTERNS:
                 logger.warning(
