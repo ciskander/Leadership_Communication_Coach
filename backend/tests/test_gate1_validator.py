@@ -199,19 +199,21 @@ def test_bad_analysis_id_format_fails(valid_single_meeting_output):
     assert result.passed is False
 
 
-def test_bad_experiment_id_format_fails(valid_single_meeting_output):
+def test_bad_experiment_id_format_sanitised(valid_single_meeting_output):
+    """Sanitiser auto-corrects short experiment IDs (EXP-1 → EXP-000001), so gate1 passes."""
     bad = copy.deepcopy(valid_single_meeting_output)
     bad["coaching_output"]["micro_experiment"][0]["experiment_id"] = "EXP-1"
     result = validate(json.dumps(bad))
-    assert result.passed is False
+    assert result.passed is True
 
 
 # ---------------------------------------------------------------------------
 # Extra / forbidden keys
 # ---------------------------------------------------------------------------
 
-def test_forbidden_key_confidence_fails(valid_single_meeting_output):
+def test_forbidden_key_confidence_sanitised(valid_single_meeting_output):
+    """Sanitiser strips forbidden keys like 'confidence', so gate1 passes."""
     bad = copy.deepcopy(valid_single_meeting_output)
     bad["confidence"] = 0.99
     result = validate(json.dumps(bad))
-    assert result.passed is False
+    assert result.passed is True

@@ -4,7 +4,7 @@ mocked Airtable and OpenAI dependencies.
 
 Key differences from the old test_workers.py:
 - AirtableClient is injected via the `client=` parameter (not class-patched)
-- call_openai is patched at backend.core.workers.call_openai (not OpenAIClient)
+- call_llm is patched at backend.core.workers.call_llm (not OpenAIClient)
 - OpenAI mock returns an OpenAIResponse object, not a raw string
 - Method names match the actual AirtableClient API
 """
@@ -37,7 +37,7 @@ def _openai_response(output: dict) -> OpenAIResponse:
 class TestProcessSingleMeetingAnalysis:
 
     def test_creates_run_record_on_success(self, mock_at, valid_single_meeting_output):
-        with patch("backend.core.workers.call_openai",
+        with patch("backend.core.workers.call_llm",
                    return_value=_openai_response(valid_single_meeting_output)):
             from backend.core.workers import process_single_meeting_analysis
             run_id = process_single_meeting_analysis("rec_rr_001", client=mock_at, system_prompt_override="test system prompt")
@@ -49,10 +49,10 @@ class TestProcessSingleMeetingAnalysis:
         """If a run with the same idempotency key exists, no new run is created."""
         mock_at.find_run_by_idempotency_key.return_value = {
             "id": "rec_run_existing",
-            "fields": {"Run ID": "R-000001"},
+            "fields": {"Run ID": "R-000001", "Gate1 Pass": True},
         }
 
-        with patch("backend.core.workers.call_openai") as mock_openai:
+        with patch("backend.core.workers.call_llm") as mock_openai:
             from backend.core.workers import process_single_meeting_analysis
             run_id = process_single_meeting_analysis("rec_rr_001", client=mock_at, system_prompt_override="test system prompt")
 
@@ -61,7 +61,7 @@ class TestProcessSingleMeetingAnalysis:
         mock_at.create_run.assert_not_called()
 
     def test_run_record_includes_parsed_json(self, mock_at, valid_single_meeting_output):
-        with patch("backend.core.workers.call_openai",
+        with patch("backend.core.workers.call_llm",
                    return_value=_openai_response(valid_single_meeting_output)):
             from backend.core.workers import process_single_meeting_analysis
             process_single_meeting_analysis("rec_rr_001", client=mock_at, system_prompt_override="test system prompt")
@@ -76,7 +76,7 @@ class TestProcessSingleMeetingAnalysis:
     def test_gate1_failure_still_creates_run(self, mock_at):
         """Even when Gate1 fails the run record is persisted (with gate1_pass=False)."""
         bad_output = {"schema_version": "wrong", "garbage": True}
-        with patch("backend.core.workers.call_openai",
+        with patch("backend.core.workers.call_llm",
                    return_value=_openai_response(bad_output)):
             from backend.core.workers import process_single_meeting_analysis
             run_id = process_single_meeting_analysis("rec_rr_001", client=mock_at, system_prompt_override="test system prompt")
@@ -102,7 +102,7 @@ class TestProcessSingleMeetingAnalysis:
 
     def test_baseline_sub_run_links_back_to_pack(self, mock_at_baseline, valid_single_meeting_output):
         """Sub-run for a baseline pack should have baseline_pack field set on the run record."""
-        with patch("backend.core.workers.call_openai",
+        with patch("backend.core.workers.call_llm",
                    return_value=_openai_response(valid_single_meeting_output)):
             from backend.core.workers import process_single_meeting_analysis
             process_single_meeting_analysis("rec_rr_001", client=mock_at_baseline, system_prompt_override="test system prompt")
@@ -143,7 +143,7 @@ class TestWorkerAppliesPatches:
         self, mock_at, valid_single_meeting_output
     ):
         bad_output = self._output_with_zero_denominator(valid_single_meeting_output)
-        with patch("backend.core.workers.call_openai",
+        with patch("backend.core.workers.call_llm",
                    return_value=_openai_response(bad_output)):
             from backend.core.workers import process_single_meeting_analysis
             process_single_meeting_analysis("rec_rr_001", client=mock_at, system_prompt_override="test system prompt")
@@ -167,7 +167,7 @@ class TestWorkerAppliesPatches:
         self, mock_at, valid_single_meeting_output
     ):
         bad_output = self._output_with_cb_ratio(valid_single_meeting_output)
-        with patch("backend.core.workers.call_openai",
+        with patch("backend.core.workers.call_llm",
                    return_value=_openai_response(bad_output)):
             from backend.core.workers import process_single_meeting_analysis
             process_single_meeting_analysis("rec_rr_001", client=mock_at, system_prompt_override="test system prompt")

@@ -120,10 +120,10 @@ def test_worker_skips_run_if_idempotency_key_exists(
     """If an existing run with the same idempotency key exists, no new run is created."""
     mock_at.find_run_by_idempotency_key.return_value = {
         "id": "rec_run_existing",
-        "fields": {"Run ID": "R-000001"},
+        "fields": {"Run ID": "R-000001", "Gate1 Pass": True},
     }
 
-    with patch("backend.core.workers.call_openai") as mock_openai:
+    with patch("backend.core.workers.call_llm") as mock_openai:
         from backend.core.workers import process_single_meeting_analysis
         run_id = process_single_meeting_analysis("rec_rr_001", client=mock_at)
 

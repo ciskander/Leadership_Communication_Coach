@@ -371,25 +371,25 @@ def mock_at_baseline(mock_at) -> MagicMock:
 
 
 # ---------------------------------------------------------------------------
-# call_openai mock
+# call_llm mock
 #
-# Workers call `call_openai(...)` which returns an OpenAIResponse object.
+# Workers call `call_llm(...)` which returns an OpenAIResponse object.
 # Patch the function at its use-site inside workers.
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
 def mock_call_openai(valid_single_meeting_output):
     """
-    Patch call_openai inside workers to return a valid OpenAIResponse.
+    Patch call_llm inside workers to return a valid OpenAIResponse.
     Use as a context manager or via pytest fixture injection.
     """
     response = _make_openai_response(valid_single_meeting_output)
-    with patch("backend.core.workers.call_openai", return_value=response) as mock:
+    with patch("backend.core.workers.call_llm", return_value=response) as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_call_openai_raw():
-    """call_openai mock without pre-configured output — configure per-test."""
-    with patch("backend.core.workers.call_openai") as mock:
+    """call_llm mock without pre-configured output — configure per-test."""
+    with patch("backend.core.workers.call_llm") as mock:
         yield mock
