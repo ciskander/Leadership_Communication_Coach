@@ -1395,8 +1395,9 @@ def process_next_experiment_suggestion(
     llm_request_count = min(num_to_generate + 2, len(_VALID_PATTERNS) - len(exclude_pattern_ids))
     llm_request_count = max(llm_request_count, num_to_generate)
 
+    exp_word = "micro-experiment" if llm_request_count == 1 else "micro-experiments"
     user_message = (
-        f"Propose {llm_request_count} micro-experiment(s) for this coachee.\n\n"
+        f"Propose exactly {llm_request_count} {exp_word} for this coachee.\n\n"
         f"Pattern scores (ratio 0-1, lower = more room to grow, based on recent meetings):\n"
         f"{pattern_lines}\n"
         f"{coaching_notes_section}"
@@ -1405,7 +1406,8 @@ def process_next_experiment_suggestion(
         f"Pick the {llm_request_count} patterns with the highest developmental impact that are not excluded above. "
         f"Each experiment MUST target a DIFFERENT pattern_id.\n"
         f"Propose specific, actionable micro-experiments targeting them, "
-        f"grounded in the coaching notes above where available."
+        f"grounded in the coaching notes above where available.\n\n"
+        f"IMPORTANT: Your response MUST contain exactly {llm_request_count} experiment objects in the JSON array."
     )
 
     # 5. Load system prompt from file and model name from active config
@@ -1457,6 +1459,12 @@ def process_next_experiment_suggestion(
     if not isinstance(parsed_response, list):
         logger.error("process_next_experiment_suggestion: unexpected response type: %s", type(parsed_response))
         return None
+
+    logger.info(
+        "process_next_experiment_suggestion: LLM returned %d experiments (requested %d, need %d) for user %s | exclude_patterns=%s",
+        len(parsed_response), llm_request_count, num_to_generate, user_record_id,
+        sorted(exclude_pattern_ids),
+    )
 
     # 8. Validate and create experiment records (cap at num_to_generate valid proposals)
     required_keys = {"experiment_id", "title", "instruction", "success_marker", "pattern_id"}
