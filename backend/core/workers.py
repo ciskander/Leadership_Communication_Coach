@@ -558,6 +558,14 @@ def process_single_meeting_analysis(
         if rewrite_span and rewrite_span in success_ids:
             success_ids.remove(rewrite_span)
 
+    # Strip dangling evidence_span_ids from micro_experiment items.
+    # The LLM sometimes references span IDs it didn't include in evidence_spans.
+    _valid_es_ids = {s.get("evidence_span_id") for s in _parsed_output.get("evidence_spans", [])}
+    for me in (_parsed_output.get("coaching_output") or {}).get("micro_experiment", []):
+        es_ids = me.get("evidence_span_ids")
+        if es_ids:
+            me["evidence_span_ids"] = [eid for eid in es_ids if eid in _valid_es_ids]
+
     _parsed_output = _patch_parsed_output(_parsed_output)
 
     # 6d. Clean up ASR artifacts in evidence_span excerpts and coaching blurbs.
@@ -896,14 +904,18 @@ def process_baseline_pack_build(
             if ids and len(ids) != len(set(ids)):
                 ps[_field] = list(dict.fromkeys(ids))
 
+    # Strip dangling evidence_span_ids from micro_experiment items.
+    _valid_es_ids = {s.get("evidence_span_id") for s in _parsed_output.get("evidence_spans", [])}
+    for me in (_parsed_output.get("coaching_output") or {}).get("micro_experiment", []):
+        es_ids = me.get("evidence_span_ids")
+        if es_ids:
+            me["evidence_span_ids"] = [eid for eid in es_ids if eid in _valid_es_ids]
+
     _parsed_output = _patch_parsed_output(_parsed_output)
 
-    # 5b. Clean up ASR artifacts in baseline pack output
-    if _CLEANUP_ENABLED:
-        try:
-            cleanup_parsed_json(_parsed_output)
-        except Exception:
-            logger.warning("Quote cleanup failed in baseline pack worker; raw text will be persisted", exc_info=True)
+    # NOTE: cleanup_parsed_json is intentionally NOT called for baseline packs.
+    # Evidence spans are already cleaned in the per-meeting sub-runs; running
+    # cleanup again is wasteful (extra LLM call) and can corrupt span text.
 
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
     openai_resp = OpenAIResponse(
