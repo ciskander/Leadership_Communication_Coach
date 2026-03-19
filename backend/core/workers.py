@@ -855,6 +855,7 @@ def process_baseline_pack_build(
 
     # Patch meta
     if "meta" in _parsed_output:
+        _parsed_output["meta"].setdefault("analysis_id", prompt_payload.meta.get("analysis_id"))
         _parsed_output["meta"].setdefault("analysis_type", "baseline_pack")
         _parsed_output["meta"].setdefault("generated_at", prompt_payload.meta.get("generated_at") if hasattr(prompt_payload, "meta") else None)
 
@@ -884,6 +885,16 @@ def process_baseline_pack_build(
         success_ids = ps.get("success_evidence_span_ids", [])
         if rewrite_span and rewrite_span in success_ids:
             success_ids.remove(rewrite_span)
+
+    # Deduplicate span ID arrays.  Baseline packs aggregate evidence from
+    # multiple meetings whose spans share the same ID namespace (ES-001, etc.),
+    # so duplicates are expected.  These arrays are never resolved to quotes at
+    # the aggregate level — quotes are resolved per sub-run — so dedup is safe.
+    for ps in _parsed_output.get("pattern_snapshot", []):
+        for _field in ("evidence_span_ids", "success_evidence_span_ids"):
+            ids = ps.get(_field)
+            if ids and len(ids) != len(set(ids)):
+                ps[_field] = list(dict.fromkeys(ids))
 
     _parsed_output = _patch_parsed_output(_parsed_output)
 
