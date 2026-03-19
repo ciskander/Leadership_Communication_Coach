@@ -842,12 +842,15 @@ def process_baseline_pack_build(
     dev_message = developer_message_override or _load_developer_message_from_config(client, config_links)
 
     # 5. Call LLM
+    # Baseline packs produce ~10-12 k tokens of JSON (10 patterns + coaching).
+    # The global default (8 192) is too tight and causes finish_reason=length
+    # truncations.  Use 16 384 unless an Airtable config override is set.
     openai_resp = call_llm(
         system_prompt=sys_prompt,
         developer_message=dev_message,
         user_message=prompt_payload.raw_user_message,
         model=_get_config_model(client, config_links),
-        max_tokens=_get_config_max_tokens(client, config_links),
+        max_tokens=_get_config_max_tokens(client, config_links) or 16384,
     )
 
     import json as _json
