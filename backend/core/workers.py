@@ -1451,6 +1451,10 @@ def process_next_experiment_suggestion(
 
     # 7. Parse response — strip accidental markdown fences
     raw = openai_resp.raw_text.strip()
+    logger.info(
+        "process_next_experiment_suggestion: raw LLM response (first 1500 chars): %.1500s",
+        raw,
+    )
     if raw.startswith("```"):
         parts = raw.split("```")
         raw = parts[1] if len(parts) > 1 else raw
