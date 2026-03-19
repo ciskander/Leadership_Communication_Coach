@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from typing import Any, Optional
 
 from .airtable_client import (
@@ -1508,16 +1509,59 @@ def process_next_experiment_suggestion(
                 raw = raw[4:]
             raw = raw.strip()
 
-        try:
-            parsed_response = json.loads(raw)
-        except Exception as exc:
-            logger.error(
-                "process_next_experiment_suggestion: JSON parse failed (attempt %d): %s | raw: %.500s",
-                attempt, exc, raw,
+        # Detect flat object with duplicate keys (model returns {exp1fields, exp2fields, ...}
+        # instead of [{exp1}, {exp2}, ...]). Split into individual objects.
+        eid_count = raw.count('"experiment_id"')
+        if eid_count > 1 and raw.lstrip().startswith("{") and not raw.lstrip().startswith("["):
+            logger.info(
+                "process_next_experiment_suggestion: detected %d experiment_id keys in flat object — splitting",
+                eid_count,
             )
-            if attempt == 0:
-                return None
-            break
+            # Split on the boundary between experiments: ,"experiment_id" (with optional whitespace)
+            inner = raw.strip().strip("{}")
+            chunks = re.split(r',\s*"experiment_id"', inner)
+            repaired = []
+            for i, chunk in enumerate(chunks):
+                obj_str = chunk.strip().strip(",").strip()
+                if i > 0:
+                    obj_str = '"experiment_id"' + obj_str
+                obj_str = "{" + obj_str + "}"
+                try:
+                    repaired.append(json.loads(obj_str))
+                except json.JSONDecodeError:
+                    logger.warning(
+                        "process_next_experiment_suggestion: failed to parse split chunk %d: %.200s",
+                        i, obj_str,
+                    )
+            if repaired:
+                parsed_response = repaired
+                logger.info(
+                    "process_next_experiment_suggestion: recovered %d experiments from flat object",
+                    len(repaired),
+                )
+            else:
+                # Fall back to normal parse
+                try:
+                    parsed_response = json.loads(raw)
+                except Exception as exc:
+                    logger.error(
+                        "process_next_experiment_suggestion: JSON parse failed (attempt %d): %s | raw: %.500s",
+                        attempt, exc, raw,
+                    )
+                    if attempt == 0:
+                        return None
+                    break
+        else:
+            try:
+                parsed_response = json.loads(raw)
+            except Exception as exc:
+                logger.error(
+                    "process_next_experiment_suggestion: JSON parse failed (attempt %d): %s | raw: %.500s",
+                    attempt, exc, raw,
+                )
+                if attempt == 0:
+                    return None
+                break
 
         # Normalise: if a single object was returned, wrap in a list
         if isinstance(parsed_response, dict):
