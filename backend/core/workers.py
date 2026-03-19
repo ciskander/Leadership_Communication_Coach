@@ -1384,7 +1384,8 @@ def process_next_experiment_suggestion(
     coaching_notes_section = ""
     if coaching_notes_lines:
         coaching_notes_section = (
-            "\nCoaching notes from recent meeting analyses (use these to tailor experiments to the coachee's specific behaviours):\n"
+            "\n── COACHING HISTORY ──\n"
+            "Observations from this coachee's recent meeting analyses. Use these to understand their specific failure modes and tailor experiments accordingly.\n\n"
             + "\n".join(coaching_notes_lines)
         )
 
@@ -1396,15 +1397,18 @@ def process_next_experiment_suggestion(
     avoid_patterns_note = ""
     if exclude_pattern_ids:
         avoid_patterns_note = (
-            "\nDo NOT propose experiments for these pattern_ids (already in use or recently worked on):\n"
+            "\n── EXCLUDED PATTERNS ──\n"
+            "Do NOT propose experiments for these pattern_ids (already in use or recently worked on):\n"
             + "\n".join(f"  - {pid}" for pid in sorted(exclude_pattern_ids))
         )
 
-    avoid_titles_note = (
-        "\nDo NOT reuse any of these past experiment titles:\n"
-        + "\n".join(f"  - {t}" for t in past_titles[:10])
-        if past_titles else ""
-    )
+    avoid_titles_note = ""
+    if past_titles:
+        avoid_titles_note = (
+            "\n── EXCLUDED TITLES ──\n"
+            "Do NOT reuse any of these past experiment titles:\n"
+            + "\n".join(f"  - {t}" for t in past_titles[:10])
+        )
 
     # Request extra experiments as buffer in case some fail validation
     llm_request_count = min(num_to_generate + 2, len(_VALID_PATTERNS) - len(exclude_pattern_ids))
@@ -1412,18 +1416,19 @@ def process_next_experiment_suggestion(
 
     exp_word = "micro-experiment" if llm_request_count == 1 else "micro-experiments"
     user_message = (
-        f"Propose exactly {llm_request_count} {exp_word} for this coachee.\n\n"
-        f"Pattern scores (ratio 0-1, lower = more room to grow, based on recent meetings):\n"
+        f"── COACHEE PATTERN SCORES ──\n"
+        f"Ratio 0-1, lower = more room to grow, based on recent meetings:\n"
         f"{pattern_lines}\n"
         f"{coaching_notes_section}"
         f"{avoid_patterns_note}"
         f"{avoid_titles_note}\n\n"
+        f"── REQUEST ──\n"
+        f"Propose exactly {llm_request_count} {exp_word} for this coachee.\n\n"
         f"Pick {llm_request_count} patterns with the highest developmental impact that are not excluded above. "
         f"You may target ANY of the 10 patterns listed in the taxonomy, including those with no score data yet. "
         f"Each experiment MUST target a DIFFERENT pattern_id.\n"
-        f"Propose specific, actionable micro-experiments targeting them, "
-        f"grounded in the coaching notes above where available.\n\n"
-        f"IMPORTANT: Your JSON array MUST contain exactly {llm_request_count} experiment objects — no fewer."
+        f"Ground each experiment in the coaching history above where available — reference the coachee's specific behaviours, not generic advice.\n\n"
+        f"IMPORTANT: Return a JSON array with exactly {llm_request_count} experiment objects — no fewer."
     )
 
     # 5. Load system prompt from file and model name from active config
@@ -1455,22 +1460,24 @@ def process_next_experiment_suggestion(
             retry_request_count = max(retry_request_count, remaining)
             if retry_request_count <= 0:
                 break
-            extra_exclude = "\nDo NOT propose experiments for these pattern_ids (already created):\n" + \
+            extra_exclude = "\n── EXCLUDED PATTERNS ──\n" \
+                "Do NOT propose experiments for these pattern_ids (already created or in use):\n" + \
                 "\n".join(f"  - {pid}" for pid in sorted(seen_patterns))
             retry_exp_word = "micro-experiment" if retry_request_count == 1 else "micro-experiments"
             current_user_message = (
-                f"Propose exactly {retry_request_count} {retry_exp_word} for this coachee.\n\n"
-                f"Pattern scores (ratio 0-1, lower = more room to grow, based on recent meetings):\n"
+                f"── COACHEE PATTERN SCORES ──\n"
+                f"Ratio 0-1, lower = more room to grow, based on recent meetings:\n"
                 f"{pattern_lines}\n"
                 f"{coaching_notes_section}"
                 f"{extra_exclude}"
                 f"{avoid_titles_note}\n\n"
+                f"── REQUEST ──\n"
+                f"Propose exactly {retry_request_count} {retry_exp_word} for this coachee.\n\n"
                 f"Pick {retry_request_count} patterns with the highest developmental impact that are not excluded above. "
                 f"You may target ANY of the 10 patterns listed in the taxonomy, including those with no score data yet. "
                 f"Each experiment MUST target a DIFFERENT pattern_id.\n"
-                f"Propose specific, actionable micro-experiments targeting them, "
-                f"grounded in the coaching notes above where available.\n\n"
-                f"IMPORTANT: Your JSON array MUST contain exactly {retry_request_count} experiment objects — no fewer."
+                f"Ground each experiment in the coaching history above where available — reference the coachee's specific behaviours, not generic advice.\n\n"
+                f"IMPORTANT: Return a JSON array with exactly {retry_request_count} experiment objects — no fewer."
             )
             current_max_tokens = 600 * retry_request_count
             logger.info(
