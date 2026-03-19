@@ -14,6 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy source
 COPY backend/ ./backend/
 COPY system_prompt_v0_2_1.txt ./system_prompt_v0_2_1.txt
+COPY system_prompt_baseline_pack_v0_2_1.txt ./system_prompt_baseline_pack_v0_2_1.txt
+COPY system_prompt_next_experiment_v0_2_1.txt ./system_prompt_next_experiment_v0_2_1.txt
 
 # Default: run API server
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
