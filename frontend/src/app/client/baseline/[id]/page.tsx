@@ -19,7 +19,7 @@ import { STRINGS } from '@/config/strings';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const POLL_TIMEOUT_MS = 5 * 60 * 1000;
+const POLL_TIMEOUT_MS = 15 * 60 * 1000;
 const ROLE_LABELS = STRINGS.roles;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

@@ -393,7 +393,7 @@ export const STRINGS = {
     heading: 'Baseline Analysis',
     notFound: 'Baseline analysis not found.',
     buildingTitle: 'Building your baseline…',
-    buildingDesc: 'This usually takes 2–5 minutes. This page will update automatically.',
+    buildingDesc: 'This may take up to 15 minutes. This page will update automatically.',
     timeoutTitle: 'Build is taking longer than expected',
     errorTitle: 'Baseline build failed',
     timeoutDesc: 'The analysis is still running in the background. Check back in a few minutes, or try creating a new baseline analysis.',

@@ -45,9 +45,9 @@ _CLEANUP_TIMEOUT: float = 20.0
 
 # Total wall-clock budget for the entire cleanup operation (seconds).
 # This runs inside the Celery worker (not the HTTP handler), so we are not
-# constrained by Railway's proxy timeout.  60s comfortably handles 3-4
-# batches of _BATCH_SIZE=15 with gpt-4o-mini (~10-15s per batch).
-_TOTAL_BUDGET: float = 60.0
+# constrained by Railway's proxy timeout.  120s comfortably handles
+# larger transcripts with many batches of _BATCH_SIZE=15.
+_TOTAL_BUDGET: float = 120.0
 
 # How many times to retry a single batch on timeout before giving up.
 _MAX_RETRIES: int = 1
