@@ -393,8 +393,16 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                   const rewriteGroupQuotes = rewriteSpanId
                     ? detectionQuotes.filter(q => q.span_id === rewriteSpanId)
                     : [];
-                  const rewriteQuote = rewriteGroupQuotes.length > 0 ? rewriteGroupQuotes[0] : null;
-                  const otherRewriteQuotes = rewriteGroupQuotes.slice(1);
+                  // For multi-speaker spans, prefer the target speaker's quote
+                  // under "For example, you said" — not the first turn which may
+                  // be a non-target speaker providing context.
+                  const targetIdx = rewriteGroupQuotes.findIndex(q => q.is_target_speaker === true);
+                  const rewriteQuote = targetIdx >= 0
+                    ? rewriteGroupQuotes[targetIdx]
+                    : (rewriteGroupQuotes.length > 0 ? rewriteGroupQuotes[0] : null);
+                  const otherRewriteQuotes = rewriteGroupQuotes.filter((_, i) =>
+                    i !== (targetIdx >= 0 ? targetIdx : 0)
+                  );
 
                   return (
                     <div className="space-y-3 pt-2">
