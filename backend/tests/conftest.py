@@ -7,6 +7,8 @@ import os
 os.environ.setdefault("DATABASE_URL", "sqlite:///./test.db")
 os.environ.setdefault("JWT_SECRET", "test-secret")
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
+os.environ.setdefault("AIRTABLE_TOKEN", "test-token")
+os.environ.setdefault("AIRTABLE_BASE_ID", "test-base-id")
 
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))

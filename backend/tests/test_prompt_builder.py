@@ -11,7 +11,14 @@ from backend.core.prompt_builder import (
     build_single_meeting_prompt,
     build_baseline_pack_prompt,
     build_memory_block,
+    build_developer_message,
+    build_experiment_taxonomy_block,
+    extract_pattern_ids,
+    _extract_section,
+    _extract_field,
+    _load_taxonomy_raw,
 )
+from backend.core.openai_client import load_next_experiment_system_prompt
 from backend.core.models import MemoryBlock, ParsedTranscript, PromptPayload, Turn, TranscriptMetadata
 
 
@@ -425,3 +432,149 @@ def test_build_memory_block_with_active_experiment():
     assert memory.active_experiment is not None
     assert memory.active_experiment["experiment_id"] == "EXP-000001"
     assert memory.active_experiment["status"] == "active"
+
+
+# ---------------------------------------------------------------------------
+# Taxonomy parsing — single source of truth verification
+# ---------------------------------------------------------------------------
+
+EXPECTED_PATTERN_IDS = [
+    "agenda_clarity",
+    "objective_signaling",
+    "turn_allocation",
+    "facilitative_inclusion",
+    "decision_closure",
+    "owner_timeframe_specification",
+    "summary_checkback",
+    "question_quality",
+    "listener_response_quality",
+    "conversational_balance",
+]
+
+
+class TestTaxonomyParsing:
+    """Verify the taxonomy file is correctly parsed for all prompt types."""
+
+    def test_extract_pattern_ids_returns_all_10(self):
+        ids = extract_pattern_ids()
+        assert ids == EXPECTED_PATTERN_IDS
+
+    def test_extract_pattern_ids_preserves_order(self):
+        ids = extract_pattern_ids()
+        assert ids[0] == "agenda_clarity"
+        assert ids[-1] == "conversational_balance"
+
+    def test_core_rules_section_extractable(self):
+        raw = _load_taxonomy_raw()
+        core_rules = _extract_section(raw, "CORE_RULES")
+        assert "Evaluate ONLY the target speaker" in core_rules
+        assert "COUNTING DISTINCTION" in core_rules
+
+    def test_each_pattern_section_extractable(self):
+        raw = _load_taxonomy_raw()
+        for pid in EXPECTED_PATTERN_IDS:
+            section = _extract_section(raw, f"PATTERN:{pid}")
+            assert len(section) > 50, f"PATTERN:{pid} section is too short"
+
+    def test_general_detection_guidance_extractable(self):
+        raw = _load_taxonomy_raw()
+        guidance = _extract_section(raw, "GENERAL_DETECTION_GUIDANCE")
+        assert len(guidance) > 20
+
+
+class TestDeveloperMessage:
+    """Verify the full taxonomy (used by single_meeting & baseline_pack)."""
+
+    def test_contains_all_pattern_begin_markers(self):
+        msg = build_developer_message()
+        for pid in EXPECTED_PATTERN_IDS:
+            assert f"### BEGIN:PATTERN:{pid} ###" in msg
+
+    def test_contains_all_pattern_end_markers(self):
+        msg = build_developer_message()
+        for pid in EXPECTED_PATTERN_IDS:
+            assert f"### END:PATTERN:{pid} ###" in msg
+
+    def test_contains_core_rules(self):
+        msg = build_developer_message()
+        assert "### BEGIN:CORE_RULES ###" in msg
+        assert "### END:CORE_RULES ###" in msg
+
+    def test_contains_general_detection_guidance(self):
+        msg = build_developer_message()
+        assert "### BEGIN:GENERAL_DETECTION_GUIDANCE ###" in msg
+
+    def test_is_nonempty_and_substantial(self):
+        msg = build_developer_message()
+        # Taxonomy should be substantial (hundreds of lines)
+        assert len(msg) > 5000
+
+
+class TestExperimentTaxonomyBlock:
+    """Verify the experiment-focused taxonomy extraction."""
+
+    def test_contains_header(self):
+        block = build_experiment_taxonomy_block()
+        assert "PATTERN TAXONOMY — EXPERIMENT DESIGN GUIDE" in block
+
+    def test_contains_all_pattern_ids(self):
+        block = build_experiment_taxonomy_block()
+        for pid in EXPECTED_PATTERN_IDS:
+            assert f"── {pid} ──" in block
+
+    def test_extracts_four_fields_per_pattern(self):
+        block = build_experiment_taxonomy_block()
+        for pid in EXPECTED_PATTERN_IDS:
+            # Each pattern section should have these four fields
+            # Find the pattern's block in the output
+            pid_idx = block.index(f"── {pid} ──")
+            # Get text until next pattern or end
+            next_pattern_idx = len(block)
+            for other_pid in EXPECTED_PATTERN_IDS:
+                other_idx = block.find(f"── {other_pid} ──", pid_idx + 1)
+                if other_idx != -1 and other_idx < next_pattern_idx:
+                    next_pattern_idx = other_idx
+            pattern_block = block[pid_idx:next_pattern_idx]
+
+            assert "What it measures:" in pattern_block, f"{pid} missing 'What it measures'"
+            assert "What good looks like:" in pattern_block, f"{pid} missing 'What good looks like'"
+            assert "Common failure mode:" in pattern_block, f"{pid} missing 'Common failure mode'"
+            assert "Experiment focus:" in pattern_block, f"{pid} missing 'Experiment focus'"
+
+    def test_extracted_fields_are_nonempty(self):
+        raw = _load_taxonomy_raw()
+        for pid in EXPECTED_PATTERN_IDS:
+            section = _extract_section(raw, f"PATTERN:{pid}")
+            what_it_measures = _extract_field(section, "What it measures:")
+            what_good = _extract_field(section, "What good looks like:")
+            common_failure = _extract_field(section, "Common failure mode:")
+            experiment_focus = _extract_field(section, "Experiment focus:")
+
+            assert what_it_measures, f"{pid}: 'What it measures' is empty"
+            assert what_good, f"{pid}: 'What good looks like' is empty"
+            assert common_failure, f"{pid}: 'Common failure mode' is empty"
+            assert experiment_focus, f"{pid}: 'Experiment focus' is empty"
+
+
+class TestNextExperimentPromptSubstitution:
+    """Verify the {{EXPERIMENT_TAXONOMY}} placeholder is replaced."""
+
+    def test_placeholder_is_substituted(self):
+        prompt = load_next_experiment_system_prompt()
+        assert "{{EXPERIMENT_TAXONOMY}}" not in prompt
+
+    def test_substituted_prompt_contains_taxonomy(self):
+        prompt = load_next_experiment_system_prompt()
+        assert "PATTERN TAXONOMY — EXPERIMENT DESIGN GUIDE" in prompt
+
+    def test_substituted_prompt_contains_all_patterns(self):
+        prompt = load_next_experiment_system_prompt()
+        for pid in EXPECTED_PATTERN_IDS:
+            assert pid in prompt, f"{pid} missing from next_experiment prompt"
+
+    def test_substituted_prompt_retains_surrounding_content(self):
+        prompt = load_next_experiment_system_prompt()
+        # Content before the placeholder
+        assert "EXPERIMENT DESIGN PHILOSOPHY" in prompt
+        # Content after the placeholder
+        assert "OUTPUT FORMAT" in prompt
