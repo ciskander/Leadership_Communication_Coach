@@ -1,0 +1,763 @@
+CLEARVOICE PATTERN TAXONOMY v3.0
+Role-conditioned, target-speaker-only, conservative counting.
+9 patterns in 4 clusters. Three scoring types: dual-element, tiered rubric, binary.
+
+────────────────────────────────────────────────────────────────
+
+### BEGIN:CORE_RULES ###
+
+CORE RULES (apply to all patterns)
+
+- Evaluate ONLY the target speaker identified by target_speaker_label.
+- Count ONLY target-controlled opportunities. If target control is ambiguous, exclude from both numerator and denominator.
+- Apply role-conditioned denominators as specified per pattern below.
+- If target-controlled opportunities < minimum threshold, mark insufficient_signal. Never force a score.
+- Do not infer intent or personality. Score observable verbal behavior only.
+- Evidence spans must reference turn-based excerpts with integer turn IDs.
+- Missing speaker attribution: attribution-dependent patterns not_evaluable.
+
+SCORING TYPES
+
+This taxonomy uses three scoring approaches matched to pattern structure:
+
+1. Dual-element scoring (Purposeful Framing, Resolution & Alignment):
+   - Two named elements required for full credit.
+   - Both elements present = 1.0 per opportunity.
+   - One element present = 0.5 per opportunity.
+   - Neither element present = 0.0 per opportunity.
+   - Score = sum of opportunity scores / opportunity_count, rounded to 4 decimals.
+   - Output must include element_a_count, element_b_count, and opportunity_count separately.
+
+2. Tiered rubric scoring (Participation Management, Disagreement Navigation, Communication Clarity, Focus Management):
+   - Each opportunity scored 0.0, 0.5, or 1.0 based on rubric level defined per pattern.
+   - Score = sum of opportunity scores / opportunity_count, rounded to 4 decimals.
+
+3. Binary scoring (Question Quality):
+   - Each opportunity scored 1.0 (purposeful) or 0.0 (not purposeful).
+   - Score = numerator / denominator, rounded to 4 decimals.
+
+4. Complexity-tiered scoring (Assignment Clarity):
+   - LLM classifies each assignment as simple or complex based on observable signals.
+   - Simple assignments scored on 3 core elements. Complex assignments scored on 5 core elements.
+   - See pattern definition for rubric details.
+
+5. Multi-element scoped scoring (Feedback Quality):
+   - Five sequential elements. Score = elements_present_count / 5 per opportunity.
+   - Scoped primarily to 1:1s and feedback-rich meeting types.
+
+PATTERN LIST (fixed output order)
+
+Cluster A — Meeting Structure & Direction:
+  1. purposeful_framing
+  2. focus_management
+
+Cluster B — Participation & Interpersonal Dynamics:
+  3. participation_management
+  4. disagreement_navigation
+
+Cluster C — Decisions & Accountability:
+  5. resolution_and_alignment
+  6. assignment_clarity
+
+Cluster D — Communication Quality:
+  7. question_quality
+  8. communication_clarity
+  9. feedback_quality
+
+Always output all 9 patterns in this fixed order.
+
+OPPORTUNITY vs. NON-OPPORTUNITY (applies to all patterns)
+
+For every potential moment, the fundamental classification is:
+
+- Scored opportunity (counts in denominator): The moment is a genuine opportunity for the target speaker to demonstrate the pattern behavior. It is scored per the pattern's scoring rubric — which may yield 1.0, 0.5, 0.25, or 0.0 depending on the pattern's scoring type. A score of 0.0 on a scored opportunity means a missed chance, which lowers the overall score.
+- Not an opportunity (excluded from denominator): The moment falls outside the pattern's scope entirely. It is invisible to the pattern and does not affect the score in either direction. Each pattern defines specific exclusion criteria under "Excluded from both numerator AND denominator."
+
+How each scored opportunity is evaluated — what earns full credit, partial credit, or zero — is defined by each pattern's scoring rubric (dual-element, tiered rubric, binary, complexity-tiered, or multi-element). Refer to the pattern definition for scoring details.
+
+When in doubt about whether a moment is a scored opportunity or not an opportunity, prefer excluding it. Undercounting is safer than miscounting.
+
+COACHING OUTPUT RULES
+
+- strengths: 0–2 patterns where the speaker performed well.
+- focus: exactly 1 pattern representing the highest-leverage area for improvement.
+- micro_experiment: exactly 1 concrete, specific behavioral experiment tied to the focus area.
+- Focus/micro-experiment selection should prioritize leverageable recurring behavior.
+- Tie-breaker priority when multiple patterns have similar scores: prefer patterns with more opportunities (larger denominator), then prefer patterns earlier in the cluster order A > B > C > D.
+
+### END:CORE_RULES ###
+
+────────────────────────────────────────────────────────────────
+
+### BEGIN:CLUSTER_A ###
+
+CLUSTER A — MEETING STRUCTURE & DIRECTION
+These patterns measure how the leader steers the meeting proactively (Purposeful Framing)
+and reactively (Focus Management).
+
+### END:CLUSTER_A ###
+
+────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:purposeful_framing ###
+
+PATTERN 1: purposeful_framing
+Cluster: A — Meeting Structure & Direction
+Scoring type: Dual-element
+
+What it measures:
+- Whether the target speaker frames topics with explicit purpose and direction — both when opening the meeting and when transitioning between topics throughout.
+
+Elements:
+- Element A: Topic identification. The speaker names what the group is discussing or shifting to.
+- Element B: Desired outcome. The speaker states what a good result looks like for this topic — what they want to leave with, what kind of output or decision is expected.
+
+Denominator (opportunity_count):
+- The meeting opening (if the target speaker leads it) PLUS each subsequent topic transition the target speaker initiates or owns during the meeting body.
+
+Counts as opportunity:
+- Target speaker opens the meeting or their segment.
+- Target speaker shifts from one topic to another, or introduces a new agenda item.
+
+Scoring per opportunity:
+- Both elements present = 1.0. Example: "Let's move to the pricing discussion — the goal is to lock in a direction today, not finalize numbers."
+- Element A only = 0.5. Example: "OK, let's move to pricing." (topic named, but no indication of desired outcome).
+- Element B only = 0.5. Example: "I want us to leave with a decision here." (outcome stated, but the topic isn't named in the transition).
+- Neither element = 0.0. Example: A transition with no framing — the speaker simply starts talking about a new subject without signaling the shift.
+
+Score = sum of opportunity scores / opportunity_count.
+
+Output fields:
+- element_a_count (topic identification instances)
+- element_b_count (desired outcome instances)
+- opportunity_count
+- score
+
+Excluded from both numerator AND denominator (not an opportunity):
+- Continuations within the same topic (e.g., "One more thing on this…") — these are not transitions.
+- Procedural transitions with no topical content ("Let me share my screen," "Hold on, let me pull that up").
+- Transitions initiated by another speaker that the target speaker does not take ownership of.
+- Greetings or pleasantries without any attempt at framing ("Good morning everyone, thanks for joining").
+- Restating the calendar invite title or meeting name without adding purpose or outcome.
+
+Role notes:
+- Chair: denominator includes the meeting open + all transitions they own. Expect the largest denominator.
+- Presenter: denominator includes their segment open + transitions within their segment.
+- Participant: only transitions they explicitly initiate. Do not penalize for transitions controlled by others.
+- 1:1 Manager: the meeting open + topic transitions they introduce.
+- 1:1 Report: only transitions they initiate. Mark not_evaluable if they do not initiate any.
+
+Minimum threshold:
+- 2 opportunities required. If only 1 opportunity exists (e.g., a short meeting with no transitions beyond the opening), mark insufficient_signal.
+
+Detection notes:
+- The meeting opening counts as the first opportunity. All subsequent transitions count as additional opportunities. Do not double-count the opening.
+- A single utterance may contain both elements woven together. Do not require them to be in separate sentences.
+
+Experiment guidance:
+- What good looks like: "Let's move to the retention numbers — I want to leave with agreement on whether we need to intervene this quarter or hold steady." Both topic and outcome are explicit.
+- Common failure mode: Naming the topic without the outcome ("OK, retention numbers"), or stating the outcome without naming the topic ("I want us to make a call on this" as a transition).
+- Experiment focus: Help the coachee build the habit of stating both elements — topic identification and desired outcome — when opening the meeting and at each transition. Prioritize whichever element the data shows is weaker.
+
+### END:PATTERN:purposeful_framing ###
+
+────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:focus_management ###
+
+PATTERN 2: focus_management
+Cluster: A — Meeting Structure & Direction
+Scoring type: Tiered rubric
+
+What it measures:
+- Whether the target speaker keeps the discussion aligned with stated objectives and manages drift. When conversation departs from the current topic, does the leader explicitly name the departure and either redirect or consciously sanction it?
+
+This is the reactive counterpart to Purposeful Framing's proactive behavior.
+
+Denominator (opportunity_count):
+- Episodes where the discussion moves off-topic, a tangent develops, or the conversation drifts from the stated agenda or current topic's purpose.
+
+Counts as opportunity:
+- A participant introduces a tangent or off-topic point.
+- The discussion gradually shifts away from the stated objective without explicit acknowledgment.
+- A sub-discussion develops that is not aligned with the current topic's framing.
+
+Scoring per opportunity (rubric):
+- 1.0 — The leader explicitly names the drift AND either redirects the group back to the topic or consciously sanctions the departure. Example: "We're getting into implementation details — let's park that for now and finish the strategy question first." Or: "This is off-agenda but it's important — let's take 5 minutes on it and then come back to pricing."
+- 0.5 — The leader partially manages the drift — e.g., redirects without naming what happened, or names the drift but doesn't clearly redirect or sanction. Example: "OK, let's get back on track" (redirects, but doesn't name what the drift was or why they're returning). Or: "That's a good point about implementation" (acknowledges the tangent, but lets it continue without a conscious decision).
+- 0.0 — The leader does not acknowledge the drift and the discussion continues off-topic without intervention.
+
+Score = sum of opportunity scores / opportunity_count.
+
+Excluded from both numerator AND denominator (not an opportunity):
+- Natural topic evolution where the discussion deepens or extends the current topic (not a departure, just development).
+- Brief asides (under ~2 turns) that self-correct without intervention needed.
+- Procedural interruptions (tech issues, latecomers) — these are not topical drift.
+- Drift episodes initiated and resolved by other participants without the target speaker's involvement or agency.
+- Meetings with no stated agenda or topic framing — if Purposeful Framing didn't establish a reference point, Focus Management has nothing to measure drift against. In this case, mark insufficient_signal.
+
+Role notes:
+- Chair: owns focus management for the full meeting. High denominator expected in long or multi-topic meetings.
+- Presenter: within their segment only.
+- Participant: only when they take explicit initiative to redirect or manage focus. Do not penalize for drift they don't control.
+- 1:1 Manager: owns focus management for the conversation. Denominator typically smaller.
+- 1:1 Report: mark not_evaluable unless they are leading the conversation.
+
+Minimum threshold:
+- 2 drift episodes required. If the meeting has 0–1 drift episodes, mark insufficient_signal. A meeting with no drift is a well-run meeting, not a scoreable one.
+
+Detection notes:
+- Identifying drift requires comparing the current discussion content against the most recently stated topic or objective. If no objective was stated (Purposeful Framing scored 0), drift detection becomes unreliable — mark insufficient_signal.
+- When in doubt about whether a discussion shift constitutes drift vs. natural topic evolution, exclude from both numerator and denominator. Undercounting drift is safer than overcounting.
+- The target speaker allowing a tangent to continue is not the same as the target speaker being unable to intervene. Only count drift as an opportunity when the target speaker has agency to redirect.
+
+Experiment guidance:
+- What good looks like: "We've moved into staffing questions — that's important but let's finish the budget decision first, then circle back." Names the drift, redirects, and acknowledges the value of the tangent.
+- Common failure mode: Discussion drifts for several minutes with no acknowledgment, or the leader says "let's stay focused" without naming what they're returning to.
+- Experiment focus: Help the coachee recognize drift moments in real time and make the redirect explicit — naming what the group drifted to, what they're returning to, and why. If the coachee tends to let tangents run, focus on building the intervention habit. If they redirect too abruptly, focus on acknowledging the tangent's value before steering back.
+
+### END:PATTERN:focus_management ###
+
+────────────────────────────────────────────────────────────────
+
+### BEGIN:CLUSTER_B ###
+
+CLUSTER B — PARTICIPATION & INTERPERSONAL DYNAMICS
+These patterns measure how the leader manages who speaks (Participation Management)
+and how they handle disagreement (Disagreement Navigation).
+
+### END:CLUSTER_B ###
+
+────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:participation_management ###
+
+PATTERN 3: participation_management
+Cluster: B — Participation & Interpersonal Dynamics
+Scoring type: Tiered rubric
+
+What it measures:
+- Whether the target speaker actively manages participation — distributing speaking turns, bringing in unheard voices, and ensuring appropriate conversational balance. This pattern captures a gradient from basic turn distribution to targeted inclusion of underrepresented perspectives.
+
+Denominator (opportunity_count):
+- Moments where the target speaker holds the floor and has agency to direct the next turn. Specifically:
+  - After the target speaker completes a substantive statement and the floor is open.
+  - After another participant finishes speaking and the target speaker takes a facilitating role (rather than responding substantively themselves).
+  - At structured transition points the target speaker controls.
+
+Scoring per opportunity (tiered):
+- 1.0 — Targeted inclusion: The speaker directs the floor to a specific person who has not yet been heard on the current topic, or explicitly amplifies a quieter participant's earlier point. Example: "Priya, you've worked closest with these customers — what's your read on this?" (Priya has not spoken on this topic.)
+- 0.5 — Named turn distribution: The speaker directs the floor to a specific named person or role, but that person has already contributed to this topic. Example: "Marcus, thoughts?" (Marcus has already spoken, but the speaker is actively managing turns.)
+- 0.0 — Generic open-floor prompt or missed opportunity: "Any thoughts?" / "Questions?" / A long monologue followed by "any questions?" / Holding the floor without inviting others.
+
+Score = sum of opportunity scores / opportunity_count.
+
+Excluded from both numerator AND denominator (not an opportunity):
+- Moments where the turn naturally passes without the target speaker having agency (e.g., a direct question to another participant from a third party).
+- Moments where the target speaker responds substantively to a question or point (they are contributing, not facilitating).
+- Moments where only two speakers are present (binary conversation — no participation to manage).
+- Non-verbal acknowledgment (nodding, gestures) — not observable in transcript.
+- Moments where someone else is actively facilitating and the target speaker appropriately defers.
+
+Contextual balance annotation:
+- In addition to the scored opportunities, provide a qualitative balance_assessment: over_indexed | balanced | under_indexed | unclear.
+- This annotation reflects whether the target speaker's overall share of speaking time is appropriate given their role.
+  - Chair/Facilitator: moderate-to-high share is appropriate. Flag over_indexed only if the chair is clearly dominating to the point where others cannot contribute.
+  - Presenter: high share acceptable within their segment. Evaluate the full meeting.
+  - Participant: flag over_indexed if dominating, under_indexed if not contributing given their stake.
+  - 1:1 Manager: roughly 40–60% balance expected. Flag if one party holds >75% consistently.
+  - 1:1 Report: same as above, mirror assessment.
+- Exclude procedural stretches (tech troubleshooting, waiting for latecomers) and reading aloud from shared materials when assessing balance.
+- If speaker attribution is insufficient, mark unclear.
+
+Role notes:
+- Chair/Facilitator: high denominator — turn management is a core responsibility. Score on the full meeting.
+- Presenter: within their segment only.
+- Participant: only when they choose to yield and redirect rather than hold the floor. Smaller denominator by design.
+- 1:1: mark not_evaluable for the scored portion (no participation to manage). Still provide the balance_assessment annotation.
+
+Minimum threshold:
+- 3 opportunities required for the scored portion. Fewer → insufficient_signal.
+- balance_assessment can always be provided regardless of opportunity count (except when attribution is unclear).
+
+Detection notes:
+- Distinguishing 1.0 (targeted inclusion) from 0.5 (named distribution) requires tracking who has spoken on the current topic. If the transcript doesn't provide enough information to determine who has been heard, default to 0.5 for any named invitation.
+- When in doubt about whether a moment constitutes an opportunity, exclude from both numerator and denominator.
+- "Any thoughts?" or "Does anyone have questions?" is always 0.0 — even if someone responds. The scoring is about the leader's behavior, not the outcome.
+
+Experiment guidance:
+- What good looks like: "Priya, you've been closest to the customer data — what's your read?" Names a specific person, invites them on a specific basis, targets someone not yet heard.
+- Common failure mode: "Any thoughts?" to the group, or extended monologues without check-ins.
+- Experiment focus: Help the coachee move from generic open-floor prompts to named invitations, and from named invitations to targeted inclusion of unheard voices. Focus on whichever tier represents the coachee's current growth edge based on observed behavior.
+
+### END:PATTERN:participation_management ###
+
+────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:disagreement_navigation ###
+
+PATTERN 4: disagreement_navigation
+Cluster: B — Participation & Interpersonal Dynamics
+Scoring type: Tiered rubric
+
+What it measures:
+- How the target speaker handles moments of disagreement, pushback, or conflict during the meeting. Does the leader engage constructively with the substance of the disagreement, or do they dismiss, escalate, or bulldoze past it?
+
+Denominator (opportunity_count):
+- Moments where the target speaker encounters or is involved in explicit disagreement, pushback, or tension — either directed at them, between other participants that they have agency to manage, or that they initiate.
+
+Counts as opportunity:
+- Another participant pushes back on the target speaker's position.
+- Two or more participants disagree and the target speaker has a facilitative role.
+- The target speaker disagrees with someone else's position.
+- Visible tension or conflict arises in the discussion and the target speaker has agency to intervene.
+
+Scoring per opportunity (rubric):
+- 1.0 — Constructive engagement. The speaker does ALL of the following that apply to the situation:
+  - Engages with the substance of the disagreement (addresses the actual point, not a straw man).
+  - Maintains factual and solution-oriented focus (forward-looking: "how do we resolve this" rather than backward-looking: "whose fault is this").
+  - Acknowledges the other perspective (names the opposing view fairly before stating their own).
+  - Works toward resolution or explicitly parks the disagreement with a concrete next step ("We're not aligned — let's schedule 30 minutes Thursday to work through the options").
+- 0.5 — Partial engagement. The speaker engages with some substance but falls short on one or more dimensions. Examples:
+  - Acknowledges the disagreement but shifts to blame framing.
+  - Maintains factual focus but doesn't work toward resolution or park the issue.
+  - Attempts to de-escalate but without engaging with the substance ("Let's not get into that now" without naming a path forward).
+  - Paraphrases the other view but then dismisses it without engaging ("I hear you, but we're going with Plan A").
+- 0.0 — Non-constructive response. The speaker does any of the following:
+  - Dismisses the disagreement entirely ("That's not relevant").
+  - Escalates — raises stakes, broadens accusations, shifts from issue to person.
+  - Makes it personal ("You always do this" / "That's a naive take").
+  - Bulldozes past the disagreement without acknowledging it.
+  - Allows visible conflict between others to continue without any intervention when they have clear agency to manage it.
+
+Score = sum of opportunity scores / opportunity_count.
+
+Excluded from both numerator AND denominator (not an opportunity):
+- Polite differences of opinion with no tension or stakes ("I'd lean toward option B, but either works" — this is a preference, not a disagreement).
+- Factual corrections without interpersonal friction ("Actually, that number is 42, not 38").
+- Disagreements between other participants that the target speaker has no role in and no agency to manage.
+- Moments where the target speaker is not present or not engaged in the exchange.
+
+Role notes:
+- Chair: denominator includes disagreements they're involved in AND disagreements between others that they should manage. Largest expected denominator.
+- Presenter: disagreements related to their content or proposals.
+- Participant: only disagreements they're directly involved in or choose to intervene in.
+- 1:1 Manager: all disagreements in the conversation. Expect moderate denominator.
+- 1:1 Report: all disagreements in the conversation.
+
+Minimum threshold:
+- 2 disagreement moments required. If fewer, mark insufficient_signal. A meeting with no disagreement is not scoreable — and is not necessarily a well-run meeting.
+
+Detection notes:
+- Distinguishing firm-but-constructive pushback from escalation is critical. "I disagree strongly, and here's why" is not escalation — it's direct engagement with substance. Escalation requires raising the emotional temperature or shifting from issue to person.
+- De-escalation language (lowering stakes, narrowing scope, acknowledging emotion) is a positive signal but alone does not warrant 1.0 — the speaker must also engage with the substance.
+- Solution-oriented language ("how do we fix this," "what would it take to…") vs. blame-oriented language ("the reason this happened is," "you should have…") is a primary detection signal.
+- When in doubt about whether a moment constitutes genuine disagreement vs. mild difference, exclude from both numerator and denominator.
+
+Experiment guidance:
+- What good looks like: "I see this differently — you're saying we should delay launch because of the QA risk, and that's a real concern. I think the market timing risk of delay is bigger. Can we map out both risk scenarios and decide based on that?"
+- Common failure mode: Dismissing pushback ("Let's not go there"), making it personal ("You're always risk-averse"), or bulldozing ("We're doing it my way — moving on").
+- Experiment focus: Help the coachee engage with the substance of disagreements rather than dismissing, escalating, or bulldozing. If the coachee tends to avoid conflict, focus on building the habit of naming disagreements directly. If they engage but escalate, focus on acknowledging the other perspective before responding. If they handle the substance well but don't drive toward resolution, focus on explicitly parking or resolving the disagreement.
+
+### END:PATTERN:disagreement_navigation ###
+
+────────────────────────────────────────────────────────────────
+
+### BEGIN:CLUSTER_C ###
+
+CLUSTER C — DECISIONS & ACCOUNTABILITY
+These patterns measure how the leader closes decisions and confirms shared understanding
+(Resolution & Alignment) and how they assign work (Assignment Clarity).
+
+### END:CLUSTER_C ###
+
+────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:resolution_and_alignment ###
+
+PATTERN 5: resolution_and_alignment
+Cluster: C — Decisions & Accountability
+Scoring type: Dual-element
+
+What it measures:
+- Whether the target speaker brings discussions to clear conclusions and confirms shared understanding before moving on. This combines the acts of naming what was decided with checking that the group agrees.
+
+Elements:
+- Element A: Named resolution. The speaker states explicitly what was decided, agreed, or concluded in concrete terms. Not vague ("we're roughly aligned") — specific ("we're going with phased rollout, enterprise first").
+- Element B: Alignment confirmation. The speaker checks that the group shares the understanding — either by explicitly asking ("Does that capture it?" / "Any objections?" / "Is everyone aligned?") or by pausing meaningfully for confirmation.
+
+Denominator (opportunity_count):
+- Topic closure moments where the target speaker controls or owns the conclusion. This includes:
+  - Decisions the target speaker introduced, was asked to make, or took explicit ownership of closing.
+  - End-of-topic transitions where the target speaker is responsible for wrapping up.
+  - End-of-meeting wrap-ups led by the target speaker.
+
+Scoring per opportunity:
+- Both elements present = 1.0. Example: "So we're going with option A — Jen leads implementation, phased rollout starting in Q3. Does that match what everyone heard? [pause] Good."
+- Element A only = 0.5. Example: "So we said we'd go with option B. Moving on…" (restates but does not check for alignment).
+- Element B only = 0.5. Example: "Everyone good? OK, next topic." (checks for alignment but does not restate what was agreed).
+- Neither element = 0.0. Example: The topic simply trails off or the speaker transitions without any recap or check.
+
+Score = sum of opportunity scores / opportunity_count.
+
+Output fields:
+- element_a_count (named resolution instances)
+- element_b_count (alignment confirmation instances)
+- opportunity_count
+- score
+
+Excluded from both numerator AND denominator (not an opportunity):
+- Decisions closed by another speaker that the target speaker did not introduce, shape, or own.
+- Informational items or status updates with no decision or conclusion at stake.
+- Exploratory discussions that are not yet ready for closure (the group is still diverging, not converging).
+- Decisions that were pre-made and merely announced — no closure behavior is needed.
+- End-of-meeting sign-offs with no substantive topic to recap ("Thanks everyone, talk next week").
+- Topic closures or transitions controlled by another speaker.
+- Minor sub-point shifts within the same topic (not a major closure moment).
+
+Role notes:
+- Chair: all decision and closure moments in the meeting.
+- Presenter: decisions and closures within their topic area.
+- Participant: only decisions they introduced, were asked to close, or actively shaped toward closure. Do not penalize for closure moments they don't control.
+- 1:1 Manager: all decisions and topic closures in the conversation.
+- 1:1 Report: decisions they propose or are responsible for.
+
+Minimum threshold:
+- 2 target-controlled closure moments required.
+
+Detection notes:
+- This pattern is about what was decided and whether there's shared understanding. It is distinct from Assignment Clarity, which is about who does what next. A single conversational moment may contain both a resolution and an assignment — score each under the appropriate pattern.
+- A vague summary ("So we're roughly aligned") does not qualify as Element A. The resolution must be specific enough that someone absent from the meeting could understand what was decided.
+- Element B does not require verbal confirmation from others — it requires the target speaker to create space for it (asking, pausing, inviting objections).
+
+Experiment guidance:
+- What good looks like: "Here's where we landed: we're going with the phased approach, starting with enterprise in Q3. Does that match what everyone heard?"
+- Common failure mode: Vague summaries ("we're roughly aligned"), or moving on without checking ("OK, next").
+- Experiment focus: Help the coachee build the two-part habit of naming the resolution explicitly AND checking for alignment before moving on. Prioritize whichever element the data shows is weaker. If both are weak, start with Element A (naming the resolution) — it's harder to check alignment on something you haven't stated.
+
+### END:PATTERN:resolution_and_alignment ###
+
+────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:assignment_clarity ###
+
+PATTERN 6: assignment_clarity
+Cluster: C — Decisions & Accountability
+Scoring type: Complexity-tiered
+
+What it measures:
+- Whether the target speaker assigns work with sufficient clarity for the assignee to succeed — including owner, deadline, deliverable definition, context, and confirmation of shared understanding. The scoring standard scales with the complexity of the assignment.
+
+Complexity classification:
+- The LLM classifies each assignment as SIMPLE or COMPLEX based on observable signals.
+- SIMPLE: Single-step, short-timeframe tasks (send an email, schedule a meeting, deliver a document, pull a data set). Typically completable within days. No significant judgment calls required.
+- COMPLEX: Multi-step work, longer timeframe (more than ~1 week), requires the assignee to make judgment calls, involves coordination with others, or represents a meaningful delegation of responsibility.
+- When the LLM cannot determine complexity, default to SIMPLE. Undercounting complexity is safer than overcounting.
+
+SIMPLE ASSIGNMENT ELEMENTS (3 core elements):
+- S1: Named owner. A specific person, not "someone" or "the team."
+- S2: Specific deadline. A date, day, or concrete timeframe, not "soon" or "when you get a chance."
+- S3: Clear deliverable. What the output is — specific enough to evaluate completion.
+
+SIMPLE SCORING:
+- 3 of 3 elements = 1.0
+- 2 of 3 elements = 0.5
+- 1 of 3 elements = 0.25
+- 0 of 3 elements = 0.0
+
+COMPLEX ASSIGNMENT ELEMENTS (5 core elements):
+- C1: Named owner. Same as S1.
+- C2: Specific deadline or milestones. Same as S2, but may include intermediate checkpoints.
+- C3: Clear deliverable / acceptance criteria. What the output is AND what good looks like — the definition of "done" or the quality bar. More detailed than S3.
+- C4: Purpose or rationale. Why this assignment matters, the context that helps the assignee make good judgment calls. Example: "The board wants to see retention trends — so focus the deck on cohort analysis, not aggregate numbers."
+- C5: Ownership confirmation. The speaker confirms the assignee understands and accepts — either by asking ("Does that make sense? Are you good to own this?") or by getting explicit verbal acceptance.
+
+COMPLEX SCORING:
+- 5 of 5 elements = 1.0
+- 4 of 5 elements = 0.75
+- 3 of 5 elements = 0.5
+- 2 of 5 elements = 0.25
+- 1 or 0 of 5 elements = 0.0
+
+BONUS ELEMENTS (for complex assignments — noted in coaching feedback when present, but do not affect score):
+- Autonomy specification: The speaker explicitly states the level of decision authority or ownership the assignee has. ("You have full call on the vendor selection" or "Check with me before committing budget.")
+- Communication expectations: The speaker defines how and when to check in, report progress, or escalate. ("Send me a draft by Wednesday, and let's sync Thursday before the client sees it.")
+
+These bonus elements are noted as strengths in coaching feedback when present but are not penalized when absent, because their relevance depends on assignment context that the LLM cannot always assess.
+
+Denominator (opportunity_count):
+- Assignments the target speaker initiates, negotiates, or explicitly accepts responsibility for.
+
+Score = sum of opportunity scores / opportunity_count (using the appropriate rubric per assignment).
+
+Output fields:
+- simple_count (number of simple assignments)
+- complex_count (number of complex assignments)
+- opportunity_count (total)
+- Per opportunity: complexity classification + elements present
+- score
+
+Excluded from both numerator AND denominator (not an opportunity):
+- Assignments made by others that the target speaker does not participate in specifying, negotiating, or accepting.
+- Vague references to future work with no concrete task attached ("We should think about this at some point").
+- Status updates on previously assigned work (re-reporting, not new assignment).
+- Work that is already complete or in progress and merely being acknowledged.
+- Decisions without associated action items (those belong to Resolution & Alignment).
+
+Role notes:
+- Chair: all assignments in the meeting.
+- Presenter: assignments within their initiative or topic area.
+- Participant: assignments they initiate, negotiate, or accept.
+- 1:1 Manager: all task assignments and delegations discussed. Expect higher proportion of complex assignments in 1:1s.
+- 1:1 Report: assignments they accept or clarify. Score on whether they confirm understanding, ask clarifying questions, or accept vague assignments without pushback.
+
+Minimum threshold:
+- 2 target-controlled assignment moments required.
+
+Detection notes:
+- The distinction between Resolution & Alignment and Assignment Clarity is: Resolution & Alignment asks "what did we decide?" and Assignment Clarity asks "who is doing what, by when, and how?" A single conversational moment often contains both — score each under the appropriate pattern.
+- For the 1:1 Report role, "accepting a vague assignment without pushback" is a coaching-relevant signal but should not be scored as a failed opportunity for the report — it should be noted in the coaching feedback as a growth area (the report could have asked clarifying questions).
+- The LLM should not score complexity classification retroactively based on the number of elements present. Classify first based on the nature of the work, then score based on elements present for that classification.
+
+Experiment guidance:
+- What good looks like: Simple — "James, send the client the revised proposal by Thursday end of day." (owner, deadline, deliverable). Complex — "Priya, I'd like you to own the Q3 retention analysis. The board wants to see cohort-level trends, not just aggregate numbers — so focus there. Aim for a draft by March 15, and let's sync the week before to review. Does that make sense? Are you good to lead this?" (owner, deadline, deliverable, context, confirmation).
+- Common failure mode: "Can someone handle the retention analysis?" (no owner, no deadline, no deliverable definition).
+- Experiment focus: Help the coachee pair every assignment with the essential elements it needs. For simple tasks, focus on whichever of owner/deadline/deliverable is most frequently missing. For complex delegations, focus on adding context and acceptance criteria — leaders who already specify owner and deadline often skip the "why" and the "what does done look like."
+
+### END:PATTERN:assignment_clarity ###
+
+────────────────────────────────────────────────────────────────
+
+### BEGIN:CLUSTER_D ###
+
+CLUSTER D — COMMUNICATION QUALITY
+These patterns measure the quality of the leader's own verbal contributions:
+how they ask questions (Question Quality), how clearly they communicate
+(Communication Clarity), and how they deliver feedback (Feedback Quality).
+
+### END:CLUSTER_D ###
+
+────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:question_quality ###
+
+PATTERN 7: question_quality
+Cluster: D — Communication Quality
+Scoring type: Binary
+
+What it measures:
+- Whether the questions the target speaker asks are purposeful — meaning they serve a clear function in advancing the conversation — rather than aimless or counterproductive.
+
+A question is purposeful when its reason for being asked is evident from context. This includes both decision-linked questions AND strategically open questions that serve a facilitative purpose.
+
+Denominator (opportunity_count):
+- Substantive questions the target speaker asks of others during the meeting.
+
+Scoring per opportunity:
+- 1.0 — Purposeful question. The question serves a clear, identifiable function. Categories of purposeful questions include:
+  - Decision-linked: Tied to a specific decision, gap, or action the group needs to resolve. Example: "Thomas, if we use 'intelligent recommendations,' does that require a disclaimer on the homepage?"
+  - Assumption-surfacing: Opens up an unexamined premise. Example: "Are we assuming the client will renew? What if they don't?"
+  - Perspective-broadening: Invites a viewpoint that's been absent. Example: "What would the customer experience team say about this approach?"
+  - Constraint-testing: Probes a specific limitation or risk. Example: "What breaks if we try to do this in two weeks instead of four?"
+  - Deepening: Drives the conversation to a more concrete or specific level. Example: "When you say 'quality dropped,' what specifically did you see?"
+
+- 0.0 — Not purposeful. The question does not serve a discernible function in moving the conversation forward. Categories:
+  - Aimless open questions: No clear target or purpose. Example: "What does everyone think about our approach?" / "Any general thoughts?"
+  - Leading questions: Assert a position in question form rather than genuinely seeking input. Example: "Don't you think we should just go with option A?"
+  - Unfocused multi-part questions: String together multiple questions that invite broad, scattered discussion rather than unlocking a specific insight. Example: "What do you think about the timeline, and are we staffed right, and what about the budget?"
+
+Score = purposeful_count / opportunity_count.
+
+Excluded from both numerator AND denominator (not an opportunity):
+- Rhetorical questions not expecting an answer ("Who wouldn't want that?").
+- Clarifying questions that merely restate or echo what was said ("So you're saying it's delayed?").
+- Procedural, logistical, or technical questions about meeting mechanics — audio/video checks ("Can you hear me?"), scheduling ("What time do we need to wrap?"), roll call, quorum checks.
+- Questions directed at the target speaker by others (wrong direction).
+- Self-directed thinking-aloud phrased as questions ("What was I going to say?").
+
+Role notes:
+- Apply consistently across all roles. Role affects volume of questions, not the standard.
+
+Minimum threshold:
+- 3 substantive questions asked by the target speaker required.
+
+Detection notes:
+- The key distinction is not open vs. closed, but purposeful vs. aimless. An open question with a clear facilitative purpose ("What are we not seeing?") is purposeful. A closed question with no clear stake ("Is everyone OK with this?") may not be.
+- Context matters for determining purpose. "What do you think?" directed at a specific person on a specific topic after a substantive discussion may be purposeful (inviting a perspective). The same question to the room at large with no specific context is aimless.
+- When in doubt about whether a question is purposeful or aimless, consider: could you explain why this question was asked at this moment? If yes, it's purposeful. If no, it's aimless.
+
+Experiment guidance:
+- What good looks like: Short, specific questions that target a decision, assumption, risk, or perspective. "What breaks if we ship this two weeks early?" is sharp. "What does everyone think?" is not.
+- Common failure mode: Aimless open questions to the group, multi-part questions that scatter attention, or leading questions that shut down real input.
+- Experiment focus: Help the coachee ask shorter, sharper questions with a clear purpose — whether that purpose is driving a decision, surfacing assumptions, broadening perspective, or testing constraints. If the coachee defaults to aimless open questions, focus on targeting questions to specific decisions or gaps. If they tend toward leading questions, focus on genuine inquiry.
+
+### END:PATTERN:question_quality ###
+
+────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:communication_clarity ###
+
+PATTERN 8: communication_clarity
+Cluster: D — Communication Quality
+Scoring type: Tiered rubric
+
+What it measures:
+- Whether the target speaker's own substantive contributions are clear, structured, and proportionate — as opposed to meandering, unfocused, or disconnected from the conversation.
+
+Denominator (opportunity_count):
+- Substantive speaking turns by the target speaker that are 3+ sentences long. Shorter turns do not provide enough signal to assess clarity.
+
+Scoring per opportunity (rubric):
+- 1.0 — Clear and structured. The turn demonstrates MOST of the following:
+  - States the main point early (BLUF — bottom line up front) rather than burying it after extended preamble.
+  - Responds to the question or point that was actually on the table (not a different question or a tangent).
+  - Completes one thought before moving to the next (does not interleave or abandon lines of reasoning).
+  - Is proportionate — the length matches the complexity and importance of the point.
+  - Uses concrete, specific language rather than vague abstractions.
+
+- 0.5 — Partially clear. The turn has a discernible point but falls short on structure or focus. Examples:
+  - The point is present but buried — the speaker arrives at their conclusion only after extended preamble or reasoning.
+  - The response is relevant but meanders — includes digressions or repetition before returning to the main thread.
+  - Mostly concrete but with patches of vagueness ("we need to improve our approach" without specifying what that means).
+  - Starts addressing the question asked but drifts into an adjacent topic.
+
+- 0.0 — Unclear or unfocused. The turn exhibits one or more of the following:
+  - No discernible main point — the speaker talks at length without arriving at a conclusion or recommendation.
+  - Responds to a different question or point than the one that was asked or raised.
+  - Circular — repeats the same idea in different words without advancing the discussion.
+  - Abandons thoughts mid-stream and jumps to unrelated points.
+  - Grossly disproportionate — a lengthy monologue for a simple point, or a terse non-answer for a complex question requiring substance.
+
+Score = sum of opportunity scores / opportunity_count.
+
+Excluded from both numerator AND denominator (not an opportunity):
+- Turns shorter than 3 sentences (insufficient signal for clarity assessment).
+- Reading aloud from slides, documents, or prepared scripts (this reflects the source material's clarity, not the speaker's).
+- Procedural or logistical statements (scheduling, tech troubleshooting).
+- Social pleasantries, greetings, sign-offs.
+- Turns where the speaker is asked to brainstorm or think aloud — these are intentionally unstructured and should not be scored against a clarity standard.
+
+Role notes:
+- Apply consistently across all roles. Role affects the volume and expected complexity of substantive turns, not the clarity standard.
+
+Minimum threshold:
+- 3 substantive turns of 3+ sentences required.
+
+Detection notes:
+- BLUF (bottom line up front) is the strongest individual signal. If the speaker states their conclusion, recommendation, or position in the first sentence of their turn, that is a strong indicator of clarity.
+- "Responds to the question actually asked" requires comparing the speaker's turn to the prior question or point. If there is no clear prior question (the speaker is introducing a new topic), this dimension does not apply to that turn.
+- Proportionality is context-dependent. A complex strategic question warrants a longer response. A simple factual question does not. Score proportionality relative to the complexity of the point, not against an absolute length standard.
+- Context affects concreteness expectations. In an early brainstorming discussion, more abstract language is appropriate. In a decision-making or planning context, vagueness is a clearer failure. Apply conservative scoring — only score vagueness as a failure when the context clearly calls for specificity.
+- When in doubt about whether a turn is 0.5 or 1.0, prefer 0.5. When in doubt about whether it's 0.0 or 0.5, prefer 0.5. Center of the rubric is the safe zone.
+
+Experiment guidance:
+- What good looks like: "I think we should delay launch by two weeks. Here's why: QA flagged three issues in the payment flow, and we can't ship with unresolved payment bugs. Two weeks gives us time to fix and retest. The trade-off is we miss the conference window, but I'd rather ship clean." Point first, reasoning second, trade-off acknowledged, proportionate length.
+- Common failure mode: Starting with extensive context and reasoning before arriving at the point, or talking at length without ever stating a clear position.
+- Experiment focus: Help the coachee lead with their main point before providing reasoning (BLUF), respond directly to the question or topic on the table, and keep contributions proportionate to the complexity of the point. Prioritize whichever clarity dimension the data shows is weakest — buried conclusions, tangential responses, and disproportionate length are distinct failure modes with different fixes.
+
+### END:PATTERN:communication_clarity ###
+
+────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:feedback_quality ###
+
+PATTERN 9: feedback_quality
+Cluster: D — Communication Quality
+Scoring type: Multi-element (SBI-RC framework)
+
+What it measures:
+- Whether the target speaker delivers feedback using a structured, effective approach — grounding it in a specific situation and observable behavior, naming the impact, offering a recommendation, and checking in with the recipient. Based on the SBI-RC model.
+
+This pattern is scoped primarily to 1:1 meetings and feedback-rich meeting types (performance reviews, coaching sessions, retrospectives, project debriefs). In standard group meetings, feedback moments are rare and this pattern will typically return insufficient_signal.
+
+Elements (5, sequential):
+- S — Situation: The speaker references a specific situation or context. ("In yesterday's client call…" / "During the sprint review last week…").
+- B — Behavior: The speaker names a specific, observable behavior — what the person actually did or said, not a character judgment. ("You interrupted the client twice during their question" rather than "You were rude").
+- I — Impact: The speaker states the effect or consequence of the behavior. ("…which made them hesitant to share their remaining concerns" / "…which meant the team didn't have the context they needed").
+- R — Request or Recommendation: The speaker names what they'd like to see going forward — a specific behavioral change or action. ("Next time, try waiting for them to finish their thought before responding" / "I'd like you to share the pre-read 24 hours before the meeting").
+- C — Check-in: The speaker invites the recipient's response, reaction, or perspective. ("How does that land?" / "Does that match your read on it?" / "What's your take?").
+
+Scoring per feedback instance:
+- Score = elements_present / 5, rounded to 2 decimals.
+- 5/5 = 1.0 (complete structured feedback)
+- 4/5 = 0.8
+- 3/5 = 0.6
+- 2/5 = 0.4
+- 1/5 = 0.2
+- 0/5 = 0.0 (unstructured feedback — a judgment delivered with no grounding)
+
+Overall score = average of per-instance scores across all feedback moments.
+
+Output fields:
+- Per instance: which elements were present (S, B, I, R, C) and which were absent.
+- opportunity_count (number of feedback instances)
+- score
+
+Denominator (opportunity_count):
+- Moments where the target speaker delivers evaluative or developmental feedback to another person — positive or constructive. This includes:
+  - Performance feedback (strengths or development areas).
+  - Behavioral feedback (observations about how someone acted or communicated).
+  - Project or work-product feedback with a developmental component (not just "this is good" but "here's what made it effective" or "here's what to improve").
+
+Excluded from both numerator AND denominator (not an opportunity):
+- Factual corrections without developmental intent ("That number is wrong — it's 42").
+- General praise with no specific behavioral reference ("Great job, everyone").
+- Task direction or instruction that is not evaluative ("Please update the spreadsheet by Friday" — this is Assignment Clarity, not feedback).
+- Questions or coaching inquiries (these belong to Question Quality).
+- Vague expressions of dissatisfaction with no attempt at structured feedback ("This isn't working" without any specific behavioral observation). Note: these should be flagged in coaching commentary as missed feedback opportunities, but are not scored because they don't meet the threshold of a feedback attempt.
+
+Role notes:
+- 1:1 Manager: primary context for this pattern. Expect the highest denominator.
+- 1:1 Report: feedback delivered upward. Same standard applies — structured feedback is effective in all directions.
+- Chair: occasionally relevant in retrospectives or debriefs.
+- Presenter/Participant: rarely relevant. Mark not_evaluable unless the meeting type involves explicit feedback exchange.
+
+Minimum threshold:
+- 2 feedback instances required.
+
+Meeting type scoping:
+- 1:1 meetings: always evaluate this pattern.
+- Retrospectives, debriefs, coaching sessions, performance reviews: always evaluate.
+- Standard team meetings, project meetings, planning meetings: mark not_evaluable unless explicit feedback exchange is observed.
+
+Detection notes:
+- The elements do not need to appear in strict S-B-I-R-C order, but all must be present for full credit. Many effective feedback moments weave elements together naturally.
+- Positive feedback counts. "In the client meeting Tuesday, you summarized their concerns before responding — that really helped de-escalate the conversation. Keep doing that." scores S, B, I, R (implicit: continue the behavior). Missing the check-in (C).
+- Distinguish between feedback (evaluative, developmental) and instruction (directive, task-oriented). "Send the report by Friday" is an instruction. "When you sent the report late last week, it meant the team couldn't prepare — I need you to prioritize the Friday deadline going forward. What would help you hit it?" is feedback.
+- The B element (Behavior) must reference observable actions, not character traits or generalizations. "You're not a team player" is a judgment, not a behavior observation. "You didn't attend the last three team syncs" is a behavior observation.
+
+Experiment guidance:
+- What good looks like: "In the product review yesterday [S], you pushed back on the design team's timeline without acknowledging the constraints they'd shared [B]. It put them on the defensive and we lost 15 minutes re-litigating instead of problem-solving [I]. Next time, try leading with what you heard from them before stating your concern [R]. How does that land with you? [C]"
+- Common failure mode: Jumping to the recommendation without grounding it in situation and behavior ("You need to be more collaborative"), or delivering observation + judgment without a path forward ("That meeting didn't go well").
+- Experiment focus: Help the coachee deliver more structured feedback using the SBI-RC framework. Identify which elements are typically missing — leaders often skip the Situation and Behavior grounding (jumping straight to judgment), omit the Impact (leaving the recipient to guess why it matters), or skip the Check-in (making feedback feel one-directional). Focus the experiment on the weakest element in the chain.
+
+### END:PATTERN:feedback_quality ###
+
+────────────────────────────────────────────────────────────────
+
+### BEGIN:GENERAL_DETECTION_GUIDANCE ###
+
+GENERAL DETECTION GUIDANCE
+
+Conservative counting in practice:
+- "Target-controlled" means the target speaker had clear agency over whether the behavior occurred. If the situation forced a particular response, it may not be a true opportunity — exclude from both numerator and denominator.
+- When a behavior is borderline between "failed opportunity" and "not an opportunity," prefer excluding from both. Undercounting is safer than miscounting.
+
+Role-conditioned floor effects:
+- Participants have smaller denominators than Chairs by design. A Participant with 2 clean resolution closures in a meeting they did not run is demonstrating strong behavior. Do not penalize the role.
+- Some patterns will return insufficient_signal or not_evaluable for certain roles/meeting types. This is expected and correct. Not every pattern applies to every meeting.
+
+Insufficient signal vs. not_evaluable:
+- insufficient_signal: The pattern is applicable to this role/meeting type, but there were too few target-controlled opportunities to score it (below minimum threshold).
+- not_evaluable: The pattern fundamentally does not apply (e.g., participation_management scored portion in a 1:1, feedback_quality in a standard team meeting, or any pattern requiring speaker attribution when labels are absent).
+
+Cluster-level coaching:
+- When generating coaching feedback, consider patterns within the same cluster together. Cluster A patterns reinforce each other (proactive + reactive meeting steering). Cluster C patterns reinforce each other (closing decisions + specifying assignments). If both patterns in a cluster are weak, the cluster-level insight is often more actionable than the individual pattern scores.
+
+Meeting type expectations:
+- Team meetings with a chair: Expect all Cluster A, B, C patterns to be evaluable. Cluster D varies.
+- Presentations: Cluster A (within segment), C, and D are primary. Cluster B is limited to the Q&A/discussion portion.
+- 1:1 meetings: Cluster A and C apply. Cluster B scored portion is not_evaluable (provide balance annotation only). Feedback Quality is primary in Cluster D.
+- Retrospectives/debriefs: All clusters apply. Feedback Quality and Disagreement Navigation are particularly relevant.
+
+### END:GENERAL_DETECTION_GUIDANCE ###
