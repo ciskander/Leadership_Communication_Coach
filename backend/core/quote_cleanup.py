@@ -40,8 +40,9 @@ CLEANUP_MODEL: str = os.getenv("QUOTE_CLEANUP_MODEL", "gpt-4o-mini")
 _BATCH_SIZE: int = 15
 
 # Timeout for each cleanup LLM call (seconds).
-# With _BATCH_SIZE=15, gpt-4o-mini typically completes in 5-10s.
-_CLEANUP_TIMEOUT: float = 20.0
+# With _BATCH_SIZE=15, gpt-4o-mini typically completes in 5-10s,
+# but can be slower under API load.
+_CLEANUP_TIMEOUT: float = 60.0
 
 # Total wall-clock budget for the entire cleanup operation (seconds).
 # This runs inside the Celery worker (not the HTTP handler), so we are not
