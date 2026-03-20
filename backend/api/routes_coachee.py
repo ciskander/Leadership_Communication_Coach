@@ -793,6 +793,13 @@ async def get_experiment_options(
     proposed_records = at_client.get_proposed_experiments_for_user(
         user.airtable_user_record_id, max_records=3
     )
+    # Sort so baseline-pack-linked experiment (the original recommendation)
+    # comes first, then by creation time (worker creates in priority order).
+    # This matches the ordering used by get_proposed_experiments().
+    proposed_records.sort(key=lambda r: (
+        0 if r.get("fields", {}).get("Baseline Pack") else 1,
+        r.get("createdTime", ""),
+    ))
     proposed = [_build_experiment_response(r) for r in proposed_records]
 
     parked_records = at_client.get_parked_experiments_for_user(user.airtable_user_record_id)
