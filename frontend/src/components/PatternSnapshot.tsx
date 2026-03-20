@@ -601,30 +601,32 @@ export function PatternCard({
                   )}
                 </div>
               )}
-              <div>
-                <SectionLabel text={STRINGS.common.whereYouCanImprove} />
-                {hasCoaching && (
-                  <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{pattern.coaching_note}</p>
-                )}
-                {rewriteTargetQuotes.length > 0 && (
-                  <div>
-                    <SectionLabel text={STRINGS.common.forExampleYouSaid} />
-                    <EvidenceQuoteList quotes={rewriteTargetQuotes} targetSpeaker={targetSpeaker} />
-                  </div>
-                )}
-                {pattern.suggested_rewrite && (
-                  <div className="mt-2">
-                    <SectionLabel text={STRINGS.common.nextTimeTry} />
-                    <SuggestedRewrite text={pattern.suggested_rewrite} />
-                  </div>
-                )}
-                {otherFailureQuotes.length > 0 && (
-                  <div className="mt-2">
-                    <SectionLabel text={STRINGS.common.otherMoments} />
-                    <EvidenceQuoteList quotes={otherFailureQuotes} targetSpeaker={targetSpeaker} />
-                  </div>
-                )}
-              </div>
+              {(hasCoaching || rewriteTargetQuotes.length > 0 || pattern.suggested_rewrite || otherFailureQuotes.length > 0) && (
+                <div>
+                  <SectionLabel text={STRINGS.common.whereYouCanImprove} />
+                  {hasCoaching && (
+                    <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{pattern.coaching_note}</p>
+                  )}
+                  {rewriteTargetQuotes.length > 0 && (
+                    <div>
+                      <SectionLabel text={STRINGS.common.forExampleYouSaid} />
+                      <EvidenceQuoteList quotes={rewriteTargetQuotes} targetSpeaker={targetSpeaker} />
+                    </div>
+                  )}
+                  {pattern.suggested_rewrite && (
+                    <div className="mt-2">
+                      <SectionLabel text={STRINGS.common.nextTimeTry} />
+                      <SuggestedRewrite text={pattern.suggested_rewrite} />
+                    </div>
+                  )}
+                  {otherFailureQuotes.length > 0 && (
+                    <div className="mt-2">
+                      <SectionLabel text={STRINGS.common.otherMoments} />
+                      <EvidenceQuoteList quotes={otherFailureQuotes} targetSpeaker={targetSpeaker} />
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
 
@@ -645,7 +647,8 @@ export function PatternCard({
           )}
 
           {/* Zero / no-numerator score (excluding conversational balance) */}
-          {!isConversationalBalance && !isPerfectScore && !isMixedScore && (
+          {!isConversationalBalance && !isPerfectScore && !isMixedScore &&
+            (hasCoaching || rewriteTargetQuotes.length > 0 || pattern.suggested_rewrite || otherFailureQuotes.length > 0) && (
             <div>
               <SectionLabel text={STRINGS.common.whereYouCanImprove} />
               {hasCoaching && (
