@@ -393,16 +393,6 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                   const rewriteGroupQuotes = rewriteSpanId
                     ? detectionQuotes.filter(q => q.span_id === rewriteSpanId)
                     : [];
-                  // For multi-speaker spans, prefer the target speaker's quote
-                  // under "For example, you said" — not the first turn which may
-                  // be a non-target speaker providing context.
-                  const targetIdx = rewriteGroupQuotes.findIndex(q => q.is_target_speaker === true);
-                  const rewriteQuote = targetIdx >= 0
-                    ? rewriteGroupQuotes[targetIdx]
-                    : (rewriteGroupQuotes.length > 0 ? rewriteGroupQuotes[0] : null);
-                  const otherRewriteQuotes = rewriteGroupQuotes.filter((_, i) =>
-                    i !== (targetIdx >= 0 ? targetIdx : 0)
-                  );
 
                   return (
                     <div className="space-y-3 pt-2">
@@ -428,13 +418,13 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                         </div>
                       )}
 
-                      {/* For example, you said — the specific rewrite-target quote */}
-                      {rewriteQuote && (
+                      {/* For example, you said — the full rewrite evidence span */}
+                      {rewriteGroupQuotes.length > 0 && (
                         <div>
                           <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
                             {STRINGS.common.forExampleYouSaid}
                           </p>
-                          <EvidenceQuote quote={rewriteQuote} targetSpeaker={targetSpeaker} />
+                          <EvidenceQuoteList quotes={rewriteGroupQuotes} targetSpeaker={targetSpeaker} />
                         </div>
                       )}
 
@@ -452,15 +442,6 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                         </div>
                       )}
 
-                      {/* Other moments — remaining quotes in the rewrite group */}
-                      {otherRewriteQuotes.length > 0 && (
-                        <div>
-                          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                            {STRINGS.common.otherMoments}
-                          </p>
-                          <EvidenceQuoteList quotes={otherRewriteQuotes} targetSpeaker={targetSpeaker} />
-                        </div>
-                      )}
                     </div>
                   );
                 })()}
