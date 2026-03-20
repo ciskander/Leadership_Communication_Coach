@@ -434,7 +434,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                           <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
                             {STRINGS.common.nextTimeTry}
                           </p>
-                          <blockquote className="border-l-4 border-cv-teal-700 pl-4 py-1 my-2 bg-cv-teal-50 rounded-r-md">
+                          <blockquote className="border-l-[2px] border-cv-teal-700 pl-4 py-1 my-2 bg-cv-teal-50 rounded-r-md">
                             <p className="text-sm text-cv-stone-700 italic">
                               &ldquo;{detection.suggested_rewrite}&rdquo;
                             </p>
