@@ -469,10 +469,22 @@ def process_single_meeting_analysis(
     sys_prompt = system_prompt_override or _load_system_prompt_from_config(client, config_links)
     dev_message = developer_message_override or _load_developer_message_from_config(client, config_links)
 
-    # 6a. Mark run_request as processing so the frontend knows work has started
+    # 6a. Debug: log taxonomy content being sent to LLM
+    _dev_pattern_ids = [m.group(1) for m in re.finditer(r'### BEGIN:PATTERN:(\w+) ###', dev_message)]
+    logger.info(
+        "TAXONOMY DEBUG [single_meeting] run_request=%s | sys_prompt=%d chars | "
+        "dev_message=%d chars | %d patterns: %s | has CORE_RULES=%s | "
+        "user_message=%d chars",
+        run_request_id, len(sys_prompt), len(dev_message),
+        len(_dev_pattern_ids), _dev_pattern_ids,
+        "### BEGIN:CORE_RULES ###" in dev_message,
+        len(prompt_payload.raw_user_message),
+    )
+
+    # 6b. Mark run_request as processing so the frontend knows work has started
     client.update_run_request_status(run_request_id, "processing")
 
-    # 6b. Call LLM
+    # 6c. Call LLM
     openai_resp = call_llm(
         system_prompt=sys_prompt,
         developer_message=dev_message,
@@ -841,7 +853,21 @@ def process_baseline_pack_build(
     sys_prompt = system_prompt_override or load_baseline_system_prompt()
     dev_message = developer_message_override or _load_developer_message_from_config(client, config_links)
 
-    # 5. Call LLM
+    # 5. Debug: log taxonomy content being sent to LLM
+    _dev_pattern_ids = [m.group(1) for m in re.finditer(r'### BEGIN:PATTERN:(\w+) ###', dev_message)]
+    logger.info(
+        "TAXONOMY DEBUG [baseline_pack] baseline_pack_id=%s | sys_prompt=%d chars | "
+        "dev_message=%d chars | %d patterns: %s | has CORE_RULES=%s | "
+        "user_message=%d chars | %d meeting_summaries",
+        prompt_payload.context.get("baseline_pack_id") if isinstance(prompt_payload.context, dict) else "?",
+        len(sys_prompt), len(dev_message),
+        len(_dev_pattern_ids), _dev_pattern_ids,
+        "### BEGIN:CORE_RULES ###" in dev_message,
+        len(prompt_payload.raw_user_message),
+        len(summaries),
+    )
+
+    # 5b. Call LLM
     # Baseline packs produce ~10-12 k tokens of JSON (10 patterns + coaching).
     # The global default (8 192) is too tight and causes finish_reason=length
     # truncations.  Use 16 384 unless an Airtable config override is set.
@@ -1448,6 +1474,19 @@ def process_next_experiment_suggestion(
 
     # 5. Load system prompt from file and model name from active config
     experiment_system_prompt = load_next_experiment_system_prompt()
+
+    _exp_pattern_ids = [m.group(1) for m in re.finditer(r'── (\w+) ──', experiment_system_prompt)]
+    logger.info(
+        "TAXONOMY DEBUG [next_experiment] user=%s | sys_prompt=%d chars | "
+        "placeholder_substituted=%s | %d patterns: %s | "
+        "has EXPERIMENT_DESIGN_GUIDE=%s | user_message=%d chars",
+        user_record_id,
+        len(experiment_system_prompt),
+        "{{EXPERIMENT_TAXONOMY}}" not in experiment_system_prompt,
+        len(_exp_pattern_ids), _exp_pattern_ids,
+        "PATTERN TAXONOMY" in experiment_system_prompt,
+        len(user_message),
+    )
 
     model_name: Optional[str] = None
     try:
