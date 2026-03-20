@@ -1115,6 +1115,19 @@ async def client_summary(
                 reverse=True,
             )
 
+            # Deduplicate baseline_pack runs: keep only the most recent
+            # Gate1-passing one.  Failed retries and older successful runs
+            # are noise for the coachee (there is a dedicated baseline page).
+            seen_baseline = False
+            filtered_runs: list[dict] = []
+            for run_entry in recent_runs:
+                if run_entry["analysis_type"] == "baseline_pack":
+                    if not run_entry.get("gate1_pass") or seen_baseline:
+                        continue
+                    seen_baseline = True
+                filtered_runs.append(run_entry)
+            recent_runs = filtered_runs
+
         except Exception as e:
             logger.warning("Error building client summary: %s", e)
 
