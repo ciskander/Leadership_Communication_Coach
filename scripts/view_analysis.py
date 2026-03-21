@@ -9,7 +9,9 @@ Usage:
 """
 
 import argparse
+import glob
 import json
+import os
 import sys
 from typing import Any
 
@@ -626,9 +628,15 @@ def main():
     )
     parser.add_argument(
         "files",
-        nargs="+",
+        nargs="*",
         metavar="FILE",
         help="JSON analysis file(s). Use - for stdin.",
+    )
+    parser.add_argument(
+        "-d",
+        "--dir",
+        metavar="DIR",
+        help="Process all .json files in this directory",
     )
     parser.add_argument(
         "-o",
@@ -666,9 +674,23 @@ def main():
                     f"Unknown pattern '{p}'. Valid: {', '.join(PATTERN_IDS)}"
                 )
 
+    # Collect file paths
+    file_paths = list(args.files or [])
+    if args.dir:
+        dir_path = os.path.expanduser(args.dir)
+        if not os.path.isdir(dir_path):
+            parser.error(f"Not a directory: {dir_path}")
+        found = sorted(glob.glob(os.path.join(dir_path, "*.json")))
+        if not found:
+            parser.error(f"No .json files found in {dir_path}")
+        file_paths.extend(found)
+
+    if not file_paths:
+        parser.error("No input files. Provide FILE arguments or use --dir.")
+
     # Load analyses
     analyses = []
-    for path in args.files:
+    for path in file_paths:
         try:
             analyses.append(load_analysis(path))
         except (json.JSONDecodeError, FileNotFoundError) as exc:
