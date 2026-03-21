@@ -64,9 +64,9 @@ def test_empty_string_fails():
 # ---------------------------------------------------------------------------
 
 def test_wrong_pattern_count_fails(valid_single_meeting_output):
-    """Removing a pattern should cause failure (must have exactly 10)."""
+    """Removing a pattern should cause failure (must have exactly 9)."""
     bad = copy.deepcopy(valid_single_meeting_output)
-    bad["pattern_snapshot"] = bad["pattern_snapshot"][:9]
+    bad["pattern_snapshot"] = bad["pattern_snapshot"][:8]
     result = validate(json.dumps(bad))
     assert result.passed is False
 
@@ -75,7 +75,7 @@ def test_wrong_pattern_order_fails(valid_single_meeting_output):
     """Swapping two patterns violates the required order."""
     bad = copy.deepcopy(valid_single_meeting_output)
     snap = bad["pattern_snapshot"]
-    snap[0], snap[1] = snap[1], snap[0]  # swap agenda_clarity and objective_signaling
+    snap[0], snap[1] = snap[1], snap[0]  # swap purposeful_framing and focus_management
     result = validate(json.dumps(bad))
     assert result.passed is False
 
@@ -87,43 +87,22 @@ def test_invalid_pattern_id_fails(valid_single_meeting_output):
     assert result.passed is False
 
 
-def test_numeric_pattern_missing_ratio_fails(valid_single_meeting_output):
+def test_numeric_pattern_missing_score_fails(valid_single_meeting_output):
     bad = copy.deepcopy(valid_single_meeting_output)
-    # Find first evaluable numeric pattern
+    # Find first evaluable pattern and remove its score
     for p in bad["pattern_snapshot"]:
-        if p.get("evaluable_status") == "evaluable" and p["pattern_id"] != "conversational_balance":
-            del p["ratio"]
+        if p.get("evaluable_status") == "evaluable":
+            del p["score"]
             break
     result = validate(json.dumps(bad))
     assert result.passed is False
 
 
-def test_numerator_exceeds_denominator_fails(valid_single_meeting_output):
+def test_score_exceeds_one_fails(valid_single_meeting_output):
     bad = copy.deepcopy(valid_single_meeting_output)
     for p in bad["pattern_snapshot"]:
-        if p.get("evaluable_status") == "evaluable" and p["pattern_id"] != "conversational_balance":
-            p["numerator"] = p["denominator"] + 1
-            p["ratio"] = round(p["numerator"] / p["denominator"], 4)
-            break
-    result = validate(json.dumps(bad))
-    assert result.passed is False
-
-
-def test_conversational_balance_must_not_have_ratio(valid_single_meeting_output):
-    bad = copy.deepcopy(valid_single_meeting_output)
-    for p in bad["pattern_snapshot"]:
-        if p["pattern_id"] == "conversational_balance":
-            p["ratio"] = 0.5  # should not be present
-            break
-    result = validate(json.dumps(bad))
-    assert result.passed is False
-
-
-def test_conversational_balance_missing_balance_assessment_fails(valid_single_meeting_output):
-    bad = copy.deepcopy(valid_single_meeting_output)
-    for p in bad["pattern_snapshot"]:
-        if p["pattern_id"] == "conversational_balance":
-            del p["balance_assessment"]
+        if p.get("evaluable_status") == "evaluable":
+            p["score"] = 1.5  # score must be <= 1.0
             break
     result = validate(json.dumps(bad))
     assert result.passed is False

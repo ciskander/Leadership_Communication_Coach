@@ -168,16 +168,19 @@ def _build_slim_meeting_summary(run_fields: dict, parsed_json: dict) -> dict:
     for p in pattern_snapshot:
         item: dict = {
             "pattern_id": p.get("pattern_id"),
+            "cluster_id": p.get("cluster_id"),
+            "scoring_type": p.get("scoring_type"),
             "evaluable_status": p.get("evaluable_status"),
-            "numerator": p.get("numerator"),
-            "denominator": p.get("denominator"),
-            "ratio": p.get("ratio"),
+            "score": p.get("score"),
+            "opportunity_count": p.get("opportunity_count"),
             "balance_assessment": p.get("balance_assessment"),
         }
         # Include coaching detail when present
         for key in ("notes", "coaching_note", "suggested_rewrite",
                      "rewrite_for_span_id", "evidence_span_ids",
-                     "success_evidence_span_ids"):
+                     "success_evidence_span_ids",
+                     "element_a_count", "element_b_count",
+                     "simple_count", "complex_count"):
             val = p.get(key)
             if val is not None:
                 item[key] = val
@@ -240,36 +243,31 @@ def _patch_parsed_output(parsed: dict) -> dict:
     Returns a new deep-copied dict — does not mutate the input.
 
     Covers:
-    - Strip numeric fields from conversational_balance (schema forbids them)
+    - Strip legacy numeric fields (numerator, denominator, ratio, tier)
     - Backfill missing denominator_rule_id and min_required_threshold
-    - Coerce zero-denominator evaluable patterns to insufficient_signal
+    - Coerce zero-opportunity evaluable patterns to insufficient_signal
     - Backfill null denominator_rule_id on not_evaluable patterns
     - Coerce legacy 'assigned' experiment status to 'proposed'
     """
     import copy as _copy
     parsed = _copy.deepcopy(parsed)
 
-    # Strip numeric fields from conversational_balance — schema forbids them
+    # Strip legacy fields the model may still emit
     for snap in parsed.get("pattern_snapshot", []):
-        if snap.get("pattern_id") == "conversational_balance":
-            for field in ("numerator", "denominator", "ratio", "opportunity_count",
-                          "opportunity_events", "opportunity_events_considered",
-                          "opportunity_events_counted"):
-                snap.pop(field, None)
+        for field in ("numerator", "denominator", "ratio", "tier"):
+            snap.pop(field, None)
         # Backfill required base fields the model sometimes omits
-        snap.setdefault("denominator_rule_id", "qualitative_balance")
+        snap.setdefault("denominator_rule_id", "unknown")
         snap.setdefault("min_required_threshold", None)
 
-    # Coerce zero-denominator evaluable patterns to insufficient_signal
+    # Coerce zero-opportunity evaluable patterns to insufficient_signal
     for snap in parsed.get("pattern_snapshot", []):
         if (
             snap.get("evaluable_status") == "evaluable"
-            and snap.get("pattern_id") != "conversational_balance"
-            and snap.get("denominator") == 0
+            and snap.get("opportunity_count") == 0
         ):
             snap["evaluable_status"] = "insufficient_signal"
-            for field in ("numerator", "denominator", "ratio"):
-                snap.pop(field, None)
+            snap.pop("score", None)
 
     # Backfill null denominator_rule_id on not_evaluable patterns
     for snap in parsed.get("pattern_snapshot", []):
@@ -868,7 +866,7 @@ def process_baseline_pack_build(
     )
 
     # 5b. Call LLM
-    # Baseline packs produce ~10-12 k tokens of JSON (10 patterns + coaching).
+    # Baseline packs produce ~10-12 k tokens of JSON (9 patterns + coaching).
     # The global default (8 192) is too tight and causes finish_reason=length
     # truncations.  Use 16 384 unless an Airtable config override is set.
     openai_resp = call_llm(
@@ -893,11 +891,10 @@ def process_baseline_pack_build(
         _parsed_output["context"]["role_consistency"] = (role_consistency == "consistent")
         _parsed_output["context"]["meeting_type_consistency"] = (meeting_type_consistency == "consistent")
 
-    # Coerce numerator/denominator to integers (model sometimes returns floats)
+    # Coerce opportunity_count to integer (model sometimes returns floats)
     for _item in _parsed_output.get("pattern_snapshot", []):
-        for _field in ("numerator", "denominator"):
-            if isinstance(_item.get(_field), float):
-                _item[_field] = round(_item[_field])
+        if isinstance(_item.get("opportunity_count"), float):
+            _item["opportunity_count"] = round(_item["opportunity_count"])
                 
     # Coerce string detection values to None — schema requires null
     _exp_track = _parsed_output.get("experiment_tracking", {})
@@ -1228,10 +1225,9 @@ def _get_valid_patterns() -> set[str]:
     except Exception:
         logger.warning("Failed to load pattern IDs from taxonomy file; using hardcoded fallback.")
         return {
-            'agenda_clarity', 'objective_signaling', 'turn_allocation',
-            'facilitative_inclusion', 'decision_closure', 'owner_timeframe_specification',
-            'summary_checkback', 'question_quality', 'listener_response_quality',
-            'conversational_balance',
+            'purposeful_framing', 'focus_management', 'participation_management',
+            'disagreement_navigation', 'resolution_and_alignment', 'assignment_clarity',
+            'question_quality', 'communication_clarity', 'feedback_quality',
         }
 
 _VALID_PATTERNS = _get_valid_patterns()
@@ -1362,9 +1358,9 @@ def process_next_experiment_suggestion(
                 if not pid:
                     continue
                 if p.get("evaluable_status") == "evaluable":
-                    ratio = p.get("ratio")
-                    if ratio is not None:
-                        pattern_scores.setdefault(pid, []).append(float(ratio))
+                    score = p.get("score")
+                    if score is not None:
+                        pattern_scores.setdefault(pid, []).append(float(score))
                 # Collect coaching notes regardless of evaluable status
                 coaching_note = p.get("coaching_note")
                 if coaching_note:
@@ -1393,14 +1389,14 @@ def process_next_experiment_suggestion(
     )
 
     # 4. Build user message with pattern scores, coaching notes, and exclusions
-    # Show ALL 10 patterns so the LLM knows it can propose experiments for any of them.
+    # Show ALL 9 patterns so the LLM knows it can propose experiments for any of them.
     # Patterns without scores are still valid targets.
     pattern_lines_parts: list[str] = []
     scored_pids = set(avg_scores.keys())
     for pid, score in sorted_patterns:
         pattern_lines_parts.append(f"  {pid}: {score:.2f}")
     for pid in _VALID_PATTERNS:
-        if pid not in scored_pids and pid != "conversational_balance":
+        if pid not in scored_pids:
             pattern_lines_parts.append(f"  {pid}: (no data yet — still a valid experiment target)")
     pattern_lines = "\n".join(pattern_lines_parts) or "  (no evaluable patterns available)"
 
@@ -1466,7 +1462,7 @@ def process_next_experiment_suggestion(
         f"── REQUEST ──\n"
         f"Propose exactly {llm_request_count} {exp_word} for this coachee.\n\n"
         f"Pick {llm_request_count} patterns with the highest developmental impact that are not excluded above. "
-        f"You may target ANY of the 10 patterns listed in the taxonomy, including those with no score data yet. "
+        f"You may target ANY of the 9 patterns listed in the taxonomy, including those with no score data yet. "
         f"Each experiment MUST target a DIFFERENT pattern_id.\n"
         f"Ground each experiment in the coaching history above where available — reference the coachee's specific behaviours, not generic advice.\n\n"
         f"IMPORTANT: Return a JSON array with exactly {llm_request_count} experiment objects — no fewer."
@@ -1528,7 +1524,7 @@ def process_next_experiment_suggestion(
                 f"── REQUEST ──\n"
                 f"Propose exactly {retry_request_count} {retry_exp_word} for this coachee.\n\n"
                 f"Pick {retry_request_count} patterns with the highest developmental impact that are not excluded above. "
-                f"You may target ANY of the 10 patterns listed in the taxonomy, including those with no score data yet. "
+                f"You may target ANY of the 9 patterns listed in the taxonomy, including those with no score data yet. "
                 f"Each experiment MUST target a DIFFERENT pattern_id.\n"
                 f"Ground each experiment in the coaching history above where available — reference the coachee's specific behaviours, not generic advice.\n\n"
                 f"IMPORTANT: Return a JSON array with exactly {retry_request_count} experiment objects — no fewer."
@@ -1767,7 +1763,7 @@ def _load_system_prompt_from_config(client: AirtableClient, config_links: list[s
 
     The client and config_links parameters are kept for backwards
     compatibility but are no longer used — the prompt is always read
-    from system_prompt_v0_2_1.txt in the repo root.
+    from system_prompt_v0_3_0.txt in the repo root.
     """
     return load_system_prompt()
 

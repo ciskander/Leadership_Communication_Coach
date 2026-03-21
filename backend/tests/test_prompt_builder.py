@@ -75,23 +75,22 @@ def _make_meeting_summaries(meeting_ids: list[str]) -> list[dict]:
             "target_speaker_name": "Alice",
             "pattern_snapshot": [
                 {
-                    "pattern_id": "agenda_clarity",
+                    "pattern_id": "purposeful_framing",
                     "evaluable_status": "evaluable",
-                    "numerator": 2,
-                    "denominator": 2,
-                    "ratio": 1.0,
+                    "opportunity_count": 2,
+                    "score": 1.0,
                     "evidence_span_ids": ["ES-001"],
                     "notes": "Strong agenda framing.",
                 }
             ],
             "coaching_output": {
-                "strengths": [{"pattern_id": "agenda_clarity", "message": "Good work."}],
-                "focus": [{"pattern_id": "decision_closure", "message": "Improve."}],
+                "strengths": [{"pattern_id": "purposeful_framing", "message": "Good work."}],
+                "focus": [{"pattern_id": "resolution_and_alignment", "message": "Improve."}],
                 "micro_experiment": {
                     "title": "Close decisions out loud",
                     "instruction": "State the decision.",
                     "success_marker": "Decision stated.",
-                    "pattern_id": "decision_closure",
+                    "pattern_id": "resolution_and_alignment",
                     "evidence_span_ids": ["ES-002"],
                 },
             },
@@ -251,13 +250,13 @@ def test_single_meeting_prompt_with_active_experiment_in_message():
     transcript = _make_transcript()
     memory = build_memory_block(
         baseline_pack_id="BP-000001",
-        focus_pattern="decision_closure",
+        focus_pattern="resolution_and_alignment",
         active_experiment={
             "experiment_id": "EXP-000001",
             "title": "Close decisions out loud",
             "instruction": "Say it aloud.",
             "success_marker": "2 of 3 closures explicit.",
-            "pattern_id": "decision_closure",
+            "pattern_id": "resolution_and_alignment",
             "status": "active",
         },
     )
@@ -391,8 +390,8 @@ def test_baseline_pack_prompt_meeting_summaries_in_message():
         meetings_meta=_make_meetings_meta(meeting_ids),
         meeting_summaries=_make_meeting_summaries(meeting_ids),
     )
-    # agenda_clarity is in the summaries and should appear in the packed message
-    assert "agenda_clarity" in payload.raw_user_message
+    # purposeful_framing is in the summaries and should appear in the packed message
+    assert "purposeful_framing" in payload.raw_user_message
 
 
 # ---------------------------------------------------------------------------
@@ -409,13 +408,13 @@ def test_build_memory_block_null_when_no_baseline_or_experiment():
 def test_build_memory_block_with_baseline():
     memory = build_memory_block(
         baseline_pack_id="BP-000001",
-        strengths=["agenda_clarity"],
-        focus_pattern="decision_closure",
+        strengths=["purposeful_framing"],
+        focus_pattern="resolution_and_alignment",
     )
     assert memory.baseline_profile is not None
     assert memory.baseline_profile["baseline_pack_id"] == "BP-000001"
-    assert memory.baseline_profile["focus"] == "decision_closure"
-    assert "agenda_clarity" in memory.baseline_profile["strengths"]
+    assert memory.baseline_profile["focus"] == "resolution_and_alignment"
+    assert "purposeful_framing" in memory.baseline_profile["strengths"]
 
 
 def test_build_memory_block_with_active_experiment():
@@ -425,7 +424,7 @@ def test_build_memory_block_with_active_experiment():
             "title": "Test",
             "instruction": "Do it.",
             "success_marker": "Done.",
-            "pattern_id": "decision_closure",
+            "pattern_id": "resolution_and_alignment",
             "status": "active",
         }
     )
@@ -439,30 +438,29 @@ def test_build_memory_block_with_active_experiment():
 # ---------------------------------------------------------------------------
 
 EXPECTED_PATTERN_IDS = [
-    "agenda_clarity",
-    "objective_signaling",
-    "turn_allocation",
-    "facilitative_inclusion",
-    "decision_closure",
-    "owner_timeframe_specification",
-    "summary_checkback",
+    "purposeful_framing",
+    "focus_management",
+    "participation_management",
+    "resolution_and_alignment",
+    "assignment_clarity",
     "question_quality",
-    "listener_response_quality",
-    "conversational_balance",
+    "communication_clarity",
+    "disagreement_navigation",
+    "feedback_quality",
 ]
 
 
 class TestTaxonomyParsing:
     """Verify the taxonomy file is correctly parsed for all prompt types."""
 
-    def test_extract_pattern_ids_returns_all_10(self):
+    def test_extract_pattern_ids_returns_all_9(self):
         ids = extract_pattern_ids()
         assert ids == EXPECTED_PATTERN_IDS
 
     def test_extract_pattern_ids_preserves_order(self):
         ids = extract_pattern_ids()
-        assert ids[0] == "agenda_clarity"
-        assert ids[-1] == "conversational_balance"
+        assert ids[0] == "purposeful_framing"
+        assert ids[-1] == "feedback_quality"
 
     def test_core_rules_section_extractable(self):
         raw = _load_taxonomy_raw()

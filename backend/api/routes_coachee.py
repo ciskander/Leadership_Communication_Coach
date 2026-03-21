@@ -255,11 +255,11 @@ async def get_baseline_pack(
             pattern_snapshot = [
                 {
                     "pattern_id": ps.get("pattern_id", ""),
-                    "tier": ps.get("tier"),
+                    "cluster_id": ps.get("cluster_id"),
+                    "scoring_type": ps.get("scoring_type"),
                     "evaluable_status": ps.get("evaluable_status", "not_evaluable"),
-                    "numerator": ps.get("numerator"),
-                    "denominator": ps.get("denominator"),
-                    "ratio": ps.get("ratio"),
+                    "score": ps.get("score"),
+                    "opportunity_count": ps.get("opportunity_count"),
                     "balance_assessment": ps.get("balance_assessment"),
                     "notes": ps.get("notes"),
                     "quotes": [],
@@ -272,13 +272,13 @@ async def get_baseline_pack(
             ]
 
             # Guardrail: filter out strengths whose pattern score is below 50%
-            ratio_by_pattern = {
-                ps.get("pattern_id"): ps.get("ratio")
+            score_by_pattern = {
+                ps.get("pattern_id"): ps.get("score")
                 for ps in raw_snapshot
             }
             strengths = [
                 s for s in strengths
-                if (ratio_by_pattern.get(s["pattern_id"]) or 0) >= 0.5
+                if (score_by_pattern.get(s["pattern_id"]) or 0) >= 0.5
             ]
         except Exception:
             pass
@@ -827,9 +827,9 @@ async def get_experiment_options(
                 parsed = json.loads(parsed_str)
                 for p in parsed.get("pattern_snapshot", []):
                     pid = p.get("pattern_id")
-                    ratio = p.get("ratio")
-                    if pid and p.get("evaluable_status") == "evaluable" and ratio is not None:
-                        pattern_scores.setdefault(pid, []).append(float(ratio))
+                    score = p.get("score")
+                    if pid and p.get("evaluable_status") == "evaluable" and score is not None:
+                        pattern_scores.setdefault(pid, []).append(float(score))
             except Exception:
                 pass
         pattern_avg = {
@@ -1245,14 +1245,13 @@ async def client_progress(
                 pid = p.get("pattern_id", "")
                 if not pid:
                     continue
-                ratio_val = p.get("ratio")
-                if ratio_val is None:
+                score_val = p.get("score")
+                if score_val is None:
                     continue  # non-evaluable pattern — skip
-                # opportunity_count is optional; fall back to denominator
-                opp = p.get("opportunity_count") or p.get("denominator") or 0
+                opp = p.get("opportunity_count") or 0
                 patterns.append({
                     "pattern_id": pid,
-                    "ratio": float(ratio_val),
+                    "score": float(score_val),
                     "opportunity_count": int(opp) if opp else 0,
                 })
         except Exception as e:

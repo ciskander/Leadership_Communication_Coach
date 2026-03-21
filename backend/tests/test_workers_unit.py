@@ -101,10 +101,10 @@ class TestSafeJsonDumps:
 class TestExtractCoachingFromRun:
     def _make_parsed_json(
         self,
-        focus_pattern="decision_closure",
-        micro_pattern="decision_closure",
+        focus_pattern="resolution_and_alignment",
+        micro_pattern="resolution_and_alignment",
         micro_exp_id="EXP-000001",
-        strengths_patterns=("agenda_clarity",),
+        strengths_patterns=("purposeful_framing",),
     ) -> dict:
         return {
             "coaching_output": {
@@ -124,11 +124,11 @@ class TestExtractCoachingFromRun:
 
     def test_extracts_focus_pattern(self):
         result = _extract_coaching_from_run(self._make_parsed_json())
-        assert result["focus_pattern"] == "decision_closure"
+        assert result["focus_pattern"] == "resolution_and_alignment"
 
     def test_extracts_micro_experiment_pattern(self):
         result = _extract_coaching_from_run(self._make_parsed_json())
-        assert result["micro_experiment_pattern"] == "decision_closure"
+        assert result["micro_experiment_pattern"] == "resolution_and_alignment"
 
     def test_extracts_experiment_id(self):
         result = _extract_coaching_from_run(self._make_parsed_json(micro_exp_id="EXP-000042"))
@@ -136,10 +136,10 @@ class TestExtractCoachingFromRun:
 
     def test_extracts_strengths_as_json_array(self):
         result = _extract_coaching_from_run(
-            self._make_parsed_json(strengths_patterns=("agenda_clarity", "summary_checkback"))
+            self._make_parsed_json(strengths_patterns=("purposeful_framing", "question_quality"))
         )
         strengths = json.loads(result["strengths_patterns"])
-        assert strengths == ["agenda_clarity", "summary_checkback"]
+        assert strengths == ["purposeful_framing", "question_quality"]
 
     def test_empty_focus_returns_none(self):
         parsed = {"coaching_output": {"strengths": [], "focus": [], "micro_experiment": []}}
@@ -175,21 +175,21 @@ class TestBuildSlimMeetingSummary:
             "evaluation_summary": {"score": 0.8},
             "pattern_snapshot": [
                 {
-                    "pattern_id": "agenda_clarity",
+                    "pattern_id": "purposeful_framing",
+                    "cluster_id": "structure",
+                    "scoring_type": "ratio",
                     "evaluable_status": "evaluable",
-                    "numerator": 2,
-                    "denominator": 2,
-                    "ratio": 1.0,
-                    "balance_assessment": None,
+                    "opportunity_count": 2,
+                    "score": 1.0,
                 }
             ],
             "coaching_output": {
-                "focus": [{"pattern_id": "decision_closure", "message": "Improve."}],
+                "focus": [{"pattern_id": "resolution_and_alignment", "message": "Improve."}],
                 "micro_experiment": [
                     {
                         "title": "Close decisions",
                         "instruction": "Say it aloud.",
-                        "pattern_id": "decision_closure",
+                        "pattern_id": "resolution_and_alignment",
                     }
                 ],
             },
@@ -242,7 +242,7 @@ class TestBuildSlimMeetingSummary:
     def test_coaching_output_includes_focus(self):
         run_fields, parsed_json = self._make_inputs()
         result = _build_slim_meeting_summary(run_fields, parsed_json)
-        assert result["coaching_output"]["focus"][0]["pattern_id"] == "decision_closure"
+        assert result["coaching_output"]["focus"][0]["pattern_id"] == "resolution_and_alignment"
 
     def test_coaching_output_includes_micro_experiment_title(self):
         run_fields, parsed_json = self._make_inputs()
@@ -286,7 +286,7 @@ class TestSnapshotPatching:
     This logic has caused production bugs twice — keep these thorough.
     """
 
-    def _snap(self, pattern_id="agenda_clarity", evaluable_status="evaluable", **kwargs) -> dict:
+    def _snap(self, pattern_id="purposeful_framing", evaluable_status="evaluable", **kwargs) -> dict:
         base = {
             "pattern_id": pattern_id,
             "evaluable_status": evaluable_status,
@@ -296,85 +296,44 @@ class TestSnapshotPatching:
         base.update(kwargs)
         return base
 
-    # ── conversational_balance stripping ─────────────────────────────────────
+    # ── score preservation ──────────────────────────────────────────────────
 
-    def test_conversational_balance_ratio_stripped(self):
+    def test_evaluable_pattern_score_not_stripped(self):
         parsed = {"pattern_snapshot": [
-            self._snap("conversational_balance", numerator=3, denominator=5, ratio=0.6)
+            self._snap("purposeful_framing", opportunity_count=3, score=0.67)
         ]}
         result = _apply_snapshot_patches(parsed)
         snap = result["pattern_snapshot"][0]
-        assert "ratio" not in snap
-        assert "numerator" not in snap
-        assert "denominator" not in snap
-
-    def test_conversational_balance_opportunity_count_stripped(self):
-        parsed = {"pattern_snapshot": [
-            self._snap("conversational_balance", opportunity_count=10)
-        ]}
-        result = _apply_snapshot_patches(parsed)
-        assert "opportunity_count" not in result["pattern_snapshot"][0]
-
-    def test_conversational_balance_opportunity_events_stripped(self):
-        parsed = {"pattern_snapshot": [
-            self._snap("conversational_balance",
-                       opportunity_events=["e1"],
-                       opportunity_events_considered=["e1"],
-                       opportunity_events_counted=["e1"])
-        ]}
-        result = _apply_snapshot_patches(parsed)
-        snap = result["pattern_snapshot"][0]
-        assert "opportunity_events" not in snap
-        assert "opportunity_events_considered" not in snap
-        assert "opportunity_events_counted" not in snap
-
-    def test_other_patterns_ratio_not_stripped(self):
-        parsed = {"pattern_snapshot": [
-            self._snap("agenda_clarity", numerator=2, denominator=3, ratio=0.67)
-        ]}
-        result = _apply_snapshot_patches(parsed)
-        snap = result["pattern_snapshot"][0]
-        assert snap["ratio"] == 0.67
+        assert snap["score"] == 0.67
 
     # ── zero-denominator coercion ─────────────────────────────────────────────
 
-    def test_zero_denominator_evaluable_coerced_to_insufficient_signal(self):
+    def test_zero_opportunity_count_coerced_to_insufficient_signal(self):
         parsed = {"pattern_snapshot": [
-            self._snap("agenda_clarity", numerator=0, denominator=0, ratio=0.0)
+            self._snap("purposeful_framing", opportunity_count=0, score=0.0)
         ]}
         result = _apply_snapshot_patches(parsed)
         snap = result["pattern_snapshot"][0]
         assert snap["evaluable_status"] == "insufficient_signal"
 
-    def test_zero_denominator_strips_numeric_fields(self):
+    def test_zero_opportunity_count_strips_numeric_fields(self):
         parsed = {"pattern_snapshot": [
-            self._snap("agenda_clarity", numerator=0, denominator=0, ratio=0.0)
+            self._snap("purposeful_framing", opportunity_count=0, score=0.0)
         ]}
         result = _apply_snapshot_patches(parsed)
         snap = result["pattern_snapshot"][0]
-        assert "numerator" not in snap
-        assert "denominator" not in snap
-        assert "ratio" not in snap
+        assert "score" not in snap
 
-    def test_zero_denominator_conversational_balance_not_coerced(self):
-        """conversational_balance is exempt from zero-denominator coercion."""
+    def test_nonzero_opportunity_count_not_coerced(self):
         parsed = {"pattern_snapshot": [
-            self._snap("conversational_balance", evaluable_status="evaluable")
-        ]}
-        result = _apply_snapshot_patches(parsed)
-        snap = result["pattern_snapshot"][0]
-        assert snap["evaluable_status"] == "evaluable"
-
-    def test_nonzero_denominator_not_coerced(self):
-        parsed = {"pattern_snapshot": [
-            self._snap("agenda_clarity", numerator=1, denominator=3, ratio=0.33)
+            self._snap("purposeful_framing", opportunity_count=3, score=0.33)
         ]}
         result = _apply_snapshot_patches(parsed)
         assert result["pattern_snapshot"][0]["evaluable_status"] == "evaluable"
 
     def test_already_insufficient_signal_not_double_coerced(self):
         parsed = {"pattern_snapshot": [
-            self._snap("agenda_clarity", evaluable_status="insufficient_signal")
+            self._snap("purposeful_framing", evaluable_status="insufficient_signal")
         ]}
         result = _apply_snapshot_patches(parsed)
         assert result["pattern_snapshot"][0]["evaluable_status"] == "insufficient_signal"
@@ -384,7 +343,7 @@ class TestSnapshotPatching:
     def test_null_denominator_rule_id_backfilled(self):
         parsed = {"pattern_snapshot": [
             {
-                "pattern_id": "agenda_clarity",
+                "pattern_id": "purposeful_framing",
                 "evaluable_status": "not_evaluable",
                 "denominator_rule_id": None,
                 "min_required_threshold": 1,
@@ -395,7 +354,7 @@ class TestSnapshotPatching:
 
     def test_existing_denominator_rule_id_not_overwritten(self):
         parsed = {"pattern_snapshot": [
-            self._snap("agenda_clarity", denominator_rule_id="my_rule")
+            self._snap("purposeful_framing", denominator_rule_id="my_rule")
         ]}
         result = _apply_snapshot_patches(parsed)
         assert result["pattern_snapshot"][0]["denominator_rule_id"] == "my_rule"
@@ -405,11 +364,10 @@ class TestSnapshotPatching:
     def test_missing_denominator_rule_id_backfilled_with_default(self):
         parsed = {"pattern_snapshot": [
             {
-                "pattern_id": "agenda_clarity",
+                "pattern_id": "purposeful_framing",
                 "evaluable_status": "evaluable",
-                "numerator": 1,
-                "denominator": 2,
-                "ratio": 0.5,
+                "opportunity_count": 2,
+                "score": 0.5,
             }
         ]}
         result = _apply_snapshot_patches(parsed)
@@ -418,11 +376,10 @@ class TestSnapshotPatching:
     def test_missing_min_required_threshold_backfilled(self):
         parsed = {"pattern_snapshot": [
             {
-                "pattern_id": "agenda_clarity",
+                "pattern_id": "purposeful_framing",
                 "evaluable_status": "evaluable",
-                "numerator": 1,
-                "denominator": 2,
-                "ratio": 0.5,
+                "opportunity_count": 2,
+                "score": 0.5,
                 "denominator_rule_id": "my_rule",
             }
         ]}
@@ -458,15 +415,12 @@ class TestSnapshotPatching:
         """Realistic snapshot with several patterns requiring different patches."""
         parsed = {"pattern_snapshot": [
             # Normal evaluable pattern — should be unchanged
-            self._snap("agenda_clarity", numerator=2, denominator=3, ratio=0.67),
-            # Zero denominator — should be coerced to insufficient_signal
-            self._snap("decision_closure", numerator=0, denominator=0, ratio=0.0),
-            # conversational_balance — numeric fields stripped
-            self._snap("conversational_balance", numerator=5, denominator=10, ratio=0.5,
-                       opportunity_count=10),
+            self._snap("purposeful_framing", opportunity_count=3, score=0.67),
+            # Zero opportunity_count — should be coerced to insufficient_signal
+            self._snap("resolution_and_alignment", opportunity_count=0, score=0.0),
             # not_evaluable with null rule_id — should be backfilled
             {
-                "pattern_id": "facilitative_inclusion",
+                "pattern_id": "disagreement_navigation",
                 "evaluable_status": "not_evaluable",
                 "denominator_rule_id": None,
                 "min_required_threshold": 2,
@@ -476,20 +430,16 @@ class TestSnapshotPatching:
         result = _apply_snapshot_patches(parsed)
         snaps = {s["pattern_id"]: s for s in result["pattern_snapshot"]}
 
-        # agenda_clarity unchanged
-        assert snaps["agenda_clarity"]["evaluable_status"] == "evaluable"
-        assert snaps["agenda_clarity"]["ratio"] == 0.67
+        # purposeful_framing unchanged
+        assert snaps["purposeful_framing"]["evaluable_status"] == "evaluable"
+        assert snaps["purposeful_framing"]["score"] == 0.67
 
-        # decision_closure coerced
-        assert snaps["decision_closure"]["evaluable_status"] == "insufficient_signal"
-        assert "ratio" not in snaps["decision_closure"]
+        # resolution_and_alignment coerced
+        assert snaps["resolution_and_alignment"]["evaluable_status"] == "insufficient_signal"
+        assert "score" not in snaps["resolution_and_alignment"]
 
-        # conversational_balance stripped
-        assert "ratio" not in snaps["conversational_balance"]
-        assert "opportunity_count" not in snaps["conversational_balance"]
-
-        # facilitative_inclusion backfilled
-        assert snaps["facilitative_inclusion"]["denominator_rule_id"] == "not_evaluable"
+        # disagreement_navigation backfilled
+        assert snaps["disagreement_navigation"]["denominator_rule_id"] == "not_evaluable"
 
     def test_empty_snapshot_does_not_raise(self):
         result = _apply_snapshot_patches({"pattern_snapshot": []})
@@ -498,7 +448,7 @@ class TestSnapshotPatching:
     def test_patching_does_not_mutate_input(self):
         """Input dict should be untouched — patching must work on a deep copy."""
         original = {"pattern_snapshot": [
-            self._snap("agenda_clarity", numerator=0, denominator=0, ratio=0.0)
+            self._snap("purposeful_framing", opportunity_count=0, score=0.0)
         ]}
         import copy
         before = copy.deepcopy(original)

@@ -42,7 +42,7 @@ _ID_PATTERNS = {
 
 _PATTERN_ID_ENUM = set(PATTERN_ORDER)
 
-_NUMERIC_PATTERNS = set(PATTERN_ORDER) - {"conversational_balance"}
+_SCORED_PATTERNS = set(PATTERN_ORDER)
 
 
 def _issue(severity: str, code: str, path: str, message: str) -> ValidationIssue:
@@ -61,7 +61,7 @@ def _warn(code: str, path: str, message: str) -> ValidationIssue:
 
 _VALID_TARGET_CONTROL = {"yes", "no", "unclear"}
 _VALID_COUNT_DECISION = {"counted", "excluded"}
-_VALID_SUCCESS = {"yes", "no", "na"}
+_VALID_SUCCESS_VALUES = {0, 0.0, 0.2, 0.25, 0.4, 0.5, 0.6, 0.75, 0.8, 1, 1.0}
 
 
 def _build_allowed_keys_map(schema: dict) -> dict[str, set[str]]:
@@ -245,8 +245,10 @@ def _sanitise_output(data: dict) -> int:
                 fixes += 1
 
             su = event.get("success")
-            if su is not None and su not in _VALID_SUCCESS:
-                inferred = "yes" if su == "counted" else "no" if su == "excluded" else "na"
+            if su is not None and isinstance(su, str):
+                # Convert legacy string values to numeric
+                str_to_num = {"yes": 1.0, "no": 0.0, "na": 0.0}
+                inferred = str_to_num.get(su, 0.0)
                 logger.warning(
                     "Sanitiser: success %r → %r (event %s)",
                     su, inferred, event.get("event_id"),
@@ -315,12 +317,12 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
     # Build valid evidence span ID set
     valid_es_ids = {span.get("evidence_span_id") for span in evidence_spans}
 
-    # ── 3a. pattern_snapshot must have exactly 10 items in required order ─────
-    if len(pattern_snapshot) != 10:
+    # ── 3a. pattern_snapshot must have exactly 9 items in required order ──────
+    if len(pattern_snapshot) != 9:
         issues.append(_err(
             "PATTERN_SNAPSHOT_COUNT",
             "pattern_snapshot",
-            f"Expected 10 items, got {len(pattern_snapshot)}.",
+            f"Expected 9 items, got {len(pattern_snapshot)}.",
         ))
     else:
         for idx, (item, expected_id) in enumerate(zip(pattern_snapshot, PATTERN_ORDER)):
@@ -369,75 +371,36 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
         status = item.get("evaluable_status")
 
         if status == "evaluable":
-            if pid == "conversational_balance":
-                # Must have balance_assessment, must NOT have num/denom/ratio
+            score = item.get("score")
+            if score is None:
+                issues.append(_err(
+                    "MISSING_SCORE",
+                    f"{path}.score",
+                    "Evaluable pattern must have a score value.",
+                ))
+            elif not (0 <= score <= 1):
+                issues.append(_err(
+                    "SCORE_OUT_OF_RANGE",
+                    f"{path}.score",
+                    f"score ({score}) must be in [0, 1].",
+                ))
+
+            # participation_management must have balance_assessment
+            if pid == "participation_management":
                 if not item.get("balance_assessment"):
-                    issues.append(_err(
-                        "CONV_BALANCE_MISSING_ASSESSMENT",
+                    issues.append(_warn(
+                        "PARTICIPATION_MISSING_BALANCE",
                         f"{path}.balance_assessment",
-                        "conversational_balance evaluable item must have balance_assessment.",
+                        "participation_management evaluable item should have balance_assessment.",
                     ))
-                for forbidden in ("numerator", "denominator", "ratio"):
-                    if item.get(forbidden) is not None:
-                        issues.append(_err(
-                            "CONV_BALANCE_FORBIDDEN_FIELD",
-                            f"{path}.{forbidden}",
-                            f"conversational_balance must not have {forbidden}.",
-                        ))
-            else:
-                # Numeric evaluable: must have num/denom/ratio.
-                # Exception: median_of_meeting_level_ratios (baseline pack aggregate)
-                # produces null numerator/denominator with a valid ratio — this is expected.
-                num = item.get("numerator")
-                den = item.get("denominator")
-                ratio = item.get("ratio")
-                is_median = item.get("denominator_rule_id") == "median_of_meeting_level_ratios"
-                if is_median:
-                    if ratio is None:
-                        issues.append(_err(
-                            "MEDIAN_PATTERN_MISSING_RATIO",
-                            f"{path}.ratio",
-                            "median_of_meeting_level_ratios pattern must have a ratio value.",
-                        ))
-                    elif not (0 <= ratio <= 1):
-                        issues.append(_err(
-                            "RATIO_OUT_OF_RANGE",
-                            f"{path}.ratio",
-                            f"ratio ({ratio}) must be in [0, 1].",
-                        ))
-                elif den is None or den < 1:
-                    issues.append(_err(
-                        "INVALID_DENOMINATOR",
-                        f"{path}.denominator",
-                        "Evaluable numeric pattern must have denominator >= 1.",
-                    ))
-                elif num is not None:
-                    if num < 0:
-                        issues.append(_err(
-                            "INVALID_NUMERATOR",
-                            f"{path}.numerator",
-                            "numerator must be >= 0.",
-                        ))
-                    if num > den:
-                        issues.append(_err(
-                            "NUMERATOR_EXCEEDS_DENOMINATOR",
-                            f"{path}",
-                            f"numerator ({num}) > denominator ({den}).",
-                        ))
-                    if ratio is not None and not (0 <= ratio <= 1):
-                        issues.append(_err(
-                            "RATIO_OUT_OF_RANGE",
-                            f"{path}.ratio",
-                            f"ratio ({ratio}) must be in [0, 1].",
-                        ))
+
         elif status in ("insufficient_signal", "not_evaluable"):
-            for forbidden in ("numerator", "denominator", "ratio"):
-                if item.get(forbidden) is not None:
-                    issues.append(_err(
-                        "NON_EVALUABLE_HAS_NUMERIC",
-                        f"{path}.{forbidden}",
-                        f"{status} item must not have {forbidden}.",
-                    ))
+            if item.get("score") is not None:
+                issues.append(_err(
+                    "NON_EVALUABLE_HAS_SCORE",
+                    f"{path}.score",
+                    f"{status} item must not have score.",
+                ))
             if item.get("evidence_span_ids"):
                 issues.append(_warn(
                     "NON_EVALUABLE_HAS_EVIDENCE",
@@ -463,17 +426,16 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
         # 2-layer scoring trace consistency (if present)
         opp_events = item.get("opportunity_events")
         if opp_events is not None:
-            if pid == "conversational_balance" or status != "evaluable":
+            if status != "evaluable":
                 issues.append(_err(
                     "OPP_EVENTS_FORBIDDEN",
                     f"{path}.opportunity_events",
-                    "opportunity_events only allowed on numeric evaluable patterns.",
+                    "opportunity_events only allowed on evaluable patterns.",
                 ))
             else:
                 considered = item.get("opportunity_events_considered")
                 counted = item.get("opportunity_events_counted")
-                den = item.get("denominator")
-                num = item.get("numerator")
+                opp_count = item.get("opportunity_count")
                 if considered != len(opp_events):
                     issues.append(_err(
                         "OPP_EVENTS_COUNT_MISMATCH",
@@ -489,21 +451,11 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
                         f"{path}.opportunity_events_counted",
                         f"opportunity_events_counted ({counted}) != actual counted events ({counted_actual}).",
                     ))
-                if den is not None and counted is not None and den != counted:
+                if opp_count is not None and counted is not None and opp_count != counted:
                     issues.append(_err(
-                        "DENOMINATOR_COUNTED_MISMATCH",
-                        f"{path}.denominator",
-                        f"denominator ({den}) must equal opportunity_events_counted ({counted}).",
-                    ))
-                yes_counted = sum(
-                    1 for e in opp_events
-                    if e.get("count_decision") == "counted" and e.get("success") == "yes"
-                )
-                if num is not None and num != yes_counted:
-                    issues.append(_err(
-                        "NUMERATOR_YES_MISMATCH",
-                        f"{path}.numerator",
-                        f"numerator ({num}) must equal count(counted AND success=yes) ({yes_counted}).",
+                        "OPP_COUNT_COUNTED_MISMATCH",
+                        f"{path}.opportunity_count",
+                        f"opportunity_count ({opp_count}) must equal opportunity_events_counted ({counted}).",
                     ))
 
     # ── 3d. turn_start_id / turn_end_id in evidence_spans ────────────────────
@@ -549,8 +501,7 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
     for key, items in [("micro_experiment", micro_experiment)]:
         for i, item in enumerate(items):
             es_ids = item.get("evidence_span_ids", [])
-            is_conv_balance = item.get("pattern_id") == "conversational_balance"
-            if not es_ids and not is_conv_balance and analysis_type != "baseline_pack":
+            if not es_ids and analysis_type != "baseline_pack":
                 issues.append(_err(
                     "COACHING_EMPTY_ES_IDS",
                     f"coaching_output.{key}[{i}].evidence_span_ids",

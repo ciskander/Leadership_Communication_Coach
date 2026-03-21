@@ -2,7 +2,7 @@
 prompt_builder.py — Assembles the OpenAI user message for single_meeting and baseline_pack.
 
 Also provides taxonomy loading utilities that read from the canonical
-``clearvoice_pattern_taxonomy_v2.1.txt`` file (single source of truth).
+``clearvoice_pattern_taxonomy_v3.0.txt`` file (single source of truth).
 """
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # Taxonomy loading — single source of truth
 # ---------------------------------------------------------------------------
 
-_TAXONOMY_FILE = Path(__file__).resolve().parent.parent.parent / "clearvoice_pattern_taxonomy_v2.1.txt"
+_TAXONOMY_FILE = Path(__file__).resolve().parent.parent.parent / "clearvoice_pattern_taxonomy_v3.0.txt"
 
 _SECTION_BEGIN_RE = re.compile(r"^### BEGIN:(.+?) ###$", re.MULTILINE)
 _SECTION_END_RE_TEMPLATE = "### END:{name} ###"
@@ -94,7 +94,7 @@ def build_experiment_taxonomy_block() -> str:
     - Experiment focus
 
     Returns a formatted block matching the structure previously embedded
-    in ``system_prompt_next_experiment_v0_2_1.txt``.
+    in ``system_prompt_next_experiment_v0_3_0.txt``.
     """
     raw = _load_taxonomy_raw()
     pattern_ids = extract_pattern_ids()
@@ -104,7 +104,7 @@ def build_experiment_taxonomy_block() -> str:
         "PATTERN TAXONOMY — EXPERIMENT DESIGN GUIDE",
         "═══════════════════════════════════════════════════════════════",
         "",
-        "The following 10 patterns define the coaching taxonomy. Use these definitions to understand what each pattern measures, what good looks like, and what kinds of interventions help.",
+        "The following 9 patterns define the coaching taxonomy. Use these definitions to understand what each pattern measures, what good looks like, and what kinds of interventions help.",
         "",
     ]
 
@@ -188,13 +188,13 @@ _HARD_REMINDERS = """
 
 Hard reminders:
 - JSON only; no prose/markdown.
-- evaluation_summary: Every one of the 10 pattern_ids must appear in EXACTLY ONE of patterns_evaluated, patterns_insufficient_signal, or patterns_not_evaluable. No pattern may be omitted — including conversational_balance.
+- evaluation_summary: Every one of the 9 pattern_ids must appear in EXACTLY ONE of patterns_evaluated, patterns_insufficient_signal, or patterns_not_evaluable. No pattern may be omitted.
 - CRITICAL: evaluation_summary MUST be consistent with pattern_snapshot. A pattern is in patterns_evaluated if and only if its evaluable_status is "evaluable" in pattern_snapshot. A pattern is in patterns_insufficient_signal if and only if its evaluable_status is "insufficient_signal". A pattern is in patterns_not_evaluable if and only if its evaluable_status is "not_evaluable". Any mismatch between these two sections is a hard error.
-- pattern_snapshot must include all 10 pattern IDs in required order.
-- conversational_balance requires balance_assessment and no numeric fields.
+- pattern_snapshot must include all 9 pattern IDs in required order, each with cluster_id and scoring_type.
+- participation_management includes balance_assessment annotation when evaluable.
 - evidence_spans turn_start_id/turn_end_id must be integers.
 - focus length=1, micro_experiment length=1. Focus and strengths items only need {pattern_id, message} — evidence and rewrites are provided via pattern_snapshot.
-- Before finalizing, re-check that each evidence span counted in a pattern's denominator is a genuine opportunity per the taxonomy definition. Remove clear mismatches (e.g., a non-question counted under question_quality, or a 2-word fragment). For question_quality specifically, exclude procedural/technical questions (audio checks, roll call, scheduling logistics) from both numerator and denominator — never quote them as evidence or in coaching. Do NOT remove spans simply because the transcript has rough ASR formatting — read past missing punctuation and filler words to assess the speaker's actual behavior.
+- Before finalizing, re-check that each evidence span counted in a pattern's opportunity_count is a genuine opportunity per the taxonomy definition. Remove clear mismatches (e.g., a non-question counted under question_quality, or a 2-word fragment). For question_quality specifically, exclude procedural/technical questions (audio checks, roll call, scheduling logistics) from both scoring and opportunity_count — never quote them as evidence or in coaching. Do NOT remove spans simply because the transcript has rough ASR formatting — read past missing punctuation and filler words to assess the speaker's actual behavior.
 - CRITICAL: Every notes and coaching_note field must specifically reference the behavior observed in the cited evidence spans. Do not write generic observations disconnected from the actual quotes.
 - pattern_snapshot: each pattern's evidence_span_ids MUST include rewrite_for_span_id when present. Include both success and failure evidence spans. Tag successes via success_evidence_span_ids.
 - pattern_snapshot: rewrite_for_span_id must be chosen from a missed-opportunity span (NOT in success_evidence_span_ids). Pick the clearest example for a meaningful rewrite. Choose evidence spans that have enough context for a meaningful rewrite. Avoid rewriting very short or garbled excerpts."""
@@ -267,7 +267,7 @@ def build_single_meeting_prompt(
     }
 
     user_message = (
-        "Analyze and return ONLY one JSON object conforming to mvp.v0.2.1.\n\n"
+        "Analyze and return ONLY one JSON object conforming to mvp.v0.3.0.\n\n"
         "INPUT_PAYLOAD\n"
         + json.dumps(input_payload, ensure_ascii=False, indent=2)
         + _HARD_REMINDERS
@@ -289,10 +289,10 @@ Hard reminders (baseline_pack):
 - JSON only; no prose/markdown.
 - You are SYNTHESISING pre-analysed meetings — do NOT fabricate evidence. Every evidence_span_id, turn_start_id, turn_end_id, and excerpt in your output must be copied exactly from the input meeting summaries.
 - Every evidence_span MUST include meeting_id. This is required for baseline_pack.
-- evaluation_summary: Every one of the 10 pattern_ids must appear in EXACTLY ONE of patterns_evaluated, patterns_insufficient_signal, or patterns_not_evaluable. Must be consistent with pattern_snapshot evaluable_status.
-- pattern_snapshot must include all 10 pattern IDs in required order.
-- Ratio = MEDIAN of meeting-level ratios. Numerator = SUM of meeting numerators. Denominator = SUM of meeting denominators. The ratio may not equal numerator/denominator — that is expected.
-- conversational_balance requires balance_assessment and no numeric fields.
+- evaluation_summary: Every one of the 9 pattern_ids must appear in EXACTLY ONE of patterns_evaluated, patterns_insufficient_signal, or patterns_not_evaluable. Must be consistent with pattern_snapshot evaluable_status.
+- pattern_snapshot must include all 9 pattern IDs in required order, each with cluster_id and scoring_type.
+- Score = WEIGHTED AVERAGE of meeting-level scores (weighted by opportunity_count). Opportunity_count = SUM of meeting opportunity_counts.
+- participation_management includes balance_assessment annotation when evaluable.
 - focus length=1, micro_experiment length=1. Focus and strengths items only need {pattern_id, message}.
 - detection_in_this_meeting MUST be null for baseline_pack.
 - CRITICAL: Every notes and coaching_note field must reference specific behaviour from the cited evidence spans. Do not write generic observations.
@@ -352,7 +352,7 @@ def build_baseline_pack_prompt(
     }
 
     user_message = (
-        "Synthesize and return ONLY one JSON object conforming to mvp.v0.2.1.\n\n"
+        "Synthesize and return ONLY one JSON object conforming to mvp.v0.3.0.\n\n"
         "INPUT_PAYLOAD\n"
         + json.dumps(input_payload, ensure_ascii=False, indent=2)
         + _BASELINE_HARD_REMINDERS

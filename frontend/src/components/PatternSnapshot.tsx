@@ -58,7 +58,7 @@ export function buildTrendData(
       const p = run.patterns.find((x) => x.pattern_id === pid);
       if (p) {
         const den = p.opportunity_count ?? 0;
-        const num = den > 0 ? Math.round(p.ratio * den) : 0;
+        const num = den > 0 ? Math.round(p.score * den) : 0;
         blNum += num;
         blDen += den;
       }
@@ -67,36 +67,36 @@ export function buildTrendData(
     if (baselineAvg == null) continue;
 
     // Build per-run numerator/denominator data for rolling average
-    const runData: { num: number; den: number; ratio: number }[] = [];
+    const runData: { num: number; den: number; score: number }[] = [];
     for (const run of scopedHistory) {
       const p = run.patterns.find((x) => x.pattern_id === pid);
       if (p) {
         const den = p.opportunity_count ?? 0;
-        const num = den > 0 ? Math.round(p.ratio * den) : 0;
-        runData.push({ num, den, ratio: p.ratio });
+        const num = den > 0 ? Math.round(p.score * den) : 0;
+        runData.push({ num, den, score: p.score });
       } else {
-        runData.push({ num: 0, den: 0, ratio: 0 });
+        runData.push({ num: 0, den: 0, score: 0 });
       }
     }
 
     // Compute rolling average points
     const points: number[] = [];
     for (let idx = 0; idx < scopedHistory.length; idx++) {
-      let totalNum = 0, totalDen = 0, ratioSum = 0, ratioCount = 0;
+      let totalNum = 0, totalDen = 0, scoreSum = 0, scoreCount = 0;
       const start = Math.max(0, idx - windowSize + 1);
       for (let j = start; j <= idx; j++) {
         const d = runData[j];
-        if (d.den > 0 || d.ratio > 0) {
+        if (d.den > 0 || d.score > 0) {
           totalNum += d.num;
           totalDen += d.den;
-          ratioSum += d.ratio;
-          ratioCount++;
+          scoreSum += d.score;
+          scoreCount++;
         }
       }
       const val = totalDen > 0
         ? Math.round((totalNum / totalDen) * 100)
-        : ratioCount > 0
-          ? Math.round((ratioSum / ratioCount) * 100)
+        : scoreCount > 0
+          ? Math.round((scoreSum / scoreCount) * 100)
           : null;
       if (val != null) points.push(val);
     }
@@ -115,26 +115,14 @@ export function buildTrendData(
 // ─── Pattern icons (inline SVG — replaces STRINGS.patternIcons emoji) ─────────
 
 const PATTERN_ICONS: Record<string, JSX.Element> = {
-  agenda_clarity: (
-    <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
-      <rect x="2" y="1.5" width="12" height="13" rx="1.5" stroke="currentColor" strokeWidth={1.4} />
-      <path d="M5 5h6M5 8h6M5 11h4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
-    </svg>
-  ),
-  objective_signaling: (
+  purposeful_framing: (
     <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
       <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth={1.4} />
       <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth={1.4} />
       <path d="M8 2V1M8 15v-1M2 8H1M15 8h-1" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
     </svg>
   ),
-  turn_allocation: (
-    <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
-      <path d="M2 5.5h9.5M2 5.5l2.5-2.5M2 5.5l2.5 2.5" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M14 10.5H4.5M14 10.5l-2.5-2.5M14 10.5l-2.5 2.5" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  facilitative_inclusion: (
+  participation_management: (
     <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
       <circle cx="8" cy="4.5" r="2" stroke="currentColor" strokeWidth={1.4} />
       <path d="M4 13c0-2.21 1.79-4 4-4s4 1.79 4 4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
@@ -144,14 +132,14 @@ const PATTERN_ICONS: Record<string, JSX.Element> = {
       <path d="M16 13c0-1.66-1.12-3-2.5-3" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" />
     </svg>
   ),
-  decision_closure: (
+  resolution_and_alignment: (
     <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
       <rect x="3" y="7" width="10" height="7.5" rx="1.5" stroke="currentColor" strokeWidth={1.4} />
       <path d="M5.5 7V5a2.5 2.5 0 015 0v2" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
       <path d="M6 10.5l1.5 1.5 2.5-2.5" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
-  owner_timeframe_specification: (
+  assignment_clarity: (
     <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
       <rect x="1.5" y="3" width="13" height="11.5" rx="1.5" stroke="currentColor" strokeWidth={1.4} />
       <path d="M1.5 6.5h13" stroke="currentColor" strokeWidth={1.4} />
@@ -161,21 +149,7 @@ const PATTERN_ICONS: Record<string, JSX.Element> = {
       <path d="M11.5 9.8V11l.8.8" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
-  summary_checkback: (
-    <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
-      <path d="M3 4h10M3 7.5h10M3 11h6" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
-      <circle cx="12.5" cy="12.5" r="2.5" fill="currentColor" fillOpacity={0.15} stroke="currentColor" strokeWidth={1.2} />
-      <path d="M11.3 12.5l.8.8 1.4-1.4" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  question_quality: (
-    <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
-      <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth={1.4} />
-      <path d="M6.2 6.2a1.8 1.8 0 013.2 1.1c0 1.8-2.2 1.8-2.2 3.2" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
-      <circle cx="7.2" cy="11.8" r="0.6" fill="currentColor" />
-    </svg>
-  ),
-  listener_response_quality: (
+  communication_clarity: (
     <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
       <path d="M4.5 10.5C3.5 9.5 3 8.3 3 7a4 4 0 018 0c0 1.2-.8 2-1.2 2.5-.4.5-.8 1-.8 1.8v.2a1.5 1.5 0 01-3 0" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
       <path d="M7 5.5A1.5 1.5 0 005.5 7c0 .6.3 1 .7 1.3" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
@@ -183,12 +157,11 @@ const PATTERN_ICONS: Record<string, JSX.Element> = {
       <path d="M13.5 3.5a7 7 0 010 6" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
     </svg>
   ),
-  conversational_balance: (
+  question_quality: (
     <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
-      <path d="M8 2v12" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
-      <path d="M3 2h10" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
-      <path d="M3 2l-2 4h4L3 2zM13 2l-2 4h4L13 2z" stroke="currentColor" strokeWidth={1.3} strokeLinejoin="round" />
-      <path d="M2 14h4M10 14h4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+      <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth={1.4} />
+      <path d="M6.2 6.2a1.8 1.8 0 013.2 1.1c0 1.8-2.2 1.8-2.2 3.2" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+      <circle cx="7.2" cy="11.8" r="0.6" fill="currentColor" />
     </svg>
   ),
 };
@@ -461,31 +434,26 @@ export function PatternCard({
 }) {
   const [expanded, setExpanded] = useState(false);
 
-  const quotes                  = pattern.quotes ?? [];
-  const isConversationalBalance = pattern.pattern_id === 'conversational_balance';
-  const hasQuotes               = quotes.length > 0;
-  const hasCoaching             = !!pattern.coaching_note;
-  const hasNotes                = !!pattern.notes;
-  const isBalanced              = pattern.balance_assessment === 'balanced';
+  const quotes      = pattern.quotes ?? [];
+  const hasQuotes    = quotes.length > 0;
+  const hasCoaching  = !!pattern.coaching_note;
+  const hasNotes     = !!pattern.notes;
+  const isBalanced   = pattern.balance_assessment === 'balanced';
 
-  const isExpandable = isConversationalBalance
-    ? (isBalanced ? hasNotes : hasCoaching)
-    : (hasQuotes || hasCoaching || hasNotes);
+  const isExpandable = hasQuotes || hasCoaching || hasNotes;
 
+  const score = pattern.score;
   const hasMissedOpportunities =
     pattern.evaluable_status === 'evaluable' &&
-    pattern.numerator != null &&
-    pattern.denominator != null &&
-    pattern.numerator < pattern.denominator;
+    score != null &&
+    score < 100;
 
   const isPerfectScore =
     pattern.evaluable_status === 'evaluable' &&
-    pattern.numerator != null &&
-    pattern.denominator != null &&
-    pattern.numerator === pattern.denominator &&
-    pattern.numerator > 0;
+    score != null &&
+    score === 100;
 
-  const isMixedScore = hasMissedOpportunities && pattern.numerator != null && pattern.numerator > 0;
+  const isMixedScore = hasMissedOpportunities && score != null && score > 0;
 
   const rewriteSpanId   = pattern.rewrite_for_span_id;
   const successSpanIds  = new Set(pattern.success_span_ids ?? []);
@@ -532,17 +500,17 @@ export function PatternCard({
             <InfoPopover patternId={pattern.pattern_id} />
           </span>
 
-          {/* Tier tag + chevron */}
+          {/* Cluster tag + chevron */}
           <div className="flex items-center gap-1.5 shrink-0 ml-2">
-            {pattern.tier && (
-              <span className="text-2xs text-cv-stone-400 tabular-nums">T{pattern.tier}</span>
+            {pattern.cluster_id && (
+              <span className="text-2xs text-cv-stone-400 tabular-nums">{pattern.cluster_id}</span>
             )}
             {isExpandable && <Chevron open={expanded} />}
           </div>
         </div>
 
         {/* Score row */}
-        {pattern.evaluable_status === 'evaluable' && pattern.ratio != null ? (
+        {pattern.evaluable_status === 'evaluable' && pattern.score != null ? (
           showSparkline ? (
             <div className="mt-1">
               <div className="flex items-baseline">
@@ -554,15 +522,15 @@ export function PatternCard({
               <TrendSparkline trend={trend!} />
             </div>
           ) : (
-            <RatioBar ratio={pattern.ratio} />
+            <>
+              <RatioBar ratio={pattern.score / 100} />
+              {pattern.balance_assessment && (
+                <div className="mt-1">
+                  <BalanceBadge assessment={pattern.balance_assessment} />
+                </div>
+              )}
+            </>
           )
-        ) : pattern.evaluable_status === 'evaluable' && pattern.balance_assessment ? (
-          <div className="mt-1 flex items-center gap-2">
-            <BalanceBadge assessment={pattern.balance_assessment} />
-            {trend && trend.points.length >= 2 && (
-              <TrendDelta delta={trend.delta} />
-            )}
-          </div>
         ) : (
           <span className="text-xs text-cv-stone-400 capitalize">
             {pattern.evaluable_status === 'insufficient_signal'
@@ -630,24 +598,8 @@ export function PatternCard({
             </>
           )}
 
-          {/* Conversational balance — balanced */}
-          {isConversationalBalance && isBalanced && hasNotes && (
-            <div>
-              <SectionLabel text={STRINGS.common.whatYouDidWell} />
-              <p className="text-sm text-cv-stone-700 leading-relaxed">{pattern.notes}</p>
-            </div>
-          )}
-
-          {/* Conversational balance — off-balance */}
-          {isConversationalBalance && !isBalanced && hasCoaching && (
-            <div>
-              <SectionLabel text={STRINGS.common.observation} />
-              <p className="text-sm text-cv-stone-700 leading-relaxed">{pattern.coaching_note}</p>
-            </div>
-          )}
-
-          {/* Zero / no-numerator score (excluding conversational balance) */}
-          {!isConversationalBalance && !isPerfectScore && !isMixedScore &&
+          {/* Zero / no-numerator score */}
+          {!isPerfectScore && !isMixedScore &&
             (hasCoaching || rewriteTargetQuotes.length > 0 || pattern.suggested_rewrite || otherFailureQuotes.length > 0) && (
             <div>
               <SectionLabel text={STRINGS.common.whereYouCanImprove} />

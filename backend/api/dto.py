@@ -83,11 +83,11 @@ class ExperimentDetectionWithQuotes(BaseModel):
 
 class PatternSnapshotItem(BaseModel):
     pattern_id: str
-    tier: Optional[int] = None
+    cluster_id: Optional[str] = None
+    scoring_type: Optional[str] = None
     evaluable_status: str
-    numerator: Optional[int] = None
-    denominator: Optional[int] = None
-    ratio: Optional[float] = None
+    score: Optional[float] = None
+    opportunity_count: Optional[int] = None
     balance_assessment: Optional[str] = None
     notes: Optional[str] = None
     # Per-pattern coaching (populated when missed opportunities exist)
@@ -256,7 +256,7 @@ class AdminUserListItem(BaseModel):
 
 class PatternDataPoint(BaseModel):
     pattern_id: str
-    ratio: float
+    score: float
     opportunity_count: int
 
 

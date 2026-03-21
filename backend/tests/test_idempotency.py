@@ -22,7 +22,7 @@ def test_idempotency_key_is_deterministic():
         coachee_id="rec_user_001",
         target_speaker_label="Alice",
         target_role="chair",
-        config_version="mvp.v0.2.1",
+        config_version="mvp.v0.3.0",
     )
     key2 = make_run_idempotency_key(
         transcript_id="rec_tr_001",
@@ -30,7 +30,7 @@ def test_idempotency_key_is_deterministic():
         coachee_id="rec_user_001",
         target_speaker_label="Alice",
         target_role="chair",
-        config_version="mvp.v0.2.1",
+        config_version="mvp.v0.3.0",
     )
     assert key1 == key2
 
@@ -42,7 +42,7 @@ def test_idempotency_key_changes_with_different_transcript():
         coachee_id="rec_user_001",
         target_speaker_label="Alice",
         target_role="chair",
-        config_version="mvp.v0.2.1",
+        config_version="mvp.v0.3.0",
     )
     key2 = make_run_idempotency_key(
         transcript_id="rec_tr_002",  # different transcript
@@ -50,7 +50,7 @@ def test_idempotency_key_changes_with_different_transcript():
         coachee_id="rec_user_001",
         target_speaker_label="Alice",
         target_role="chair",
-        config_version="mvp.v0.2.1",
+        config_version="mvp.v0.3.0",
     )
     assert key1 != key2
 
@@ -62,7 +62,7 @@ def test_idempotency_key_changes_with_different_speaker_label():
         coachee_id="rec_user_001",
         target_speaker_label="Alice",
         target_role="chair",
-        config_version="mvp.v0.2.1",
+        config_version="mvp.v0.3.0",
     )
     key2 = make_run_idempotency_key(
         transcript_id="rec_tr_001",
@@ -70,7 +70,7 @@ def test_idempotency_key_changes_with_different_speaker_label():
         coachee_id="rec_user_001",
         target_speaker_label="Bob",  # different speaker
         target_role="chair",
-        config_version="mvp.v0.2.1",
+        config_version="mvp.v0.3.0",
     )
     assert key1 != key2
 
@@ -82,7 +82,7 @@ def test_idempotency_key_case_insensitive_for_speaker_label():
         coachee_id="rec_user_001",
         target_speaker_label="alice",
         target_role="chair",
-        config_version="mvp.v0.2.1",
+        config_version="mvp.v0.3.0",
     )
     key2 = make_run_idempotency_key(
         transcript_id="rec_tr_001",
@@ -90,7 +90,7 @@ def test_idempotency_key_case_insensitive_for_speaker_label():
         coachee_id="rec_user_001",
         target_speaker_label="ALICE",  # different casing
         target_role="chair",
-        config_version="mvp.v0.2.1",
+        config_version="mvp.v0.3.0",
     )
     # Per the implementation, speaker labels are lowercased before hashing
     assert key1 == key2
@@ -103,7 +103,7 @@ def test_idempotency_key_is_hex_string():
         coachee_id="y",
         target_speaker_label="z",
         target_role="chair",
-        config_version="mvp.v0.2.1",
+        config_version="mvp.v0.3.0",
     )
     # SHA-256 hex is 64 chars
     assert len(key) == 64

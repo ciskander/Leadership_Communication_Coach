@@ -190,16 +190,16 @@ def resolve_coaching_output(
     """
     coaching = parsed_json.get("coaching_output", {})
 
-    # Build a ratio lookup from pattern_snapshot to filter low-score strengths
-    ratio_by_pattern = {
-        ps.get("pattern_id"): ps.get("ratio")
+    # Build a score lookup from pattern_snapshot to filter low-score strengths
+    score_by_pattern = {
+        ps.get("pattern_id"): ps.get("score")
         for ps in parsed_json.get("pattern_snapshot", [])
     }
 
     strengths: list[HighlightItem] = []
     for s in coaching.get("strengths", []):
         # Guardrail: skip strengths whose pattern score is below 50%
-        if (ratio_by_pattern.get(s.get("pattern_id")) or 0) < 0.5:
+        if (score_by_pattern.get(s.get("pattern_id")) or 0) < 0.5:
             continue
         strengths.append(
             HighlightItem(
@@ -254,11 +254,11 @@ def resolve_pattern_snapshot(
         )
         snapshot_items.append(PatternSnapshotItem(
             pattern_id=ps.get("pattern_id", ""),
-            tier=ps.get("tier"),
+            cluster_id=ps.get("cluster_id"),
+            scoring_type=ps.get("scoring_type"),
             evaluable_status=ps.get("evaluable_status", "not_evaluable"),
-            numerator=ps.get("numerator"),
-            denominator=ps.get("denominator"),
-            ratio=ps.get("ratio"),
+            score=ps.get("score"),
+            opportunity_count=ps.get("opportunity_count"),
             balance_assessment=ps.get("balance_assessment"),
             notes=ps.get("notes"),
             quotes=ps_quotes,

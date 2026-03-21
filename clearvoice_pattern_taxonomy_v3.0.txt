@@ -1,6 +1,6 @@
 CLEARVOICE PATTERN TAXONOMY v3.0
 Role-conditioned, target-speaker-only, conservative counting.
-9 patterns in 4 clusters. Three scoring types: dual-element, tiered rubric, binary.
+9 patterns in 4 clusters. Five scoring types: dual-element, tiered rubric, binary, complexity-tiered, multi-element.
 
 ────────────────────────────────────────────────────────────────
 
@@ -34,7 +34,7 @@ This taxonomy uses three scoring approaches matched to pattern structure:
 
 3. Binary scoring (Question Quality):
    - Each opportunity scored 1.0 (purposeful) or 0.0 (not purposeful).
-   - Score = numerator / denominator, rounded to 4 decimals.
+   - Score = purposeful_count / opportunity_count, rounded to 4 decimals.
 
 4. Complexity-tiered scoring (Assignment Clarity):
    - LLM classifies each assignment as simple or complex based on observable signals.

@@ -64,12 +64,12 @@ function buildChartData(
   windowSize: number,
 ): ChartPoint[] {
   const runData = history.map((run) => {
-    const map: Record<string, { num: number; den: number; ratio: number }> = {};
+    const map: Record<string, { num: number; den: number; score: number }> = {};
     for (const p of run.patterns) {
       if (visiblePatterns.includes(p.pattern_id)) {
         const den = p.opportunity_count ?? 0;
-        const num = den > 0 ? Math.round(p.ratio * den) : 0;
-        map[p.pattern_id] = { num, den, ratio: p.ratio };
+        const num = den > 0 ? Math.round(p.score * den) : 0;
+        map[p.pattern_id] = { num, den, score: p.score };
       }
     }
     return map;
@@ -88,17 +88,17 @@ function buildChartData(
       if (cur) {
         point[rawKey(pid)] = cur.den > 0
           ? Math.round((cur.num / cur.den) * 100)
-          : Math.round(cur.ratio * 100);
+          : Math.round(cur.score * 100);
       }
-      let totalNum = 0, totalDen = 0, ratioSum = 0, ratioCount = 0;
+      let totalNum = 0, totalDen = 0, scoreSum = 0, scoreCount = 0;
       const start = Math.max(0, idx - windowSize + 1);
       for (let j = start; j <= idx; j++) {
         const d = runData[j][pid];
-        if (d) { totalNum += d.num; totalDen += d.den; ratioSum += d.ratio; ratioCount++; }
+        if (d) { totalNum += d.num; totalDen += d.den; scoreSum += d.score; scoreCount++; }
       }
       point[pid] = totalDen > 0
         ? Math.round((totalNum / totalDen) * 100)
-        : ratioCount > 0 ? Math.round((ratioSum / ratioCount) * 100) : null;
+        : scoreCount > 0 ? Math.round((scoreSum / scoreCount) * 100) : null;
     }
     return point;
   });
@@ -336,9 +336,9 @@ function ProposedExperimentRow({ experiment }: { experiment: Experiment }) {
 
 // ─── Pattern snapshot bar ─────────────────────────────────────────────────────
 
-function PatternSnapshotBar({ item }: { item: { pattern_id: string; ratio?: number | null; evaluable_status?: string } }) {
-  const ratio = item.ratio;
-  const pct   = ratio != null ? Math.round(ratio * 100) : null;
+function PatternSnapshotBar({ item }: { item: { pattern_id: string; score?: number | null; evaluable_status?: string } }) {
+  const score = item.score;
+  const pct   = score != null ? Math.round(score) : null;
   const label = STRINGS.patternLabels[item.pattern_id] ?? item.pattern_id.replace(/_/g, ' ');
 
   if (pct === null) {

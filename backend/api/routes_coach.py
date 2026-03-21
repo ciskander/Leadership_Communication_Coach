@@ -389,13 +389,13 @@ async def coachee_progress(
                 pid = p.get("pattern_id", "")
                 if not pid:
                     continue
-                ratio_val = p.get("ratio")
-                if ratio_val is None:
+                score_val = p.get("score")
+                if score_val is None:
                     continue
-                opp = p.get("opportunity_count") or p.get("denominator") or 0
+                opp = p.get("opportunity_count") or 0
                 patterns.append({
                     "pattern_id": pid,
-                    "ratio": float(ratio_val),
+                    "score": float(score_val),
                     "opportunity_count": int(opp) if opp else 0,
                 })
         except Exception:

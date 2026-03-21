@@ -1,5 +1,29 @@
 // TypeScript interfaces matching backend DTOs
 
+export type PatternId =
+  | 'purposeful_framing'
+  | 'focus_management'
+  | 'participation_management'
+  | 'disagreement_navigation'
+  | 'resolution_and_alignment'
+  | 'assignment_clarity'
+  | 'question_quality'
+  | 'communication_clarity'
+  | 'feedback_quality';
+
+export type ClusterId =
+  | 'meeting_structure'
+  | 'participation_dynamics'
+  | 'decisions_accountability'
+  | 'communication_quality';
+
+export type ScoringType =
+  | 'dual_element'
+  | 'tiered_rubric'
+  | 'binary'
+  | 'complexity_tiered'
+  | 'multi_element';
+
 export interface User {
   id: string;
   email: string;
@@ -48,11 +72,14 @@ export interface ExperimentDetection {
 
 export interface PatternSnapshotItem {
   pattern_id: string;
-  tier: number | null;
+  cluster_id: ClusterId;
+  scoring_type: ScoringType;
+  score: number | null;
   evaluable_status: string;
-  numerator?: number;
-  denominator?: number;
-  ratio?: number;
+  element_a_count?: number;
+  element_b_count?: number;
+  simple_count?: number;
+  complex_count?: number;
   balance_assessment?: string;
   notes?: string;
   quotes: QuoteObject[];
@@ -244,7 +271,7 @@ export type MeetingType =
 
 export interface PatternDataPoint {
   pattern_id: string;
-  ratio: number;
+  score: number;
   opportunity_count: number;
 }
 

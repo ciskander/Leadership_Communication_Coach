@@ -91,54 +91,50 @@ export const STRINGS = {
 
   // ── Pattern labels ──────────────────────────────────────────────────────────
   patternLabels: {
-    agenda_clarity: 'Agenda Clarity',
-    objective_signaling: 'Objective Signaling',
-    turn_allocation: 'Turn Allocation',
-    facilitative_inclusion: 'Facilitative Inclusion',
-    decision_closure: 'Decision Closure',
-    owner_timeframe_specification: 'Owner & Timeframe Specification',
-    summary_checkback: 'Summary & Check-back',
+    purposeful_framing: 'Purposeful Framing',
+    focus_management: 'Focus Management',
+    participation_management: 'Participation Management',
+    disagreement_navigation: 'Disagreement Navigation',
+    resolution_and_alignment: 'Resolution & Alignment',
+    assignment_clarity: 'Assignment Clarity',
     question_quality: 'Question Quality',
-    listener_response_quality: 'Listener Response Quality',
-    conversational_balance: 'Conversational Balance',
+    communication_clarity: 'Communication Clarity',
+    feedback_quality: 'Feedback Quality',
   } as Record<string, string>,
 
   // ── Pattern explanations (used in progress page popovers) ───────────────────
   patternExplanations: {
-    agenda_clarity:
-      'How consistently you open meetings with a clear agenda and stated objectives.',
-    objective_signaling:
-      "How often you make the meeting's purpose explicit when transitioning between topics.",
-    turn_allocation:
-      'How equitably you distribute speaking opportunities across participants.',
-    facilitative_inclusion:
-      'How actively you draw in quieter voices and prevent dominant speakers from taking over.',
-    decision_closure:
-      'How reliably you bring discussions to a clear decision with an owner before moving on.',
-    owner_timeframe_specification:
-      'How consistently action items are assigned with a named owner and a deadline.',
-    summary_checkback:
-      'How often you summarise key points and check for alignment before closing a topic.',
+    purposeful_framing:
+      'How effectively you open meetings with a clear purpose, desired outcomes, and context for participants.',
+    focus_management:
+      'How well you keep discussions on track, manage tangents, and transition between topics with clear signaling.',
+    participation_management:
+      'How equitably you manage speaking opportunities and balance participation across all attendees.',
+    disagreement_navigation:
+      'How skillfully you surface, acknowledge, and work through differing viewpoints in a constructive way.',
+    resolution_and_alignment:
+      'How reliably you bring discussions to clear decisions with explicit alignment checks before moving on.',
+    assignment_clarity:
+      'How consistently action items are stated with a named owner, specific deliverable, and a deadline.',
     question_quality:
       'How often your questions are tied to a specific decision or outcome rather than open-ended exploration.',
-    listener_response_quality:
-      'How well you acknowledge and build on what others have said before responding.',
-    conversational_balance:
-      'Whether speaking time is distributed appropriately given your role in the meeting.',
+    communication_clarity:
+      'How clearly and concisely you express your ideas, using structure and precision to aid understanding.',
+    feedback_quality:
+      'How effectively you give and receive feedback — balancing directness with empathy and specificity.',
   } as Record<string, string>,
 
   // ── Pattern icons (legacy — components now use inline SVG; keep for any unconverted usage) ─────
   patternIcons: {
-    agenda_clarity: '📋',
-    objective_signaling: '🥅',
-    turn_allocation: '🔄',
-    facilitative_inclusion: '👨‍👩‍👧‍👦',
-    decision_closure: '🔒',
-    owner_timeframe_specification: '📅',
-    summary_checkback: '☑️',
+    purposeful_framing: '🎯',
+    focus_management: '🧭',
+    participation_management: '👥',
+    disagreement_navigation: '🤝',
+    resolution_and_alignment: '✅',
+    assignment_clarity: '📋',
     question_quality: '❓',
-    listener_response_quality: '👂',
-    conversational_balance: '⚖️',
+    communication_clarity: '💬',
+    feedback_quality: '📣',
   } as Record<string, string>,
 
   // ── Balance assessment labels ───────────────────────────────────────────────

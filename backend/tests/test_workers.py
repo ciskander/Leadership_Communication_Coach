@@ -119,38 +119,27 @@ class TestWorkerAppliesPatches:
     by inspecting what gets written to Airtable.
     """
 
-    def _output_with_zero_denominator(self, base: dict) -> dict:
+    def _output_with_zero_opportunity_count(self, base: dict) -> dict:
         import copy
         out = copy.deepcopy(base)
         for snap in out["pattern_snapshot"]:
-            if snap["pattern_id"] == "agenda_clarity":
-                snap["denominator"] = 0
-                snap["numerator"] = 0
-                snap["ratio"] = 0.0
+            if snap["pattern_id"] == "purposeful_framing":
+                snap["opportunity_count"] = 0
+                snap["score"] = 0.0
         return out
 
-    def _output_with_cb_ratio(self, base: dict) -> dict:
-        import copy
-        out = copy.deepcopy(base)
-        for snap in out["pattern_snapshot"]:
-            if snap["pattern_id"] == "conversational_balance":
-                snap["ratio"] = 0.5
-                snap["numerator"] = 5
-                snap["denominator"] = 10
-        return out
-
-    def test_zero_denominator_coerced_in_persisted_json(
+    def test_zero_opportunity_count_coerced_in_persisted_json(
         self, mock_at, valid_single_meeting_output
     ):
-        bad_output = self._output_with_zero_denominator(valid_single_meeting_output)
+        bad_output = self._output_with_zero_opportunity_count(valid_single_meeting_output)
         with patch("backend.core.workers.call_llm",
                    return_value=_openai_response(bad_output)):
             from backend.core.workers import process_single_meeting_analysis
             process_single_meeting_analysis("rec_rr_001", client=mock_at, system_prompt_override="test system prompt")
 
         fields_str = str(mock_at.create_run.call_args)
-        # The persisted JSON should not contain ratio for the zero-denominator pattern
-        # (it will have been coerced to insufficient_signal and ratio stripped)
+        # The persisted JSON should not contain score for the zero-opportunity pattern
+        # (it will have been coerced to insufficient_signal and score stripped)
         persisted_json_str = [
             str(v) for k, v in (mock_at.create_run.call_args[0][0] if mock_at.create_run.call_args[0]
                                  else mock_at.create_run.call_args[1]).items()
@@ -159,26 +148,6 @@ class TestWorkerAppliesPatches:
         if persisted_json_str:
             persisted = json.loads(persisted_json_str[0])
             for snap in persisted.get("pattern_snapshot", []):
-                if snap["pattern_id"] == "agenda_clarity":
+                if snap["pattern_id"] == "purposeful_framing":
                     assert snap["evaluable_status"] == "insufficient_signal"
-                    assert "ratio" not in snap
-
-    def test_conversational_balance_ratio_stripped_before_persist(
-        self, mock_at, valid_single_meeting_output
-    ):
-        bad_output = self._output_with_cb_ratio(valid_single_meeting_output)
-        with patch("backend.core.workers.call_llm",
-                   return_value=_openai_response(bad_output)):
-            from backend.core.workers import process_single_meeting_analysis
-            process_single_meeting_analysis("rec_rr_001", client=mock_at, system_prompt_override="test system prompt")
-
-        # If we can access the persisted fields, verify ratio is gone
-        create_args = mock_at.create_run.call_args
-        if create_args and create_args[0]:
-            fields = create_args[0][0]
-            parsed_str = fields.get("Parsed JSON", "")
-            if parsed_str:
-                persisted = json.loads(parsed_str)
-                for snap in persisted.get("pattern_snapshot", []):
-                    if snap["pattern_id"] == "conversational_balance":
-                        assert "ratio" not in snap
+                    assert "score" not in snap
