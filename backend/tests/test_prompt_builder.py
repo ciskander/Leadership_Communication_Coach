@@ -441,11 +441,11 @@ EXPECTED_PATTERN_IDS = [
     "purposeful_framing",
     "focus_management",
     "participation_management",
+    "disagreement_navigation",
     "resolution_and_alignment",
     "assignment_clarity",
     "question_quality",
     "communication_clarity",
-    "disagreement_navigation",
     "feedback_quality",
 ]
 
@@ -466,7 +466,7 @@ class TestTaxonomyParsing:
         raw = _load_taxonomy_raw()
         core_rules = _extract_section(raw, "CORE_RULES")
         assert "Evaluate ONLY the target speaker" in core_rules
-        assert "COUNTING DISTINCTION" in core_rules
+        assert "OPPORTUNITY vs. NON-OPPORTUNITY" in core_rules
 
     def test_each_pattern_section_extractable(self):
         raw = _load_taxonomy_raw()
