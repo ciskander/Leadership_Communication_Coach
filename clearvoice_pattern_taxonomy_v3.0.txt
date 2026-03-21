@@ -29,7 +29,7 @@ This taxonomy uses three scoring approaches matched to pattern structure:
    - Output must include element_a_count, element_b_count, and opportunity_count separately.
 
 2. Tiered rubric scoring (Participation Management, Disagreement Navigation, Communication Clarity, Focus Management):
-   - Each opportunity scored 0.0, 0.5, or 1.0 based on rubric level defined per pattern.
+   - Each opportunity scored 0.0, 0.25, 0.5, 0.75, or 1.0 based on rubric level defined per pattern.
    - Score = sum of opportunity scores / opportunity_count, rounded to 4 decimals.
 
 3. Binary scoring (Question Quality):
@@ -184,7 +184,9 @@ Counts as opportunity:
 
 Scoring per opportunity (rubric):
 - 1.0 — The leader explicitly names the drift AND either redirects the group back to the topic or consciously sanctions the departure. Example: "We're getting into implementation details — let's park that for now and finish the strategy question first." Or: "This is off-agenda but it's important — let's take 5 minutes on it and then come back to pricing."
+- 0.75 — The leader names the drift but only partially redirects — e.g., acknowledges the tangent and suggests returning to the topic but doesn't firmly steer the group back or set a clear boundary. Example: "Yeah, we're getting into implementation — we should probably get back to strategy" (names the drift, expresses intent to return, but doesn't decisively redirect or sanction the departure).
 - 0.5 — The leader partially manages the drift — e.g., redirects without naming what happened, or names the drift but doesn't clearly redirect or sanction. Example: "OK, let's get back on track" (redirects, but doesn't name what the drift was or why they're returning). Or: "That's a good point about implementation" (acknowledges the tangent, but lets it continue without a conscious decision).
+- 0.25 — Minimal acknowledgment — the leader makes a vague attempt to intervene but doesn't name the drift or redirect meaningfully. Example: "Hmm, OK…" or a brief hesitation that signals awareness of the tangent but takes no action. The drift continues essentially unmanaged.
 - 0.0 — The leader does not acknowledge the drift and the discussion continues off-topic without intervention.
 
 Score = sum of opportunity scores / opportunity_count.
@@ -247,7 +249,9 @@ Denominator (opportunity_count):
 
 Scoring per opportunity (tiered):
 - 1.0 — Targeted inclusion: The speaker directs the floor to a specific person who has not yet been heard on the current topic, or explicitly amplifies a quieter participant's earlier point. Example: "Priya, you've worked closest with these customers — what's your read on this?" (Priya has not spoken on this topic.)
+- 0.75 — Contextual named invitation: The speaker directs the floor to a specific named person who hasn't spoken on this particular sub-point but has already contributed to the broader topic. The invitation shows awareness of the discussion but doesn't target an unheard voice. Example: "Marcus, you raised the timeline concern earlier — how does this option affect your estimate?" (Marcus has spoken on the topic, but the speaker is connecting his expertise to a new dimension.)
 - 0.5 — Named turn distribution: The speaker directs the floor to a specific named person or role, but that person has already contributed to this topic. Example: "Marcus, thoughts?" (Marcus has already spoken, but the speaker is actively managing turns.)
+- 0.25 — Directed but generic: The speaker turns to a specific subgroup or side of the table without naming an individual. Shows intent to manage participation but lacks the precision of a named invitation. Example: "Engineering team, any concerns?" or "Those of you on the client side — reactions?" (Directed to a group, not a person.)
 - 0.0 — Generic open-floor prompt or missed opportunity: "Any thoughts?" / "Questions?" / A long monologue followed by "any questions?" / Holding the floor without inviting others.
 
 Score = sum of opportunity scores / opportunity_count.
@@ -281,7 +285,7 @@ Minimum threshold:
 - balance_assessment can always be provided regardless of opportunity count (except when attribution is unclear).
 
 Detection notes:
-- Distinguishing 1.0 (targeted inclusion) from 0.5 (named distribution) requires tracking who has spoken on the current topic. If the transcript doesn't provide enough information to determine who has been heard, default to 0.5 for any named invitation.
+- Distinguishing 1.0 (targeted inclusion) from 0.75/0.5 (named distribution) requires tracking who has spoken on the current topic. If the transcript doesn't provide enough information to determine who has been heard, default to 0.5 for any named invitation.
 - When in doubt about whether a moment constitutes an opportunity, exclude from both numerator and denominator.
 - "Any thoughts?" or "Does anyone have questions?" is always 0.0 — even if someone responds. The scoring is about the leader's behavior, not the outcome.
 
@@ -318,11 +322,18 @@ Scoring per opportunity (rubric):
   - Maintains factual and solution-oriented focus (forward-looking: "how do we resolve this" rather than backward-looking: "whose fault is this").
   - Acknowledges the other perspective (names the opposing view fairly before stating their own).
   - Works toward resolution or explicitly parks the disagreement with a concrete next step ("We're not aligned — let's schedule 30 minutes Thursday to work through the options").
+- 0.75 — Substantive engagement without resolution. The speaker engages with the substance of the disagreement and acknowledges the other perspective, but doesn't drive toward resolution or park it with a clear next step. The conversation is constructive but left open-ended. Examples:
+  - "I see your point about the timeline risk — the market pressure is real too, and these are genuinely in tension." (Engages substance, acknowledges perspective, but doesn't propose a path forward.)
+  - "You're right that the data supports waiting, and I think there's also a cost to delay we haven't quantified." (Names both sides fairly, but doesn't move toward a decision or next step.)
 - 0.5 — Partial engagement. The speaker engages with some substance but falls short on one or more dimensions. Examples:
   - Acknowledges the disagreement but shifts to blame framing.
   - Maintains factual focus but doesn't work toward resolution or park the issue.
   - Attempts to de-escalate but without engaging with the substance ("Let's not get into that now" without naming a path forward).
   - Paraphrases the other view but then dismisses it without engaging ("I hear you, but we're going with Plan A").
+- 0.25 — Procedural acknowledgment without substance. The speaker acknowledges that a disagreement exists but doesn't engage with the substance at all — de-escalates procedurally or deflects without addressing the point. Examples:
+  - "I can see we have different views on this — let's move on." (Acknowledges disagreement, but neither engages nor parks it with a next step.)
+  - "That's a fair concern." (Acknowledges, but doesn't engage with what makes it fair or what to do about it.)
+  - Attempts to lower the temperature without addressing the issue ("Let's all take a breath here").
 - 0.0 — Non-constructive response. The speaker does any of the following:
   - Dismisses the disagreement entirely ("That's not relevant").
   - Escalates — raises stakes, broadens accusations, shifts from issue to person.
@@ -615,11 +626,22 @@ Scoring per opportunity (rubric):
   - Is proportionate — the length matches the complexity and importance of the point.
   - Uses concrete, specific language rather than vague abstractions.
 
+- 0.75 — Mostly clear with a minor shortfall. The turn has a clear main point stated early and is mostly well-structured, but falls short on one dimension. Examples:
+  - Clear BLUF and on-topic, but slightly disproportionate in length — the point is made but the speaker over-explains or adds unnecessary elaboration.
+  - Clear point and good structure, but one patch of vagueness amid otherwise concrete language.
+  - Responds directly to the question and is concise, but briefly touches an adjacent concern before returning to the main thread.
+
 - 0.5 — Partially clear. The turn has a discernible point but falls short on structure or focus. Examples:
   - The point is present but buried — the speaker arrives at their conclusion only after extended preamble or reasoning.
   - The response is relevant but meanders — includes digressions or repetition before returning to the main thread.
   - Mostly concrete but with patches of vagueness ("we need to improve our approach" without specifying what that means).
   - Starts addressing the question asked but drifts into an adjacent topic.
+
+- 0.25 — Mostly unclear with a partial signal. A discernible point exists somewhere in the turn but is significantly undermined by poor structure. Examples:
+  - The main point is deeply buried — the speaker talks at length before arriving at a conclusion that could have been stated up front, and the preamble obscures rather than supports it.
+  - The response partially addresses the question asked but mostly drifts to adjacent or tangential concerns.
+  - Multiple ideas are started but not completed — the speaker circles back to finish one thread, but the others are left hanging.
+  - Substantially disproportionate — a long response to a simple question, where the point is present but lost in volume.
 
 - 0.0 — Unclear or unfocused. The turn exhibits one or more of the following:
   - No discernible main point — the speaker talks at length without arriving at a conclusion or recommendation.
@@ -648,7 +670,7 @@ Detection notes:
 - "Responds to the question actually asked" requires comparing the speaker's turn to the prior question or point. If there is no clear prior question (the speaker is introducing a new topic), this dimension does not apply to that turn.
 - Proportionality is context-dependent. A complex strategic question warrants a longer response. A simple factual question does not. Score proportionality relative to the complexity of the point, not against an absolute length standard.
 - Context affects concreteness expectations. In an early brainstorming discussion, more abstract language is appropriate. In a decision-making or planning context, vagueness is a clearer failure. Apply conservative scoring — only score vagueness as a failure when the context clearly calls for specificity.
-- When in doubt about whether a turn is 0.5 or 1.0, prefer 0.5. When in doubt about whether it's 0.0 or 0.5, prefer 0.5. Center of the rubric is the safe zone.
+- When in doubt between adjacent tiers, use your best judgment based on the rubric criteria. Do not systematically default to any single tier — score each opportunity based on the strongest matching description.
 
 Experiment guidance:
 - What good looks like: "I think we should delay launch by two weeks. Here's why: QA flagged three issues in the payment flow, and we can't ship with unresolved payment bugs. Two weeks gives us time to fix and retest. The trade-off is we miss the conference window, but I'd rather ship clean." Point first, reasoning second, trade-off acknowledged, proportionate length.

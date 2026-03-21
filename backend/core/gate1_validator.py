@@ -473,7 +473,7 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
                 # Per-type success value validation
                 _ALLOWED_SUCCESS = {
                     "dual_element":       {0, 0.5, 1.0},
-                    "tiered_rubric":      {0, 0.5, 1.0},
+                    "tiered_rubric":      {0, 0.25, 0.5, 0.75, 1.0},
                     "binary":             {0, 1.0},
                     "complexity_tiered":  {0, 0.25, 0.5, 0.75, 1.0},
                     "multi_element":      {0, 0.2, 0.4, 0.6, 0.8, 1.0},
