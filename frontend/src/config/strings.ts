@@ -105,23 +105,23 @@ export const STRINGS = {
   // ── Pattern explanations (used in progress page popovers) ───────────────────
   patternExplanations: {
     purposeful_framing:
-      'How effectively you open meetings with a clear purpose, desired outcomes, and context for participants.',
+      'Whether you frame topics with both a named subject and a desired outcome — when opening the meeting and at each transition. Scored on two elements: topic identification and stated outcome.',
     focus_management:
-      'How well you keep discussions on track, manage tangents, and transition between topics with clear signaling.',
+      'Whether you keep discussion aligned with stated objectives when conversation drifts. Scored on how explicitly you name the departure and redirect or sanction it.',
     participation_management:
-      'How equitably you manage speaking opportunities and balance participation across all attendees.',
+      'Whether you actively manage speaking turns — distributing the floor, bringing in unheard voices, and ensuring appropriate balance. Scored from generic prompts (0) to targeted inclusion (1).',
     disagreement_navigation:
-      'How skillfully you surface, acknowledge, and work through differing viewpoints in a constructive way.',
+      'How you handle moments of disagreement or pushback. Scored on whether you engage with the substance, acknowledge the opposing view, maintain solution focus, and drive toward resolution.',
     resolution_and_alignment:
-      'How reliably you bring discussions to clear decisions with explicit alignment checks before moving on.',
+      'Whether you close discussions with a clear statement of what was decided and an explicit check that the group agrees. Scored on two elements: named resolution and alignment confirmation.',
     assignment_clarity:
-      'How consistently action items are stated with a named owner, specific deliverable, and a deadline.',
+      'Whether assignments include the elements needed for success — owner, deadline, and deliverable for simple tasks, plus context and confirmation for complex ones. Scoring scales with assignment complexity.',
     question_quality:
-      'How often your questions are tied to a specific decision or outcome rather than open-ended exploration.',
+      'Whether your questions serve a clear purpose — advancing a decision, surfacing assumptions, broadening perspective, or testing constraints — rather than being aimless or leading.',
     communication_clarity:
-      'How clearly and concisely you express your ideas, using structure and precision to aid understanding.',
+      'Whether your substantive contributions are clear and structured — leading with your main point, responding to the actual question, and keeping length proportionate to complexity.',
     feedback_quality:
-      'How effectively you give and receive feedback — balancing directness with empathy and specificity.',
+      'Whether you deliver feedback using a structured approach: grounding it in a specific situation and behavior, naming the impact, offering a recommendation, and checking in with the recipient (SBI-RC).',
   } as Record<string, string>,
 
   // ── Pattern icons (legacy — components now use inline SVG; keep for any unconverted usage) ─────
