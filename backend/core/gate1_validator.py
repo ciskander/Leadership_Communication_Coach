@@ -298,11 +298,16 @@ def validate(raw_text: str) -> Gate1Result:
         # Schema errors are fatal; skip business rules for cleaner reporting
         return Gate1Result(passed=False, issues=issues)
 
-    # ── Step 3: Business rules ────────────────────────────────────────────────
+    # ── Step 3: Business rules (may auto-correct data in-place) ────────────────
     issues.extend(_business_rules(data))
 
+    has_corrections = any(i.issue_code == "SCORE_ARITHMETIC_AUTOCORRECTED" for i in issues)
     passed = all(i.severity != "error" for i in issues)
-    return Gate1Result(passed=passed, issues=issues)
+    return Gate1Result(
+        passed=passed,
+        issues=issues,
+        corrected_data=data if has_corrections else None,
+    )
 
 
 def _business_rules(data: dict) -> list[ValidationIssue]:
@@ -474,11 +479,13 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
                     expected_score = round(success_sum / counted_actual, 4)
                     actual_score = item.get("score")
                     if actual_score is not None and abs(actual_score - expected_score) > 0.0005:
-                        issues.append(_err(
-                            "SCORE_ARITHMETIC_MISMATCH",
+                        # Auto-correct: trust the opportunity_events arithmetic
+                        item["score"] = expected_score
+                        issues.append(_warn(
+                            "SCORE_ARITHMETIC_AUTOCORRECTED",
                             f"{path}.score",
-                            f"score ({actual_score}) != sum(success)/counted ({expected_score}). "
-                            f"success_sum={success_sum}, counted={counted_actual}.",
+                            f"score corrected from {actual_score} to {expected_score} "
+                            f"(sum(success)/counted = {success_sum}/{counted_actual}).",
                         ))
 
     # ── 3d. turn_start_id / turn_end_id in evidence_spans ────────────────────
