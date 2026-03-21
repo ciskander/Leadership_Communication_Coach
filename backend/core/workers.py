@@ -589,8 +589,9 @@ def process_single_meeting_analysis(
         total_tokens=openai_resp.total_tokens,
     )
 
-    # 7. Gate1 validate
+    # 7. Gate1 validate (may auto-correct scores in-place)
     gate1_result = gate1_validate(openai_resp.raw_text)
+    persisted_json = gate1_result.corrected_data or openai_resp.parsed
 
     # 8/9. Persist run
     run_record = _persist_run_fields(
@@ -601,7 +602,7 @@ def process_single_meeting_analysis(
         active_experiment_record_id=active_exp_record_id,
         request_payload=prompt_payload.raw_user_message,
         raw_output=openai_resp.raw_text,
-        parsed_json=openai_resp.parsed,
+        parsed_json=persisted_json,
         parse_ok=True,
         schema_ok=all(i.issue_code != "SCHEMA_VIOLATION" for i in gate1_result.issues),
         business_ok=gate1_result.passed,
@@ -933,8 +934,9 @@ def process_baseline_pack_build(
         total_tokens=openai_resp.total_tokens,
     )
 
-    # 6. Gate1 validate
+    # 6. Gate1 validate (may auto-correct scores in-place)
     gate1_result = gate1_validate(openai_resp.raw_text)
+    persisted_json = gate1_result.corrected_data or openai_resp.parsed
 
     # Determine user_record_id from baseline pack users link
     user_record_id = user_links[0] if user_links else ""
@@ -947,7 +949,7 @@ def process_baseline_pack_build(
         baseline_pack_record_id=baseline_pack_id,
         request_payload=prompt_payload.raw_user_message,
         raw_output=openai_resp.raw_text,
-        parsed_json=openai_resp.parsed,
+        parsed_json=persisted_json,
         parse_ok=True,
         schema_ok=all(i.issue_code != "SCHEMA_VIOLATION" for i in gate1_result.issues),
         business_ok=gate1_result.passed,

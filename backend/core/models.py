@@ -47,6 +47,7 @@ class ValidationIssue(BaseModel):
 class Gate1Result(BaseModel):
     passed: bool
     issues: list[ValidationIssue] = Field(default_factory=list)
+    corrected_data: Optional[dict] = None  # populated when auto-fixes were applied
 
 
 # ── Airtable / domain objects ─────────────────────────────────────────────────
