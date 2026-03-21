@@ -13,10 +13,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source
 COPY backend/ ./backend/
-COPY system_prompt_v0_2_1.txt ./system_prompt_v0_2_1.txt
-COPY system_prompt_baseline_pack_v0_2_1.txt ./system_prompt_baseline_pack_v0_2_1.txt
-COPY system_prompt_next_experiment_v0_2_1.txt ./system_prompt_next_experiment_v0_2_1.txt
-COPY clearvoice_pattern_taxonomy_v2.1.txt ./clearvoice_pattern_taxonomy_v2.1.txt
+COPY system_prompt_v0_3_0.txt ./system_prompt_v0_3_0.txt
+COPY system_prompt_baseline_pack_v0_3_0.txt ./system_prompt_baseline_pack_v0_3_0.txt
+COPY system_prompt_next_experiment_v0_3_0.txt ./system_prompt_next_experiment_v0_3_0.txt
+COPY clearvoice_pattern_taxonomy_v3.0.txt ./clearvoice_pattern_taxonomy_v3.0.txt
 
 # Default: run API server
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
