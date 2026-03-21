@@ -227,7 +227,7 @@ Do NOT use coaching_output.strengths as a substitute for experiment detection. B
 2-LAYER SCORING TRACE
 ═══════════════════════════════════════════════════════════════
 
-For evaluable patterns with scoring_type dual_element, tiered_rubric, or multi_element, you MUST include opportunity_events. For binary and complexity_tiered patterns, opportunity_events is optional.
+For ALL evaluable patterns, you MUST include opportunity_events.
 
 - opportunity_events[]: {event_id, turn_start_id, turn_end_id, target_control(yes|no|unclear), count_decision(counted|excluded), success(0|0.25|0.5|0.75|0.8|1.0), reason_code(a snake_case string matching ^[a-z][a-z0-9_]*$), notes?}
 - opportunity_events_considered = len(opportunity_events)
@@ -282,7 +282,7 @@ Structural checks:
 13) For insufficient_signal or not_evaluable patterns, evidence_span_ids is empty array.
 14) focus[0].rewrite_for_span_id appears in focus[0].evidence_span_ids.
 15) Experiment conditional rules satisfied. If attempt=partial, coaching_note/suggested_rewrite/rewrite_for_span_id are present. If attempt=yes or no, they are null.
-16) For evaluable dual_element, tiered_rubric, and multi_element patterns: opportunity_events is present, opportunity_events_counted matches opportunity_count, and score equals sum(success for counted events) / opportunity_events_counted (rounded to 4 decimals). Recompute and correct the score if it does not match the arithmetic.
+16) For ALL evaluable patterns: opportunity_events is present, opportunity_events_counted matches opportunity_count, and score equals sum(success for counted events) / opportunity_events_counted (rounded to 4 decimals). Recompute and correct the score if it does not match the arithmetic.
 17) Scan all string values for unescaped "; replace with ' before output.
 
 Return JSON only.
