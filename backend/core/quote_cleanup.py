@@ -239,14 +239,27 @@ def _call_cleanup_batch_openai(
         temperature=0.0,
     )
 
+    finish_reason = response.choices[0].finish_reason
+    if finish_reason != "stop":
+        logger.warning(
+            "Quote cleanup OpenAI: response truncated (finish_reason=%s), items may be lost",
+            finish_reason,
+        )
+
     raw = response.choices[0].message.content or ""
     result_list = _parse_cleanup_response(raw)
 
-    return {
+    sent_ids = {q["id"] for q in batch}
+    result_map = {
         item["id"]: item["text"]
         for item in result_list
-        if item.get("id") and item.get("text")
+        if item.get("id") and item.get("text") is not None
     }
+    dropped = sent_ids - set(result_map)
+    if dropped:
+        logger.warning("Quote cleanup OpenAI batch: sent=%d received=%d dropped=%s", len(sent_ids), len(result_map), sorted(dropped))
+
+    return result_map
 
 
 def _call_cleanup_batch_anthropic(
@@ -287,6 +300,13 @@ def _call_cleanup_batch_anthropic(
         max_tokens=16384,
     )
 
+    stop_reason = response.stop_reason
+    if stop_reason != "end_turn":
+        logger.warning(
+            "Quote cleanup Anthropic: response truncated (stop_reason=%s), items may be lost",
+            stop_reason,
+        )
+
     raw = ""
     for block in response.content:
         if block.type == "text":
@@ -295,11 +315,17 @@ def _call_cleanup_batch_anthropic(
 
     result_list = _parse_cleanup_response(raw)
 
-    return {
+    sent_ids = {q["id"] for q in batch}
+    result_map = {
         item["id"]: item["text"]
         for item in result_list
-        if item.get("id") and item.get("text")
+        if item.get("id") and item.get("text") is not None
     }
+    dropped = sent_ids - set(result_map)
+    if dropped:
+        logger.warning("Quote cleanup Anthropic batch: sent=%d received=%d dropped=%s", len(sent_ids), len(result_map), sorted(dropped))
+
+    return result_map
 
 
 def cleanup_quotes(
@@ -402,11 +428,12 @@ def cleanup_quotes(
         for qid in originals:
             cleaned.setdefault(qid, originals[qid])
 
+        n_cached = len(quotes) - len(uncached)
+        n_changed = sum(1 for qid in cleaned if cleaned[qid] != originals.get(qid))
         logger.info(
-            "Quote cleanup completed: %d/%d quotes cleaned, model=%s provider=%s",
-            sum(1 for qid in cleaned if cleaned[qid] != originals.get(qid)),
-            len(originals),
-            effective_model,
+            "Quote cleanup completed: total=%d cached=%d changed=%d unchanged=%d model=%s provider=%s",
+            len(originals), n_cached, n_changed,
+            len(originals) - n_changed, effective_model,
             "anthropic" if use_anthropic else "openai",
         )
         return cleaned
