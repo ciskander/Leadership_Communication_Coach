@@ -131,7 +131,7 @@ function buildChartData(
     for (const p of run.patterns) {
       if (visiblePatterns.includes(p.pattern_id)) {
         const den = p.opportunity_count ?? 0;
-        const num = den > 0 ? Math.round(p.score * den) : 0;
+        const num = den > 0 ? p.score * den : 0;
         map[p.pattern_id] = { num, den, score: p.score };
       }
     }

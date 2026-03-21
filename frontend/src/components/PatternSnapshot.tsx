@@ -58,7 +58,7 @@ export function buildTrendData(
       const p = run.patterns.find((x) => x.pattern_id === pid);
       if (p) {
         const den = p.opportunity_count ?? 0;
-        const num = den > 0 ? Math.round(p.score * den) : 0;
+        const num = den > 0 ? p.score * den : 0;
         blNum += num;
         blDen += den;
       }
@@ -72,7 +72,7 @@ export function buildTrendData(
       const p = run.patterns.find((x) => x.pattern_id === pid);
       if (p) {
         const den = p.opportunity_count ?? 0;
-        const num = den > 0 ? Math.round(p.score * den) : 0;
+        const num = den > 0 ? p.score * den : 0;
         runData.push({ num, den, score: p.score });
       } else {
         runData.push({ num: 0, den: 0, score: 0 });
