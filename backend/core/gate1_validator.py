@@ -423,11 +423,10 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
                     f"evidence_span_id {es_id} not found in evidence_spans.",
                 ))
 
-        # 2-layer scoring trace: required for dual_element, tiered_rubric, multi_element
-        _REQUIRED_OPP_EVENTS_TYPES = {"dual_element", "tiered_rubric", "multi_element"}
+        # 2-layer scoring trace: required for all evaluable patterns
         scoring_type = item.get("scoring_type")
         opp_events = item.get("opportunity_events")
-        if opp_events is None and status == "evaluable" and scoring_type in _REQUIRED_OPP_EVENTS_TYPES:
+        if opp_events is None and status == "evaluable":
             issues.append(_warn(
                 "OPP_EVENTS_MISSING",
                 f"{path}.opportunity_events",
