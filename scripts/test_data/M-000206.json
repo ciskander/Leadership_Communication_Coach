@@ -1,0 +1,204 @@
+{
+  "schema_version": "mvp.v0.3.0",
+  "meta": {
+    "analysis_id": "A-260321",
+    "taxonomy_version": "v3.0",
+    "output_mode": "coaching_first_2s1e",
+    "analysis_type": "single_meeting",
+    "generated_at": "2026-03-21T04:05:52.914377+00:00"
+  },
+  "context": {
+    "meeting_id": "M-000206",
+    "meeting_type": "cross_functional",
+    "target_role": "participant",
+    "meeting_date": "2026-02-11",
+    "target_speaker_name": "Chris Iskander",
+    "target_speaker_label": "spk_2"
+  },
+  "evaluation_summary": {
+    "patterns_evaluated": [
+      "resolution_and_alignment",
+      "question_quality",
+      "communication_clarity"
+    ],
+    "patterns_insufficient_signal": [
+      "purposeful_framing",
+      "focus_management",
+      "participation_management",
+      "disagreement_navigation",
+      "assignment_clarity"
+    ],
+    "patterns_not_evaluable": [
+      "feedback_quality"
+    ]
+  },
+  "pattern_snapshot": [
+    {
+      "pattern_id": "purposeful_framing",
+      "cluster_id": "meeting_structure",
+      "scoring_type": "dual_element",
+      "evaluable_status": "insufficient_signal",
+      "denominator_rule_id": "pf_open_plus_owned_transitions",
+      "min_required_threshold": 2,
+      "evidence_span_ids": []
+    },
+    {
+      "pattern_id": "focus_management",
+      "cluster_id": "meeting_structure",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "insufficient_signal",
+      "denominator_rule_id": "fm_drift_episodes_target_controlled",
+      "min_required_threshold": 2,
+      "evidence_span_ids": []
+    },
+    {
+      "pattern_id": "participation_management",
+      "cluster_id": "participation_dynamics",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "insufficient_signal",
+      "denominator_rule_id": "pm_floor_control_moments",
+      "min_required_threshold": 3,
+      "evidence_span_ids": [],
+      "balance_assessment": "under_indexed"
+    },
+    {
+      "pattern_id": "disagreement_navigation",
+      "cluster_id": "participation_dynamics",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "insufficient_signal",
+      "denominator_rule_id": "dn_disagreement_moments",
+      "min_required_threshold": 2,
+      "evidence_span_ids": []
+    },
+    {
+      "pattern_id": "resolution_and_alignment",
+      "cluster_id": "decisions_accountability",
+      "scoring_type": "dual_element",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "ra_target_owned_closure_moments",
+      "min_required_threshold": 2,
+      "evidence_span_ids": [
+        "ES-001",
+        "ES-002"
+      ],
+      "score": 0.25,
+      "opportunity_count": 2,
+      "element_a_count": 1,
+      "element_b_count": 0,
+      "notes": "You did name the action you wanted staff to take.",
+      "coaching_note": "When you closed your public comment, you moved straight into a request without checking whether the council shared the same takeaway.",
+      "suggested_rewrite": "We've heard a few threads here: fees, existing garage conversions, and practical options for homeowners. What I'd like staff to bring back is the clearest set of options for expanding and streamlining ADUs in Long Beach, including what's already in place on garage conversions. Does that capture where we want the report to land?",
+      "rewrite_for_span_id": "ES-002",
+      "success_evidence_span_ids": [
+        "ES-001"
+      ]
+    },
+    {
+      "pattern_id": "assignment_clarity",
+      "cluster_id": "decisions_accountability",
+      "scoring_type": "complexity_tiered",
+      "evaluable_status": "insufficient_signal",
+      "denominator_rule_id": "ac_assignments_initiated_negotiated_or_accepted",
+      "min_required_threshold": 2,
+      "evidence_span_ids": []
+    },
+    {
+      "pattern_id": "question_quality",
+      "cluster_id": "communication_quality",
+      "scoring_type": "binary",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "qq_substantive_questions_only",
+      "min_required_threshold": 3,
+      "evidence_span_ids": [
+        "ES-003",
+        "ES-004",
+        "ES-005"
+      ],
+      "score": 1,
+      "opportunity_count": 3,
+      "notes": "Your questions were consistently tied to real decision or implementation gaps."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "cluster_id": "communication_quality",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "cc_substantive_turns_3plus_sentences",
+      "min_required_threshold": 3,
+      "evidence_span_ids": [
+        "ES-006",
+        "ES-007",
+        "ES-008"
+      ],
+      "score": 0.6667,
+      "opportunity_count": 3,
+      "notes": "At your best, you anchored your point early and connected it to concrete resident impact.",
+      "coaching_note": "Your longer ADU comments sometimes stacked multiple ideas into one turn.",
+      "suggested_rewrite": "I'm supportive of the item, and I want the report back to do one practical thing for residents: show the real all-in cost before they start.",
+      "rewrite_for_span_id": "ES-008",
+      "success_evidence_span_ids": [
+        "ES-006",
+        "ES-007"
+      ]
+    },
+    {
+      "pattern_id": "feedback_quality",
+      "cluster_id": "communication_quality",
+      "scoring_type": "multi_element",
+      "evaluable_status": "not_evaluable",
+      "denominator_rule_id": "fq_feedback_instances",
+      "min_required_threshold": 2,
+      "evidence_span_ids": []
+    }
+  ],
+  "coaching_output": {
+    "strengths": [
+      {
+        "pattern_id": "question_quality",
+        "message": "You asked sharp, decision-relevant questions in the ADU discussion."
+      },
+      {
+        "pattern_id": "communication_clarity",
+        "message": "When you grounded your comments in resident experience, your voice was strong and persuasive."
+      }
+    ],
+    "focus": [
+      {
+        "pattern_id": "resolution_and_alignment",
+        "message": "Your highest-leverage move is still the one in your active experiment."
+      }
+    ],
+    "micro_experiment": [
+      {
+        "experiment_id": "EXP-000068",
+        "title": "Name the call, then check the room",
+        "instruction": "In your next meeting, use the two-step close.",
+        "success_marker": "You complete this two-step close at least three times in your next two meetings.",
+        "pattern_id": "resolution_and_alignment",
+        "evidence_span_ids": ["ES-002"]
+      }
+    ]
+  },
+  "experiment_tracking": {
+    "active_experiment": { "experiment_id": "EXP-000068", "status": "active" },
+    "detection_in_this_meeting": {
+      "experiment_id": "EXP-000068",
+      "attempt": "partial",
+      "count_attempts": 2,
+      "evidence_span_ids": ["ES-001", "ES-002"],
+      "coaching_note": "You partially attempted the experiment.",
+      "suggested_rewrite": "Does that reflect what we want staff to bring back?",
+      "rewrite_for_span_id": "ES-002"
+    }
+  },
+  "evidence_spans": [
+    { "evidence_span_id": "ES-001", "turn_start_id": 171, "turn_end_id": 171, "excerpt": "Thank you. I'd just like to thank my colleagues for their input there on this particular item." },
+    { "evidence_span_id": "ES-002", "turn_start_id": 173, "turn_end_id": 173, "excerpt": "All right. Thank you. And my just last words are we've heard a lot of good comments from input from the council." },
+    { "evidence_span_id": "ES-003", "turn_start_id": 62, "turn_end_id": 62, "excerpt": "Thank you. Because it is a hearing, are we not able to ask questions to help resolve those issues now?" },
+    { "evidence_span_id": "ES-004", "turn_start_id": 96, "turn_end_id": 96, "excerpt": "Thank you. Is this staff able to tell us how many people were signed up for public comment tonight?" },
+    { "evidence_span_id": "ES-005", "turn_start_id": 175, "turn_end_id": 175, "excerpt": "Thank you. I just have another question for our director, Oscar. Are the fees regulated only for the city?" },
+    { "evidence_span_id": "ES-006", "turn_start_id": 44, "turn_end_id": 44, "excerpt": "Oh, squeak. Good evening again. I'd like to take this time very briefly to ask..." },
+    { "evidence_span_id": "ES-007", "turn_start_id": 49, "turn_end_id": 49, "excerpt": "Thank you. First of all, good evening, and thank you all for granting me a few minutes of your time." },
+    { "evidence_span_id": "ES-008", "turn_start_id": 160, "turn_end_id": 160, "excerpt": "Thank you. Just to circle back, I think that after finishing reading the FFA..." }
+  ]
+}
