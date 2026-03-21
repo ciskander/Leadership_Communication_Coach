@@ -446,12 +446,12 @@ export function PatternCard({
   const hasMissedOpportunities =
     pattern.evaluable_status === 'evaluable' &&
     score != null &&
-    score < 100;
+    score < 1;
 
   const isPerfectScore =
     pattern.evaluable_status === 'evaluable' &&
     score != null &&
-    score === 100;
+    score >= 1;
 
   const isMixedScore = hasMissedOpportunities && score != null && score > 0;
 
@@ -523,7 +523,7 @@ export function PatternCard({
             </div>
           ) : (
             <>
-              <RatioBar ratio={pattern.score / 100} />
+              <RatioBar ratio={pattern.score} />
               {pattern.balance_assessment && (
                 <div className="mt-1">
                   <BalanceBadge assessment={pattern.balance_assessment} />
