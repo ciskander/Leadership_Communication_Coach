@@ -423,8 +423,16 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
                     f"evidence_span_id {es_id} not found in evidence_spans.",
                 ))
 
-        # 2-layer scoring trace consistency (if present)
+        # 2-layer scoring trace: required for dual_element, tiered_rubric, multi_element
+        _REQUIRED_OPP_EVENTS_TYPES = {"dual_element", "tiered_rubric", "multi_element"}
+        scoring_type = item.get("scoring_type")
         opp_events = item.get("opportunity_events")
+        if opp_events is None and status == "evaluable" and scoring_type in _REQUIRED_OPP_EVENTS_TYPES:
+            issues.append(_warn(
+                "OPP_EVENTS_MISSING",
+                f"{path}.opportunity_events",
+                f"opportunity_events is required for evaluable {scoring_type} patterns.",
+            ))
         if opp_events is not None:
             if status != "evaluable":
                 issues.append(_err(
@@ -457,6 +465,22 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
                         f"{path}.opportunity_count",
                         f"opportunity_count ({opp_count}) must equal opportunity_events_counted ({counted}).",
                     ))
+
+                # Verify score matches arithmetic: sum(success) / counted
+                if counted_actual > 0:
+                    success_sum = sum(
+                        e.get("success", 0) for e in opp_events
+                        if e.get("count_decision") == "counted"
+                    )
+                    expected_score = round(success_sum / counted_actual, 4)
+                    actual_score = item.get("score")
+                    if actual_score is not None and abs(actual_score - expected_score) > 0.0005:
+                        issues.append(_err(
+                            "SCORE_ARITHMETIC_MISMATCH",
+                            f"{path}.score",
+                            f"score ({actual_score}) != sum(success)/counted ({expected_score}). "
+                            f"success_sum={success_sum}, counted={counted_actual}.",
+                        ))
 
     # ── 3d. turn_start_id / turn_end_id in evidence_spans ────────────────────
     for idx, span in enumerate(evidence_spans):
