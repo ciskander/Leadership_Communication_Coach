@@ -110,6 +110,10 @@ def build_span_index(
 
 
 def get_analysis_id(data: dict) -> str:
+    """Return a short label for the run — prefer meeting_id over analysis_id."""
+    mid = data.get("context", {}).get("meeting_id")
+    if mid:
+        return str(mid)
     return data.get("meta", {}).get("analysis_id", "unknown")
 
 
