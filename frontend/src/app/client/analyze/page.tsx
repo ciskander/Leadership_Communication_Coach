@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { api } from '@/lib/api';
 import { STRINGS } from '@/config/strings';
 import { OnboardingTip } from '@/components/OnboardingTip';
@@ -73,6 +74,8 @@ export default function AnalyzePage() {
   const [error, setError]                         = useState<string | null>(null);
   const [speakerPreviews, setSpeakerPreviews]     = useState<Record<string, string[]>>({});
   const [needsSpeakerPick, setNeedsSpeakerPick]   = useState(false);
+  const [pendingRunRequestId, setPendingRunRequestId] = useState<string | null>(null);
+  const [checkState, setCheckState]               = useState<'idle' | 'checking' | 'still_processing'>('idle');
 
   useEffect(() => {
     api.me().then((user) => {
@@ -170,6 +173,9 @@ export default function AnalyzePage() {
         const limit = processing ? MAX_PROCESSING_POLLS : MAX_QUEUED_POLLS;
         if (count < limit) setTimeout(poll, 2000);
         else {
+          if (processing) {
+            setPendingRunRequestId(rrId);
+          }
           setError(
             processing
               ? STRINGS.analyzePage.analysisStillRunning
@@ -185,6 +191,28 @@ export default function AnalyzePage() {
       }
     };
     poll();
+  };
+
+  const handleCheckNow = async () => {
+    if (!pendingRunRequestId) return;
+    setCheckState('checking');
+    try {
+      const status = await api.getRunRequest(pendingRunRequestId);
+      if (status.run_id) {
+        router.push(`/client/runs/${status.run_id}`);
+        return;
+      }
+      if (status.status === 'error') {
+        setError(STRINGS.analyzePage.analysisFailedToStart);
+        setPendingRunRequestId(null);
+        setCheckState('idle');
+        return;
+      }
+      setCheckState('still_processing');
+      setTimeout(() => setCheckState('idle'), 3000);
+    } catch {
+      setCheckState('idle');
+    }
   };
 
   const step = !transcriptId ? 1 : !speakerLabel || !name || !role ? 2 : 3;
@@ -305,8 +333,45 @@ export default function AnalyzePage() {
         </div>
       )}
 
-      {/* Error */}
-      {error && (
+      {/* Recovery card — shown when processing poll timed out but analysis is still running */}
+      {pendingRunRequestId && (
+        <div className="bg-cv-amber-50 border border-cv-amber-200 rounded px-5 py-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <svg viewBox="0 0 16 16" fill="none" className="w-5 h-5 shrink-0 text-cv-amber-600 mt-0.5" aria-hidden="true">
+              <circle cx="8" cy="9" r="6" stroke="currentColor" strokeWidth={1.4} />
+              <path d="M8 6v3.5l2 1.5" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M8 3V1" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+            </svg>
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-cv-amber-800">{STRINGS.analyzePage.analysisStillRunning}</p>
+              {checkState === 'still_processing' && (
+                <p className="text-xs text-cv-amber-600">{STRINGS.analyzePage.stillProcessing}</p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-3 pl-8">
+            <button
+              onClick={handleCheckNow}
+              disabled={checkState === 'checking'}
+              className="px-4 py-2 bg-cv-teal-600 text-white rounded text-xs font-medium hover:bg-cv-teal-800 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {checkState === 'checking' && (
+                <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              )}
+              {STRINGS.analyzePage.checkNow}
+            </button>
+            <Link
+              href="/client"
+              className="text-xs text-cv-stone-400 hover:text-cv-stone-600 transition-colors"
+            >
+              {STRINGS.analyzePage.backToDashboard}
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Error (non-recovery) */}
+      {error && !pendingRunRequestId && (
         <p className="text-sm text-cv-red-700 bg-cv-red-50 border border-cv-red-200 rounded px-4 py-3">
           {error}
         </p>

@@ -380,6 +380,9 @@ export const STRINGS = {
     analysisFailedToStart: 'Analysis failed to start.',
     timedOutWaiting: 'Timed out waiting for analysis to start.',
     analysisStillRunning: 'Analysis is taking longer than expected. Please check back shortly — your results will appear on the dashboard when ready.',
+    checkNow: 'Check now',
+    stillProcessing: 'Still processing — check back in a minute.',
+    backToDashboard: 'Back to dashboard',
     failedToPollStatus: 'Failed to poll status.',
   },
 
