@@ -27,6 +27,8 @@ interface ExperimentTrackerProps {
   onPark?: (experimentRecordId?: string) => void;
   /** @deprecated Use onPark instead */
   onAbandon?: () => void;
+  /** When true, hide attempt history and CTA buttons (rendered externally). */
+  slim?: boolean;
 }
 
 // ─── Config maps ──────────────────────────────────────────────────────────────
@@ -59,6 +61,7 @@ export function ExperimentTracker({
   onComplete,
   onPark,
   onAbandon,
+  slim,
 }: ExperimentTrackerProps) {
   const [actionState, setActionState] = useState<'idle' | 'confirm-park' | 'loading'>('idle');
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -150,6 +153,7 @@ export function ExperimentTracker({
         </div>
 
         {/* Attempt history */}
+        {!slim && (
         <div>
           <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1.5">
             {STRINGS.experimentTracker.attemptHistory}
@@ -216,9 +220,10 @@ export function ExperimentTracker({
             </p>
           )}
         </div>
+        )}
 
         {/* CTA buttons */}
-        {isActive && (
+        {!slim && isActive && (
           <div className="pt-1 space-y-2">
             {actionState === 'confirm-park' ? (
               <div className="bg-cv-amber-50 border border-cv-amber-200 rounded p-4 space-y-3">

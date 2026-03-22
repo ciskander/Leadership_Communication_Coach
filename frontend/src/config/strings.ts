@@ -266,6 +266,7 @@ export const STRINGS = {
     whatWorkedMissing: 'What worked and what was missing',
     coachsNote: "Coach's note",
     currentExperiment: 'Current Experiment',
+    inThisMeeting: 'In this meeting',
     yourExperiment: 'Your experiment',
     viewOnMyExperiment: 'View on My Experiment →',
     // Detection

@@ -480,9 +480,9 @@ export function PatternCard({
   const showSparkline = !!trend && trend.points.length >= 2;
 
   const highlightBorder = highlightType === 'strength'
-    ? 'border-[2px] border-cv-teal-500'
+    ? 'border-[2px] border-cv-teal-700'
     : highlightType === 'focus'
-      ? 'border-[2px] border-cv-amber-500'
+      ? 'border-[2px] border-cv-amber-800'
       : 'border border-cv-stone-400';
 
   return (

@@ -81,7 +81,7 @@ const config: Config = {
           // ── Rose — experiment section accents ────────────────────────────
           rose: {
             50:  '#FFF5F5',  // light text on dark header
-            700: '#9B2C2C',  // section header bg
+            700: '#7F1D1D',  // section header bg (darkened to match other -700s)
           },
 
           // ── Red — errors, destructive actions ────────────────────────────
