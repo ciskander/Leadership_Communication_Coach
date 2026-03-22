@@ -38,9 +38,9 @@ export default function AdminPage() {
     <div className="max-w-6xl mx-auto space-y-6">
       <h1 className="font-serif text-2xl text-cv-stone-900">{STRINGS.admin.heading}</h1>
 
-      <div className="bg-white rounded border border-cv-warm-200 overflow-hidden">
+      <div className="bg-white rounded border border-cv-warm-300 overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-cv-warm-50 border-b border-cv-warm-200">
+          <thead className="bg-cv-warm-50 border-b border-cv-warm-300">
             <tr>
               <th className="text-left px-4 py-3 text-2xs font-semibold text-cv-stone-400 uppercase tracking-[0.12em]">
                 {STRINGS.admin.userColumn}
@@ -54,7 +54,7 @@ export default function AdminPage() {
               <th className="px-4 py-3" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-cv-warm-100">
+          <tbody className="divide-y divide-cv-warm-300">
             {users.map((u) => (
               <tr key={u.id} className="hover:bg-cv-warm-50 transition-colors">
                 <td className="px-4 py-3">

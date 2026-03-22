@@ -27,7 +27,7 @@ export default function RootPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-cv-warm-100">
-      <div className="bg-white rounded border border-cv-warm-200 shadow-sm p-10 max-w-sm w-full text-center space-y-7">
+      <div className="bg-white rounded border border-cv-warm-300 shadow-sm p-10 max-w-sm w-full text-center space-y-7">
 
         {/* Logo */}
         <div className="flex justify-center">
@@ -45,7 +45,7 @@ export default function RootPage() {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-cv-warm-200" />
+        <div className="border-t border-cv-warm-300" />
 
         {/* Google sign-in */}
         <a

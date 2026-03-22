@@ -179,7 +179,7 @@ function PatternTrendsCompact({
                 const trendEntries = payload.filter((e: any) => !e.dataKey.endsWith('_raw'));
                 if (!trendEntries.length) return null;
                 return (
-                  <div className="bg-white border border-cv-warm-200 rounded shadow-lg p-2 text-xs min-w-[160px]">
+                  <div className="bg-white border border-cv-warm-300 rounded shadow-lg p-2 text-xs min-w-[160px]">
                     <p className="font-semibold text-cv-stone-700 mb-1">{label}</p>
                     {trendEntries.map((entry: any) => (
                       <div key={entry.dataKey} className="flex justify-between gap-3">
@@ -251,7 +251,7 @@ function PatternTrendsCompact({
                       if (!active || !payload?.length) return null;
                       const patternName = payload[0]?.payload?.pattern;
                       return (
-                        <div className="bg-white border border-cv-warm-200 rounded shadow-lg p-2 text-xs min-w-[140px]">
+                        <div className="bg-white border border-cv-warm-300 rounded shadow-lg p-2 text-xs min-w-[140px]">
                           <p className="font-semibold text-cv-stone-700 mb-1">{patternName}</p>
                           {payload.map((entry: any) => (
                             <div key={entry.dataKey} className="flex justify-between gap-3">
@@ -315,7 +315,7 @@ function PatternTrendsCompact({
 
 function ProposedExperimentRow({ experiment }: { experiment: Experiment }) {
   return (
-    <div className="bg-cv-warm-50 border border-cv-warm-200 rounded p-4 space-y-2">
+    <div className="bg-cv-warm-50 border border-cv-warm-300 rounded p-4 space-y-2">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1 min-w-0">
           <PatternLabel id={experiment.pattern_id} />
@@ -377,7 +377,7 @@ function PastExperimentRow({ exp }: { exp: Record<string, unknown> }) {
       : null;
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-white border border-cv-warm-200 rounded">
+    <div className="flex items-center justify-between px-4 py-3 bg-white border border-cv-warm-300 rounded">
       <div className="flex items-center gap-3 min-w-0">
         <span className={`text-2xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${statusCls}`}>
           {STRINGS.experimentStatus[exp.status as string] ?? exp.status}
@@ -427,7 +427,7 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
   };
 
   return (
-    <div className="border border-cv-warm-200 rounded overflow-hidden">
+    <div className="border border-cv-warm-300 rounded overflow-hidden">
       {/* Row header */}
       <button
         onClick={handleToggle}
@@ -466,7 +466,7 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
 
       {/* Expanded detail */}
       {expanded && (
-        <div className="px-4 py-4 bg-cv-warm-50 border-t border-cv-warm-200 space-y-4">
+        <div className="px-4 py-4 bg-cv-warm-50 border-t border-cv-warm-300 space-y-4">
           {loadingDetail && (
             <div className="flex items-center gap-2 text-cv-stone-400 text-sm py-4 justify-center">
               <span className="w-4 h-4 border-2 border-cv-teal-500 border-t-transparent rounded-full animate-spin" />
@@ -529,7 +529,7 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
               )}
 
               {runDetail.experiment_detection && (
-                <div className="bg-cv-warm-100 border border-cv-warm-200 rounded px-3 py-2">
+                <div className="bg-cv-warm-100 border border-cv-warm-300 rounded px-3 py-2">
                   <p className="text-2xs font-semibold text-cv-stone-600 mb-0.5">
                     {runDetail.experiment_detection.attempt === 'yes'
                       ? STRINGS.runStatusPoller.nicelyDone
@@ -585,7 +585,7 @@ export default function CoacheeDetailPage() {
   const experimentPatternId  = data.active_experiment?.pattern_id ?? null;
 
   // Shared card shell
-  const cardCls = 'bg-white rounded border border-cv-warm-200 p-5';
+  const cardCls = 'bg-white rounded border border-cv-warm-300 p-5';
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 py-2">

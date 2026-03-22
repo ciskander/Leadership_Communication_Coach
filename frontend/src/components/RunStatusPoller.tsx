@@ -293,36 +293,45 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           };
 
     return (
-      <div className="space-y-4">
-        {/* Current experiment tracker — shown first for context */}
-        <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mt-2 mb-4">{STRINGS.runStatusPoller.currentExperiment}</p>
-        {activeExpData?.experiment ? (
-          <ExperimentTracker
-            experiment={activeExpData.experiment}
-            events={activeExpData.recent_events}
-            onComplete={() => router.push('/client/experiment?action=completed')}
-            onPark={(expId) => router.push(`/client/experiment?action=parked${expId ? `&parked_id=${expId}` : ''}`)}
-          />
-        ) : (
-          // Fallback while data is loading or if fetch failed
-          <div className="bg-white rounded border border-cv-warm-300 p-5 space-y-3">
-            <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest">
-              {STRINGS.runStatusPoller.yourExperiment}
-            </p>
-            <div className="flex gap-3 flex-wrap">
-              <Link
-                href="/client/experiment"
-                className="px-5 py-2.5 bg-cv-teal-600 text-cv-teal-50 rounded text-sm font-medium hover:bg-cv-teal-800 transition-colors"
-              >
-                {STRINGS.runStatusPoller.viewOnMyExperiment}
-              </Link>
-            </div>
-          </div>
-        )}
+      <section className="bg-white rounded border border-cv-rose-700 overflow-hidden">
+        {/* Section header */}
+        <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-rose-700">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-rose-50 shrink-0" aria-hidden="true">
+            <path fillRule="evenodd" d="M8.5 3.528v4.644c0 .479-.239.927-.644 1.190L6.24 10.484A3.501 3.501 0 008 17h4a3.5 3.5 0 001.76-6.516l-1.616-1.122A1.419 1.419 0 0011.5 8.172V3.528a16.989 16.989 0 00-3 0z" clipRule="evenodd" />
+          </svg>
+          <h3 className="text-sm font-semibold text-cv-rose-50">{STRINGS.runStatusPoller.experimentSectionHeading}</h3>
+        </div>
 
-        {/* Detection banner */}
-        <section className="bg-white rounded border border-cv-stone-400 overflow-hidden">
-          <div className={`flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 ${attemptConfig.bgColor}`}>
+        <div className="px-5 py-4 space-y-4">
+          {/* Current experiment tracker */}
+          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest">{STRINGS.runStatusPoller.currentExperiment}</p>
+          {activeExpData?.experiment ? (
+            <ExperimentTracker
+              experiment={activeExpData.experiment}
+              events={activeExpData.recent_events}
+              onComplete={() => router.push('/client/experiment?action=completed')}
+              onPark={(expId) => router.push(`/client/experiment?action=parked${expId ? `&parked_id=${expId}` : ''}`)}
+            />
+          ) : (
+            // Fallback while data is loading or if fetch failed
+            <div className="bg-white rounded border border-cv-warm-300 p-5 space-y-3">
+              <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest">
+                {STRINGS.runStatusPoller.yourExperiment}
+              </p>
+              <div className="flex gap-3 flex-wrap">
+                <Link
+                  href="/client/experiment"
+                  className="px-5 py-2.5 bg-cv-teal-600 text-cv-teal-50 rounded text-sm font-medium hover:bg-cv-teal-800 transition-colors"
+                >
+                  {STRINGS.runStatusPoller.viewOnMyExperiment}
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Detection banner */}
+          <div className="rounded border border-cv-stone-400 overflow-hidden">
+            <div className={`flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 ${attemptConfig.bgColor}`}>
             {attemptConfig.icon}
             <h3 className={`text-sm font-semibold ${attemptConfig.labelColor}`}>
               Experiment: {attemptConfig.label}
@@ -487,8 +496,9 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
               Experiment {activeExp?.experiment_id as string}
             </p>
           </div>
-        </section>
-      </div>
+          </div>
+        </div>
+      </section>
     );
   }
 
@@ -519,9 +529,17 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
       {/* Executive summary */}
       {run.executive_summary && (
-        <div className="bg-white border border-cv-warm-300 rounded px-5 py-4">
-          <p className="text-sm text-cv-stone-700 leading-relaxed">{run.executive_summary}</p>
-        </div>
+        <section className="bg-white rounded border border-cv-stone-500 overflow-hidden">
+          <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-stone-500">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-stone-50 shrink-0" aria-hidden="true">
+              <path fillRule="evenodd" d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5V7.621a1.5 1.5 0 00-.44-1.06l-4.12-4.122A1.5 1.5 0 0011.378 2H4.5zm2.25 8.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zm0 3a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clipRule="evenodd" />
+            </svg>
+            <h3 className="text-sm font-semibold text-cv-stone-50">{STRINGS.runStatusPoller.summaryHeading}</h3>
+          </div>
+          <div className="px-5 py-4">
+            <p className="text-sm text-cv-stone-700 leading-relaxed">{run.executive_summary}</p>
+          </div>
+        </section>
       )}
 
       <CoachingCard
@@ -544,18 +562,23 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
       <ExperimentSection />
 
       {run.pattern_snapshot && run.pattern_snapshot.length > 0 && (
-        <section>
-          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-4">
-            {STRINGS.runStatusPoller.patternSnapshot}
-          </p>
-          <PatternSnapshot
-            patterns={run.pattern_snapshot}
-            targetSpeaker={targetSpeaker}
-            trendData={trendData}
-            groupByCluster
-            strengthPatternIds={strengthPatternIds}
-            focusPatternId={focusPatternId}
-          />
+        <section className="bg-white rounded border border-cv-blue-700 overflow-hidden">
+          <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-blue-700">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-blue-50 shrink-0" aria-hidden="true">
+              <path fillRule="evenodd" d="M6 3a2 2 0 00-2 2v1.161l-.33.275a2 2 0 00-.67 1.49V16a2 2 0 002 2h10a2 2 0 002-2V7.926a2 2 0 00-.67-1.49L16 6.161V5a2 2 0 00-2-2H6zm8 3.21V5H6v1.21l-1 .834V16h10V7.044l-1-.834zM9 9a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm0 4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" />
+            </svg>
+            <h3 className="text-sm font-semibold text-cv-blue-50">{STRINGS.runStatusPoller.patternSnapshot}</h3>
+          </div>
+          <div className="px-5 py-4">
+            <PatternSnapshot
+              patterns={run.pattern_snapshot}
+              targetSpeaker={targetSpeaker}
+              trendData={trendData}
+              groupByCluster
+              strengthPatternIds={strengthPatternIds}
+              focusPatternId={focusPatternId}
+            />
+          </div>
         </section>
       )}
     </div>

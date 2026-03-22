@@ -175,7 +175,7 @@ export default function RunResultsPage() {
 
       {/* ── Delete ── */}
       {canDelete && (
-        <div className="pt-4 border-t border-cv-warm-200">
+        <div className="pt-4 border-t border-cv-warm-300">
           {deleteError && (
             <p className="text-xs text-cv-red-600 mb-3">{deleteError}</p>
           )}

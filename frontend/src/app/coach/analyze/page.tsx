@@ -172,7 +172,7 @@ function CoachAnalyzePage() {
       </div>
 
       {/* Step 1 — Select coachee */}
-      <div className="bg-white rounded border border-cv-warm-200 p-5">
+      <div className="bg-white rounded border border-cv-warm-300 p-5">
         <StepLabel text={STRINGS.coachAnalyze.step1} done={!!selectedCoacheeId} />
         {loadingCoachees ? (
           <div className="h-8 flex items-center">
@@ -194,7 +194,7 @@ function CoachAnalyzePage() {
                   'flex items-center gap-3 px-3 py-2.5 rounded cursor-pointer border transition-colors',
                   selectedCoacheeId === c.id
                     ? 'border-cv-teal-400 bg-cv-teal-50'
-                    : 'border-cv-warm-200 hover:border-cv-warm-300',
+                    : 'border-cv-warm-300 hover:border-cv-warm-300',
                 ].join(' ')}
               >
                 <input
@@ -219,7 +219,7 @@ function CoachAnalyzePage() {
 
       {/* Step 2 — Upload transcript */}
       {selectedCoacheeId && (
-        <div className="bg-white rounded border border-cv-warm-200 p-5">
+        <div className="bg-white rounded border border-cv-warm-300 p-5">
           <StepLabel text={STRINGS.coachAnalyze.step2} done={!!transcriptId} />
           <TranscriptUploadPanel onUploaded={handleUploaded} />
         </div>
@@ -227,7 +227,7 @@ function CoachAnalyzePage() {
 
       {/* Step 3 — Configure */}
       {transcriptId && (
-        <div className="bg-white rounded border border-cv-warm-200 p-5 space-y-4">
+        <div className="bg-white rounded border border-cv-warm-300 p-5 space-y-4">
           <StepLabel text={STRINGS.coachAnalyze.step3} done={!!(speakerLabel && name && role)} />
 
           {speakerLabels.length > 0 ? (

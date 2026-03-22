@@ -31,7 +31,7 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="bg-white border-b border-cv-warm-200 px-4 md:px-6 py-0 flex items-center justify-between h-14 sticky top-0 z-30">
+      <nav className="bg-white border-b border-cv-warm-300 px-4 md:px-6 py-0 flex items-center justify-between h-14 sticky top-0 z-30">
 
         {/* ── Left: hamburger (mobile) + logo ── */}
         <div className="flex items-center gap-2">

@@ -101,7 +101,7 @@ function InfoPopover({ patternId, hoverColor }: { patternId: string; hoverColor?
       </button>
       {open && (
         <div
-          className="absolute z-50 left-5 top-0 w-64 bg-white border border-cv-warm-200 rounded shadow-lg p-3 text-sm text-cv-stone-700 leading-snug"
+          className="absolute z-50 left-5 top-0 w-64 bg-white border border-cv-warm-300 rounded shadow-lg p-3 text-sm text-cv-stone-700 leading-snug"
           onMouseEnter={() => { if (leaveTimer.current) { clearTimeout(leaveTimer.current); leaveTimer.current = null; } }}
           onMouseLeave={() => { if (!pinned) { leaveTimer.current = setTimeout(() => setOpen(false), 200); } }}
         >
@@ -227,7 +227,7 @@ function PatternTrendsChart({
     const entries = trendEntries.length > 0 ? trendEntries : rawOnlyEntries;
     if (!entries.length) return null;
     return (
-      <div className="bg-white border border-cv-warm-200 rounded shadow-lg p-3 text-sm min-w-[200px]">
+      <div className="bg-white border border-cv-warm-300 rounded shadow-lg p-3 text-sm min-w-[200px]">
         <p className="font-semibold text-cv-stone-700 mb-1.5">{label}</p>
         {entries.map((entry: any) => {
           const patternId = entry.dataKey.replace(/_raw$/, '');
@@ -334,7 +334,7 @@ function PatternTrendsChart({
                         if (!active || !payload?.length) return null;
                         const patternName = payload[0]?.payload?.pattern;
                         return (
-                          <div className="bg-white border border-cv-warm-200 rounded shadow-lg p-3 text-sm min-w-[180px]">
+                          <div className="bg-white border border-cv-warm-300 rounded shadow-lg p-3 text-sm min-w-[180px]">
                             <p className="font-semibold text-cv-stone-700 mb-1.5">{patternName}</p>
                             {payload.map((entry: any) => (
                               <div key={entry.dataKey} className="flex justify-between gap-4">
@@ -441,7 +441,7 @@ function PastExperimentCard({
   const axisStyle = { fontSize: 10, fill: S.chartAxisFill };
 
   return (
-    <div className="border border-cv-warm-200 rounded overflow-hidden">
+    <div className="border border-cv-warm-300 rounded overflow-hidden">
       {/* Row */}
       <button
         onClick={() => setOpen((v) => !v)}
@@ -465,7 +465,7 @@ function PastExperimentCard({
 
       {/* Expanded */}
       {open && (
-        <div className="px-5 py-4 bg-cv-warm-50 border-t border-cv-warm-200 space-y-4">
+        <div className="px-5 py-4 bg-cv-warm-50 border-t border-cv-warm-300 space-y-4">
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
               <span className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400">{STRINGS.progressPage.pattern}</span>
@@ -593,19 +593,19 @@ export default function ProgressPage() {
       {data && (
         <>
           {/* Pattern Trends */}
-          <section className="bg-white rounded border border-cv-warm-200 p-6">
+          <section className="bg-white rounded border border-cv-warm-300 p-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-semibold text-cv-stone-900">{STRINGS.progressPage.patternTrends}</h2>
 
               {/* View mode pill selector */}
-              <div className="inline-flex rounded border border-cv-warm-200 overflow-hidden">
+              <div className="inline-flex rounded border border-cv-warm-300 overflow-hidden">
                 {viewOptions.map(({ key, label, disabled }) => (
                   <button
                     key={key}
                     onClick={() => setViewMode(key)}
                     disabled={disabled}
                     className={[
-                      'px-3 py-1.5 text-xs font-medium transition-colors border-r last:border-r-0 border-cv-warm-200',
+                      'px-3 py-1.5 text-xs font-medium transition-colors border-r last:border-r-0 border-cv-warm-300',
                       effectiveViewMode === key
                         ? 'bg-cv-stone-900 text-white'
                         : disabled
@@ -628,7 +628,7 @@ export default function ProgressPage() {
           </section>
 
           {/* Past Experiments */}
-          <section className="bg-white rounded border border-cv-warm-200 p-6">
+          <section className="bg-white rounded border border-cv-warm-300 p-6">
             <h2 className="text-lg font-semibold text-cv-stone-900 mb-5">
               {STRINGS.progressPage.pastExperiments}
             </h2>

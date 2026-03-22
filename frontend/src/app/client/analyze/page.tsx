@@ -231,7 +231,7 @@ export default function AnalyzePage() {
       </div>
 
       {/* ── Step 1: Upload ── */}
-      <div className="bg-white rounded border border-cv-warm-200 p-5 space-y-3">
+      <div className="bg-white rounded border border-cv-warm-300 p-5 space-y-3">
         <div className="flex items-center gap-2.5">
           <StepBadge n={1} done={step > 1} />
           <p className="text-sm font-semibold text-cv-stone-800">{STRINGS.analyzePage.step1}</p>
@@ -241,7 +241,7 @@ export default function AnalyzePage() {
 
       {/* ── Step 2: Configure ── */}
       {transcriptId && (
-        <div className="bg-white rounded border border-cv-warm-200 p-5 space-y-4">
+        <div className="bg-white rounded border border-cv-warm-300 p-5 space-y-4">
           <div className="flex items-center gap-2.5">
             <StepBadge n={2} done={step > 2} />
             <p className="text-sm font-semibold text-cv-stone-800">{STRINGS.analyzePage.step2}</p>
@@ -264,7 +264,7 @@ export default function AnalyzePage() {
                         'text-left p-3.5 rounded border transition-colors',
                         speakerLabel === label
                           ? 'border-cv-teal-500 bg-cv-teal-50'
-                          : 'border-cv-warm-200 bg-white hover:border-cv-warm-300',
+                          : 'border-cv-warm-300 bg-white hover:border-cv-warm-300',
                       ].join(' ')}
                     >
                       <p className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400 mb-1.5">

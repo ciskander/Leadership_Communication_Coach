@@ -114,7 +114,7 @@ function ProposedExperimentCard({
   }
 
   return (
-    <div className="bg-white rounded border border-cv-warm-200 p-5 space-y-4">
+    <div className="bg-white rounded border border-cv-warm-300 p-5 space-y-4">
       <div className="space-y-1">
         <PatternLabel id={experiment.pattern_id} />
         <p className="text-sm font-medium text-cv-stone-900 leading-snug mt-1">
@@ -268,7 +268,7 @@ function MeetingAccordionCard({
 
   return (
     <div className={`bg-white border rounded overflow-hidden transition-colors ${
-      open ? 'border-cv-stone-100' : 'border-cv-warm-200'
+      open ? 'border-cv-stone-100' : 'border-cv-warm-300'
     }`}>
       {/* Header */}
       <button
@@ -298,7 +298,7 @@ function MeetingAccordionCard({
 
       {/* Expanded content */}
       {open && (
-        <div className="border-t border-cv-warm-200 px-5 pb-6 pt-5 space-y-6">
+        <div className="border-t border-cv-warm-300 px-5 pb-6 pt-5 space-y-6">
           {meeting.run_id && hasSubRunData ? (
             <>
               {(meeting.sub_run_strengths?.length || meeting.sub_run_focus) && (
@@ -420,7 +420,7 @@ export default function BaselineDetailPage() {
 
       {/* ── Building state ─────────────────────────────────────────────────── */}
       {isBuilding && !timedOut && (
-        <div className="bg-white rounded border border-cv-warm-200 p-10 text-center space-y-5">
+        <div className="bg-white rounded border border-cv-warm-300 p-10 text-center space-y-5">
           <div className="relative mx-auto w-12 h-12">
             <div className="w-12 h-12 rounded-full border-2 border-cv-stone-100" />
             <div className="absolute inset-0 w-12 h-12 rounded-full border-2 border-cv-teal-600 border-t-transparent animate-spin" />

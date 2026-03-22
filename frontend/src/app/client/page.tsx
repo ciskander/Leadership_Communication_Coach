@@ -87,17 +87,17 @@ function ProposedExperimentCard({
   }
 
   return (
-    <div className="bg-white rounded border border-cv-warm-200 p-5 space-y-3">
+    <div className="bg-white rounded border border-cv-warm-300 p-5 space-y-3">
       <div className="space-y-1">
         <PatternLabel id={experiment.pattern_id} />
         <p className="text-sm font-semibold text-cv-stone-900 leading-snug font-serif">{experiment.title}</p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div className="bg-cv-warm-50 border border-cv-warm-200 rounded p-3">
+        <div className="bg-cv-warm-50 border border-cv-warm-300 rounded p-3">
           <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1">{STRINGS.common.whatToDo}</p>
           <p className="text-xs text-cv-stone-600 leading-relaxed">{experiment.instruction}</p>
         </div>
-        <div className="bg-cv-warm-50 border border-cv-warm-200 rounded p-3">
+        <div className="bg-cv-warm-50 border border-cv-warm-300 rounded p-3">
           <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1">{STRINGS.common.successLooksLike}</p>
           <p className="text-xs text-cv-stone-600 leading-relaxed">{experiment.success_marker}</p>
         </div>
@@ -197,7 +197,7 @@ function RecentRunCard({ run, editMode, selected, onToggle }: {
       {editMode && (
         <div className="mt-0.5 shrink-0">
           {isBaseline ? (
-            <div className="w-4 h-4 rounded border border-cv-warm-200 bg-cv-warm-100" title={STRINGS.clientDashboard.baselineCannotDeleteTooltip} />
+            <div className="w-4 h-4 rounded border border-cv-warm-300 bg-cv-warm-100" title={STRINGS.clientDashboard.baselineCannotDeleteTooltip} />
           ) : (
             <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${selected ? 'bg-cv-red-600 border-cv-red-600' : 'border-cv-warm-300 bg-white'}`}>
               {selected && (
@@ -245,9 +245,9 @@ function RecentRunCard({ run, editMode, selected, onToggle }: {
         onClick={() => !isBaseline && onToggle(runId)}
         className={[
           'flex items-start justify-between px-4 py-3 rounded border gap-4 transition-all select-none',
-          isBaseline ? 'bg-cv-warm-50 border-cv-warm-200 cursor-default opacity-60'
+          isBaseline ? 'bg-cv-warm-50 border-cv-warm-300 cursor-default opacity-60'
           : selected  ? 'bg-cv-red-50 border-cv-red-300 cursor-pointer'
-          : 'bg-white border-cv-warm-200 cursor-pointer hover:border-cv-warm-300',
+          : 'bg-white border-cv-warm-300 cursor-pointer hover:border-cv-warm-300',
         ].join(' ')}
       >
         {metaContent}{dateLabel}
@@ -258,7 +258,7 @@ function RecentRunCard({ run, editMode, selected, onToggle }: {
   return (
     <Link
       href={isBaseline ? `/client/baseline/${run.baseline_pack_id as string}` : `/client/runs/${runId}`}
-      className="flex items-start justify-between bg-white border border-cv-warm-200 rounded px-4 py-3 hover:border-cv-teal-300 hover:shadow-sm transition-all gap-4"
+      className="flex items-start justify-between bg-white border border-cv-warm-300 rounded px-4 py-3 hover:border-cv-teal-300 hover:shadow-sm transition-all gap-4"
     >
       {metaContent}{dateLabel}
     </Link>
@@ -369,7 +369,7 @@ export default function ClientDashboard() {
       </div>
 
       {/* Journey tracker */}
-      <div className="bg-white rounded border border-cv-warm-200 p-5">
+      <div className="bg-white rounded border border-cv-warm-300 p-5">
         <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-4">
           {STRINGS.clientDashboard.yourJourney}
         </p>
@@ -383,7 +383,7 @@ export default function ClientDashboard() {
           <JourneyStep num={4} label={STRINGS.clientDashboard.journeyGrowth}        done={false}     active={false} />
         </div>
         {!hasBaseline && !isBuilding && (
-          <div className="mt-4 pt-4 border-t border-cv-warm-100 flex items-center justify-between">
+          <div className="mt-4 pt-4 border-t border-cv-warm-300 flex items-center justify-between">
             <p className="text-sm text-cv-stone-600">{STRINGS.clientDashboard.startBaseline}</p>
             <Link href="/client/baseline/new" className="text-sm px-4 py-1.5 bg-cv-teal-600 text-white rounded font-medium hover:bg-cv-teal-700 transition-colors whitespace-nowrap">
               {STRINGS.clientDashboard.getStarted}
@@ -391,13 +391,13 @@ export default function ClientDashboard() {
           </div>
         )}
         {isBuilding && (
-          <div className="mt-4 pt-4 border-t border-cv-warm-100 flex items-center gap-3">
+          <div className="mt-4 pt-4 border-t border-cv-warm-300 flex items-center gap-3">
             <span className="w-4 h-4 rounded-full border-2 border-cv-amber-400 border-t-transparent animate-spin" />
             <p className="text-sm text-cv-amber-700 font-medium">{STRINGS.clientDashboard.buildingBaseline}</p>
           </div>
         )}
         {hasBaseline && !hasExperiment && hasExperimentOptions && (
-          <div className="mt-4 pt-4 border-t border-cv-warm-100 flex items-center justify-between">
+          <div className="mt-4 pt-4 border-t border-cv-warm-300 flex items-center justify-between">
             <p className="text-sm text-cv-stone-600">{STRINGS.clientDashboard.experimentOptionsWaiting}</p>
             <Link href="/client/experiment" className="text-sm px-4 py-1.5 bg-cv-teal-600 text-white rounded font-medium hover:bg-cv-teal-700 transition-colors whitespace-nowrap">
               {STRINGS.clientDashboard.chooseExperiment}
@@ -405,7 +405,7 @@ export default function ClientDashboard() {
           </div>
         )}
         {hasBaseline && !hasExperiment && !hasExperimentOptions && (
-          <div className="mt-4 pt-4 border-t border-cv-warm-100 flex items-center justify-between">
+          <div className="mt-4 pt-4 border-t border-cv-warm-300 flex items-center justify-between">
             <p className="text-sm text-cv-stone-600">{STRINGS.clientDashboard.baselineReadyAnalyze}</p>
             <Link href="/client/analyze" className="flex items-center gap-2 text-sm px-4 py-1.5 bg-cv-navy-600 text-white rounded hover:bg-cv-navy-700 transition-colors whitespace-nowrap">
               <span className="shrink-0"><svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M9 3L10.5 7.5L15 9L10.5 10.5L9 15L7.5 10.5L3 9L7.5 7.5L9 3Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/><path d="M19 13L19.75 15.25L22 16L19.75 16.75L19 19L18.25 16.75L16 16L18.25 15.25L19 13Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/></svg></span>
@@ -417,7 +417,7 @@ export default function ClientDashboard() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-white rounded border border-cv-warm-200 p-5 space-y-3">
+        <div className="bg-white rounded border border-cv-warm-300 p-5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-cv-teal-600 shrink-0" aria-hidden="true">
@@ -439,7 +439,7 @@ export default function ClientDashboard() {
           )}
         </div>
 
-        <div className="bg-white rounded border border-cv-warm-200 p-5 space-y-3">
+        <div className="bg-white rounded border border-cv-warm-300 p-5 space-y-3">
           <div className="flex items-center gap-2">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-cv-teal-600 shrink-0" aria-hidden="true">
               <path d="M9 3H15" />

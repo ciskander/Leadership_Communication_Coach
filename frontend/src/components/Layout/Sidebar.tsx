@@ -146,7 +146,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
 
       {/* ── Bottom: replay onboarding + hint ── */}
-      <div className="px-5 py-5 space-y-3 border-t border-cv-warm-200">
+      <div className="px-5 py-5 space-y-3 border-t border-cv-warm-300">
         {user?.role === 'coachee' && (
           <button
             onClick={() => {
@@ -184,7 +184,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
 export function Sidebar() {
   return (
-    <aside className="hidden md:flex w-52 min-h-screen bg-cv-warm-50 border-r border-cv-warm-200 flex-col">
+    <aside className="hidden md:flex w-52 min-h-screen bg-cv-warm-50 border-r border-cv-warm-300 flex-col">
       <SidebarContent />
     </aside>
   );

@@ -255,7 +255,7 @@ function InfoPopover({ patternId }: { patternId: string }) {
       {open && pos && createPortal(
         <div
           ref={popoverRef}
-          className="fixed z-[9999] w-64 bg-white border border-cv-warm-200 rounded shadow-lg p-3 text-sm text-cv-stone-700 leading-snug"
+          className="fixed z-[9999] w-64 bg-white border border-cv-warm-300 rounded shadow-lg p-3 text-sm text-cv-stone-700 leading-snug"
           style={{ top: pos.top, left: pos.left }}
           onMouseEnter={handlePopoverEnter}
           onMouseLeave={handlePopoverLeave}
@@ -480,13 +480,13 @@ export function PatternCard({
   const showSparkline = !!trend && trend.points.length >= 2;
 
   const highlightBorder = highlightType === 'strength'
-    ? 'border-l-[3px] border-l-cv-teal-500'
+    ? 'border-[2px] border-cv-teal-500'
     : highlightType === 'focus'
-      ? 'border-l-[3px] border-l-cv-amber-500'
-      : '';
+      ? 'border-[2px] border-cv-amber-500'
+      : 'border border-cv-stone-400';
 
   return (
-    <div className={`bg-white border border-cv-stone-400 rounded overflow-hidden${expanded ? ' sm:col-span-2' : ''} ${highlightBorder}`}>
+    <div className={`bg-white rounded overflow-hidden${expanded ? ' sm:col-span-2' : ''} ${highlightBorder}`}>
       {/* ── Card header row ── */}
       <button
         type="button"
@@ -657,7 +657,7 @@ function ClusterHeader({ clusterId }: { clusterId: string }) {
       <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400">
         {label}
       </p>
-      <div className="border-b border-cv-warm-200 mt-1.5" />
+      <div className="border-b border-cv-warm-300 mt-1.5" />
     </div>
   );
 }

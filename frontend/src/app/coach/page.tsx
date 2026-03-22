@@ -102,7 +102,7 @@ function CoacheeCard({
   return (
     <Link
       href={`/coach/coachees/${coachee.id}`}
-      className="bg-white rounded border border-cv-warm-200 p-5 hover:border-cv-teal-300 hover:shadow-sm transition-all group space-y-3"
+      className="bg-white rounded border border-cv-warm-300 p-5 hover:border-cv-teal-300 hover:shadow-sm transition-all group space-y-3"
     >
       {/* Avatar + name */}
       <div className="flex items-center gap-3">
@@ -146,7 +146,7 @@ function CoacheeCard({
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-1 border-t border-cv-warm-100">
+      <div className="flex items-center justify-between pt-1 border-t border-cv-warm-300">
         <span className="text-xs text-cv-stone-400">{STRINGS.coachDashboard.viewProfile}</span>
         <svg
           viewBox="0 0 20 20"
@@ -240,7 +240,7 @@ function AddCoacheeModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded shadow-xl w-full max-w-md mx-4 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-cv-warm-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-cv-warm-300">
           <h2 className="font-semibold text-cv-stone-800">{STRINGS.coachDashboard.addCoacheeModalTitle}</h2>
           <button
             onClick={onClose}
@@ -254,7 +254,7 @@ function AddCoacheeModal({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-cv-warm-200">
+        <div className="flex border-b border-cv-warm-300">
           {(['search', 'invite'] as const).map((t) => (
             <button
               key={t}
@@ -296,7 +296,7 @@ function AddCoacheeModal({
                   {results.map((r) => (
                     <li
                       key={r.id}
-                      className="flex items-center justify-between px-3 py-2.5 rounded border border-cv-warm-200 hover:border-cv-warm-300 transition-colors"
+                      className="flex items-center justify-between px-3 py-2.5 rounded border border-cv-warm-300 hover:border-cv-warm-300 transition-colors"
                     >
                       <div>
                         <p className="text-sm font-medium text-cv-stone-800">
@@ -342,7 +342,7 @@ function AddCoacheeModal({
                 </button>
               ) : (
                 <div className="space-y-3">
-                  <div className="bg-cv-warm-50 border border-cv-warm-200 rounded p-3">
+                  <div className="bg-cv-warm-50 border border-cv-warm-300 rounded p-3">
                     <p className="text-xs font-mono text-cv-stone-600 break-all">{inviteUrl}</p>
                   </div>
                   <div className="flex gap-2">
