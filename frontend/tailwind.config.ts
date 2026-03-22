@@ -75,6 +75,13 @@ const config: Config = {
             50:  '#EFF6FF',  // light info background
             100: '#DBEAFE',  // info border
             600: '#2563EB',  // chart accent
+            700: '#1D4ED8',  // section header bg
+          },
+
+          // ── Rose — experiment section accents ────────────────────────────
+          rose: {
+            50:  '#FFF5F5',  // light text on dark header
+            700: '#9B2C2C',  // section header bg
           },
 
           // ── Red — errors, destructive actions ────────────────────────────
