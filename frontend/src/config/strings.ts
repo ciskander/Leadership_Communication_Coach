@@ -137,6 +137,27 @@ export const STRINGS = {
     feedback_quality: '📣',
   } as Record<string, string>,
 
+  // ── Cluster metadata ──────────────────────────────────────────────────────
+  clusterLabels: {
+    meeting_structure: 'Meeting Structure & Direction',
+    participation_dynamics: 'Participation & Interpersonal Dynamics',
+    decisions_accountability: 'Decisions & Accountability',
+    communication_quality: 'Communication Quality',
+  } as Record<string, string>,
+
+  clusterOrder: [
+    'meeting_structure',
+    'participation_dynamics',
+    'decisions_accountability',
+    'communication_quality',
+  ] as string[],
+
+  // ── Highlight badges (shown on pattern cards in cluster view) ────────────
+  highlightBadges: {
+    strength: 'Strength',
+    focus: 'Focus area',
+  },
+
   // ── Balance assessment labels ───────────────────────────────────────────────
   balanceLabels: {
     balanced: 'Balanced',

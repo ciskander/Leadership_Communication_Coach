@@ -215,6 +215,7 @@ async def get_baseline_pack(
             phase1_map[key] = result
 
     # ── Parse aggregate run coaching data ─────────────────────────────────
+    executive_summary = None
     strengths, focus, micro_experiment, pattern_snapshot = [], None, None, []
     agg_run_rec = phase1_map.get("agg_run")
     if agg_run_rec:
@@ -223,6 +224,7 @@ async def get_baseline_pack(
             parsed = json.loads(parsed_json_str)
 
             coaching = parsed.get("coaching_output", {})
+            executive_summary = coaching.get("executive_summary")
             strengths = [
                 {"pattern_id": s.get("pattern_id", ""), "message": s.get("message", "")}
                 for s in coaching.get("strengths", [])
@@ -411,6 +413,7 @@ async def get_baseline_pack(
         "target_speaker_label": bf.get("Speaker Label"),
         "role_consistency": bf.get("Role Consistency"),
         "meeting_type_consistency": bf.get("Meeting Type Consistency"),
+        "executive_summary": executive_summary,
         "strengths": strengths,
         "focus": focus,
         "micro_experiment": micro_experiment,

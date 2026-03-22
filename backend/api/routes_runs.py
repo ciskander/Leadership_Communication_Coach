@@ -185,6 +185,10 @@ async def _build_run_response(run_record: dict, at_client: Optional[AirtableClie
     turn_map = results_map.get("turn_map") or {}
 
     # ── Resolve quotes (pure computation using fetched data) ──────────────
+    # Executive summary
+    coaching_output = parsed_json.get("coaching_output", {})
+    resp.executive_summary = coaching_output.get("executive_summary")
+
     # Coaching output with resolved quotes
     strengths, focus, micro_exp = resolve_coaching_output(
         parsed_json, spans_by_id, transcript_id, meeting_id, turn_map, effective_target

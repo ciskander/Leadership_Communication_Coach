@@ -427,10 +427,12 @@ export function PatternCard({
   pattern,
   targetSpeaker,
   trend,
+  highlightType,
 }: {
   pattern: PatternSnapshotItem;
   targetSpeaker: string | null;
   trend?: PatternTrendData;
+  highlightType?: 'strength' | 'focus' | null;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -477,8 +479,14 @@ export function PatternCard({
   // Determine if we should show sparkline for this pattern
   const showSparkline = !!trend && trend.points.length >= 2;
 
+  const highlightBorder = highlightType === 'strength'
+    ? 'border-l-[3px] border-l-cv-teal-500'
+    : highlightType === 'focus'
+      ? 'border-l-[3px] border-l-cv-amber-500'
+      : '';
+
   return (
-    <div className={`bg-white border border-cv-stone-400 rounded overflow-hidden${expanded ? ' sm:col-span-2' : ''}`}>
+    <div className={`bg-white border border-cv-stone-400 rounded overflow-hidden${expanded ? ' sm:col-span-2' : ''} ${highlightBorder}`}>
       {/* ── Card header row ── */}
       <button
         type="button"
@@ -489,22 +497,29 @@ export function PatternCard({
         ].join(' ')}
       >
         <div className="flex items-center justify-between mb-0.5">
-          {/* Pattern name */}
-          <span className="text-sm font-medium text-cv-stone-800 leading-snug">
+          {/* Pattern name + highlight badge */}
+          <span className="text-sm font-medium text-cv-stone-800 leading-snug flex items-center gap-1.5">
             {PATTERN_ICONS[pattern.pattern_id] && (
-              <span className="mr-1.5 text-cv-stone-400 inline-flex items-center">
+              <span className="text-cv-stone-400 inline-flex items-center">
                 {PATTERN_ICONS[pattern.pattern_id]}
               </span>
             )}
             {STRINGS.patternLabels[pattern.pattern_id] ?? pattern.pattern_id}
             <InfoPopover patternId={pattern.pattern_id} />
+            {highlightType === 'strength' && (
+              <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-medium bg-cv-teal-50 text-cv-teal-700">
+                {STRINGS.highlightBadges.strength}
+              </span>
+            )}
+            {highlightType === 'focus' && (
+              <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-medium bg-cv-amber-50 text-cv-amber-700">
+                {STRINGS.highlightBadges.focus}
+              </span>
+            )}
           </span>
 
-          {/* Cluster tag + chevron */}
+          {/* Chevron */}
           <div className="flex items-center gap-1.5 shrink-0 ml-2">
-            {pattern.cluster_id && (
-              <span className="text-2xs text-cv-stone-400 tabular-nums">{pattern.cluster_id}</span>
-            )}
             {isExpandable && <Chevron open={expanded} />}
           </div>
         </div>
@@ -633,6 +648,20 @@ export function PatternCard({
   );
 }
 
+// ─── Cluster header ───────────────────────────────────────────────────────────
+
+function ClusterHeader({ clusterId }: { clusterId: string }) {
+  const label = STRINGS.clusterLabels[clusterId] ?? clusterId;
+  return (
+    <div className="sm:col-span-2 pt-4 first:pt-0">
+      <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400">
+        {label}
+      </p>
+      <div className="border-b border-cv-warm-200 mt-1.5" />
+    </div>
+  );
+}
+
 // ─── Grid wrapper ─────────────────────────────────────────────────────────────
 
 interface PatternSnapshotProps {
@@ -640,25 +669,80 @@ interface PatternSnapshotProps {
   targetSpeaker?: string | null;
   trendData?: Record<string, PatternTrendData>;
   excludePatternIds?: string[];
+  /** When true, group patterns by cluster with cluster headers. */
+  groupByCluster?: boolean;
+  /** Pattern IDs that should show a "Strength" badge. */
+  strengthPatternIds?: string[];
+  /** Pattern ID that should show a "Focus area" badge. */
+  focusPatternId?: string | null;
 }
 
-export function PatternSnapshot({ patterns, targetSpeaker, trendData, excludePatternIds }: PatternSnapshotProps) {
+export function PatternSnapshot({
+  patterns,
+  targetSpeaker,
+  trendData,
+  excludePatternIds,
+  groupByCluster,
+  strengthPatternIds,
+  focusPatternId,
+}: PatternSnapshotProps) {
   const filtered = excludePatternIds?.length
     ? patterns.filter((p) => !excludePatternIds.includes(p.pattern_id))
     : patterns;
 
   if (filtered.length === 0) return null;
 
+  const strengthSet = new Set(strengthPatternIds ?? []);
+
+  function getHighlightType(patternId: string): 'strength' | 'focus' | null {
+    if (strengthSet.has(patternId)) return 'strength';
+    if (focusPatternId === patternId) return 'focus';
+    return null;
+  }
+
+  if (!groupByCluster) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {filtered.map((p) => (
+          <PatternCard
+            key={p.pattern_id}
+            pattern={p}
+            targetSpeaker={targetSpeaker ?? null}
+            trend={trendData?.[p.pattern_id]}
+            highlightType={getHighlightType(p.pattern_id)}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  // Group patterns by cluster in defined order
+  const clusterOrder = STRINGS.clusterOrder;
+  const byCluster: Record<string, PatternSnapshotItem[]> = {};
+  for (const p of filtered) {
+    const cid = p.cluster_id ?? 'unknown';
+    if (!byCluster[cid]) byCluster[cid] = [];
+    byCluster[cid].push(p);
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {filtered.map((p) => (
-        <PatternCard
-          key={p.pattern_id}
-          pattern={p}
-          targetSpeaker={targetSpeaker ?? null}
-          trend={trendData?.[p.pattern_id]}
-        />
-      ))}
+      {clusterOrder.map((cid) => {
+        const clusterPatterns = byCluster[cid];
+        if (!clusterPatterns || clusterPatterns.length === 0) return null;
+        return [
+          <ClusterHeader key={`header-${cid}`} clusterId={cid} />,
+          ...clusterPatterns.map((p) => (
+            <PatternCard
+              key={p.pattern_id}
+              pattern={p}
+              targetSpeaker={targetSpeaker ?? null}
+              trend={trendData?.[p.pattern_id]}
+              highlightType={getHighlightType(p.pattern_id)}
+            />
+          )),
+        ];
+      })}
     </div>
   );
 }

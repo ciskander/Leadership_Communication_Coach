@@ -160,9 +160,12 @@ For insufficient_signal or not_evaluable: omit all coaching fields.
 COACHING OUTPUT
 ═══════════════════════════════════════════════════════════════
 
-Coaching-first: up to 2 strengths, exactly 1 focus, exactly 1 micro_experiment.
+Coaching-first: exactly 1 executive_summary, up to 2 strengths, exactly 1 focus, exactly 1 micro_experiment.
 
-Coaching voice: all coaching text (message, notes, coaching_note) must be written in the 2nd person, addressing the speaker as 'you.' Write as a coach speaking directly to the coachee.
+Coaching voice: all coaching text (executive_summary, message, notes, coaching_note) must be written in the 2nd person, addressing the speaker as 'you.' Write as a coach speaking directly to the coachee.
+
+executive_summary (exactly 1 string):
+Write a brief coaching summary — typically 2-4 sentences. Be direct and warm. Synthesize across clusters rather than listing patterns. Shorter is better when the picture is simple; use more space only when there are meaningful tensions or cross-cutting observations to highlight. Do not name specific pattern IDs — speak in plain language about the speaker's overall communication signature across these meetings. This should feel like the opening line of a coaching debrief after reviewing the full baseline.
 
 message field (in strengths and focus): 2-3 sentences written directly to the coachee. For strengths, name the specific cross-meeting behavior you observed and explain why it is effective. For focus, name the gap visible across meetings, explain what it costs them, and point toward the improvement opportunity. The message should feel like something a coach would say after reviewing multiple meetings — warm but direct, grounded in patterns, never generic.
 
@@ -242,7 +245,7 @@ Aggregation checks:
 10) Verify evaluation_summary is consistent with pattern_snapshot evaluable_status values.
 
 Structural checks:
-11) JSON parses. Required top-level keys present. No extra keys.
+11) JSON parses. Required top-level keys present. No extra keys. coaching_output includes executive_summary.
 12) pattern_snapshot has exactly 9 items in required order. All pattern_id values are valid enum.
 13) participation_management includes balance_assessment annotation when evaluable.
 14) focus length = 1, micro_experiment length = 1.

@@ -97,6 +97,7 @@ export interface RunStatus {
   baseline_pack_id: string | null;
   target_speaker_label: string | null;
   error: Record<string, unknown> | null;
+  executive_summary: string | null;
   strengths: CoachingItem[];
   focus: CoachingItem | null;
   micro_experiment: MicroExperiment | null;
@@ -206,6 +207,7 @@ export interface BaselinePack {
   status: string;
   target_speaker_label?: string | null;
   run_id?: string | null;
+  executive_summary?: string | null;
   strengths?: CoachingItem[];
   focus?: CoachingItem | null;
   micro_experiment?: MicroExperiment | null;

@@ -107,6 +107,7 @@ class RunStatusResponse(BaseModel):
     target_speaker_label: Optional[str] = None
     error: Optional[dict] = None
     # Populated when status=complete and gate1_pass=True
+    executive_summary: Optional[str] = None
     strengths: list[HighlightItem] = Field(default_factory=list)
     focus: Optional[HighlightItem] = None
     micro_experiment: Optional[MicroExperimentWithQuotes] = None

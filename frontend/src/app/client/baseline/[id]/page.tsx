@@ -484,6 +484,13 @@ export default function BaselineDetailPage() {
             </div>
           </div>
 
+          {/* Executive summary */}
+          {pack.executive_summary && (
+            <div className="bg-white border border-cv-warm-300 rounded px-5 py-4">
+              <p className="text-sm text-cv-stone-700 leading-relaxed">{pack.executive_summary}</p>
+            </div>
+          )}
+
           {/* Aggregate coaching — micro_experiment suppressed at baseline */}
           <CoachingCard
             strengths={pack.strengths ?? []}
@@ -515,25 +522,21 @@ export default function BaselineDetailPage() {
             <ExperimentSection />
           </section>
 
-          {/* Aggregate pattern snapshot — exclude patterns already shown in coaching card */}
-          {pack.pattern_snapshot && pack.pattern_snapshot.length > 0 && (() => {
-            const usedPatternIds = [
-              ...(pack.strengths ?? []).map((s: CoachingItem) => s.pattern_id),
-              ...(pack.focus ? [pack.focus.pattern_id] : []),
-            ];
-            return (
-              <section>
-                <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-4">
-                  {STRINGS.baselineDetail.otherPatterns}
-                </p>
-                <PatternSnapshot
-                  patterns={pack.pattern_snapshot as unknown as PatternSnapshotItem[]}
-                  targetSpeaker={pack.target_speaker_label}
-                  excludePatternIds={usedPatternIds}
-                />
-              </section>
-            );
-          })()}
+          {/* Aggregate pattern snapshot — grouped by cluster */}
+          {pack.pattern_snapshot && pack.pattern_snapshot.length > 0 && (
+            <section>
+              <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-4">
+                {STRINGS.runStatusPoller.patternSnapshot}
+              </p>
+              <PatternSnapshot
+                patterns={pack.pattern_snapshot as unknown as PatternSnapshotItem[]}
+                targetSpeaker={pack.target_speaker_label}
+                groupByCluster
+                strengthPatternIds={(pack.strengths ?? []).map((s: CoachingItem) => s.pattern_id)}
+                focusPatternId={pack.focus?.pattern_id ?? null}
+              />
+            </section>
+          )}
 
           {/* Individual meetings as accordions */}
           {meetings.length > 0 && (

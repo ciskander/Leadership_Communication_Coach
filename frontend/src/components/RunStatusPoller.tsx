@@ -492,6 +492,10 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
     );
   }
 
+  // Build strength/focus pattern IDs for highlight badges
+  const strengthPatternIds = run.strengths.map((s) => s.pattern_id);
+  const focusPatternId = run.focus?.pattern_id ?? null;
+
   return (
     <div className="space-y-6">
       {/* Status banner */}
@@ -510,6 +514,13 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
             <p className="text-sm font-semibold text-cv-teal-800">{STRINGS.runStatusPoller.analysisComplete}</p>
             <p className="text-sm text-cv-teal-400 font-light mt-0.5">{STRINGS.runStatusPoller.analysisFeedback}</p>
           </div>
+        </div>
+      )}
+
+      {/* Executive summary */}
+      {run.executive_summary && (
+        <div className="bg-white border border-cv-warm-300 rounded px-5 py-4">
+          <p className="text-sm text-cv-stone-700 leading-relaxed">{run.executive_summary}</p>
         </div>
       )}
 
@@ -532,25 +543,21 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
       <ExperimentSection />
 
-      {run.pattern_snapshot && run.pattern_snapshot.length > 0 && (() => {
-        const usedPatternIds = [
-          ...run.strengths.map((s) => s.pattern_id),
-          ...(run.focus ? [run.focus.pattern_id] : []),
-        ];
-        return (
-          <section>
-            <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-4">
-              {STRINGS.runStatusPoller.otherPatterns}
-            </p>
-            <PatternSnapshot
-              patterns={run.pattern_snapshot}
-              targetSpeaker={targetSpeaker}
-              trendData={trendData}
-              excludePatternIds={usedPatternIds}
-            />
-          </section>
-        );
-      })()}
+      {run.pattern_snapshot && run.pattern_snapshot.length > 0 && (
+        <section>
+          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-4">
+            {STRINGS.runStatusPoller.patternSnapshot}
+          </p>
+          <PatternSnapshot
+            patterns={run.pattern_snapshot}
+            targetSpeaker={targetSpeaker}
+            trendData={trendData}
+            groupByCluster
+            strengthPatternIds={strengthPatternIds}
+            focusPatternId={focusPatternId}
+          />
+        </section>
+      )}
     </div>
   );
 }

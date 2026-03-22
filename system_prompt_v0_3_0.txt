@@ -165,9 +165,12 @@ For insufficient_signal or not_evaluable: omit all coaching fields.
 COACHING OUTPUT
 ═══════════════════════════════════════════════════════════════
 
-Coaching-first: up to 2 strengths, exactly 1 focus, exactly 1 micro_experiment.
+Coaching-first: exactly 1 executive_summary, up to 2 strengths, exactly 1 focus, exactly 1 micro_experiment.
 
-Coaching voice: all coaching text (message, notes, coaching_note) must be written in the 2nd person, addressing the speaker as 'you.' Write as a coach speaking directly to the coachee, not as an analyst describing them in the 3rd person.
+Coaching voice: all coaching text (executive_summary, message, notes, coaching_note) must be written in the 2nd person, addressing the speaker as 'you.' Write as a coach speaking directly to the coachee, not as an analyst describing them in the 3rd person.
+
+executive_summary (exactly 1 string):
+Write a brief coaching summary — typically 2-4 sentences. Be direct and warm. Synthesize across clusters rather than listing patterns. Shorter is better when the picture is simple; use more space only when there are meaningful tensions or cross-cutting observations to highlight. Do not name specific pattern IDs — speak in plain language about the speaker's overall communication in this meeting. This should feel like the opening line of a coaching debrief.
 
 message field (in strengths and focus): 2-3 sentences written directly to the coachee. For strengths, name the specific behavior you observed and explain why it was effective in this meeting's context. For focus, name the gap, explain what it cost them in this meeting, and point toward the improvement opportunity. The message should feel like something a coach would say in a debrief — warm but direct, specific to this meeting, never generic.
 
@@ -272,7 +275,7 @@ Quality checks (most important):
 5) Remove evidence span excerpts shorter than ~5 words only if clearly fragments. Short complete statements are valid.
 
 Structural checks:
-6) JSON parses. Required top-level keys present. No extra keys.
+6) JSON parses. Required top-level keys present. No extra keys. coaching_output includes executive_summary.
 7) evaluation_summary has all 3 required arrays, consistent with pattern_snapshot evaluable_status values.
 8) pattern_snapshot has exactly 9 items in required order. All pattern_id values are valid enum.
 9) participation_management includes balance_assessment annotation when evaluable.

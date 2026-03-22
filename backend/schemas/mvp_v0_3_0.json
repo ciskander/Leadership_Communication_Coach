@@ -763,11 +763,17 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "executive_summary",
         "strengths",
         "focus",
         "micro_experiment"
       ],
       "properties": {
+        "executive_summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1200
+        },
         "strengths": {
           "type": "array",
           "minItems": 0,
