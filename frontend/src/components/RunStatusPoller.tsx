@@ -259,14 +259,14 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
   }: {
     sortedEvents: { event_id?: string; id?: string; attempt?: string; meeting_date?: string; created_at?: string; human_confirmed?: string }[];
     summaryText: string;
-    attemptStyles: Record<string, { color: string; dot: string; bg: string; label: string }>;
+    attemptStyles: Record<string, { color: string; dot: string; bg: string; label: string; dateColor?: string }>;
     humanStyles: Record<string, { label: string; color: string; border: string }>;
   }) {
     const [historyOpen, setHistoryOpen] = useState(false);
 
     return (
       <div>
-        <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-rose-700 mb-1.5">
+        <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-amber-800 mb-1.5">
           {STRINGS.experimentTracker.attemptHistory}
         </p>
         {sortedEvents.length > 0 ? (
@@ -301,7 +301,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                         </span>
                       )}
                       {displayDate && (
-                        <span className="text-xs text-cv-stone-400 ml-auto shrink-0 tabular-nums">
+                        <span className={`text-xs ml-auto shrink-0 tabular-nums ${cfg.dateColor ?? 'text-cv-stone-400'}`}>
                           {new Date(displayDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </span>
                       )}
@@ -362,18 +362,18 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           };
 
     return (
-      <section className="bg-white rounded border border-cv-rose-700 overflow-hidden">
+      <section className="bg-white rounded border border-cv-amber-800 overflow-hidden">
         {/* Section header */}
-        <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-rose-700">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-cv-rose-50 shrink-0" aria-hidden="true">
+        <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-amber-800">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-cv-amber-50 shrink-0" aria-hidden="true">
             <path d="M9 3H15" /><path d="M9 3V9L4 18H20L15 9V3" /><path d="M7.5 14H16.5" />
           </svg>
-          <h3 className="text-sm font-semibold text-cv-rose-50">{STRINGS.runStatusPoller.experimentSectionHeading}</h3>
+          <h3 className="text-sm font-semibold text-cv-amber-50">{STRINGS.runStatusPoller.experimentSectionHeading}</h3>
         </div>
 
         <div className="px-5 py-4 space-y-4">
           {/* Current experiment tracker (slim — no attempt history or CTAs) */}
-          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-rose-700">{STRINGS.runStatusPoller.currentExperiment}</p>
+          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-amber-800">{STRINGS.runStatusPoller.currentExperiment}</p>
           {activeExpData?.experiment ? (
             <ExperimentTracker
               experiment={activeExpData.experiment}
@@ -385,7 +385,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           ) : (
             // Fallback while data is loading or if fetch failed
             <div className="bg-white rounded border border-cv-warm-300 p-5 space-y-3">
-              <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-rose-700">
+              <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-amber-800">
                 {STRINGS.runStatusPoller.yourExperiment}
               </p>
               <div className="flex gap-3 flex-wrap">
@@ -400,7 +400,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           )}
 
           {/* "In this meeting" heading + detection banner */}
-          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-rose-700">{STRINGS.runStatusPoller.inThisMeeting}</p>
+          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-amber-800">{STRINGS.runStatusPoller.inThisMeeting}</p>
           <div className="rounded border border-cv-stone-400 overflow-hidden">
             <div className={`flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 ${attemptConfig.bgColor}`}>
             {attemptConfig.icon}
@@ -588,9 +588,9 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                 ? STRINGS.experimentTracker.noAttemptsYet(sortedEvents.length)
                 : STRINGS.experimentTracker.attemptsDetected(totalAttempted, sortedEvents.length);
 
-            const ATTEMPT_STYLES: Record<string, { color: string; dot: string; bg: string; label: string }> = {
+            const ATTEMPT_STYLES: Record<string, { color: string; dot: string; bg: string; label: string; dateColor?: string }> = {
               yes:     { color: 'text-cv-teal-700',  dot: 'bg-cv-teal-500',  bg: 'bg-cv-teal-50',  label: STRINGS.attemptLabels.yes     },
-              partial: { color: 'text-cv-amber-700', dot: 'bg-cv-amber-400', bg: 'bg-cv-amber-50', label: STRINGS.attemptLabels.partial },
+              partial: { color: 'text-cv-amber-800', dot: 'bg-cv-amber-600', bg: 'bg-cv-amber-50', label: STRINGS.attemptLabels.partial, dateColor: 'text-cv-amber-800' },
               no:      { color: 'text-cv-stone-500', dot: 'bg-cv-stone-300', bg: 'bg-cv-warm-100', label: STRINGS.attemptLabels.no      },
             };
 

@@ -482,7 +482,7 @@ export function PatternCard({
   const highlightBorder = highlightType === 'strength'
     ? 'border-[2px] border-cv-teal-700'
     : highlightType === 'focus'
-      ? 'border-[2px] border-cv-amber-700'
+      ? 'border-[2px] border-cv-rose-700'
       : 'border border-cv-stone-400';
 
   return (
@@ -512,7 +512,7 @@ export function PatternCard({
               </span>
             )}
             {highlightType === 'focus' && (
-              <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-medium bg-cv-amber-50 text-cv-amber-700">
+              <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-medium bg-cv-rose-50 text-cv-rose-700">
                 {STRINGS.highlightBadges.focus}
               </span>
             )}

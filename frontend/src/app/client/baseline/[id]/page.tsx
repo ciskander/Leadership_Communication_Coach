@@ -523,12 +523,12 @@ export default function BaselineDetailPage() {
           )}
 
           {/* Experiment section */}
-          <section className="bg-white rounded border border-cv-rose-700 overflow-hidden">
-            <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-rose-700">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-cv-rose-50 shrink-0" aria-hidden="true">
+          <section className="bg-white rounded border border-cv-amber-800 overflow-hidden">
+            <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-amber-800">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-cv-amber-50 shrink-0" aria-hidden="true">
                 <path d="M9 3H15" /><path d="M9 3V9L4 18H20L15 9V3" /><path d="M7.5 14H16.5" />
               </svg>
-              <h3 className="text-sm font-semibold text-cv-rose-50">{STRINGS.runStatusPoller.experimentSectionHeading}</h3>
+              <h3 className="text-sm font-semibold text-cv-amber-50">{STRINGS.runStatusPoller.experimentSectionHeading}</h3>
             </div>
             <div className="px-5 py-4">
               <ExperimentSection />

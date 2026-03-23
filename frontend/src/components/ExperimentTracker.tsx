@@ -33,9 +33,9 @@ interface ExperimentTrackerProps {
 
 // ─── Config maps ──────────────────────────────────────────────────────────────
 
-const ATTEMPT_CONFIG: Record<string, { color: string; label: string; dot: string; bg: string }> = {
+const ATTEMPT_CONFIG: Record<string, { color: string; label: string; dot: string; bg: string; dateColor?: string }> = {
   yes:     { color: 'text-cv-teal-700',   label: STRINGS.attemptLabels.yes,     dot: 'bg-cv-teal-500',   bg: 'bg-cv-teal-50'  },
-  partial: { color: 'text-cv-amber-700',  label: STRINGS.attemptLabels.partial, dot: 'bg-cv-amber-400',  bg: 'bg-cv-amber-50' },
+  partial: { color: 'text-cv-amber-800',  label: STRINGS.attemptLabels.partial, dot: 'bg-cv-amber-600',  bg: 'bg-cv-amber-50', dateColor: 'text-cv-amber-800' },
   no:      { color: 'text-cv-stone-500',  label: STRINGS.attemptLabels.no,      dot: 'bg-cv-stone-300',  bg: 'bg-cv-warm-100' },
 };
 
@@ -201,7 +201,7 @@ export function ExperimentTracker({
                         )}
 
                         {displayDate && (
-                          <span className="text-xs text-cv-stone-400 ml-auto shrink-0 tabular-nums">
+                          <span className={`text-xs ml-auto shrink-0 tabular-nums ${cfg.dateColor ?? 'text-cv-stone-400'}`}>
                             {new Date(displayDate).toLocaleDateString('en-US', {
                               month: 'short',
                               day: 'numeric',
