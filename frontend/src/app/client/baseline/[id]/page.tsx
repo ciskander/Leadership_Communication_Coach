@@ -200,7 +200,7 @@ function ExperimentSection() {
   if (proposed.length > 0) {
     return (
       <section className="space-y-3">
-        <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest">
+        <p className="text-sm font-semibold text-cv-amber-800">
           {STRINGS.baselineDetail.experimentReady}
         </p>
         <ProposedExperimentCard
@@ -221,21 +221,6 @@ function ExperimentSection() {
   }
 
   return null;
-}
-
-// ─── Sub-run Pattern Snapshot ─────────────────────────────────────────────────
-
-function SubRunPatternSnapshot({ patterns, targetSpeaker, excludePatternIds }: { patterns: Record<string, unknown>[]; targetSpeaker?: string | null; excludePatternIds?: string[] }) {
-  return (
-    <div className="mt-1">
-      <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-3">
-        {STRINGS.baselineDetail.otherPatterns}
-      </p>
-      <div className="opacity-90">
-        <PatternSnapshot patterns={patterns as unknown as PatternSnapshotItem[]} targetSpeaker={targetSpeaker} excludePatternIds={excludePatternIds} />
-      </div>
-    </div>
-  );
 }
 
 // ─── Meeting Accordion Card ───────────────────────────────────────────────────
@@ -261,10 +246,14 @@ function MeetingAccordionCard({
   const meta = [date, meeting.meeting_type, role].filter(Boolean).join(' · ');
 
   const hasSubRunData = !!(
+    meeting.sub_run_executive_summary ||
     meeting.sub_run_strengths?.length ||
     meeting.sub_run_focus ||
     meeting.sub_run_pattern_snapshot?.length
   );
+
+  const strengthPatternIds = ((meeting.sub_run_strengths ?? []) as CoachingItem[]).map((s) => s.pattern_id);
+  const focusPatternId = (meeting.sub_run_focus as CoachingItem | null)?.pattern_id ?? null;
 
   return (
     <div className={`bg-white border rounded overflow-hidden transition-colors ${
@@ -301,34 +290,53 @@ function MeetingAccordionCard({
         <div className="border-t border-cv-warm-300 px-5 pb-6 pt-5 space-y-6">
           {meeting.run_id && hasSubRunData ? (
             <>
-              {(meeting.sub_run_strengths?.length || meeting.sub_run_focus) && (
-                <div>
-                  <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-4">
-                    {STRINGS.baselineDetail.coachingOutput}
-                  </p>
-                  <CoachingCard
-                    strengths={(meeting.sub_run_strengths ?? []) as CoachingItem[]}
-                    focus={(meeting.sub_run_focus ?? null) as CoachingItem | null}
-                    microExperiment={null}
-                    targetSpeaker={targetSpeaker}
-                    patternSnapshot={meeting.sub_run_pattern_snapshot as unknown as PatternSnapshotItem[]}
-                  />
-                </div>
+              {/* Summary section */}
+              {meeting.sub_run_executive_summary && (
+                <section className="bg-white rounded border border-cv-navy-600 overflow-hidden">
+                  <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-navy-600">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-blue-50 shrink-0" aria-hidden="true">
+                      <path fillRule="evenodd" d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5V7.621a1.5 1.5 0 00-.44-1.06l-4.12-4.122A1.5 1.5 0 0011.378 2H4.5zm2.25 8.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zm0 3a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clipRule="evenodd" />
+                    </svg>
+                    <h3 className="text-sm font-semibold text-cv-blue-50">{STRINGS.runStatusPoller.summaryHeading}</h3>
+                  </div>
+                  <div className="px-5 py-4">
+                    <p className="text-sm text-cv-stone-700 leading-relaxed">{meeting.sub_run_executive_summary}</p>
+                  </div>
+                </section>
               )}
+
+              {/* Strengths & Focus */}
+              {(meeting.sub_run_strengths?.length || meeting.sub_run_focus) && (
+                <CoachingCard
+                  strengths={(meeting.sub_run_strengths ?? []) as CoachingItem[]}
+                  focus={(meeting.sub_run_focus ?? null) as CoachingItem | null}
+                  microExperiment={null}
+                  targetSpeaker={targetSpeaker}
+                  patternSnapshot={meeting.sub_run_pattern_snapshot as unknown as PatternSnapshotItem[]}
+                />
+              )}
+
+              {/* Detailed Feedback — pattern snapshot grouped by cluster */}
               {meeting.sub_run_pattern_snapshot &&
-                meeting.sub_run_pattern_snapshot.length > 0 && (() => {
-                  const subUsedIds = [
-                    ...((meeting.sub_run_strengths ?? []) as CoachingItem[]).map((s) => s.pattern_id),
-                    ...((meeting.sub_run_focus as CoachingItem | null)?.pattern_id ? [(meeting.sub_run_focus as CoachingItem).pattern_id] : []),
-                  ];
-                  return (
-                    <SubRunPatternSnapshot
-                      patterns={meeting.sub_run_pattern_snapshot}
+                meeting.sub_run_pattern_snapshot.length > 0 && (
+                <section className="bg-white rounded border border-cv-stone-700 overflow-hidden">
+                  <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-stone-700">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-stone-50 shrink-0" aria-hidden="true">
+                      <path fillRule="evenodd" d="M6 3a2 2 0 00-2 2v1.161l-.33.275a2 2 0 00-.67 1.49V16a2 2 0 002 2h10a2 2 0 002-2V7.926a2 2 0 00-.67-1.49L16 6.161V5a2 2 0 00-2-2H6zm8 3.21V5H6v1.21l-1 .834V16h10V7.044l-1-.834zM9 9a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm0 4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <h3 className="text-sm font-semibold text-cv-stone-50">{STRINGS.runStatusPoller.patternSnapshot}</h3>
+                  </div>
+                  <div className="px-5 py-4">
+                    <PatternSnapshot
+                      patterns={meeting.sub_run_pattern_snapshot as unknown as PatternSnapshotItem[]}
                       targetSpeaker={targetSpeaker}
-                      excludePatternIds={subUsedIds}
+                      groupByCluster
+                      strengthPatternIds={strengthPatternIds}
+                      focusPatternId={focusPatternId}
                     />
-                  );
-                })()}
+                  </div>
+                </section>
+              )}
             </>
           ) : (
             <p className="text-xs text-cv-stone-400 font-light">
@@ -559,9 +567,10 @@ export default function BaselineDetailPage() {
           {/* Individual meetings as accordions */}
           {meetings.length > 0 && (
             <section>
-              <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-4">
+              <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400">
                 {STRINGS.baselineDetail.meetingsInBaseline}
               </p>
+              <div className="border-b border-cv-warm-300 mt-1.5 mb-4" />
               <div className="space-y-2">
                 {meetings.map((meeting, i) => (
                   <MeetingAccordionCard
