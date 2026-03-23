@@ -38,6 +38,7 @@ def _make_client(api_key: Optional[str] = None) -> OpenAI:
     return OpenAI(
         api_key=api_key or OPENAI_API_KEY,
         timeout=openai.Timeout(timeout=OPENAI_READ_TIMEOUT),
+        max_retries=0,  # we handle retries ourselves in call_openai
     )
 
 

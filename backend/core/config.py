@@ -24,7 +24,7 @@ OUTPUT_MODE: str = "coaching_first_2s1e"
 OPENAI_MODEL_DEFAULT: str = "gpt-5.2-chat-latest"
 OPENAI_MAX_TOKENS: int = 16384
 OPENAI_CONNECT_TIMEOUT: float = 10.0
-OPENAI_READ_TIMEOUT: float = 90.0
+OPENAI_READ_TIMEOUT: float = 300.0
 OPENAI_MAX_CONCURRENCY: int = 3     # semaphore cap per process
 
 # ── Anthropic ──────────────────────────────────────────────────────────────────
