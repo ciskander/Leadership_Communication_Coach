@@ -146,6 +146,7 @@ By the time the LLM writes coaching/rewrites, all evidence and scoring is alread
    - Create new COACHING section combining what was in coaching_output + pattern_snapshot coaching fields + experiment_tracking coaching fields
    - Update EVIDENCE SPANS section with turn-anchored ID format and `event_ids` field
    - Use provider-neutral language: "Before generating JSON output" not "In your thinking"
+   - **Critical for non-thinking models (GPT-5.4):** Step 1 (holistic impression) has no scratchpad destination in the JSON. The prompt must frame it as an imperative prerequisite: "Before writing the opening brace of the JSON output, you MUST read the full transcript and form a holistic impression." This phrasing works for both providers — Claude uses extended thinking naturally, GPT-5.4 treats it as a sequential commitment during generation. Without forceful framing, non-thinking models may skip directly to JSON serialization.
 
 4. **CREATE** `system_prompt_baseline_pack_v0_4_0.txt` — Based on `system_prompt_baseline_pack_v0_3_0.txt`. Lighter changes: no OEs in baseline output, but same structural reorder. Check what it references and update accordingly.
 
@@ -165,15 +166,22 @@ By the time the LLM writes coaching/rewrites, all evidence and scoring is alread
 ### Phase 4: Test Fixtures
 8. **EDIT** `backend/tests/conftest.py` — Update `VALID_SINGLE_MEETING_OUTPUT` fixture to v0.4.0 structure. This is critical — all validator and worker tests depend on it.
 
-### Phase 5: Validator
+### Phase 5: Validator (largest single task — budget accordingly)
 9. **EDIT** `backend/core/gate1_validator.py`:
    - OE validation moves from inside pattern_snapshot loop to top-level `opportunity_events` array
    - Pattern_snapshot validation simplified — no coaching fields to check
    - New `coaching` section validation: pattern_coaching array, experiment_coaching, rewrite_for_span_id checks
-   - Update ES ID regex from `^ES-[0-9]{3}$` to `^ES-T[0-9]+-?[0-9]*$`
+   - Update ES ID regex from `^ES-[0-9]{3}$` to `^ES-T[0-9]+(-[0-9]+)?$`
    - Retain all existing auto-corrections: score arithmetic, success list rebuild, content mismatch detection
    - Update success_evidence_span_ids rebuild to work with new structure (OEs are now top-level, not nested)
    - Rewrite validation moves from pattern_snapshot context to coaching.pattern_coaching context
+
+   **Three-way consistency graph** — the v0.4.0 structure creates cross-references between three top-level sections that the validator must enforce:
+   - **(a) span → OE:** Every `evidence_span_id` in `pattern_snapshot[].evidence_span_ids` must exist in `evidence_spans[]`. Every span's `event_ids` must reference valid `event_id`s in `opportunity_events[]`.
+   - **(b) OE → pattern:** Every OE's `pattern_id` must match the pattern whose `evidence_span_ids` contains the span linked to that OE. OE counts in `opportunity_events[]` (filtered by pattern_id + counted) must reconcile with `opportunity_count` in the corresponding `pattern_snapshot` item.
+   - **(c) success classification:** `success_evidence_span_ids` must contain exactly those spans whose linked OEs have `success` ≥ the threshold for that scoring type (binary/dual_element ≥ 1.0, tiered_rubric/complexity_tiered ≥ 0.75, multi_element ≥ 0.8). The deterministic rebuild must walk: pattern → evidence_span_ids → span.event_ids → OE.success → threshold check.
+
+   This is more complex than v0.3.0's two-way check. Derive the rebuild logic carefully from the dependency graph.
 
 ### Phase 6: Workers
 10. **EDIT** `backend/core/workers.py`:
@@ -238,6 +246,11 @@ Classify each evidence span as success or missed opportunity using the threshold
 scoring type: binary/dual_element ≥ 1.0, tiered_rubric/complexity_tiered ≥ 0.75,
 multi_element ≥ 0.8. List success spans in success_evidence_span_ids.
 
+IMPORTANT: These success classification thresholds MUST appear explicitly in the
+system prompt text — both in the PATTERN SNAPSHOT section definition AND in this
+REASONING SEQUENCE. If they only exist in this implementation spec, the LLM won't
+see them and won't apply them correctly.
+
 Step 6 — Experiment detection (output: experiment_tracking):
 If active experiment exists: evaluate whether the speaker attempted it.
 Record attempt (yes/partial/no), count, and evidence_span_ids.
@@ -260,11 +273,14 @@ Write strengths, focus, micro_experiment, and executive_summary.
 - Score arithmetic auto-correction in gate1 validator
 - Sanitiser (enum confusion fixes, key stripping)
 - workers.py rewrite_for_span_id safety checks (adapt to new field locations)
+- Post-hoc rewrite span reassignment detection logic — kept as fallback safety net (see "What to Drop" note)
 
 ## What to Drop
 
-- Post-hoc rewrite span reassignment (remapping rewrite to different span) — the reasoning-aligned schema should prevent most errors at the source
+- Rewrite remapping to different spans — too likely to produce nonsensical coaching. If a rewrite doesn't match its span, drop the rewrite rather than remap it.
 - Any backward-compatibility version dispatch — not needed
+
+**Note:** Retain the post-hoc rewrite span reassignment *detection* (warning generation) as a fallback safety net, even though the reasoning-aligned schema should prevent most errors at the source. The detection costs almost nothing to keep and provides a regression net for edge cases the new architecture doesn't catch. Plan to remove in a future version once empirical data confirms it's redundant.
 
 ## Verification
 
