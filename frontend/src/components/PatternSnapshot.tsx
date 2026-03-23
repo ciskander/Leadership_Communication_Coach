@@ -480,15 +480,15 @@ export function PatternCard({
   const showSparkline = !!trend && trend.points.length >= 2;
 
   const highlightBorder = highlightType === 'strength'
-    ? 'border-[2px] border-cv-teal-700'
+    ? 'border border-cv-teal-700'
     : highlightType === 'focus'
-      ? 'border-[2px] border-cv-rose-700'
+      ? 'border border-cv-rose-700'
       : 'border border-cv-stone-400';
 
   const highlightBg = highlightType === 'strength'
-    ? 'bg-cv-teal-50'
+    ? 'bg-cv-teal-50 hover:bg-cv-teal-100'
     : highlightType === 'focus'
-      ? 'bg-cv-rose-50'
+      ? 'bg-cv-rose-50 hover:bg-cv-rose-100'
       : '';
 
   return (
