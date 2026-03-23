@@ -571,7 +571,8 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
           {/* Attempt history (pulled from ExperimentTracker) */}
           {activeExpData?.experiment && (() => {
-            const sortedEvents = [...activeExpData.recent_events]
+            const events = activeExpData.recent_events as { event_id?: string; id?: string; attempt?: string; meeting_date?: string; created_at?: string; human_confirmed?: string }[];
+            const sortedEvents = [...events]
               .sort((a, b) => {
                 const da = a.meeting_date || a.created_at || '';
                 const db = b.meeting_date || b.created_at || '';
