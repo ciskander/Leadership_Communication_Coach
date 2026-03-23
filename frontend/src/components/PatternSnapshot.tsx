@@ -290,7 +290,7 @@ function SuggestedRewrite({ text }: { text: string }) {
 
 // ─── Balance badge ────────────────────────────────────────────────────────────
 
-const BALANCE_COLORS: Record<string, { bg: string; dot: string; text: string }> = {
+const BALANCE_COLORS: Record<string, { bg: string; dot: string; text: string; border: string }> = {
   balanced:      { bg: 'bg-cv-teal-50',   dot: 'bg-cv-teal-500',   text: 'text-cv-stone-700', border: 'border-cv-teal-700'  },
   over_indexed:  { bg: 'bg-cv-red-50',    dot: 'bg-cv-red-400',    text: 'text-cv-stone-700', border: 'border-cv-red-700'   },
   under_indexed: { bg: 'bg-cv-amber-50',  dot: 'bg-cv-amber-400',  text: 'text-cv-stone-700', border: 'border-cv-amber-700' },
