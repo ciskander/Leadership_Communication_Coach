@@ -710,13 +710,14 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         <section className="bg-white rounded border border-cv-stone-700 overflow-hidden">
           <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-stone-700">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-stone-50 shrink-0" aria-hidden="true">
-              <path fillRule="evenodd" d="M4 2a1 1 0 00-1 1v14a1 1 0 001 1h12a1 1 0 001-1V3a1 1 0 00-1-1H4zm1 1h10v14H5V3z" clipRule="evenodd" />
-              <rect x="6" y="5.5" width="1.5" height="1.5" rx="0.25" />
-              <rect x="9" y="5.5" width="5" height="1.5" rx="0.25" />
-              <rect x="6" y="9" width="1.5" height="1.5" rx="0.25" />
-              <rect x="9" y="9" width="5" height="1.5" rx="0.25" />
-              <rect x="6" y="12.5" width="1.5" height="1.5" rx="0.25" />
-              <rect x="9" y="12.5" width="5" height="1.5" rx="0.25" />
+              <rect x="2" y="2" width="2.5" height="2.5" />
+              <rect x="7" y="2" width="11" height="2.5" />
+              <rect x="2" y="6.5" width="2.5" height="2.5" />
+              <rect x="7" y="6.5" width="11" height="2.5" />
+              <rect x="2" y="11" width="2.5" height="2.5" />
+              <rect x="7" y="11" width="11" height="2.5" />
+              <rect x="2" y="15.5" width="2.5" height="2.5" />
+              <rect x="7" y="15.5" width="11" height="2.5" />
             </svg>
             <h3 className="text-sm font-semibold text-cv-stone-50">{STRINGS.runStatusPoller.patternSnapshot}</h3>
           </div>
