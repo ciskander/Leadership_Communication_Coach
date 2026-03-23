@@ -586,7 +586,7 @@ export function PatternCard({
 
       {/* ── Expanded detail ── */}
       {expanded && (
-        <div className="border-t border-cv-warm-300 px-4 pb-4 pt-3 space-y-3">
+        <div className="border-t border-cv-warm-300 px-4 pb-4 pt-3 space-y-3 bg-white">
 
           {/* Perfect score */}
           {isPerfectScore && (hasQuotes || hasNotes) && (
