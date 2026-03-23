@@ -173,10 +173,9 @@ const PATTERN_ICONS: Record<string, JSX.Element> = {
   ),
   disagreement_navigation: (
     <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
-      <path d="M4 1.5h5.5L13 5v9.5a1 1 0 01-1 1H4a1 1 0 01-1-1v-13a1 1 0 011-1z" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round" />
-      <path d="M9.5 1.5V5H13" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round" />
-      <path d="M8.5 7v3.5" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
-      <circle cx="8.5" cy="12.5" r="0.6" fill="currentColor" />
+      <path d="M8 1.5L14.5 13a.5.5 0 01-.43.75H1.93a.5.5 0 01-.43-.75L8 1.5z" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round" />
+      <path d="M8 6v3.5" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+      <circle cx="8" cy="11.5" r="0.7" fill="currentColor" />
     </svg>
   ),
   feedback_quality: (

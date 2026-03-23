@@ -540,7 +540,13 @@ export default function BaselineDetailPage() {
             <section className="bg-white rounded border border-cv-stone-700 overflow-hidden">
               <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-stone-700">
                 <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-stone-50 shrink-0" aria-hidden="true">
-                  <path fillRule="evenodd" d="M6 3a2 2 0 00-2 2v1.161l-.33.275a2 2 0 00-.67 1.49V16a2 2 0 002 2h10a2 2 0 002-2V7.926a2 2 0 00-.67-1.49L16 6.161V5a2 2 0 00-2-2H6zm8 3.21V5H6v1.21l-1 .834V16h10V7.044l-1-.834zM9 9a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm0 4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" />
+                  <path fillRule="evenodd" d="M4 2a1 1 0 00-1 1v14a1 1 0 001 1h12a1 1 0 001-1V3a1 1 0 00-1-1H4zm1 1h10v14H5V3z" clipRule="evenodd" />
+                  <rect x="6" y="5.5" width="1.5" height="1.5" rx="0.25" />
+                  <rect x="9" y="5.5" width="5" height="1.5" rx="0.25" />
+                  <rect x="6" y="9" width="1.5" height="1.5" rx="0.25" />
+                  <rect x="9" y="9" width="5" height="1.5" rx="0.25" />
+                  <rect x="6" y="12.5" width="1.5" height="1.5" rx="0.25" />
+                  <rect x="9" y="12.5" width="5" height="1.5" rx="0.25" />
                 </svg>
                 <h3 className="text-sm font-semibold text-cv-stone-50">{STRINGS.runStatusPoller.patternSnapshot}</h3>
               </div>
