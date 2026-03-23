@@ -326,6 +326,7 @@ async def get_run_request_status(
     run_links = fields.get("Run", [])
     run_id = run_links[0] if isinstance(run_links, list) and run_links else None
     error_msg = fields.get("Error")
+    progress_message = fields.get("Progress Message")
 
     error_detail = None
     if error_msg:
@@ -336,4 +337,5 @@ async def get_run_request_status(
         status=status,
         run_id=run_id,
         error=error_detail,
+        progress_message=progress_message,
     )

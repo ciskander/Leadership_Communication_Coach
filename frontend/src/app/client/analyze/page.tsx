@@ -76,6 +76,8 @@ export default function AnalyzePage() {
   const [needsSpeakerPick, setNeedsSpeakerPick]   = useState(false);
   const [pendingRunRequestId, setPendingRunRequestId] = useState<string | null>(null);
   const [checkState, setCheckState]               = useState<'idle' | 'checking' | 'still_processing'>('idle');
+  const [progressMessage, setProgressMessage]     = useState<string | null>(null);
+  const [analysisStarted, setAnalysisStarted]     = useState(false);
 
   useEffect(() => {
     api.me().then((user) => {
@@ -135,6 +137,8 @@ export default function AnalyzePage() {
       if (result.run_id) {
         router.push(`/client/runs/${result.run_id}`);
       } else {
+        setAnalysisStarted(true);
+        setProgressMessage(result.progress_message || STRINGS.analyzePage.startingAnalysis);
         pollRunRequest(result.run_request_id);
       }
     } catch (e: unknown) {
@@ -153,6 +157,9 @@ export default function AnalyzePage() {
       count++;
       try {
         const status = await api.getRunRequest(rrId);
+        if (status.progress_message) {
+          setProgressMessage(status.progress_message);
+        }
         if (status.run_id) {
           router.push(`/client/runs/${status.run_id}`);
           return;
@@ -161,6 +168,7 @@ export default function AnalyzePage() {
           setError(STRINGS.analyzePage.analysisFailedToStart);
           setSubmitLabel(STRINGS.analyzePage.startingAnalysis);
           setSubmitting(false);
+          setAnalysisStarted(false);
           return;
         }
         if (status.status === 'processing') {
@@ -183,11 +191,13 @@ export default function AnalyzePage() {
           );
           setSubmitLabel(STRINGS.analyzePage.startingAnalysis);
           setSubmitting(false);
+          setAnalysisStarted(false);
         }
       } catch {
         setError(STRINGS.analyzePage.failedToPollStatus);
         setSubmitLabel(STRINGS.analyzePage.startingAnalysis);
         setSubmitting(false);
+        setAnalysisStarted(false);
       }
     };
     poll();
@@ -216,6 +226,28 @@ export default function AnalyzePage() {
   };
 
   const step = !transcriptId ? 1 : !speakerLabel || !name || !role ? 2 : 3;
+
+  // ── Progress screen (replaces form while analysis is running) ──
+  if (analysisStarted) {
+    return (
+      <div className="max-w-xl mx-auto py-2">
+        <div className="bg-white rounded border border-cv-warm-300 p-10 text-center space-y-5">
+          <div className="relative mx-auto w-12 h-12">
+            <div className="w-12 h-12 rounded-full border-2 border-cv-stone-100" />
+            <div className="absolute inset-0 w-12 h-12 rounded-full border-2 border-cv-teal-600 border-t-transparent animate-spin" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-cv-stone-900">
+              {progressMessage || STRINGS.analyzePage.analysisInProgress}
+            </p>
+            <p className="text-xs text-cv-stone-400 font-light mt-1">
+              {STRINGS.runStatusPoller.usuallyTakes}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-xl mx-auto space-y-5 py-2">

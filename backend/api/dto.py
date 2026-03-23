@@ -132,6 +132,7 @@ class RunRequestStatusResponse(BaseModel):
     status: str
     run_id: Optional[str] = None
     error: Optional[dict] = None
+    progress_message: Optional[str] = None
 
 
 # ── Baseline Packs ────────────────────────────────────────────────────────────

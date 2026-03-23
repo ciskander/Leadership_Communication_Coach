@@ -66,6 +66,7 @@ F_RR_RUN = "Run"                             # Link
 F_RR_BASELINE_PACK = "Baseline Pack"         # Link
 F_RR_USER = "User"                           # Link
 F_RR_ERROR = "Error"
+F_RR_PROGRESS = "Progress Message"
 F_RR_ACTIVE_EXPERIMENT = "Active Experiment" # Link
 F_RR_EXP_ID_FROM_AE = "Experiment ID (from Active Experiment)"
 
@@ -126,6 +127,7 @@ F_BP_STATUS = "Status"
 F_BP_SPEAKER_LABEL = "Speaker Label"
 F_BP_ACTIVE_EXPERIMENT = "Active Experiment"  # Link
 F_BP_LAST_RUN = "Last Run"                    # Link
+F_BP_PROGRESS = "Progress Message"
 F_BP_ROLE_CONSISTENCY = "Role Consistency"
 F_BP_MEETING_TYPE_CONSISTENCY = "Meeting Type Consistency"
 
@@ -302,13 +304,21 @@ class AirtableClient:
     def get_run_request(self, record_id: str) -> dict:
         return self.get_record(AT_TABLE_RUN_REQUESTS, record_id)
 
-    def update_run_request_status(self, record_id: str, status: str, error: Optional[str] = None, run_record_id: Optional[str] = None) -> dict:
+    def update_run_request_status(self, record_id: str, status: str, error: Optional[str] = None, run_record_id: Optional[str] = None, progress_message: Optional[str] = None) -> dict:
         fields: dict = {F_RR_STATUS: status}
         if error:
             fields[F_RR_ERROR] = error
         if run_record_id:
             fields[F_RR_RUN] = [run_record_id]
+        if progress_message is not None:
+            fields[F_RR_PROGRESS] = progress_message
         return self.update_record(AT_TABLE_RUN_REQUESTS, record_id, fields)
+
+    def update_run_request_progress(self, record_id: str, message: str) -> dict:
+        return self.update_record(AT_TABLE_RUN_REQUESTS, record_id, {F_RR_PROGRESS: message})
+
+    def update_baseline_pack_progress(self, record_id: str, message: str) -> dict:
+        return self.update_record(AT_TABLE_BASELINE_PACKS, record_id, {F_BP_PROGRESS: message})
         
     def create_run_request(self, fields: dict) -> dict:
         return self.create_record(AT_TABLE_RUN_REQUESTS, fields)

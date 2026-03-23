@@ -432,6 +432,12 @@ def process_single_meeting_analysis(
         source_id=transcript_id_str,
     )
 
+    # Progress: transcript parsed
+    try:
+        client.update_run_request_progress(run_request_id, "Preparing analysis…")
+    except Exception:
+        pass  # non-blocking
+
     # 3. Idempotency check — reuse only if the previous run passed Gate1.
     idem_key = make_run_idempotency_key(
         transcript_id_str, analysis_type, coachee_id,
@@ -480,7 +486,7 @@ def process_single_meeting_analysis(
     )
 
     # 6b. Mark run_request as processing so the frontend knows work has started
-    client.update_run_request_status(run_request_id, "processing")
+    client.update_run_request_status(run_request_id, "processing", progress_message="Generating coaching feedback…")
 
     # 6c. Call LLM
     openai_resp = call_llm(
@@ -588,6 +594,12 @@ def process_single_meeting_analysis(
         completion_tokens=openai_resp.completion_tokens,
         total_tokens=openai_resp.total_tokens,
     )
+
+    # Progress: LLM call complete
+    try:
+        client.update_run_request_progress(run_request_id, "Reviewing output quality…")
+    except Exception:
+        pass  # non-blocking
 
     # 7. Gate1 validate (may auto-correct scores in-place)
     gate1_result = gate1_validate(openai_resp.raw_text)
@@ -709,7 +721,15 @@ def process_baseline_pack_build(
     meeting_run_data: list[dict] = []
     meetings_meta: list[dict] = []
 
-    for item in items[:3]:
+    for item_idx, item in enumerate(items[:3]):
+        # Progress: analyzing meeting N of 3
+        try:
+            client.update_baseline_pack_progress(
+                baseline_pack_id, f"Analyzing meeting {item_idx + 1} of 3…"
+            )
+        except Exception:
+            pass  # non-blocking
+
         item_fields = _extract_fields(item)
         transcript_links = _get_link_ids(item_fields, "Transcript")
         run_links = _get_link_ids(item_fields, "Run")
@@ -836,6 +856,12 @@ def process_baseline_pack_build(
     # 3. Fetch the 3 slim summaries
     summaries = [mrd["slim_summary"] for mrd in meeting_run_data]
 
+    # Progress: synthesizing
+    try:
+        client.update_baseline_pack_progress(baseline_pack_id, "Synthesizing patterns across meetings…")
+    except Exception:
+        pass  # non-blocking
+
     # 4. Build baseline_pack prompt
     prompt_payload = build_baseline_pack_prompt(
         baseline_pack_id=bp_pack_id_str,
@@ -865,6 +891,12 @@ def process_baseline_pack_build(
         len(prompt_payload.raw_user_message),
         len(summaries),
     )
+
+    # Progress: calling LLM for baseline synthesis
+    try:
+        client.update_baseline_pack_progress(baseline_pack_id, "Generating baseline assessment…")
+    except Exception:
+        pass  # non-blocking
 
     # 5b. Call LLM
     # Baseline packs produce ~10-12 k tokens of JSON (9 patterns + coaching).
@@ -933,6 +965,12 @@ def process_baseline_pack_build(
         completion_tokens=openai_resp.completion_tokens,
         total_tokens=openai_resp.total_tokens,
     )
+
+    # Progress: reviewing output
+    try:
+        client.update_baseline_pack_progress(baseline_pack_id, "Reviewing output quality…")
+    except Exception:
+        pass  # non-blocking
 
     # 6. Gate1 validate (may auto-correct scores in-place)
     gate1_result = gate1_validate(openai_resp.raw_text)

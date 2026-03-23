@@ -427,7 +427,7 @@ export default function BaselineDetailPage() {
           </div>
           <div>
             <p className="text-sm font-medium text-cv-stone-900">
-              {STRINGS.baselineDetail.buildingTitle}
+              {pack.progress_message || STRINGS.baselineDetail.buildingTitle}
             </p>
             <p className="text-xs text-cv-stone-400 font-light mt-1">
               {STRINGS.baselineDetail.buildingDesc}

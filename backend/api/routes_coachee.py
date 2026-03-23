@@ -409,6 +409,7 @@ async def get_baseline_pack(
     return {
         "baseline_pack_id": bp_rec["id"],
         "status": bf.get("Status"),
+        "progress_message": bf.get("Progress Message"),
         "target_role": bf.get("Target Role"),
         "target_speaker_label": bf.get("Speaker Label"),
         "role_consistency": bf.get("Role Consistency"),

@@ -95,6 +95,13 @@ def enqueue_single_meeting(self, run_request_id: str) -> str:
             raise
 
         try:
+            # Update progress to indicate retry
+            try:
+                AirtableClient().update_run_request_progress(
+                    run_request_id, "Retrying analysis…"
+                )
+            except Exception:
+                pass
             raise self.retry(exc=exc)
         except MaxRetriesExceededError:
             raise
@@ -138,6 +145,13 @@ def enqueue_baseline_pack_build(self, baseline_pack_id: str) -> str:
             raise
 
         try:
+            # Update progress to indicate retry
+            try:
+                AirtableClient().update_baseline_pack_progress(
+                    baseline_pack_id, "Retrying — this can take a moment…"
+                )
+            except Exception:
+                pass
             raise self.retry(exc=exc)
         except MaxRetriesExceededError:
             raise

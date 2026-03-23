@@ -115,6 +115,7 @@ export interface RunRequestStatus {
   status: string;
   run_id: string | null;
   error: Record<string, unknown> | null;
+  progress_message?: string | null;
 }
 
 export interface Experiment {
@@ -205,6 +206,7 @@ export interface BaselinePackMeeting {
 export interface BaselinePack {
   baseline_pack_id: string;
   status: string;
+  progress_message?: string | null;
   target_speaker_label?: string | null;
   run_id?: string | null;
   executive_summary?: string | null;
