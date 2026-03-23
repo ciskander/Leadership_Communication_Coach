@@ -37,7 +37,7 @@ function fmtDate(dateStr: string | null | undefined): string {
 
 function PatternLabel({ id }: { id: string }) {
   return (
-    <span className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest">
+    <span className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400">
       {id.replace(/_/g, ' ')}
     </span>
   );
@@ -60,20 +60,20 @@ function AcceptedExperimentPanel({ experiment }: { experiment: Experiment }) {
           {experiment.title}
         </p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div className="bg-white rounded p-3 border border-cv-teal-100">
-          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="bg-cv-warm-50 border border-cv-warm-300 rounded p-3.5">
+          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1.5">
             {STRINGS.common.whatToDo}
           </p>
-          <p className="text-xs text-cv-stone-600 font-light leading-relaxed">
+          <p className="text-sm text-cv-stone-700 leading-relaxed">
             {experiment.instruction}
           </p>
         </div>
-        <div className="bg-white rounded p-3 border border-cv-teal-100">
-          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+        <div className="bg-cv-warm-50 border border-cv-warm-300 rounded p-3.5">
+          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1.5">
             {STRINGS.common.successLooksLike}
           </p>
-          <p className="text-xs text-cv-stone-600 font-light leading-relaxed">
+          <p className="text-sm text-cv-stone-700 leading-relaxed">
             {experiment.success_marker}
           </p>
         </div>
@@ -82,7 +82,7 @@ function AcceptedExperimentPanel({ experiment }: { experiment: Experiment }) {
         href="/client/experiment"
         className="inline-flex items-center text-sm text-cv-teal-600 font-medium hover:text-cv-teal-800 transition-colors"
       >
-        {STRINGS.baselineDetail.trackExperiment} →
+        {STRINGS.baselineDetail.trackExperiment}
       </Link>
     </div>
   );
@@ -121,20 +121,20 @@ function ProposedExperimentCard({
           {experiment.title}
         </p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div className="bg-cv-warm-100 rounded p-3">
-          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="bg-cv-warm-50 border border-cv-warm-300 rounded p-3.5">
+          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1.5">
             {STRINGS.common.whatToDo}
           </p>
-          <p className="text-xs text-cv-stone-600 font-light leading-relaxed">
+          <p className="text-sm text-cv-stone-700 leading-relaxed">
             {experiment.instruction}
           </p>
         </div>
-        <div className="bg-cv-warm-100 rounded p-3">
-          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+        <div className="bg-cv-warm-50 border border-cv-warm-300 rounded p-3.5">
+          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1.5">
             {STRINGS.common.successLooksLike}
           </p>
-          <p className="text-xs text-cv-stone-600 font-light leading-relaxed">
+          <p className="text-sm text-cv-stone-700 leading-relaxed">
             {experiment.success_marker}
           </p>
         </div>
@@ -200,7 +200,7 @@ function ExperimentSection() {
   if (proposed.length > 0) {
     return (
       <section className="space-y-3">
-        <p className="text-sm font-semibold text-cv-amber-800">
+        <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-amber-800">
           {STRINGS.baselineDetail.experimentReady}
         </p>
         <ProposedExperimentCard
