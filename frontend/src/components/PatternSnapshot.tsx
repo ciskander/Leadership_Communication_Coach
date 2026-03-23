@@ -291,17 +291,17 @@ function SuggestedRewrite({ text }: { text: string }) {
 // ─── Balance badge ────────────────────────────────────────────────────────────
 
 const BALANCE_COLORS: Record<string, { bg: string; dot: string; text: string }> = {
-  balanced:      { bg: 'bg-cv-teal-50',   dot: 'bg-cv-teal-500',   text: 'text-cv-stone-700' },
-  over_indexed:  { bg: 'bg-cv-red-50',    dot: 'bg-cv-red-400',    text: 'text-cv-stone-700' },
-  under_indexed: { bg: 'bg-cv-amber-50',  dot: 'bg-cv-amber-400',  text: 'text-cv-stone-700' },
-  unclear:       { bg: 'bg-cv-warm-100',  dot: 'bg-cv-stone-300',  text: 'text-cv-stone-500' },
+  balanced:      { bg: 'bg-cv-teal-50',   dot: 'bg-cv-teal-500',   text: 'text-cv-stone-700', border: 'border-cv-teal-700'  },
+  over_indexed:  { bg: 'bg-cv-red-50',    dot: 'bg-cv-red-400',    text: 'text-cv-stone-700', border: 'border-cv-red-700'   },
+  under_indexed: { bg: 'bg-cv-amber-50',  dot: 'bg-cv-amber-400',  text: 'text-cv-stone-700', border: 'border-cv-amber-700' },
+  unclear:       { bg: 'bg-cv-warm-100',  dot: 'bg-cv-stone-300',  text: 'text-cv-stone-500', border: 'border-cv-stone-700' },
 };
 
 function BalanceBadge({ assessment }: { assessment: string }) {
   const colors = BALANCE_COLORS[assessment] ?? BALANCE_COLORS.unclear;
   const label  = STRINGS.balanceLabels[assessment] ?? assessment;
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${colors.bg} ${colors.text}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border ${colors.bg} ${colors.text} ${colors.border}`}>
       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${colors.dot}`} />
       {label}
     </span>

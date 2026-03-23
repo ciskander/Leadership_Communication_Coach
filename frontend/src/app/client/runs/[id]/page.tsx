@@ -83,7 +83,7 @@ function ConfirmDeleteModal({
 
 function MetaPill({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded bg-cv-warm-100 text-2xs font-medium text-cv-stone-500 tabular-nums">
+    <span className="inline-flex items-center px-2 py-0.5 rounded bg-cv-warm-100 text-2xs font-medium text-cv-stone-500 border border-cv-stone-700 tabular-nums">
       {children}
     </span>
   );

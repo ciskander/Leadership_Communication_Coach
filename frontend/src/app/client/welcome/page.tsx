@@ -100,7 +100,7 @@ export default function WelcomePage() {
                   {step.title}
                 </p>
                 <p className="text-sm text-cv-stone-400 font-light leading-relaxed">{step.desc}</p>
-                <span className="inline-block mt-2 text-2xs font-medium tracking-wide uppercase text-cv-teal-400 bg-cv-teal-400/10 px-2 py-0.5 rounded">
+                <span className="inline-block mt-2 text-2xs font-medium tracking-wide uppercase text-cv-teal-400 bg-cv-teal-400/10 border border-cv-teal-700 px-2 py-0.5 rounded">
                   {step.tag}
                 </span>
               </div>

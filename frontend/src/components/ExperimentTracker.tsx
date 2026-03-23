@@ -44,12 +44,12 @@ const HUMAN_PILL_CONFIG: Record<string, { label: string; color: string; border: 
   confirmed_no_attempt: { label: STRINGS.humanConfirmation.confirmed_no_attempt, color: 'text-cv-stone-500', border: 'border-cv-stone-300' },
 };
 
-const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
-  proposed:  { bg: 'bg-cv-warm-100',   text: 'text-cv-stone-600',  label: STRINGS.experimentStatus.proposed  },
-  active:    { bg: 'bg-cv-teal-100',   text: 'text-cv-teal-700',   label: STRINGS.experimentStatus.active    },
-  completed: { bg: 'bg-cv-warm-200',   text: 'text-cv-stone-600',  label: STRINGS.experimentStatus.completed },
-  parked:    { bg: 'bg-cv-amber-100',  text: 'text-cv-amber-700',  label: STRINGS.experimentStatus.parked    },
-  abandoned: { bg: 'bg-cv-red-100',    text: 'text-cv-red-700',    label: STRINGS.experimentStatus.abandoned },
+const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string; border: string }> = {
+  proposed:  { bg: 'bg-cv-warm-100',   text: 'text-cv-stone-600',  label: STRINGS.experimentStatus.proposed,  border: 'border-cv-stone-600'  },
+  active:    { bg: 'bg-cv-teal-100',   text: 'text-cv-teal-700',   label: STRINGS.experimentStatus.active,    border: 'border-cv-teal-700'   },
+  completed: { bg: 'bg-cv-warm-200',   text: 'text-cv-stone-600',  label: STRINGS.experimentStatus.completed, border: 'border-cv-stone-600'  },
+  parked:    { bg: 'bg-cv-amber-100',  text: 'text-cv-amber-700',  label: STRINGS.experimentStatus.parked,    border: 'border-cv-amber-700'  },
+  abandoned: { bg: 'bg-cv-red-100',    text: 'text-cv-red-700',    label: STRINGS.experimentStatus.abandoned, border: 'border-cv-red-700'    },
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -128,7 +128,7 @@ export function ExperimentTracker({
           </h3>
           <p className="text-2xs text-cv-stone-400 tabular-nums">{experiment.experiment_id}</p>
         </div>
-        <span className={`text-2xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${statusCfg.bg} ${statusCfg.text}`}>
+        <span className={`text-2xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap border ${statusCfg.bg} ${statusCfg.text} ${statusCfg.border}`}>
           {statusCfg.label}
         </span>
       </div>
