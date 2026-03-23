@@ -163,7 +163,7 @@ function ParkedExperimentCard({
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-2xs font-semibold px-2 py-0.5 rounded-full bg-cv-amber-100 text-cv-amber-700">
+            <span className="text-2xs font-semibold px-2 py-0.5 rounded-full bg-cv-amber-100 text-cv-amber-700 border border-cv-amber-700">
               {STRINGS.experimentPage.parked}
             </span>
             {experiment.ended_at && (

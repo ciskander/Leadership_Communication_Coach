@@ -317,7 +317,7 @@ function PatternTrendsChart({
             return (
               <>
                 {/* "N meetings until trends" nudge */}
-                <div className="mb-3 inline-flex items-center gap-2 bg-cv-teal-50 text-cv-teal-700 text-xs font-medium px-3 py-1.5 rounded-full">
+                <div className="mb-3 inline-flex items-center gap-2 bg-cv-teal-50 text-cv-teal-700 border border-cv-teal-700 text-xs font-medium px-3 py-1.5 rounded-full">
                   <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                   </svg>
@@ -385,7 +385,7 @@ function PatternTrendsChart({
                 />
                 {STRINGS.patternLabels[pid] ?? pid}
                 {isExp && (
-                  <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide bg-cv-teal-100 text-cv-teal-700 px-1.5 py-0.5 rounded-full leading-none">
+                  <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide bg-cv-teal-100 text-cv-teal-700 border border-cv-teal-700 px-1.5 py-0.5 rounded-full leading-none">
                     {STRINGS.progressPage.experimentBadge}
                   </span>
                 )}
@@ -413,9 +413,9 @@ function PastExperimentCard({
   const [open, setOpen] = useState(false);
 
   const statusCls =
-    exp.status === 'completed' ? 'bg-cv-teal-100 text-cv-teal-700'
-    : exp.status === 'parked'  ? 'bg-cv-amber-100 text-cv-amber-700'
-    : 'bg-cv-red-100 text-cv-red-700';
+    exp.status === 'completed' ? 'bg-cv-teal-100 text-cv-teal-700 border-cv-teal-700'
+    : exp.status === 'parked'  ? 'bg-cv-amber-100 text-cv-amber-700 border-cv-amber-700'
+    : 'bg-cv-red-100 text-cv-red-700 border-cv-red-700';
 
   const statusLabel =
     exp.status === 'completed' ? STRINGS.experimentStatus.completed
@@ -449,7 +449,7 @@ function PastExperimentCard({
         type="button"
       >
         <div className="flex items-center gap-3 min-w-0">
-          <span className={`text-2xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${statusCls}`}>
+          <span className={`text-2xs font-semibold px-2 py-0.5 rounded-full border shrink-0 ${statusCls}`}>
             {statusLabel}
           </span>
           <span className="font-medium text-cv-stone-800 truncate text-sm">{exp.title}</span>

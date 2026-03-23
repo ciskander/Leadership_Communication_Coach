@@ -218,7 +218,7 @@ function RecentRunCard({ run, editMode, selected, onToggle }: {
         </p>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-cv-stone-400">
           {isBaseline ? (
-            <span className="inline-flex items-center bg-cv-teal-50 text-cv-teal-700 text-xs px-1.5 py-0.5 rounded font-medium">
+            <span className="inline-flex items-center bg-cv-teal-50 text-cv-teal-700 border border-cv-teal-700 text-xs px-1.5 py-0.5 rounded font-medium">
               {STRINGS.clientDashboard.baselinePackTitle}
             </span>
           ) : (

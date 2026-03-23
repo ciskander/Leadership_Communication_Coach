@@ -12,43 +12,49 @@ function getJourneyStage(summary: CoacheeSummary): {
   label: string;
   color: string;
   dotColor: string;
+  borderColor: string;
 } {
   const bp  = summary.active_baseline_pack;
   const exp = summary.active_experiment;
 
   if (exp) {
     return {
-      label:    STRINGS.coachCard.experimenting,
-      color:    'bg-cv-teal-50 text-cv-teal-700',
-      dotColor: 'bg-cv-teal-500',
+      label:       STRINGS.coachCard.experimenting,
+      color:       'bg-cv-teal-50 text-cv-teal-700',
+      dotColor:    'bg-cv-teal-500',
+      borderColor: 'border-cv-teal-700',
     };
   }
   if (bp) {
     const status = (bp as Record<string, unknown>).status as string;
     if (status === 'completed' || status === 'baseline_ready') {
       return {
-        label:    STRINGS.coachCard.baselineReady,
-        color:    'bg-cv-teal-50 text-cv-teal-700',
-        dotColor: 'bg-cv-teal-500',
+        label:       STRINGS.coachCard.baselineReady,
+        color:       'bg-cv-teal-50 text-cv-teal-700',
+        dotColor:    'bg-cv-teal-500',
+        borderColor: 'border-cv-teal-700',
       };
     }
     return {
-      label:    STRINGS.coachCard.baselineBuilding,
-      color:    'bg-cv-amber-50 text-cv-amber-700',
-      dotColor: 'bg-cv-amber-500',
+      label:       STRINGS.coachCard.baselineBuilding,
+      color:       'bg-cv-amber-50 text-cv-amber-700',
+      dotColor:    'bg-cv-amber-500',
+      borderColor: 'border-cv-amber-700',
     };
   }
   if (summary.recent_runs.length > 0) {
     return {
-      label:    STRINGS.coachCard.baselineReady,
-      color:    'bg-cv-teal-50 text-cv-teal-700',
-      dotColor: 'bg-cv-teal-500',
+      label:       STRINGS.coachCard.baselineReady,
+      color:       'bg-cv-teal-50 text-cv-teal-700',
+      dotColor:    'bg-cv-teal-500',
+      borderColor: 'border-cv-teal-700',
     };
   }
   return {
-    label:    STRINGS.coachCard.noActivity,
-    color:    'bg-cv-warm-100 text-cv-stone-500',
-    dotColor: 'bg-cv-stone-400',
+    label:       STRINGS.coachCard.noActivity,
+    color:       'bg-cv-warm-100 text-cv-stone-500',
+    dotColor:    'bg-cv-stone-400',
+    borderColor: 'border-cv-stone-700',
   };
 }
 
@@ -120,7 +126,7 @@ function CoacheeCard({
       {/* Status row */}
       {stage && (
         <div className="flex items-center justify-between">
-          <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${stage.color}`}>
+          <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${stage.color} ${stage.borderColor}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${stage.dotColor}`} />
             {stage.label}
           </span>

@@ -236,7 +236,7 @@ function PatternTrendsCompact({
           return (
             <>
               {meetingsUntil > 0 && (
-                <div className="mb-3 inline-flex items-center gap-2 bg-cv-teal-50 text-cv-teal-700 text-xs font-medium px-3 py-1.5 rounded-full">
+                <div className="mb-3 inline-flex items-center gap-2 bg-cv-teal-50 text-cv-teal-700 border border-cv-teal-700 text-xs font-medium px-3 py-1.5 rounded-full">
                   {STRINGS.progressPage.meetingsUntilTrends(meetingsUntil)}
                 </div>
               )}
@@ -298,7 +298,7 @@ function PatternTrendsCompact({
                 <span className="inline-block w-2.5 h-2.5 rounded-full mr-1 shrink-0" style={{ background: patternColor(pid) }} />
                 {STRINGS.patternLabels[pid] ?? pid}
                 {isExp && (
-                  <span className="ml-1 text-[9px] font-semibold uppercase tracking-wide bg-cv-teal-100 text-cv-teal-700 px-1 py-0.5 rounded-full leading-none">
+                  <span className="ml-1 text-[9px] font-semibold uppercase tracking-wide bg-cv-teal-100 text-cv-teal-700 border border-cv-teal-700 px-1 py-0.5 rounded-full leading-none">
                     Exp
                   </span>
                 )}
@@ -323,7 +323,7 @@ function ProposedExperimentRow({ experiment }: { experiment: Experiment }) {
             {experiment.title}
           </p>
         </div>
-        <span className="text-2xs px-2 py-0.5 rounded-full font-semibold bg-cv-warm-200 text-cv-stone-600 whitespace-nowrap shrink-0">
+        <span className="text-2xs px-2 py-0.5 rounded-full font-semibold bg-cv-warm-200 text-cv-stone-600 border border-cv-stone-600 whitespace-nowrap shrink-0">
           {STRINGS.experimentStatus.proposed}
         </span>
       </div>
@@ -367,9 +367,9 @@ function PatternSnapshotBar({ item }: { item: { pattern_id: string; score?: numb
 
 function PastExperimentRow({ exp }: { exp: Record<string, unknown> }) {
   const statusCls =
-    exp.status === 'completed' ? 'bg-cv-teal-100 text-cv-teal-700'
-    : exp.status === 'parked'  ? 'bg-cv-amber-100 text-cv-amber-700'
-    : 'bg-cv-red-100 text-cv-red-700';
+    exp.status === 'completed' ? 'bg-cv-teal-100 text-cv-teal-700 border-cv-teal-700'
+    : exp.status === 'parked'  ? 'bg-cv-amber-100 text-cv-amber-700 border-cv-amber-700'
+    : 'bg-cv-red-100 text-cv-red-700 border-cv-red-700';
 
   const dateRange =
     exp.started_at || exp.ended_at
@@ -379,7 +379,7 @@ function PastExperimentRow({ exp }: { exp: Record<string, unknown> }) {
   return (
     <div className="flex items-center justify-between px-4 py-3 bg-white border border-cv-warm-300 rounded">
       <div className="flex items-center gap-3 min-w-0">
-        <span className={`text-2xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${statusCls}`}>
+        <span className={`text-2xs font-semibold px-2 py-0.5 rounded-full border shrink-0 ${statusCls}`}>
           {STRINGS.experimentStatus[exp.status as string] ?? exp.status}
         </span>
         <div className="min-w-0">
@@ -436,12 +436,12 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
       >
         <div className="flex items-center gap-2.5 min-w-0">
           {gate1Pass === false && (
-            <span className="text-2xs px-2 py-0.5 rounded-full font-semibold bg-cv-amber-100 text-cv-amber-700 whitespace-nowrap shrink-0">
+            <span className="text-2xs px-2 py-0.5 rounded-full font-semibold bg-cv-amber-100 text-cv-amber-700 border border-cv-amber-700 whitespace-nowrap shrink-0">
               {STRINGS.coacheeDetail.gateFailLabel}
             </span>
           )}
           {isBaseline && (
-            <span className="text-2xs px-2 py-0.5 rounded-full font-semibold bg-cv-teal-100 text-cv-teal-700 whitespace-nowrap shrink-0">
+            <span className="text-2xs px-2 py-0.5 rounded-full font-semibold bg-cv-teal-100 text-cv-teal-700 border border-cv-teal-700 whitespace-nowrap shrink-0">
               {STRINGS.common.baselinePackAnalysis}
             </span>
           )}
@@ -667,14 +667,14 @@ export default function CoacheeDetailPage() {
               const status = (data.active_baseline_pack as Record<string, unknown>).status as string;
               const statusCls =
                 status === 'completed' || status === 'baseline_ready'
-                  ? 'bg-cv-teal-100 text-cv-teal-700'
+                  ? 'bg-cv-teal-100 text-cv-teal-700 border-cv-teal-700'
                   : status === 'building'
-                    ? 'bg-cv-amber-100 text-cv-amber-700'
+                    ? 'bg-cv-amber-100 text-cv-amber-700 border-cv-amber-700'
                     : status === 'error'
-                      ? 'bg-cv-red-100 text-cv-red-700'
-                      : 'bg-cv-warm-100 text-cv-stone-600';
+                      ? 'bg-cv-red-100 text-cv-red-700 border-cv-red-700'
+                      : 'bg-cv-warm-100 text-cv-stone-600 border-cv-stone-600';
               return (
-                <span className={`text-2xs font-semibold px-2.5 py-1 rounded-full ${statusCls}`}>
+                <span className={`text-2xs font-semibold px-2.5 py-1 rounded-full border ${statusCls}`}>
                   {STRINGS.baselineStatus[status] ?? status}
                 </span>
               );
