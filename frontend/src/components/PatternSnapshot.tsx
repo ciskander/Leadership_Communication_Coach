@@ -514,7 +514,7 @@ export function PatternCard({
       : '';
 
   return (
-    <div className={`bg-white rounded overflow-hidden${expanded ? ' sm:col-span-2' : ''} ${highlightBorder}`}>
+    <div className={`bg-cv-warm-50 rounded overflow-hidden${expanded ? ' sm:col-span-2' : ''} ${highlightBorder}`}>
       {/* ── Card header row ── */}
       <button
         type="button"
