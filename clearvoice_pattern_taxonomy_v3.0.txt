@@ -77,6 +77,8 @@ How each scored opportunity is evaluated — what earns full credit, partial cre
 
 When in doubt about whether a moment is a scored opportunity or not an opportunity, prefer excluding it. Undercounting is safer than miscounting.
 
+PATTERN CLASSIFICATION OVERLAP: See Pattern Priority Rules in General Detection Guidance section below for collision resolution.
+
 COACHING OUTPUT RULES
 
 - strengths: 0–2 patterns where the speaker performed well.
@@ -262,6 +264,7 @@ Excluded from both numerator AND denominator (not an opportunity):
 - Moments where only two speakers are present (binary conversation — no participation to manage).
 - Non-verbal acknowledgment (nodding, gestures) — not observable in transcript.
 - Moments where someone else is actively facilitating and the target speaker appropriately defers.
+- Questions the target speaker asks a substantive question (these belong to question_quality). A question that also yields the floor is scored under question_quality, not participation_management, unless the floor-direction function is clearly primary.
 
 Contextual balance annotation:
 - In addition to the scored opportunities, provide a qualitative balance_assessment: over_indexed | balanced | under_indexed | unclear.
@@ -440,6 +443,7 @@ Detection notes:
 - This pattern is about what was decided and whether there's shared understanding. It is distinct from Assignment Clarity, which is about who does what next. A single conversational moment may contain both a resolution and an assignment — score each under the appropriate pattern.
 - A vague summary ("So we're roughly aligned") does not qualify as Element A. The resolution must be specific enough that someone absent from the meeting could understand what was decided.
 - Element B does not require verbal confirmation from others — it requires the target speaker to create space for it (asking, pausing, inviting objections).
+- In 1:1 meetings, or in any two-person conversational exchange, a direct affirmative response from the other party immediately following a named resolution satisfies Element B.
 
 Experiment guidance:
 - What good looks like: "Here's where we landed: we're going with the phased approach, starting with enterprise in Q3. Does that match what everyone heard?"
@@ -671,6 +675,7 @@ Detection notes:
 - Proportionality is context-dependent. A complex strategic question warrants a longer response. A simple factual question does not. Score proportionality relative to the complexity of the point, not against an absolute length standard.
 - Context affects concreteness expectations. In an early brainstorming discussion, more abstract language is appropriate. In a decision-making or planning context, vagueness is a clearer failure. Apply conservative scoring — only score vagueness as a failure when the context clearly calls for specificity.
 - When in doubt between adjacent tiers, use your best judgment based on the rubric criteria. Do not systematically default to any single tier — score each opportunity based on the strongest matching description.
+- In 1:1 meetings, coaching conversations, and any turn where the speaker's primary communicative goal is acknowledgment, empathy, or feedback delivery: do not penalize for not leading with the task point. Leading with acknowledgment is appropriate structure in these contexts. Evaluate proportionality and relevance, but not BLUF. Apply the full BLUF standard only to task-oriented turns in task-oriented meetings.
 
 Experiment guidance:
 - What good looks like: "I think we should delay launch by two weeks. Here's why: QA flagged three issues in the payment flow, and we can't ship with unresolved payment bugs. Two weeks gives us time to fix and retest. The trade-off is we miss the conference window, but I'd rather ship clean." Point first, reasoning second, trade-off acknowledged, proportionate length.
@@ -781,5 +786,44 @@ Meeting type expectations:
 - Presentations: Cluster A (within segment), C, and D are primary. Cluster B is limited to the Q&A/discussion portion.
 - 1:1 meetings: Cluster A and C apply. Cluster B scored portion is not_evaluable (provide balance annotation only). Feedback Quality is primary in Cluster D.
 - Retrospectives/debriefs: All clusters apply. Feedback Quality and Disagreement Navigation are particularly relevant.
+
+PATTERN PRIORITY RULES
+
+Where a single utterance could be classified under more than one pattern, 
+apply the following rules:
+
+EXCLUSIVE (count under only one):
+- question_quality vs. participation_management: If the target speaker's 
+  turn is interrogative in form — i.e., they are asking a question — count 
+  it under question_quality only, not participation_management, even if 
+  asking the question also yields the floor to another speaker. Exception: 
+  if the question is clearly procedural or logistical (excluded from 
+  question_quality per its own exclusion rules), it may still qualify as 
+  a participation_management moment if it functions as a named floor 
+  direction (e.g., "Jake, quick update from you?").
+
+- focus_management vs. disagreement_navigation: If a drift episode and 
+  a disagreement moment co-occur in the same exchange, score the moment 
+  under disagreement_navigation only. Focus Management is the appropriate 
+  lens when the primary issue is topical drift; Disagreement Navigation 
+  takes priority when interpersonal tension or explicit pushback is 
+  the primary dynamic.
+
+PERMITTED MULTI-PATTERN (count under both):
+- resolution_and_alignment + assignment_clarity: A single moment may 
+  be scored under both if it contains a named decision AND a work 
+  assignment. Score each pattern independently against its own rubric.
+
+- feedback_quality + communication_clarity: A feedback delivery turn 
+  may be scored under both. feedback_quality evaluates SBI-RC structure; 
+  communication_clarity evaluates the turn's overall clarity and 
+  proportionality. These are distinct dimensions.
+
+- purposeful_framing + communication_clarity: A topic transition of 
+  3+ sentences may be scored under both. purposeful_framing evaluates 
+  the presence of Elements A and B; communication_clarity evaluates 
+  the turn's structure and clarity. Do not double-count the same 
+  moment's content when writing coaching notes — each pattern's 
+  coaching note should address its own dimension only.
 
 ### END:GENERAL_DETECTION_GUIDANCE ###

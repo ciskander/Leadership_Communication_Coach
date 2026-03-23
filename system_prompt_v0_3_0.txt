@@ -270,7 +270,8 @@ Before outputting, verify in this order:
 Quality checks (most important):
 1) Re-read each notes and coaching_note field. Does it describe specific behavior visible in the cited evidence — or could it apply to any meeting? If generic, rewrite it.
 2) Re-read each suggested_rewrite. Does it sound like something this specific speaker would say in this specific meeting? Is it a plausible replacement for the excerpt in rewrite_for_span_id?
-3) For each pattern in the denominator, verify the counted opportunity genuinely meets the taxonomy definition. Remove mismatches (e.g., a procedural question under question_quality, a non-transition under purposeful_framing). Rough ASR formatting does not disqualify substantive utterances.
+3) For each pattern in the denominator, verify the counted opportunity genuinely meets the taxonomy definition. Remove mismatches (e.g., a procedural question under question_quality, a non-transition under purposeful_framing). Rough ASR formatting does not disqualify substantive utterances. A warm opener like 'How are you really?' is not a purposeful framing opportunity — exclude from both numerator and denominator.
+3a) For any turn counted under participation_management: confirm it is not also counted under question_quality. Remove the duplicate from whichever pattern is the weaker fit.
 4) Does the focus area represent the right coaching choice for this speaker? If an experiment is active, does the coaching reinforce that experiment effectively? If no experiment is active, is this the highest-leverage behavior change? Does the overall coaching output form a coherent story about this communicator?
 5) Remove evidence span excerpts shorter than ~5 words only if clearly fragments. Short complete statements are valid.
 
