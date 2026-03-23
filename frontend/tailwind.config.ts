@@ -81,6 +81,7 @@ const config: Config = {
           // ── Rose — experiment section accents ────────────────────────────
           rose: {
             50:  '#FFF5F5',  // light text on dark header
+            100: '#FFE5E5',  // hover tint for focus cards
             700: '#7F1D1D',  // section header bg (darkened to match other -700s)
           },
 
