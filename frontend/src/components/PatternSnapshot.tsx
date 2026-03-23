@@ -485,6 +485,12 @@ export function PatternCard({
       ? 'border-[2px] border-cv-rose-700'
       : 'border border-cv-stone-400';
 
+  const highlightBg = highlightType === 'strength'
+    ? 'bg-cv-teal-50'
+    : highlightType === 'focus'
+      ? 'bg-cv-rose-50'
+      : '';
+
   return (
     <div className={`bg-white rounded overflow-hidden${expanded ? ' sm:col-span-2' : ''} ${highlightBorder}`}>
       {/* ── Card header row ── */}
@@ -493,7 +499,8 @@ export function PatternCard({
         onClick={() => isExpandable && setExpanded(!expanded)}
         className={[
           'w-full px-4 py-3 text-left',
-          isExpandable ? 'cursor-pointer hover:bg-cv-warm-100 transition-colors' : 'cursor-default',
+          highlightBg || (isExpandable ? 'hover:bg-cv-warm-100' : ''),
+          isExpandable ? 'cursor-pointer transition-colors' : 'cursor-default',
         ].join(' ')}
       >
         <div className="flex items-center justify-between mb-0.5">
@@ -507,12 +514,12 @@ export function PatternCard({
             {STRINGS.patternLabels[pattern.pattern_id] ?? pattern.pattern_id}
             <InfoPopover patternId={pattern.pattern_id} />
             {highlightType === 'strength' && (
-              <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-medium bg-cv-teal-50 text-cv-teal-700">
+              <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-medium bg-white text-cv-teal-700 border border-cv-teal-700">
                 {STRINGS.highlightBadges.strength}
               </span>
             )}
             {highlightType === 'focus' && (
-              <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-medium bg-cv-rose-50 text-cv-rose-700">
+              <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-medium bg-white text-cv-rose-700 border border-cv-rose-700">
                 {STRINGS.highlightBadges.focus}
               </span>
             )}
