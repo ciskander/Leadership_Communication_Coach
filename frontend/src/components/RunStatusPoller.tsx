@@ -249,6 +249,75 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
     );
   }
 
+  // ── Attempt history (expandable, rendered at bottom of Experiment section) ──
+
+  function AttemptHistorySection({
+    sortedEvents,
+    summaryText,
+    attemptStyles,
+    humanStyles,
+  }: {
+    sortedEvents: { event_id?: string; id?: string; attempt?: string; meeting_date?: string; created_at?: string; human_confirmed?: string }[];
+    summaryText: string;
+    attemptStyles: Record<string, { color: string; dot: string; bg: string; label: string }>;
+    humanStyles: Record<string, { label: string; color: string; border: string }>;
+  }) {
+    const [historyOpen, setHistoryOpen] = useState(false);
+
+    return (
+      <div>
+        <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-rose-700 mb-1.5">
+          {STRINGS.experimentTracker.attemptHistory}
+        </p>
+        {sortedEvents.length > 0 ? (
+          <>
+            <button
+              onClick={() => setHistoryOpen(!historyOpen)}
+              className="w-full flex items-center justify-between gap-2 text-sm text-cv-stone-600 leading-relaxed hover:text-cv-stone-800 transition-colors"
+            >
+              <span>{summaryText}</span>
+              <svg
+                viewBox="0 0 16 16"
+                fill="none"
+                className={`w-3.5 h-3.5 shrink-0 text-cv-stone-400 transition-transform duration-200 ${historyOpen ? 'rotate-180' : ''}`}
+                aria-hidden="true"
+              >
+                <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            {historyOpen && (
+              <ul className="space-y-1.5 mt-2">
+                {sortedEvents.map((ev, i) => {
+                  const cfg = attemptStyles[ev.attempt ?? 'no'] ?? attemptStyles.no;
+                  const humanCfg = ev.human_confirmed ? humanStyles[ev.human_confirmed] : undefined;
+                  const displayDate = ev.meeting_date || ev.created_at;
+                  return (
+                    <li key={ev.event_id ?? ev.id ?? i} className={`flex items-center gap-2 rounded px-3 py-2 ${cfg.bg}`}>
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot}`} />
+                      <span className={`text-xs font-semibold ${cfg.color}`}>{cfg.label}</span>
+                      {humanCfg && (
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full bg-white border ${humanCfg.border} ${humanCfg.color}`} title={STRINGS.humanConfirmation.tooltip}>
+                          {humanCfg.label}
+                        </span>
+                      )}
+                      {displayDate && (
+                        <span className="text-xs text-cv-stone-400 ml-auto shrink-0 tabular-nums">
+                          {new Date(displayDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </>
+        ) : (
+          <p className="text-sm text-cv-stone-600 leading-relaxed">{summaryText}</p>
+        )}
+      </div>
+    );
+  }
+
   // ── Experiment section ─────────────────────────────────────────────────────
 
   function ExperimentSection() {
@@ -304,7 +373,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
         <div className="px-5 py-4 space-y-4">
           {/* Current experiment tracker (slim — no attempt history or CTAs) */}
-          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400">{STRINGS.runStatusPoller.currentExperiment}</p>
+          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-rose-700">{STRINGS.runStatusPoller.currentExperiment}</p>
           {activeExpData?.experiment ? (
             <ExperimentTracker
               experiment={activeExpData.experiment}
@@ -316,7 +385,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           ) : (
             // Fallback while data is loading or if fetch failed
             <div className="bg-white rounded border border-cv-warm-300 p-5 space-y-3">
-              <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400">
+              <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-rose-700">
                 {STRINGS.runStatusPoller.yourExperiment}
               </p>
               <div className="flex gap-3 flex-wrap">
@@ -331,7 +400,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           )}
 
           {/* "In this meeting" heading + detection banner */}
-          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400">{STRINGS.runStatusPoller.inThisMeeting}</p>
+          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-rose-700">{STRINGS.runStatusPoller.inThisMeeting}</p>
           <div className="rounded border border-cv-stone-400 overflow-hidden">
             <div className={`flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 ${attemptConfig.bgColor}`}>
             {attemptConfig.icon}
@@ -501,30 +570,43 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           </div>
 
           {/* Attempt history (pulled from ExperimentTracker) */}
-          {activeExpData?.experiment && (
-            <div>
-              <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1.5">
-                {STRINGS.experimentTracker.attemptHistory}
-              </p>
-              {activeExpData.recent_events.length > 0 ? (
-                <p className="text-sm text-cv-stone-600 leading-relaxed">
-                  {(() => {
-                    const evts = activeExpData.recent_events;
-                    const successCount = evts.filter((e) => e.attempt === 'yes').length;
-                    const partialCount = evts.filter((e) => e.attempt === 'partial').length;
-                    const totalAttempted = successCount + partialCount;
-                    if (totalAttempted === 0)
-                      return STRINGS.experimentTracker.noAttemptsYet(evts.length);
-                    return STRINGS.experimentTracker.attemptsDetected(totalAttempted, evts.length);
-                  })()}
-                </p>
-              ) : (
-                <p className="text-sm text-cv-stone-600 leading-relaxed">
-                  {STRINGS.experimentTracker.analyzeToStart}
-                </p>
-              )}
-            </div>
-          )}
+          {activeExpData?.experiment && (() => {
+            const sortedEvents = [...activeExpData.recent_events]
+              .sort((a, b) => {
+                const da = a.meeting_date || a.created_at || '';
+                const db = b.meeting_date || b.created_at || '';
+                return db.localeCompare(da);
+              })
+              .slice(0, 10);
+            const successCount = sortedEvents.filter((e) => e.attempt === 'yes').length;
+            const partialCount = sortedEvents.filter((e) => e.attempt === 'partial').length;
+            const totalAttempted = successCount + partialCount;
+            const summaryText = sortedEvents.length === 0
+              ? STRINGS.experimentTracker.analyzeToStart
+              : totalAttempted === 0
+                ? STRINGS.experimentTracker.noAttemptsYet(sortedEvents.length)
+                : STRINGS.experimentTracker.attemptsDetected(totalAttempted, sortedEvents.length);
+
+            const ATTEMPT_STYLES: Record<string, { color: string; dot: string; bg: string; label: string }> = {
+              yes:     { color: 'text-cv-teal-700',  dot: 'bg-cv-teal-500',  bg: 'bg-cv-teal-50',  label: STRINGS.attemptLabels.yes     },
+              partial: { color: 'text-cv-amber-700', dot: 'bg-cv-amber-400', bg: 'bg-cv-amber-50', label: STRINGS.attemptLabels.partial },
+              no:      { color: 'text-cv-stone-500', dot: 'bg-cv-stone-300', bg: 'bg-cv-warm-100', label: STRINGS.attemptLabels.no      },
+            };
+
+            const HUMAN_STYLES: Record<string, { label: string; color: string; border: string }> = {
+              confirmed_attempt:    { label: STRINGS.humanConfirmation.confirmed_attempt,    color: 'text-cv-teal-700',  border: 'border-cv-teal-300'  },
+              confirmed_no_attempt: { label: STRINGS.humanConfirmation.confirmed_no_attempt, color: 'text-cv-stone-500', border: 'border-cv-stone-300' },
+            };
+
+            return (
+              <AttemptHistorySection
+                sortedEvents={sortedEvents}
+                summaryText={summaryText}
+                attemptStyles={ATTEMPT_STYLES}
+                humanStyles={HUMAN_STYLES}
+              />
+            );
+          })()}
 
           {/* CTA buttons (pulled from ExperimentTracker) */}
           {activeExpData?.experiment && activeExpData.experiment.status === 'active' && (
@@ -591,8 +673,8 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
       {/* Executive summary */}
       {run.executive_summary && (
-        <section className="bg-white rounded border border-cv-navy-700 overflow-hidden">
-          <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-navy-700">
+        <section className="bg-white rounded border border-cv-navy-600 overflow-hidden">
+          <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-navy-600">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-white shrink-0" aria-hidden="true">
               <path fillRule="evenodd" d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5V7.621a1.5 1.5 0 00-.44-1.06l-4.12-4.122A1.5 1.5 0 0011.378 2H4.5zm2.25 8.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zm0 3a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clipRule="evenodd" />
             </svg>

@@ -482,7 +482,7 @@ export function PatternCard({
   const highlightBorder = highlightType === 'strength'
     ? 'border-[2px] border-cv-teal-700'
     : highlightType === 'focus'
-      ? 'border-[2px] border-cv-amber-800'
+      ? 'border-[2px] border-cv-amber-700'
       : 'border border-cv-stone-400';
 
   return (

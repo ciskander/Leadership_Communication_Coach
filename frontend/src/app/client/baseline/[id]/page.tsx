@@ -486,8 +486,8 @@ export default function BaselineDetailPage() {
 
           {/* Executive summary */}
           {pack.executive_summary && (
-            <section className="bg-white rounded border border-cv-navy-700 overflow-hidden">
-              <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-navy-700">
+            <section className="bg-white rounded border border-cv-navy-600 overflow-hidden">
+              <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-navy-600">
                 <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-white shrink-0" aria-hidden="true">
                   <path fillRule="evenodd" d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5V7.621a1.5 1.5 0 00-.44-1.06l-4.12-4.122A1.5 1.5 0 0011.378 2H4.5zm2.25 8.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zm0 3a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clipRule="evenodd" />
                 </svg>
