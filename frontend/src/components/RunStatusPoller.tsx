@@ -710,14 +710,14 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         <section className="bg-white rounded border border-cv-stone-700 overflow-hidden">
           <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-stone-700">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-stone-50 shrink-0" aria-hidden="true">
-              <rect x="2" y="2" width="2.5" height="2.5" />
-              <rect x="7" y="2" width="11" height="2.5" />
-              <rect x="2" y="6.5" width="2.5" height="2.5" />
-              <rect x="7" y="6.5" width="11" height="2.5" />
-              <rect x="2" y="11" width="2.5" height="2.5" />
-              <rect x="7" y="11" width="11" height="2.5" />
-              <rect x="2" y="15.5" width="2.5" height="2.5" />
-              <rect x="7" y="15.5" width="11" height="2.5" />
+              <rect x="2" y="2.35" width="1.8" height="1.8" />
+              <rect x="7" y="2.35" width="11" height="1.8" />
+              <rect x="2" y="6.85" width="1.8" height="1.8" />
+              <rect x="7" y="6.85" width="11" height="1.8" />
+              <rect x="2" y="11.35" width="1.8" height="1.8" />
+              <rect x="7" y="11.35" width="11" height="1.8" />
+              <rect x="2" y="15.85" width="1.8" height="1.8" />
+              <rect x="7" y="15.85" width="11" height="1.8" />
             </svg>
             <h3 className="text-sm font-semibold text-cv-stone-50">{STRINGS.runStatusPoller.patternSnapshot}</h3>
           </div>
