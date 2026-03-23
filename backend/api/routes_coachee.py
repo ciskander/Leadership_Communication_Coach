@@ -363,6 +363,8 @@ async def get_baseline_pack(
                     sub_parsed, sub_spans, sub_transcript_id, sub_meeting_id, sub_turn_map, sub_target_label
                 )
 
+                sub_coaching = sub_parsed.get("coaching_output", {})
+                meeting_info["sub_run_executive_summary"] = sub_coaching.get("executive_summary")
                 meeting_info["_sub_strengths"] = sub_strengths
                 meeting_info["_sub_focus"] = sub_focus
                 meeting_info["_sub_snapshot"] = sub_pattern_snapshot
