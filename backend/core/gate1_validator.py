@@ -57,6 +57,36 @@ def _warn(code: str, path: str, message: str) -> ValidationIssue:
     return _issue("warning", code, path, message)
 
 
+# ── Helpers for span/rewrite consistency checks ─────────────────────────────
+
+def _turns_overlap(range_a: tuple, range_b: tuple) -> bool:
+    """Check if two (turn_start, turn_end) ranges overlap."""
+    if None in range_a or None in range_b:
+        return False
+    return range_a[0] <= range_b[1] and range_b[0] <= range_a[1]
+
+
+_STOP_WORDS = frozenset({
+    "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
+    "of", "with", "by", "from", "is", "are", "was", "were", "be", "been",
+    "have", "has", "had", "do", "does", "did", "will", "would", "could",
+    "should", "may", "might", "can", "shall", "that", "this", "these",
+    "those", "it", "its", "they", "them", "their", "we", "our", "you",
+    "your", "just", "also", "very", "really", "then", "than", "so", "if",
+    "when", "what", "which", "who", "how", "about", "into", "over",
+    "after", "before", "between", "through", "during", "think", "want",
+    "going", "know", "like", "need", "make", "said", "says", "say",
+    "here", "there", "some", "more", "still", "every", "each", "both",
+    "does", "done", "being", "much", "well", "back", "even", "only",
+})
+
+
+def _extract_content_words(text: str) -> set[str]:
+    """Extract meaningful content words (4+ chars, not stop words) from text."""
+    words = set(re.findall(r"[a-zA-Z]{4,}", text.lower()))
+    return words - _STOP_WORDS
+
+
 # ── Pre-validation sanitiser ─────────────────────────────────────────────────
 
 _VALID_TARGET_CONTROL = {"yes", "no", "unclear"}
@@ -514,6 +544,116 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
                             f"score corrected from {actual_score} to {expected_score} "
                             f"(sum(success)/counted = {success_sum}/{counted_actual}).",
                         ))
+
+    # ── 3c2. success_evidence_span_ids, rewrite target, and content checks ──
+    # Build evidence_span_id → (turn_start, turn_end) map once for reuse.
+    _es_turn_map: dict[str, tuple[int | None, int | None]] = {}
+    for span in evidence_spans:
+        _es_turn_map[span.get("evidence_span_id", "")] = (
+            span.get("turn_start_id"),
+            span.get("turn_end_id"),
+        )
+
+    _SUCCESS_THRESHOLDS = {
+        "binary": 1.0,
+        "dual_element": 1.0,
+        "tiered_rubric": 0.75,
+        "complexity_tiered": 0.75,
+        "multi_element": 0.8,
+    }
+
+    for idx, item in enumerate(pattern_snapshot):
+        pid = item.get("pattern_id", "")
+        path = f"pattern_snapshot[{idx}]"
+        status = item.get("evaluable_status")
+        scoring_type = item.get("scoring_type", "")
+        opp_events = item.get("opportunity_events") or []
+
+        if status != "evaluable" or not opp_events:
+            continue
+
+        threshold = _SUCCESS_THRESHOLDS.get(scoring_type, 0.75)
+
+        # Build OE turn-range → success score map
+        oe_scores: dict[tuple, float] = {}
+        for ev in opp_events:
+            if ev.get("count_decision") == "counted":
+                key = (ev.get("turn_start_id"), ev.get("turn_end_id"))
+                oe_scores[key] = ev.get("success", 0)
+
+        success_ids = set(item.get("success_evidence_span_ids") or [])
+        pattern_es_ids = item.get("evidence_span_ids") or []
+
+        # V1: success_evidence_span_ids consistency with OE scores
+        for es_id in pattern_es_ids:
+            es_range = _es_turn_map.get(es_id)
+            if not es_range or es_range[0] is None:
+                continue
+            matched_score = None
+            for oe_range, score in oe_scores.items():
+                if _turns_overlap(es_range, oe_range):
+                    matched_score = score
+                    break
+            if matched_score is None:
+                continue
+
+            is_success = matched_score >= threshold
+            in_success_list = es_id in success_ids
+
+            if is_success and not in_success_list:
+                issues.append(_warn(
+                    "SUCCESS_SPAN_MISSING",
+                    f"{path}.success_evidence_span_ids",
+                    f"{es_id} has OE score {matched_score} (>= {threshold} threshold "
+                    f"for {scoring_type}) but is not in success_evidence_span_ids.",
+                ))
+            elif not is_success and in_success_list:
+                issues.append(_warn(
+                    "SUCCESS_SPAN_INCORRECT",
+                    f"{path}.success_evidence_span_ids",
+                    f"{es_id} has OE score {matched_score} (< {threshold} threshold "
+                    f"for {scoring_type}) but IS in success_evidence_span_ids.",
+                ))
+
+        # V2: rewrite_for_span_id should target a low-scored span
+        rewrite_span = item.get("rewrite_for_span_id")
+        if rewrite_span:
+            rewrite_range = _es_turn_map.get(rewrite_span)
+            if rewrite_range and rewrite_range[0] is not None:
+                for oe_range, score in oe_scores.items():
+                    if _turns_overlap(rewrite_range, oe_range):
+                        if score >= threshold:
+                            issues.append(_warn(
+                                "REWRITE_TARGETS_SUCCESS",
+                                f"{path}.rewrite_for_span_id",
+                                f"rewrite_for_span_id {rewrite_span} maps to OE with "
+                                f"score {score} (>= {threshold} threshold for "
+                                f"{scoring_type}). Rewrite should target a missed "
+                                f"opportunity.",
+                            ))
+                        break
+
+        # V3: rewrite/span content plausibility — zero content-word overlap
+        if rewrite_span and item.get("suggested_rewrite"):
+            span_obj = next(
+                (s for s in evidence_spans
+                 if s.get("evidence_span_id") == rewrite_span),
+                None,
+            )
+            if span_obj and span_obj.get("excerpt"):
+                excerpt_words = _extract_content_words(span_obj["excerpt"])
+                rewrite_words = _extract_content_words(item["suggested_rewrite"])
+                if (excerpt_words and rewrite_words
+                        and len(excerpt_words) >= 3
+                        and len(rewrite_words) >= 3
+                        and not excerpt_words & rewrite_words):
+                    issues.append(_warn(
+                        "REWRITE_CONTENT_MISMATCH",
+                        f"{path}.suggested_rewrite",
+                        f"suggested_rewrite shares no content words with the "
+                        f"excerpt of {rewrite_span}. The rewrite may address "
+                        f"a different topic.",
+                    ))
 
     # ── 3d. turn_start_id / turn_end_id in evidence_spans ────────────────────
     for idx, span in enumerate(evidence_spans):

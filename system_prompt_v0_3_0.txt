@@ -149,7 +149,13 @@ When score < 1.0 (at least one missed opportunity):
 - suggested_rewrite: concrete reworded version of what the speaker said at the missed opportunity, in the speaker's natural voice, 1-3 sentences.
 - rewrite_for_span_id: the evidence_span_id whose excerpt the suggested_rewrite directly rewrites. Must appear in the pattern's evidence_span_ids. Must NOT appear in success_evidence_span_ids (it is always a missed opportunity). Pick the clearest missed-opportunity excerpt — one with enough context for a meaningful rewrite.
 - evidence_span_ids: must include ALL evidence — both successes and missed opportunities.
-- success_evidence_span_ids: subset listing only span IDs where the speaker demonstrated the pattern successfully. Spans not in this list are treated as missed opportunities.
+- success_evidence_span_ids: subset listing only span IDs where the speaker demonstrated the pattern successfully. A span is a "success" if and only if the corresponding opportunity event has success >= the threshold for its scoring type:
+    - binary: success >= 1.0
+    - dual_element: success >= 1.0
+    - tiered_rubric: success >= 0.75
+    - complexity_tiered: success >= 0.75
+    - multi_element: success >= 0.8
+  Classify every span against this threshold BEFORE selecting rewrite_for_span_id. Do NOT retroactively adjust the success list to satisfy the rewrite constraint. Spans not in this list are treated as missed opportunities.
 
 When score == 1.0 (100%):
 - suggested_rewrite, rewrite_for_span_id, and coaching_note should be omitted (or null).
@@ -270,6 +276,7 @@ Before outputting, verify in this order:
 Quality checks (most important):
 1) Re-read each notes and coaching_note field. Does it describe specific behavior visible in the cited evidence — or could it apply to any meeting? If generic, rewrite it.
 2) Re-read each suggested_rewrite. Does it sound like something this specific speaker would say in this specific meeting? Is it a plausible replacement for the excerpt in rewrite_for_span_id?
+2b) For each rewrite_for_span_id, locate the evidence span with that ID and re-read its excerpt. Verify the suggested_rewrite is a plausible alternative to THAT SPECIFIC excerpt — same topic, same conversational moment, same participants being addressed. If the rewrite text addresses a different topic or moment, you have a span ID mismatch — find the correct span ID or rewrite the text to match the assigned span.
 3) For each pattern in the denominator, verify the counted opportunity genuinely meets the taxonomy definition. Remove mismatches (e.g., a procedural question under question_quality, a non-transition under purposeful_framing). Rough ASR formatting does not disqualify substantive utterances. A warm opener like 'How are you really?' is not a purposeful framing opportunity — exclude from both numerator and denominator.
 3a) For any turn counted under participation_management: confirm it is not also counted under question_quality. Remove the duplicate from whichever pattern is the weaker fit.
 4) Does the focus area represent the right coaching choice for this speaker? If an experiment is active, does the coaching reinforce that experiment effectively? If no experiment is active, is this the highest-leverage behavior change? Does the overall coaching output form a coherent story about this communicator?

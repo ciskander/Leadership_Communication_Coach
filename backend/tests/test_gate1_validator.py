@@ -196,3 +196,199 @@ def test_forbidden_key_confidence_sanitised(valid_single_meeting_output):
     bad["confidence"] = 0.99
     result = validate(json.dumps(bad))
     assert result.passed is True
+
+
+# ---------------------------------------------------------------------------
+# success_evidence_span_ids / rewrite consistency checks
+# ---------------------------------------------------------------------------
+
+def _make_output_with_oe(valid_single_meeting_output):
+    """Build a test output with opportunity_events and success_evidence_span_ids
+    on a tiered_rubric pattern (participation_management, idx=2).
+    Uses ES-004 (turns 5-5, score 1.0) and ES-005 (turns 15-15, score 0.25).
+    """
+    out = copy.deepcopy(valid_single_meeting_output)
+    pm = out["pattern_snapshot"][2]  # participation_management
+    pm["score"] = 0.625
+    pm["opportunity_count"] = 2
+    pm["opportunity_events_considered"] = 2
+    pm["opportunity_events_counted"] = 2
+    pm["success_evidence_span_ids"] = ["ES-004"]
+    pm["opportunity_events"] = [
+        {
+            "event_id": "OE-001",
+            "turn_start_id": 5,
+            "turn_end_id": 5,
+            "target_control": "yes",
+            "count_decision": "counted",
+            "success": 1.0,
+            "reason_code": "named_invitation",
+        },
+        {
+            "event_id": "OE-002",
+            "turn_start_id": 15,
+            "turn_end_id": 15,
+            "target_control": "yes",
+            "count_decision": "counted",
+            "success": 0.25,
+            "reason_code": "generic_open_floor",
+        },
+    ]
+    return out
+
+
+def test_success_span_missing_warns(valid_single_meeting_output):
+    """A span with OE score 1.0 not in success_evidence_span_ids triggers warning."""
+    out = _make_output_with_oe(valid_single_meeting_output)
+    pm = out["pattern_snapshot"][2]
+    # Remove ES-004 (score 1.0) from success list
+    pm["success_evidence_span_ids"] = []
+    result = validate(json.dumps(out))
+    codes = {i.issue_code for i in result.issues}
+    assert "SUCCESS_SPAN_MISSING" in codes
+
+
+def test_success_span_incorrect_warns(valid_single_meeting_output):
+    """A span with OE score 0.25 in success_evidence_span_ids triggers warning."""
+    out = _make_output_with_oe(valid_single_meeting_output)
+    pm = out["pattern_snapshot"][2]
+    # Add ES-005 (score 0.25) to success list
+    pm["success_evidence_span_ids"] = ["ES-004", "ES-005"]
+    result = validate(json.dumps(out))
+    codes = {i.issue_code for i in result.issues}
+    assert "SUCCESS_SPAN_INCORRECT" in codes
+
+
+def test_success_span_correct_no_warning(valid_single_meeting_output):
+    """Correctly classified spans produce no success consistency warnings."""
+    out = _make_output_with_oe(valid_single_meeting_output)
+    # ES-004 (1.0) in success, ES-005 (0.25) not — correct
+    result = validate(json.dumps(out))
+    codes = {i.issue_code for i in result.issues}
+    assert "SUCCESS_SPAN_MISSING" not in codes
+    assert "SUCCESS_SPAN_INCORRECT" not in codes
+
+
+def test_rewrite_targets_success_warns(valid_single_meeting_output):
+    """rewrite_for_span_id pointing at a high-scored span triggers warning."""
+    out = _make_output_with_oe(valid_single_meeting_output)
+    pm = out["pattern_snapshot"][2]
+    # Rewrite targets ES-004 (score 1.0) — should be a missed opportunity
+    pm["rewrite_for_span_id"] = "ES-004"
+    pm["suggested_rewrite"] = "Bob, what's your take on the Q2 projections?"
+    pm["coaching_note"] = "Test coaching note."
+    # Must remove ES-004 from success list (workers.py would do this)
+    pm["success_evidence_span_ids"] = []
+    result = validate(json.dumps(out))
+    codes = {i.issue_code for i in result.issues}
+    assert "REWRITE_TARGETS_SUCCESS" in codes
+
+
+def test_rewrite_content_mismatch_warns(valid_single_meeting_output):
+    """Zero content word overlap between rewrite and excerpt triggers warning."""
+    out = _make_output_with_oe(valid_single_meeting_output)
+    pm = out["pattern_snapshot"][2]
+    # Rewrite targets ES-005 (turns 15-15, about risk analysis)
+    pm["rewrite_for_span_id"] = "ES-005"
+    pm["success_evidence_span_ids"] = ["ES-004"]
+    pm["coaching_note"] = "Test coaching note."
+    # Rewrite text about a completely different topic (pricing/budget)
+    pm["suggested_rewrite"] = (
+        "We should finalize the pricing tiers and overage threshold "
+        "before the finance review on Friday."
+    )
+    result = validate(json.dumps(out))
+    codes = {i.issue_code for i in result.issues}
+    assert "REWRITE_CONTENT_MISMATCH" in codes
+
+
+def test_rewrite_content_match_no_warning(valid_single_meeting_output):
+    """Rewrite sharing topic words with excerpt does not trigger mismatch."""
+    out = _make_output_with_oe(valid_single_meeting_output)
+    pm = out["pattern_snapshot"][2]
+    # ES-005 excerpt is "Carol, can you walk us through the risk analysis?"
+    pm["rewrite_for_span_id"] = "ES-005"
+    pm["success_evidence_span_ids"] = ["ES-004"]
+    pm["coaching_note"] = "Test coaching note."
+    # Rewrite shares topic words: "Carol", "risk", "analysis"
+    pm["suggested_rewrite"] = (
+        "Carol, before we move on I'd like your risk analysis "
+        "perspective on this proposal."
+    )
+    result = validate(json.dumps(out))
+    codes = {i.issue_code for i in result.issues}
+    assert "REWRITE_CONTENT_MISMATCH" not in codes
+
+
+def test_success_threshold_binary_requires_1_0(valid_single_meeting_output):
+    """For binary scoring, only success=1.0 qualifies as success."""
+    out = copy.deepcopy(valid_single_meeting_output)
+    qq = out["pattern_snapshot"][6]  # question_quality (binary)
+    qq["score"] = 0.5
+    qq["opportunity_count"] = 2
+    qq["opportunity_events_considered"] = 2
+    qq["opportunity_events_counted"] = 2
+    qq["evidence_span_ids"] = ["ES-008", "ES-009"]
+    # ES-009 scored 0.0 but listed as success — wrong for binary
+    qq["success_evidence_span_ids"] = ["ES-008", "ES-009"]
+    qq["opportunity_events"] = [
+        {
+            "event_id": "OE-010",
+            "turn_start_id": 25,
+            "turn_end_id": 25,
+            "target_control": "yes",
+            "count_decision": "counted",
+            "success": 1.0,
+            "reason_code": "decision_linked_question",
+        },
+        {
+            "event_id": "OE-011",
+            "turn_start_id": 30,
+            "turn_end_id": 30,
+            "target_control": "yes",
+            "count_decision": "counted",
+            "success": 0.0,
+            "reason_code": "generic_question",
+        },
+    ]
+    result = validate(json.dumps(out))
+    codes = {i.issue_code for i in result.issues}
+    assert "SUCCESS_SPAN_INCORRECT" in codes
+
+
+def test_success_threshold_dual_element_requires_1_0(valid_single_meeting_output):
+    """For dual_element scoring, success=0.5 (one element only) is not a success."""
+    out = copy.deepcopy(valid_single_meeting_output)
+    ra = out["pattern_snapshot"][4]  # resolution_and_alignment (dual_element)
+    ra["score"] = 0.5
+    ra["opportunity_count"] = 2
+    ra["element_a_count"] = 2
+    ra["element_b_count"] = 0
+    ra["opportunity_events_considered"] = 2
+    ra["opportunity_events_counted"] = 2
+    ra["evidence_span_ids"] = ["ES-006", "ES-007"]
+    # ES-006 scored 0.5 but listed as success — wrong for dual_element
+    ra["success_evidence_span_ids"] = ["ES-006"]
+    ra["opportunity_events"] = [
+        {
+            "event_id": "OE-020",
+            "turn_start_id": 20,
+            "turn_end_id": 21,
+            "target_control": "yes",
+            "count_decision": "counted",
+            "success": 0.5,
+            "reason_code": "named_resolution_without_alignment_check",
+        },
+        {
+            "event_id": "OE-021",
+            "turn_start_id": 22,
+            "turn_end_id": 22,
+            "target_control": "yes",
+            "count_decision": "counted",
+            "success": 0.5,
+            "reason_code": "named_resolution_without_alignment_check",
+        },
+    ]
+    result = validate(json.dumps(out))
+    codes = {i.issue_code for i in result.issues}
+    assert "SUCCESS_SPAN_INCORRECT" in codes
