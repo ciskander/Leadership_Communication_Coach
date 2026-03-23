@@ -803,6 +803,16 @@ def process_baseline_pack_build(
                 try:
                     run_record_id = process_single_meeting_analysis(rr_id, client=client)
                 except Exception as exc:
+                    # Mark the run_request as error so it doesn't remain stuck
+                    # in "processing" status forever.
+                    try:
+                        client.update_run_request_status(
+                            rr_id, "error", error=str(exc)[:2000]
+                        )
+                    except Exception:
+                        logger.warning(
+                            "Failed to update run_request %s status to error", rr_id
+                        )
                     raise ValueError(
                         f"Auto single-meeting analysis failed for item {item['id']}: {exc}"
                     ) from exc
