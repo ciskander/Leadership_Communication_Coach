@@ -159,6 +159,7 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
         },
     ],
     "coaching_output": {
+        "executive_summary": "You showed strong purposeful framing throughout the meeting. Focus on closing decisions with explicit verbal alignment to strengthen resolution patterns.",
         "strengths": [
             {
                 "pattern_id": "purposeful_framing",

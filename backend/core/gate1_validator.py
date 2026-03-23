@@ -155,6 +155,11 @@ def _sanitise_output(data: dict) -> int:
     if "coaching_output" in data and isinstance(data["coaching_output"], dict):
         co = data["coaching_output"]
         fixes += _fix_extra_keys(co, _ALLOWED_KEYS.get("CoachingOutput", set()), "$.coaching_output")
+        # Coerce executive_summary from array to string (common LLM quirk)
+        es = co.get("executive_summary")
+        if isinstance(es, list):
+            co["executive_summary"] = " ".join(str(item) for item in es if item)
+            fixes += 1
         ci_keys = _ALLOWED_KEYS.get("HighlightItem", set())
         for i, s in enumerate(co.get("strengths", [])):
             if isinstance(s, dict):
