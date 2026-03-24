@@ -406,3 +406,55 @@ def test_success_threshold_dual_element_requires_1_0(valid_single_meeting_output
     result = validate(json.dumps(out))
     codes = {i.issue_code for i in result.issues}
     assert "SUCCESS_SPAN_INCORRECT" in codes
+
+
+# ---------------------------------------------------------------------------
+# OPP_COUNT_COUNTED_MISMATCH: baseline_pack skip
+# ---------------------------------------------------------------------------
+
+def test_opp_count_mismatch_skipped_for_baseline_pack(valid_single_meeting_output):
+    """OPP_COUNT_COUNTED_MISMATCH must NOT fire for baseline_pack analysis type."""
+    out = copy.deepcopy(valid_single_meeting_output)
+    out["meta"]["analysis_type"] = "baseline_pack"
+
+    # Simulate baseline_pack stripping: clear evidence arrays but keep opportunity_count
+    out["evidence_spans"] = []
+    out["opportunity_events"] = []
+    for ps in out["pattern_snapshot"]:
+        ps["evidence_span_ids"] = []
+        ps["success_evidence_span_ids"] = []
+        # opportunity_count stays non-zero (e.g. aggregate from sub-runs)
+
+    result = validate(json.dumps(out))
+    codes = {i.issue_code for i in result.issues}
+    assert "OPP_COUNT_COUNTED_MISMATCH" not in codes
+
+
+def test_opp_count_mismatch_fires_for_single_meeting(valid_single_meeting_output):
+    """OPP_COUNT_COUNTED_MISMATCH fires for single_meeting when count is wrong."""
+    out = copy.deepcopy(valid_single_meeting_output)
+    # Set wrong opportunity_count on first evaluable pattern
+    out["pattern_snapshot"][0]["opportunity_count"] = 99
+    result = validate(json.dumps(out))
+    codes = {i.issue_code for i in result.issues}
+    assert "OPP_COUNT_COUNTED_MISMATCH" in codes
+
+
+# ---------------------------------------------------------------------------
+# Gate1FailureError is non-retryable
+# ---------------------------------------------------------------------------
+
+def test_gate1_failure_error_is_not_retryable():
+    """Gate1FailureError must be classified as non-retryable by _is_retryable."""
+    import importlib
+    import sys
+    from unittest.mock import MagicMock
+
+    # The tasks module imports anthropic at module level; stub it if unavailable.
+    if "anthropic" not in sys.modules:
+        sys.modules["anthropic"] = MagicMock()
+
+    from backend.queue.tasks import _is_retryable
+    from backend.core.models import Gate1FailureError
+
+    assert _is_retryable(Gate1FailureError("Run failed Gate1")) is False

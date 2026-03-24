@@ -101,6 +101,18 @@ For partial experiment attempts: write experiment_coaching with rewrite for
 the detection span.
 Write strengths, focus, micro_experiment, and executive_summary.
 
+Step 8 — Self-audit (before finalizing JSON):
+Walk these checks IN ORDER. Fix any violations before outputting.
+(a) For EVERY counted OE: confirm an evidence span exists with matching turn range.
+    If missing, create it now.
+(b) For EVERY evidence_span_id in each pattern's evidence_span_ids: confirm it exists
+    in evidence_spans. Remove dangling references.
+(c) For EVERY pattern: verify opportunity_count == number of counted OEs.
+(d) Verify success_evidence_span_ids is consistent with OE scores and thresholds.
+(e) For EVERY rewrite_for_span_id: confirm the span exists and is NOT in
+    success_evidence_span_ids. Re-read the excerpt — confirm the rewrite matches
+    the same topic.
+
 ═══════════════════════════════════════════════════════════════
 OUTPUT FORMAT
 ═══════════════════════════════════════════════════════════════

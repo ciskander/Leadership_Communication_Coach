@@ -17,6 +17,7 @@ from celery.exceptions import MaxRetriesExceededError
 from requests.exceptions import HTTPError
 
 from .celery_app import celery_app
+from ..core.models import Gate1FailureError
 
 logger = logging.getLogger(__name__)
 
@@ -25,11 +26,14 @@ def _is_retryable(exc: Exception) -> bool:
     """Return True only for transient errors worth retrying.
 
     Non-retryable cases (fail immediately):
+    - Gate1 validation failures
     - 400 billing/credit errors
     - 401 authentication errors
     - 403 permission errors
     - Any other 4xx client error (except 429 rate limit)
     """
+    if isinstance(exc, Gate1FailureError):
+        return False
     if isinstance(exc, anthropic.RateLimitError):
         return True
     if isinstance(exc, anthropic.APIStatusError):

@@ -610,7 +610,8 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
         opp_count = item.get("opportunity_count")
 
         # (b) OE → pattern: opportunity_count must match counted OEs
-        if opp_count is not None and opp_count != counted_actual:
+        #     (skip for baseline_pack — aggregate counts don't map to individual OEs)
+        if analysis_type != "baseline_pack" and opp_count is not None and opp_count != counted_actual:
             issues.append(_warn(
                 "OPP_COUNT_COUNTED_MISMATCH",
                 f"{path}.opportunity_count",

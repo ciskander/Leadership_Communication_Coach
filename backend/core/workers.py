@@ -88,7 +88,7 @@ from .idempotency import (
     make_experiment_event_key,
     make_run_idempotency_key,
 )
-from .models import MemoryBlock, ValidationIssue, OpenAIResponse
+from .models import Gate1FailureError, MemoryBlock, ValidationIssue, OpenAIResponse
 from .llm_client import call_llm
 from .openai_client import load_baseline_system_prompt, load_next_experiment_system_prompt, load_system_prompt
 from .prompt_builder import build_baseline_pack_prompt, build_memory_block, build_single_meeting_prompt
@@ -849,7 +849,7 @@ def process_baseline_pack_build(
         run_fields = _extract_fields(run_rec)
 
         if not run_fields.get("Gate1 Pass"):
-            raise ValueError(
+            raise Gate1FailureError(
                 f"Run {run_record_id} for item {item['id']} did not pass Gate1. "
                 "Cannot build baseline pack with failed run."
             )

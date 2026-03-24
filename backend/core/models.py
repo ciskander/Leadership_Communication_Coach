@@ -50,6 +50,11 @@ class Gate1Result(BaseModel):
     corrected_data: Optional[dict] = None  # populated when auto-fixes were applied
 
 
+class Gate1FailureError(Exception):
+    """Raised when a run fails Gate1 validation. Non-retryable."""
+    pass
+
+
 # ── Airtable / domain objects ─────────────────────────────────────────────────
 
 class RunRequest(BaseModel):
