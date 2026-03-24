@@ -515,8 +515,8 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
                   </p>
                   <p className="text-sm text-cv-stone-700">{runDetail.focus.message}</p>
                   {(() => {
-                    const rewrite = runDetail.pattern_snapshot?.find(
-                      (ps) => ps.pattern_id === runDetail.focus!.pattern_id
+                    const rewrite = runDetail.pattern_coaching?.find(
+                      (pc) => pc.pattern_id === runDetail.focus!.pattern_id
                     )?.suggested_rewrite;
                     return rewrite ? (
                       <div className="mt-1.5 bg-cv-teal-50 border border-cv-teal-100 rounded px-3 py-2">
