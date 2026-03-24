@@ -270,6 +270,24 @@ def _sanitise_output(data: dict) -> int:
     if isinstance(det, dict):
         fixes += _fix_exp_id(det, "experiment_id", "$.experiment_tracking.detection_in_this_meeting.experiment_id")
 
+    # ── Strip OEs for non-evaluable patterns ────────────────────────────
+    ps_list = data.get("pattern_snapshot", [])
+    non_evaluable_pids = {
+        p.get("pattern_id") for p in ps_list
+        if p.get("evaluable_status") in ("insufficient_signal", "not_evaluable")
+    }
+    if non_evaluable_pids:
+        original_oes = data.get("opportunity_events", [])
+        stripped = [oe for oe in original_oes if oe.get("pattern_id") in non_evaluable_pids]
+        if stripped:
+            data["opportunity_events"] = [oe for oe in original_oes if oe.get("pattern_id") not in non_evaluable_pids]
+            for oe in stripped:
+                logger.warning(
+                    "Sanitiser: stripping OE %s for non-evaluable pattern %s",
+                    oe.get("event_id"), oe.get("pattern_id"),
+                )
+            fixes += len(stripped)
+
     # ── Fix known LLM enum confusions in top-level opportunity_events ────
     for event in data.get("opportunity_events", []):
         if not isinstance(event, dict):
@@ -304,6 +322,43 @@ def _sanitise_output(data: dict) -> int:
                 su, inferred, event.get("event_id"),
             )
             event["success"] = inferred
+            fixes += 1
+
+    # ── Null out detection_in_this_meeting when no active experiment ─────
+    et = data.get("experiment_tracking")
+    if isinstance(et, dict):
+        ae = et.get("active_experiment")
+        if isinstance(ae, dict) and ae.get("status") == "none":
+            det = et.get("detection_in_this_meeting")
+            if det is not None:
+                logger.warning(
+                    "Sanitiser: detection_in_this_meeting set to null "
+                    "(active_experiment.status=none)",
+                )
+                et["detection_in_this_meeting"] = None
+                fixes += 1
+
+    # ── experiment_coaching: [] → null ────────────────────────────────────
+    co = data.get("coaching")
+    if isinstance(co, dict):
+        ec = co.get("experiment_coaching")
+        if isinstance(ec, list) and len(ec) == 0:
+            logger.warning("Sanitiser: experiment_coaching [] → null")
+            co["experiment_coaching"] = None
+            fixes += 1
+
+    # ── reason_code: replace spaces with underscores ─────────────────────
+    for event in data.get("opportunity_events", []):
+        if not isinstance(event, dict):
+            continue
+        rc = event.get("reason_code")
+        if isinstance(rc, str) and " " in rc:
+            fixed_rc = re.sub(r"\s+", "_", rc.strip()).lower()
+            logger.warning(
+                "Sanitiser: reason_code %r → %r (event %s)",
+                rc, fixed_rc, event.get("event_id"),
+            )
+            event["reason_code"] = fixed_rc
             fixes += 1
 
     if fixes:

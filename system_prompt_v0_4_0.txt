@@ -149,8 +149,10 @@ OPPORTUNITY EVENTS
 
 Opportunity events are a top-level array. Each event identifies a specific transcript moment where a pattern's denominator definition is met. All events across all patterns go in one flat array with pattern_id on each event.
 
-Each item requires: event_id, pattern_id, turn_start_id, turn_end_id, target_control(yes|no|unclear), count_decision(counted|excluded), success(0|0.25|0.5|0.75|0.8|1.0), reason_code(a snake_case string matching ^[a-z][a-z0-9_]*$)
+Each item requires: event_id, pattern_id, turn_start_id, turn_end_id, target_control(yes|no|unclear), count_decision(counted|excluded), success(0|0.25|0.5|0.75|0.8|1.0), reason_code
 Optional: notes
+
+reason_code format: strict snake_case matching ^[a-z][a-z0-9_]*$. No spaces, no hyphens, no uppercase. Example: "decision_linked_question" not "decision_linked_question_testing feasible_scope".
 
 Rules:
 - Include opportunity events for ALL evaluable patterns.
@@ -255,6 +257,7 @@ count_attempts: integer >= 0
 Detection fields only — no coaching fields here. Coaching for experiment attempts belongs in coaching.experiment_coaching.
 
 If analysis_type=single_meeting and status in proposed|active, detection_in_this_meeting must not be null.
+If status=none, detection_in_this_meeting MUST be null (not an empty object or a placeholder with experiment_id "EXP-000000").
 
 Detection rules:
 - If memory.active_experiment is non-null and status=active, you MUST evaluate whether the target speaker attempted the experiment.
@@ -332,10 +335,12 @@ For insufficient_signal or not_evaluable patterns: do not include an entry in pa
 --- EXPERIMENT COACHING ---
 
 experiment_coaching = null OR {coaching_note, suggested_rewrite, rewrite_for_span_id}
+MUST be null (not an empty array []) when not applicable.
 
 - If attempt=partial: coaching_note (1-2 sentences: what was done well and what was missing), suggested_rewrite (concrete reworded version in speaker's voice), rewrite_for_span_id (must appear in detection's evidence_span_ids).
-- If attempt=yes or attempt=no: experiment_coaching should be null.
-- If no active experiment: experiment_coaching should be null.
+- If attempt=yes or attempt=no: experiment_coaching = null.
+- If no active experiment: experiment_coaching = null.
+- For baseline_pack analysis_type: experiment_coaching = null.
 
 ═══════════════════════════════════════════════════════════════
 DETERMINISTIC STABILITY
@@ -376,10 +381,18 @@ Structural checks:
 10) coaching: focus length = 1, micro_experiment length = 1, strengths length 0-2.
 11) turn_start_id / turn_end_id are integers in both opportunity_events and evidence_spans.
 12) For each evaluable pattern: opportunity_count in pattern_snapshot matches count of counted OEs with that pattern_id. Score matches sum(success)/counted (rounded to 4 decimals). Recompute and correct the score if it does not match the arithmetic.
-13) For each evidence span: event_ids references valid OE event_ids. Turn-anchored span ID matches turn_start_id/turn_end_id.
-14) For insufficient_signal or not_evaluable patterns, evidence_span_ids is empty array.
-15) Experiment conditional rules satisfied. If attempt=partial, coaching.experiment_coaching has coaching_note/suggested_rewrite/rewrite_for_span_id. If attempt=yes or no, experiment_coaching is null.
-16) For each coaching.pattern_coaching item: rewrite_for_span_id appears in the pattern's evidence_span_ids and is NOT in success_evidence_span_ids.
-17) Scan all string values for unescaped "; replace with ' before output.
+
+Cross-reference audit (CRITICAL — common error source):
+13) Walk every ES-ID in every pattern_snapshot entry's evidence_span_ids AND success_evidence_span_ids. For each ID, confirm a matching entry exists in the evidence_spans array. If any ID is missing from evidence_spans, create the missing evidence span entry BEFORE outputting. This is the most common bookkeeping error.
+14) For each evidence span: event_ids references valid OE event_ids. Turn-anchored span ID matches turn_start_id/turn_end_id.
+15) For insufficient_signal or not_evaluable patterns, evidence_span_ids is empty array.
+
+Success classification audit:
+16) For each evaluable pattern, re-check success_evidence_span_ids against the threshold for its scoring type (binary/dual_element ≥ 1.0, tiered_rubric/complexity_tiered ≥ 0.75, multi_element ≥ 0.8). For each evidence span in the pattern's evidence_span_ids, find the linked OE(s) via the span's event_ids. If any linked OE for this pattern has success >= the threshold and the span is NOT in success_evidence_span_ids, add it. If a span IS in success_evidence_span_ids but no linked OE meets the threshold, remove it.
+
+17) For each coaching.pattern_coaching item: rewrite_for_span_id appears in the pattern's evidence_span_ids and is NOT in success_evidence_span_ids. If the rewrite targets a success span, choose a different span or remove the rewrite.
+18) Experiment conditional rules satisfied. If attempt=partial, coaching.experiment_coaching has coaching_note/suggested_rewrite/rewrite_for_span_id. If attempt=yes or no or no active experiment, experiment_coaching = null (not [] or {}).
+19) Every OE has a reason_code field (required, not optional). Verify reason_code is snake_case with no spaces.
+20) Scan all string values for unescaped "; replace with ' before output.
 
 Return JSON only.
