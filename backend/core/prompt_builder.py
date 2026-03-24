@@ -190,16 +190,17 @@ Hard reminders:
 - JSON only; no prose/markdown.
 - evaluation_summary: Every one of the 9 pattern_ids must appear in EXACTLY ONE of patterns_evaluated, patterns_insufficient_signal, or patterns_not_evaluable. No pattern may be omitted.
 - CRITICAL: evaluation_summary MUST be consistent with pattern_snapshot. A pattern is in patterns_evaluated if and only if its evaluable_status is "evaluable" in pattern_snapshot. A pattern is in patterns_insufficient_signal if and only if its evaluable_status is "insufficient_signal". A pattern is in patterns_not_evaluable if and only if its evaluable_status is "not_evaluable". Any mismatch between these two sections is a hard error.
-- pattern_snapshot must include all 9 pattern IDs in required order, each with cluster_id and scoring_type.
+- pattern_snapshot must include all 9 pattern IDs in required order, each with cluster_id and scoring_type. pattern_snapshot contains SCORING ONLY — no notes, coaching_note, suggested_rewrite, or rewrite_for_span_id.
 - participation_management includes balance_assessment annotation when evaluable.
-- evidence_spans turn_start_id/turn_end_id must be integers.
-- focus length=1, micro_experiment length=1. Focus and strengths items only need {pattern_id, message} — evidence and rewrites are provided via pattern_snapshot.
+- evidence_spans: turn_start_id/turn_end_id must be integers. evidence_span_id must be turn-anchored: ES-T{start} or ES-T{start}-{end}. Each span must include event_ids linking to its source opportunity_events.
+- opportunity_events: top-level array. Each OE must include pattern_id. OE event_ids must be referenced by evidence_spans.
+- coaching.focus length=1, coaching.micro_experiment length=1. Focus and strengths items only need {pattern_id, message}.
+- coaching.pattern_coaching: array of per-pattern coaching items. Each has pattern_id, notes, coaching_note, suggested_rewrite, rewrite_for_span_id. rewrite_for_span_id must be chosen from a missed-opportunity span (NOT in success_evidence_span_ids). Pick the clearest example for a meaningful rewrite. Avoid rewriting very short or garbled excerpts.
+- coaching.experiment_coaching: set for partial experiment attempts only (coaching_note + suggested_rewrite + rewrite_for_span_id). Null otherwise.
 - Before finalizing, re-check that each evidence span counted in a pattern's opportunity_count is a genuine opportunity per the taxonomy definition. Remove clear mismatches (e.g., a non-question counted under question_quality, or a 2-word fragment). For question_quality specifically, exclude procedural/technical questions (audio checks, roll call, scheduling logistics) from both scoring and opportunity_count — never quote them as evidence or in coaching. Do NOT remove spans simply because the transcript has rough ASR formatting — read past missing punctuation and filler words to assess the speaker's actual behavior.
-- CRITICAL: Every notes and coaching_note field must specifically reference the behavior observed in the cited evidence spans. Do not write generic observations disconnected from the actual quotes.
-- pattern_snapshot: each pattern's evidence_span_ids MUST include rewrite_for_span_id when present. Include both success and failure evidence spans. Tag successes via success_evidence_span_ids.
-- pattern_snapshot: rewrite_for_span_id must be chosen from a missed-opportunity span (NOT in success_evidence_span_ids). Pick the clearest example for a meaningful rewrite. Choose evidence spans that have enough context for a meaningful rewrite. Avoid rewriting very short or garbled excerpts.
+- CRITICAL: Every notes and coaching_note field in coaching.pattern_coaching must specifically reference the behavior observed in the cited evidence spans. Do not write generic observations disconnected from the actual quotes.
 - CRITICAL: success_evidence_span_ids must be consistent with opportunity event scores. binary/dual_element require success >= 1.0; tiered_rubric/complexity_tiered require success >= 0.75; multi_element requires success >= 0.8. Classify spans BEFORE selecting rewrite_for_span_id — do NOT adjust the success list to satisfy the rewrite constraint.
-- CRITICAL: After writing suggested_rewrite, re-read the excerpt of rewrite_for_span_id and confirm the rewrite addresses the SAME topic and conversational moment. If the topics differ, either fix the span ID or rewrite the text."""
+- CRITICAL: After writing suggested_rewrite in coaching.pattern_coaching, re-read the excerpt of rewrite_for_span_id and confirm the rewrite addresses the SAME topic and conversational moment. If the topics differ, either fix the span ID or rewrite the text."""
 
 
 def _generate_analysis_id() -> str:
@@ -269,7 +270,7 @@ def build_single_meeting_prompt(
     }
 
     user_message = (
-        "Analyze and return ONLY one JSON object conforming to mvp.v0.3.0.\n\n"
+        "Analyze and return ONLY one JSON object conforming to mvp.v0.4.0.\n\n"
         "INPUT_PAYLOAD\n"
         + json.dumps(input_payload, ensure_ascii=False, indent=2)
         + _HARD_REMINDERS
@@ -292,14 +293,16 @@ Hard reminders (baseline_pack):
 - You are SYNTHESISING pre-analysed meetings — do NOT fabricate evidence. Every evidence_span_id, turn_start_id, turn_end_id, and excerpt in your output must be copied exactly from the input meeting summaries.
 - Every evidence_span MUST include meeting_id. This is required for baseline_pack.
 - evaluation_summary: Every one of the 9 pattern_ids must appear in EXACTLY ONE of patterns_evaluated, patterns_insufficient_signal, or patterns_not_evaluable. Must be consistent with pattern_snapshot evaluable_status.
-- pattern_snapshot must include all 9 pattern IDs in required order, each with cluster_id and scoring_type.
+- pattern_snapshot must include all 9 pattern IDs in required order, each with cluster_id and scoring_type. pattern_snapshot contains SCORING ONLY — no coaching fields.
 - Score = WEIGHTED AVERAGE of meeting-level scores (weighted by opportunity_count). Opportunity_count = SUM of meeting opportunity_counts.
 - participation_management includes balance_assessment annotation when evaluable.
-- focus length=1, micro_experiment length=1. Focus and strengths items only need {pattern_id, message}.
+- coaching.focus length=1, coaching.micro_experiment length=1. Focus and strengths items only need {pattern_id, message}.
+- coaching.pattern_coaching: array of per-pattern coaching items (pattern_id, notes, coaching_note, suggested_rewrite, rewrite_for_span_id).
+- coaching.experiment_coaching MUST be null for baseline_pack.
 - detection_in_this_meeting MUST be null for baseline_pack.
-- CRITICAL: Every notes and coaching_note field must reference specific behaviour from the cited evidence spans. Do not write generic observations.
-- In notes and coaching_note fields, describe behaviour in plain language. Do NOT reference evidence_span_ids (e.g. "ES-005") or meeting_ids (e.g. "M-000153") in the text — these are internal identifiers that are not meaningful to the coachee.
-- Do NOT include opportunity_events, opportunity_events_considered, or opportunity_events_counted for baseline_pack.
+- opportunity_events MUST be an empty array for baseline_pack.
+- CRITICAL: Every notes and coaching_note field in coaching.pattern_coaching must reference specific behaviour from the cited evidence spans. Do not write generic observations.
+- In notes and coaching_note fields, describe behaviour in plain language. Do NOT reference evidence_span_ids (e.g. "ES-T051") or meeting_ids (e.g. "M-000153") in the text — these are internal identifiers that are not meaningful to the coachee.
 - Do NOT generate new evidence_span_ids. Only use IDs from the input meeting summaries."""
 
 
@@ -354,7 +357,7 @@ def build_baseline_pack_prompt(
     }
 
     user_message = (
-        "Synthesize and return ONLY one JSON object conforming to mvp.v0.3.0.\n\n"
+        "Synthesize and return ONLY one JSON object conforming to mvp.v0.4.0.\n\n"
         "INPUT_PAYLOAD\n"
         + json.dumps(input_payload, ensure_ascii=False, indent=2)
         + _BASELINE_HARD_REMINDERS

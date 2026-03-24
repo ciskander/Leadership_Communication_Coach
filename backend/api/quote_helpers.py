@@ -17,9 +17,11 @@ from ..core.models import Turn
 from ..core.quote_cleanup import cleanup_quotes
 from ..core.transcript_parser import parse_transcript
 from .dto import (
+    ExperimentCoachingItem,
     ExperimentDetectionWithQuotes,
     HighlightItem,
     MicroExperimentWithQuotes,
+    PatternCoachingItem,
     PatternSnapshotItem,
     QuoteObject,
 )
@@ -183,12 +185,12 @@ def resolve_coaching_output(
     Optional[HighlightItem],
     Optional[MicroExperimentWithQuotes],
 ]:
-    """Resolve coaching_output strengths, focus, and micro_experiment.
+    """Resolve coaching strengths, focus, and micro_experiment.
 
     Strengths and focus are lightweight HighlightItems (pattern_id + message only).
-    Detailed evidence, rewrites, and quotes live on pattern_snapshot.
+    Detailed evidence, rewrites, and quotes live on coaching.pattern_coaching.
     """
-    coaching = parsed_json.get("coaching_output", {})
+    coaching = parsed_json.get("coaching", {})
 
     # Build a score lookup from pattern_snapshot to filter low-score strengths
     score_by_pattern = {
@@ -242,7 +244,7 @@ def resolve_pattern_snapshot(
     turn_map: Optional[dict[int, Turn]] = None,
     target_speaker_label: Optional[str] = None,
 ) -> list[PatternSnapshotItem]:
-    """Resolve pattern_snapshot items with per-pattern quotes."""
+    """Resolve pattern_snapshot items with per-pattern quotes (scoring only)."""
     raw_snapshot = parsed_json.get("pattern_snapshot") or []
     snapshot_items: list[PatternSnapshotItem] = []
     for ps in raw_snapshot:
@@ -260,14 +262,43 @@ def resolve_pattern_snapshot(
             score=ps.get("score"),
             opportunity_count=ps.get("opportunity_count"),
             balance_assessment=ps.get("balance_assessment"),
-            notes=ps.get("notes"),
             quotes=ps_quotes,
-            coaching_note=ps.get("coaching_note"),
-            suggested_rewrite=ps.get("suggested_rewrite"),
-            rewrite_for_span_id=ps.get("rewrite_for_span_id"),
             success_span_ids=ps.get("success_evidence_span_ids", []),
         ))
     return snapshot_items
+
+
+def resolve_pattern_coaching(
+    parsed_json: dict,
+) -> list[PatternCoachingItem]:
+    """Resolve coaching.pattern_coaching items into PatternCoachingItem DTOs."""
+    coaching = parsed_json.get("coaching", {})
+    raw_items = coaching.get("pattern_coaching", [])
+    return [
+        PatternCoachingItem(
+            pattern_id=pc.get("pattern_id", ""),
+            notes=pc.get("notes"),
+            coaching_note=pc.get("coaching_note"),
+            suggested_rewrite=pc.get("suggested_rewrite"),
+            rewrite_for_span_id=pc.get("rewrite_for_span_id"),
+        )
+        for pc in raw_items
+    ]
+
+
+def resolve_experiment_coaching(
+    parsed_json: dict,
+) -> Optional[ExperimentCoachingItem]:
+    """Resolve coaching.experiment_coaching into ExperimentCoachingItem DTO."""
+    coaching = parsed_json.get("coaching", {})
+    ec = coaching.get("experiment_coaching")
+    if not isinstance(ec, dict):
+        return None
+    return ExperimentCoachingItem(
+        coaching_note=ec.get("coaching_note"),
+        suggested_rewrite=ec.get("suggested_rewrite"),
+        rewrite_for_span_id=ec.get("rewrite_for_span_id"),
+    )
 
 
 def build_spans_lookup(parsed_json: dict) -> dict[str, dict]:

@@ -81,12 +81,22 @@ export interface PatternSnapshotItem {
   simple_count?: number;
   complex_count?: number;
   balance_assessment?: string;
-  notes?: string;
   quotes: QuoteObject[];
+  success_span_ids?: string[];
+}
+
+export interface PatternCoachingItem {
+  pattern_id: string;
+  notes?: string | null;
   coaching_note?: string | null;
   suggested_rewrite?: string | null;
   rewrite_for_span_id?: string | null;
-  success_span_ids?: string[];
+}
+
+export interface ExperimentCoachingItem {
+  coaching_note?: string | null;
+  suggested_rewrite?: string | null;
+  rewrite_for_span_id?: string | null;
 }
 
 export interface RunStatus {
@@ -102,6 +112,8 @@ export interface RunStatus {
   focus: CoachingItem | null;
   micro_experiment: MicroExperiment | null;
   pattern_snapshot: PatternSnapshotItem[] | null;
+  pattern_coaching: PatternCoachingItem[];
+  experiment_coaching: ExperimentCoachingItem | null;
   evaluation_summary: Record<string, unknown> | null;
   experiment_tracking: Record<string, unknown> | null;
   experiment_detection: ExperimentDetection | null;

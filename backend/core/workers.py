@@ -132,7 +132,7 @@ def _get_link_ids(fields: dict, key: str) -> list[str]:
 
 def _extract_coaching_from_run(parsed_json: dict) -> dict:
     """Extract key coaching fields from a run's parsed JSON output."""
-    coaching = parsed_json.get("coaching_output", {})
+    coaching = parsed_json.get("coaching", {})
     focus = coaching.get("focus", [{}])[0] if coaching.get("focus") else {}
     micro = coaching.get("micro_experiment", [{}])[0] if coaching.get("micro_experiment") else {}
     strengths = coaching.get("strengths", [])
@@ -157,13 +157,19 @@ def _build_slim_meeting_summary(run_fields: dict, parsed_json: dict) -> dict:
     ctx = parsed_json.get("context", {})
     eval_summary = parsed_json.get("evaluation_summary", {})
     pattern_snapshot = parsed_json.get("pattern_snapshot", [])
-    coaching = parsed_json.get("coaching_output", {})
+    coaching = parsed_json.get("coaching", {})
     evidence_spans = parsed_json.get("evidence_spans", [])
 
     meeting_id = ctx.get("meeting_id")
 
-    # Enriched pattern snapshot: include notes, coaching_note, suggested_rewrite,
-    # rewrite_for_span_id, evidence_span_ids, and success_evidence_span_ids
+    # Build pattern_coaching lookup by pattern_id
+    pattern_coaching_map: dict = {}
+    for pc in coaching.get("pattern_coaching", []):
+        pid = pc.get("pattern_id")
+        if pid:
+            pattern_coaching_map[pid] = pc
+
+    # Enriched pattern snapshot: scoring fields + coaching from coaching.pattern_coaching
     enriched_snapshot = []
     for p in pattern_snapshot:
         item: dict = {
@@ -175,15 +181,21 @@ def _build_slim_meeting_summary(run_fields: dict, parsed_json: dict) -> dict:
             "opportunity_count": p.get("opportunity_count"),
             "balance_assessment": p.get("balance_assessment"),
         }
-        # Include coaching detail when present
-        for key in ("notes", "coaching_note", "suggested_rewrite",
-                     "rewrite_for_span_id", "evidence_span_ids",
-                     "success_evidence_span_ids",
+        # Include scoring detail when present
+        for key in ("evidence_span_ids", "success_evidence_span_ids",
                      "element_a_count", "element_b_count",
                      "simple_count", "complex_count"):
             val = p.get(key)
             if val is not None:
                 item[key] = val
+        # Merge coaching fields from coaching.pattern_coaching
+        pc = pattern_coaching_map.get(p.get("pattern_id"))
+        if pc:
+            for key in ("notes", "coaching_note", "suggested_rewrite",
+                         "rewrite_for_span_id"):
+                val = pc.get(key)
+                if val is not None:
+                    item[key] = val
         enriched_snapshot.append(item)
 
     # Enriched coaching output: include messages for strengths and focus
@@ -232,7 +244,7 @@ def _build_slim_meeting_summary(run_fields: dict, parsed_json: dict) -> dict:
         "target_role": ctx.get("target_role"),
         "evaluation_summary": eval_summary,
         "pattern_snapshot": enriched_snapshot,
-        "coaching_output": coaching_enriched,
+        "coaching": coaching_enriched,
         "evidence_spans": enriched_spans,
     }
 
@@ -533,9 +545,13 @@ def process_single_meeting_analysis(
             exp_track["detection_in_this_meeting"] = None
             
     # Coerce missing evidence_span_ids on micro_experiment items
-    coaching = _parsed_output.get("coaching_output", {})
+    coaching = _parsed_output.get("coaching", {})
     for item in coaching.get("micro_experiment", []):
         item.setdefault("evidence_span_ids", [])
+
+    # Ensure coaching.pattern_coaching exists
+    coaching.setdefault("pattern_coaching", [])
+    coaching.setdefault("experiment_coaching", None)
 
     # Focus override safety gate: when an active experiment exists, force the
     # focus pattern_id to match the experiment's pattern_id. The system prompt
@@ -552,26 +568,34 @@ def process_single_meeting_analysis(
                 )
                 focus_items[0]["pattern_id"] = expected_pattern
                 # Replace the message with the coaching_note from the matching
-                # pattern_snapshot entry so the text is relevant to the
+                # pattern_coaching entry so the text is relevant to the
                 # overridden pattern.
-                snapshot = _parsed_output.get("pattern_snapshot", [])
+                pattern_coaching = coaching.get("pattern_coaching", [])
                 match = next(
-                    (ps for ps in snapshot
-                     if ps.get("pattern_id") == expected_pattern),
+                    (pc for pc in pattern_coaching
+                     if pc.get("pattern_id") == expected_pattern),
                     None,
                 )
                 if match and match.get("coaching_note"):
                     focus_items[0]["message"] = match["coaching_note"]
 
-    # Ensure rewrite_for_span_id is in evidence_span_ids for every pattern,
-    # and that it is NOT in success_evidence_span_ids (it is always a failure).
+    # Ensure rewrite_for_span_id references in coaching.pattern_coaching are
+    # included in the corresponding pattern's evidence_span_ids and NOT in
+    # success_evidence_span_ids (it is always a failure).
+    _pc_rewrite_by_pattern = {
+        pc.get("pattern_id"): pc.get("rewrite_for_span_id")
+        for pc in coaching.get("pattern_coaching", [])
+        if pc.get("rewrite_for_span_id")
+    }
     for ps in _parsed_output.get("pattern_snapshot", []):
-        rewrite_span = ps.get("rewrite_for_span_id")
+        rewrite_span = _pc_rewrite_by_pattern.get(ps.get("pattern_id"))
+        if not rewrite_span:
+            continue
         es_ids = ps.get("evidence_span_ids", [])
-        if rewrite_span and rewrite_span not in es_ids:
+        if rewrite_span not in es_ids:
             es_ids.append(rewrite_span)
         success_ids = ps.get("success_evidence_span_ids", [])
-        if rewrite_span and rewrite_span in success_ids:
+        if rewrite_span in success_ids:
             success_ids.remove(rewrite_span)
 
     _parsed_output = _patch_parsed_output(_parsed_output)
@@ -953,9 +977,12 @@ def process_baseline_pack_build(
     for ps in _parsed_output.get("pattern_snapshot", []):
         ps["evidence_span_ids"] = []
         ps["success_evidence_span_ids"] = []
-        ps["rewrite_for_span_id"] = None
 
-    for me in (_parsed_output.get("coaching_output") or {}).get("micro_experiment", []):
+    # Strip coaching rewrite span refs (namespace collision risk)
+    for pc in (_parsed_output.get("coaching", {}) or {}).get("pattern_coaching", []):
+        pc["rewrite_for_span_id"] = None
+
+    for me in (_parsed_output.get("coaching", {}) or {}).get("micro_experiment", []):
         me["evidence_span_ids"] = []
 
     _parsed_output["evidence_spans"] = []
@@ -1103,10 +1130,10 @@ def instantiate_experiment_from_run(
     parsed_json_str = run_fields.get("Parsed JSON") or "{}"
     parsed_json = json.loads(parsed_json_str)
 
-    coaching = parsed_json.get("coaching_output", {})
+    coaching = parsed_json.get("coaching", {})
     micro_list = coaching.get("micro_experiment", [])
     if not micro_list:
-        logger.warning("Run %s has no micro_experiment in coaching_output", run_id)
+        logger.warning("Run %s has no micro_experiment in coaching", run_id)
         return None
 
     # Pick the micro_experiment matching the focus pattern; fall back to first.
@@ -1411,13 +1438,15 @@ def process_next_experiment_suggestion(
                     score = p.get("score")
                     if score is not None:
                         pattern_scores.setdefault(pid, []).append(float(score))
-                # Collect coaching notes regardless of evaluable status
-                coaching_note = p.get("coaching_note")
-                if coaching_note:
-                    pattern_coaching_notes.setdefault(pid, []).append(coaching_note)
-            # Also collect focus message from coaching_output
-            coaching_output = parsed.get("coaching_output", {})
-            for focus_item in (coaching_output.get("focus") or []):
+            # Collect coaching notes from coaching.pattern_coaching
+            for pc in (parsed.get("coaching", {}) or {}).get("pattern_coaching", []):
+                pc_pid = pc.get("pattern_id")
+                pc_note = pc.get("coaching_note")
+                if pc_pid and pc_note:
+                    pattern_coaching_notes.setdefault(pc_pid, []).append(pc_note)
+            # Also collect focus message from coaching
+            coaching_section = parsed.get("coaching", {})
+            for focus_item in (coaching_section.get("focus") or []):
                 fpid = focus_item.get("pattern_id")
                 fmsg = focus_item.get("message")
                 if fpid and fmsg:

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
-import type { PatternSnapshotItem, RunHistoryPoint } from '@/lib/types';
+import type { PatternSnapshotItem, PatternCoachingItem, RunHistoryPoint } from '@/lib/types';
 import { EvidenceQuote, EvidenceQuoteList } from './EvidenceQuote';
 import { STRINGS } from '@/config/strings';
 
@@ -447,11 +447,13 @@ function Chevron({ open }: { open: boolean }) {
 
 export function PatternCard({
   pattern,
+  coaching,
   targetSpeaker,
   trend,
   highlightType,
 }: {
   pattern: PatternSnapshotItem;
+  coaching?: PatternCoachingItem | null;
   targetSpeaker: string | null;
   trend?: PatternTrendData;
   highlightType?: 'strength' | 'focus' | null;
@@ -460,8 +462,8 @@ export function PatternCard({
 
   const quotes      = pattern.quotes ?? [];
   const hasQuotes    = quotes.length > 0;
-  const hasCoaching  = !!pattern.coaching_note;
-  const hasNotes     = !!pattern.notes;
+  const hasCoaching  = !!coaching?.coaching_note;
+  const hasNotes     = !!coaching?.notes;
   const isBalanced   = pattern.balance_assessment === 'balanced';
 
   const isExpandable = hasQuotes || hasCoaching || hasNotes;
@@ -479,7 +481,7 @@ export function PatternCard({
 
   const isMixedScore = hasMissedOpportunities && score != null && score > 0;
 
-  const rewriteSpanId   = pattern.rewrite_for_span_id;
+  const rewriteSpanId   = coaching?.rewrite_for_span_id;
   const successSpanIds  = new Set(pattern.success_span_ids ?? []);
 
   // Split quotes into three groups using success_span_ids from the LLM:
@@ -593,7 +595,7 @@ export function PatternCard({
             <div>
               <SectionLabel text={STRINGS.common.whatYouDidWell} />
               {hasNotes && (
-                <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{pattern.notes}</p>
+                <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{coaching?.notes}</p>
               )}
               <EvidenceQuoteList quotes={quotes} targetSpeaker={targetSpeaker} />
             </div>
@@ -606,18 +608,18 @@ export function PatternCard({
                 <div>
                   <SectionLabel text={STRINGS.common.whatYouDidWell} />
                   {hasNotes && (
-                    <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{pattern.notes}</p>
+                    <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{coaching?.notes}</p>
                   )}
                   {successQuotes.length > 0 && (
                     <EvidenceQuoteList quotes={successQuotes} targetSpeaker={targetSpeaker} />
                   )}
                 </div>
               )}
-              {(hasCoaching || rewriteTargetQuotes.length > 0 || pattern.suggested_rewrite || otherFailureQuotes.length > 0) && (
+              {(hasCoaching || rewriteTargetQuotes.length > 0 || coaching?.suggested_rewrite || otherFailureQuotes.length > 0) && (
                 <div>
                   <SectionLabel text={STRINGS.common.whereYouCanImprove} />
                   {hasCoaching && (
-                    <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{pattern.coaching_note}</p>
+                    <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{coaching?.coaching_note}</p>
                   )}
                   {rewriteTargetQuotes.length > 0 && (
                     <div>
@@ -625,10 +627,10 @@ export function PatternCard({
                       <EvidenceQuoteList quotes={rewriteTargetQuotes} targetSpeaker={targetSpeaker} />
                     </div>
                   )}
-                  {pattern.suggested_rewrite && (
+                  {coaching?.suggested_rewrite && (
                     <div className="mt-2">
                       <SectionLabel text={STRINGS.common.nextTimeTry} />
-                      <SuggestedRewrite text={pattern.suggested_rewrite} />
+                      <SuggestedRewrite text={coaching?.suggested_rewrite} />
                     </div>
                   )}
                   {otherFailureQuotes.length > 0 && (
@@ -644,11 +646,11 @@ export function PatternCard({
 
           {/* Zero / no-numerator score */}
           {!isPerfectScore && !isMixedScore &&
-            (hasCoaching || rewriteTargetQuotes.length > 0 || pattern.suggested_rewrite || otherFailureQuotes.length > 0) && (
+            (hasCoaching || rewriteTargetQuotes.length > 0 || coaching?.suggested_rewrite || otherFailureQuotes.length > 0) && (
             <div>
               <SectionLabel text={STRINGS.common.whereYouCanImprove} />
               {hasCoaching && (
-                <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{pattern.coaching_note}</p>
+                <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{coaching?.coaching_note}</p>
               )}
               {rewriteTargetQuotes.length > 0 && (
                 <div>
@@ -656,10 +658,10 @@ export function PatternCard({
                   <EvidenceQuoteList quotes={rewriteTargetQuotes} targetSpeaker={targetSpeaker} />
                 </div>
               )}
-              {pattern.suggested_rewrite && (
+              {coaching?.suggested_rewrite && (
                 <div className="mt-2">
                   <SectionLabel text={STRINGS.common.nextTimeTry} />
-                  <SuggestedRewrite text={pattern.suggested_rewrite} />
+                  <SuggestedRewrite text={coaching?.suggested_rewrite} />
                 </div>
               )}
               {otherFailureQuotes.length > 0 && (
@@ -695,6 +697,7 @@ function ClusterHeader({ clusterId }: { clusterId: string }) {
 
 interface PatternSnapshotProps {
   patterns: PatternSnapshotItem[];
+  patternCoaching?: PatternCoachingItem[];
   targetSpeaker?: string | null;
   trendData?: Record<string, PatternTrendData>;
   excludePatternIds?: string[];
@@ -708,6 +711,7 @@ interface PatternSnapshotProps {
 
 export function PatternSnapshot({
   patterns,
+  patternCoaching,
   targetSpeaker,
   trendData,
   excludePatternIds,
@@ -720,6 +724,12 @@ export function PatternSnapshot({
     : patterns;
 
   if (filtered.length === 0) return null;
+
+  // Build coaching lookup by pattern_id
+  const coachingByPatternId: Record<string, PatternCoachingItem> = {};
+  for (const pc of patternCoaching ?? []) {
+    coachingByPatternId[pc.pattern_id] = pc;
+  }
 
   const strengthSet = new Set(strengthPatternIds ?? []);
 
@@ -736,6 +746,7 @@ export function PatternSnapshot({
           <PatternCard
             key={p.pattern_id}
             pattern={p}
+            coaching={coachingByPatternId[p.pattern_id]}
             targetSpeaker={targetSpeaker ?? null}
             trend={trendData?.[p.pattern_id]}
             highlightType={getHighlightType(p.pattern_id)}
@@ -765,6 +776,7 @@ export function PatternSnapshot({
             <PatternCard
               key={p.pattern_id}
               pattern={p}
+              coaching={coachingByPatternId[p.pattern_id]}
               targetSpeaker={targetSpeaker ?? null}
               trend={trendData?.[p.pattern_id]}
               highlightType={getHighlightType(p.pattern_id)}

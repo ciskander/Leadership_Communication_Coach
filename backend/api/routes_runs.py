@@ -28,6 +28,8 @@ from .quote_helpers import (
     build_spans_lookup,
     build_turn_map,
     resolve_coaching_output,
+    resolve_experiment_coaching,
+    resolve_pattern_coaching,
     resolve_pattern_snapshot,
     resolve_quotes,
 )
@@ -186,8 +188,8 @@ async def _build_run_response(run_record: dict, at_client: Optional[AirtableClie
 
     # ── Resolve quotes (pure computation using fetched data) ──────────────
     # Executive summary
-    coaching_output = parsed_json.get("coaching_output", {})
-    resp.executive_summary = coaching_output.get("executive_summary")
+    coaching_section = parsed_json.get("coaching", {})
+    resp.executive_summary = coaching_section.get("executive_summary")
 
     # Coaching output with resolved quotes
     strengths, focus, micro_exp = resolve_coaching_output(
@@ -202,6 +204,12 @@ async def _build_run_response(run_record: dict, at_client: Optional[AirtableClie
         parsed_json, spans_by_id, transcript_id, meeting_id, turn_map, effective_target
     )
     resp.pattern_snapshot = snapshot_items if snapshot_items else None
+
+    # Pattern coaching (separate from pattern_snapshot in v0.4.0)
+    resp.pattern_coaching = resolve_pattern_coaching(parsed_json)
+
+    # Experiment coaching (from coaching.experiment_coaching)
+    resp.experiment_coaching = resolve_experiment_coaching(parsed_json)
 
     resp.evaluation_summary = parsed_json.get("evaluation_summary")
 
@@ -218,14 +226,16 @@ async def _build_run_response(run_record: dict, at_client: Optional[AirtableClie
                 turn_map,
                 effective_target,
             )
+            # In v0.4.0, coaching fields come from coaching.experiment_coaching, not detection
+            exp_coaching = coaching_section.get("experiment_coaching")
             resp.experiment_detection = ExperimentDetectionWithQuotes(
                 experiment_id=detection.get("experiment_id", ""),
                 attempt=detection.get("attempt", "no"),
                 count_attempts=detection.get("count_attempts", 0),
                 quotes=det_quotes,
-                coaching_note=detection.get("coaching_note"),
-                suggested_rewrite=detection.get("suggested_rewrite"),
-                rewrite_for_span_id=detection.get("rewrite_for_span_id"),
+                coaching_note=exp_coaching.get("coaching_note") if isinstance(exp_coaching, dict) else None,
+                suggested_rewrite=exp_coaching.get("suggested_rewrite") if isinstance(exp_coaching, dict) else None,
+                rewrite_for_span_id=exp_coaching.get("rewrite_for_span_id") if isinstance(exp_coaching, dict) else None,
             )
             # Keep raw quotes on the dict for backwards compat
             detection["quotes"] = [q.model_dump() for q in det_quotes]

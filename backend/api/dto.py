@@ -82,6 +82,7 @@ class ExperimentDetectionWithQuotes(BaseModel):
 
 
 class PatternSnapshotItem(BaseModel):
+    """Scoring-only pattern measurement (v0.4.0: coaching fields moved to PatternCoachingItem)."""
     pattern_id: str
     cluster_id: Optional[str] = None
     scoring_type: Optional[str] = None
@@ -89,13 +90,24 @@ class PatternSnapshotItem(BaseModel):
     score: Optional[float] = None
     opportunity_count: Optional[int] = None
     balance_assessment: Optional[str] = None
-    notes: Optional[str] = None
-    # Per-pattern coaching (populated when missed opportunities exist)
     quotes: list[QuoteObject] = Field(default_factory=list)
+    success_span_ids: list[str] = Field(default_factory=list)
+
+
+class PatternCoachingItem(BaseModel):
+    """Per-pattern coaching output (v0.4.0: separated from pattern_snapshot)."""
+    pattern_id: str
+    notes: Optional[str] = None
     coaching_note: Optional[str] = None
     suggested_rewrite: Optional[str] = None
     rewrite_for_span_id: Optional[str] = None
-    success_span_ids: list[str] = Field(default_factory=list)
+
+
+class ExperimentCoachingItem(BaseModel):
+    """Experiment coaching output for partial attempts (v0.4.0)."""
+    coaching_note: Optional[str] = None
+    suggested_rewrite: Optional[str] = None
+    rewrite_for_span_id: Optional[str] = None
 
 
 class RunStatusResponse(BaseModel):
@@ -112,6 +124,8 @@ class RunStatusResponse(BaseModel):
     focus: Optional[HighlightItem] = None
     micro_experiment: Optional[MicroExperimentWithQuotes] = None
     pattern_snapshot: Optional[list[PatternSnapshotItem]] = None
+    pattern_coaching: list[PatternCoachingItem] = Field(default_factory=list)
+    experiment_coaching: Optional[ExperimentCoachingItem] = None
     evaluation_summary: Optional[dict] = None
     experiment_tracking: Optional[dict] = None
     experiment_detection: Optional[ExperimentDetectionWithQuotes] = None

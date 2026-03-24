@@ -1,4 +1,4 @@
-import type { CoachingItem, MicroExperiment, PatternSnapshotItem } from '@/lib/types';
+import type { CoachingItem, MicroExperiment, PatternSnapshotItem, PatternCoachingItem } from '@/lib/types';
 import { EvidenceQuoteList } from './EvidenceQuote';
 import { PatternCard } from './PatternSnapshot';
 import type { PatternTrendData } from './PatternSnapshot';
@@ -42,6 +42,7 @@ interface CoachingCardProps {
   microExperiment: MicroExperiment | null;
   targetSpeaker?: string | null;
   patternSnapshot?: PatternSnapshotItem[] | null;
+  patternCoaching?: PatternCoachingItem[];
   trendData?: Record<string, PatternTrendData>;
 }
 
@@ -51,11 +52,17 @@ export function CoachingCard({
   microExperiment,
   targetSpeaker,
   patternSnapshot,
+  patternCoaching,
   trendData,
 }: CoachingCardProps) {
   /** Look up the PatternSnapshotItem for a given pattern_id. */
   function findPatternCard(patternId: string): PatternSnapshotItem | undefined {
     return patternSnapshot?.find((p) => p.pattern_id === patternId);
+  }
+
+  /** Look up the PatternCoachingItem for a given pattern_id. */
+  function findPatternCoaching(patternId: string): PatternCoachingItem | undefined {
+    return patternCoaching?.find((pc) => pc.pattern_id === patternId);
   }
 
   return (
@@ -76,6 +83,7 @@ export function CoachingCard({
           <div className="divide-y divide-cv-warm-300">
             {strengths.map((s) => {
               const card = findPatternCard(s.pattern_id);
+              const coaching = findPatternCoaching(s.pattern_id);
               return (
                 <div key={s.pattern_id} className="px-5 py-4">
                   <div className={card ? 'grid grid-cols-1 lg:grid-cols-2 gap-4 items-start' : ''}>
@@ -86,6 +94,7 @@ export function CoachingCard({
                     {card && (
                       <PatternCard
                         pattern={card}
+                        coaching={coaching}
                         targetSpeaker={targetSpeaker ?? null}
                         trend={trendData?.[s.pattern_id]}
                       />
@@ -114,6 +123,7 @@ export function CoachingCard({
           <div className="px-5 py-4">
             {(() => {
               const card = findPatternCard(focus.pattern_id);
+              const focusCoaching = findPatternCoaching(focus.pattern_id);
               return (
                 <div className={card ? 'grid grid-cols-1 lg:grid-cols-2 gap-4 items-start' : ''}>
                   <div className="space-y-2">
@@ -123,6 +133,7 @@ export function CoachingCard({
                   {card && (
                     <PatternCard
                       pattern={card}
+                      coaching={focusCoaching}
                       targetSpeaker={targetSpeaker ?? null}
                       trend={trendData?.[focus.pattern_id]}
                     />

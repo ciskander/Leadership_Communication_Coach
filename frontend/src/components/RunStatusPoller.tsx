@@ -451,13 +451,13 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                       <EvidenceQuoteList quotes={detectionQuotes} targetSpeaker={targetSpeaker} />
                     </div>
 
-                    {detection?.coaching_note && (
+                    {run?.experiment_coaching?.coaching_note && (
                       <div>
                         <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
                           {STRINGS.runStatusPoller.coachsNote}
                         </p>
                         <p className="text-sm text-cv-stone-700 leading-relaxed">
-                          {detection.coaching_note}
+                          {run?.experiment_coaching?.coaching_note}
                         </p>
                       </div>
                     )}
@@ -466,7 +466,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
                 {/* Evidence quotes — partial attempts: split by rewrite_for_span_id */}
                 {attempt === 'partial' && detectionQuotes.length > 0 && (() => {
-                  const rewriteSpanId = detection?.rewrite_for_span_id;
+                  const rewriteSpanId = run?.experiment_coaching?.rewrite_for_span_id;
                   const successQuotes = rewriteSpanId
                     ? detectionQuotes.filter(q => q.span_id !== rewriteSpanId)
                     : detectionQuotes;
@@ -487,13 +487,13 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                       )}
 
                       {/* What worked and what was missing — coaching note */}
-                      {detection?.coaching_note && (
+                      {run?.experiment_coaching?.coaching_note && (
                         <div>
                           <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
                             {STRINGS.runStatusPoller.whatWorkedMissing}
                           </p>
                           <p className="text-sm text-cv-stone-700 leading-relaxed">
-                            {detection.coaching_note}
+                            {run?.experiment_coaching?.coaching_note}
                           </p>
                         </div>
                       )}
@@ -509,14 +509,14 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                       )}
 
                       {/* Next time, try something like — suggested rewrite */}
-                      {detection?.suggested_rewrite && (
+                      {run?.experiment_coaching?.suggested_rewrite && (
                         <div>
                           <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
                             {STRINGS.common.nextTimeTry}
                           </p>
                           <blockquote className="border-l-[2px] border-cv-teal-700 pl-4 py-1 my-2 bg-cv-teal-50 rounded-r-md">
                             <p className="text-sm text-cv-stone-700 italic">
-                              &ldquo;{detection.suggested_rewrite}&rdquo;
+                              &ldquo;{run?.experiment_coaching?.suggested_rewrite}&rdquo;
                             </p>
                           </blockquote>
                         </div>
@@ -699,6 +699,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
             : run.micro_experiment
         }
         patternSnapshot={run.pattern_snapshot}
+        patternCoaching={run.pattern_coaching}
         trendData={trendData}
       />
 
@@ -724,6 +725,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           <div className="px-5 py-4">
             <PatternSnapshot
               patterns={run.pattern_snapshot}
+              patternCoaching={run.pattern_coaching}
               targetSpeaker={targetSpeaker}
               trendData={trendData}
               groupByCluster

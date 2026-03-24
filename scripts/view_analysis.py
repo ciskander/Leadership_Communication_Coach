@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-view_analysis.py — Parse model output (mvp.v0.3.0) and produce a formatted
+view_analysis.py — Parse model output (mvp.v0.4.0) and produce a formatted
 Excel workbook for evaluating taxonomy v3.0 pattern scoring at a glance.
 
 Usage:
@@ -83,10 +83,10 @@ def load_analysis(path: str) -> dict[str, Any]:
         with open(path, "r") as f:
             raw = f.read()
     data = json.loads(raw)
-    if data.get("schema_version") != "mvp.v0.3.0":
+    if data.get("schema_version") != "mvp.v0.4.0":
         print(
             f"Warning: {path} has schema_version "
-            f"'{data.get('schema_version')}', expected 'mvp.v0.3.0'",
+            f"'{data.get('schema_version')}', expected 'mvp.v0.4.0'",
             file=sys.stderr,
         )
     return data
@@ -389,17 +389,24 @@ def build_events_sheet(
     write_header_row(ws, 1, headers)
     row = 2
 
-    snapshot = data.get("pattern_snapshot", [])
+    snapshot_map = get_pattern_snapshot_map(data)
+    all_oes = data.get("opportunity_events", [])
     has_any_events = False
 
-    for item in snapshot:
-        pid = item.get("pattern_id", "")
+    # Group top-level OEs by pattern_id
+    oes_by_pattern: dict[str, list[dict]] = {}
+    for oe in all_oes:
+        pid = oe.get("pattern_id", "")
+        oes_by_pattern.setdefault(pid, []).append(oe)
+
+    for pid in PATTERN_IDS:
         if pattern_filter and pid not in pattern_filter:
             continue
+        item = snapshot_map.get(pid, {})
         if evaluable_only and item.get("evaluable_status") != "evaluable":
             continue
 
-        events = item.get("opportunity_events", [])
+        events = oes_by_pattern.get(pid, [])
         if not events:
             continue
 
@@ -429,7 +436,7 @@ def build_events_sheet(
             is_excluded = decision == "excluded"
 
             # Look up evidence excerpt
-            excerpt = _find_excerpt(t_start, t_end, span_by_id, span_by_turns, item)
+            excerpt = _find_excerpt(t_start, t_end, span_by_id, span_by_turns)
 
             col = 1
             ws.cell(row=row, column=col, value=pattern_name)
@@ -496,7 +503,6 @@ def _find_excerpt(
     t_end: int,
     span_by_id: dict,
     span_by_turns: dict,
-    pattern_item: dict,
 ) -> str:
     """Find the evidence excerpt for an opportunity event's turn range."""
     # Direct turn match
@@ -521,7 +527,7 @@ def build_coaching_sheet(wb: Workbook, data: dict, analysis_id: str):
     write_header_row(ws, 1, ["Section", "Pattern", "Content"])
     row = 2
 
-    coaching = data.get("coaching_output", {})
+    coaching = data.get("coaching", {})
 
     # Strengths
     for i, s in enumerate(coaching.get("strengths", [])):
@@ -558,6 +564,23 @@ def build_coaching_sheet(wb: Workbook, data: dict, analysis_id: str):
             row=row, column=3, value=exp.get("success_marker", "")
         ).alignment = WRAP
         row += 1
+
+    # Pattern coaching
+    for pc in coaching.get("pattern_coaching", []):
+        row += 1  # blank separator
+        ws.cell(row=row, column=1, value="Pattern Coaching").font = BOLD_FONT
+        ws.cell(row=row, column=2, value=pc.get("pattern_id", ""))
+        notes = pc.get("notes", "") or pc.get("coaching_note", "") or ""
+        ws.cell(row=row, column=3, value=notes).alignment = WRAP
+        row += 1
+
+        rewrite = pc.get("suggested_rewrite", "")
+        if rewrite:
+            ws.cell(row=row, column=1, value="Suggested Rewrite").font = NORMAL_FONT
+            rewrite_span = pc.get("rewrite_for_span_id", "")
+            label = f"[{rewrite_span}] {rewrite}" if rewrite_span else rewrite
+            ws.cell(row=row, column=3, value=label).alignment = WRAP
+            row += 1
 
     # Experiment tracking
     tracking = data.get("experiment_tracking", {})
@@ -628,7 +651,7 @@ def build_evidence_sheet(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Parse model analysis output (mvp.v0.3.0) into a formatted Excel workbook.",
+        description="Parse model analysis output (mvp.v0.4.0) into a formatted Excel workbook.",
     )
     parser.add_argument(
         "files",

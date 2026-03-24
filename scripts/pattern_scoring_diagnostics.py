@@ -2,7 +2,7 @@
 """
 Pattern Scoring Diagnostics — Root-cause analysis of scoring anomalies.
 
-Operates on raw analysis JSON outputs (the full mvp.v0.3.0 schema objects)
+Operates on raw analysis JSON outputs (the full mvp.v0.4.0 schema objects)
 to diagnose specific failure modes observed in the scoring pipeline.
 
 Four diagnostic tests, each with a clear hypothesis:
@@ -240,7 +240,13 @@ def test_pm_aggregate_lock(analyses: list[dict]) -> dict:
         balance = pm.get("balance_assessment", "")
         success_spans = pm.get("success_evidence_span_ids", [])
         total_spans = pm.get("evidence_span_ids", [])
-        coaching = pm.get("coaching_note", "")
+
+        # In v0.4.0, coaching notes live in coaching.pattern_coaching[]
+        coaching_note = ""
+        for pc in a.get("coaching", {}).get("pattern_coaching", []):
+            if pc.get("pattern_id") == "participation_management":
+                coaching_note = pc.get("coaching_note", "") or pc.get("notes", "") or ""
+                break
 
         results["meetings_analyzed"] += 1
         results["scores"].append(score)
@@ -252,7 +258,7 @@ def test_pm_aggregate_lock(analyses: list[dict]) -> dict:
             "balance_assessment": balance,
             "success_spans": len(success_spans),
             "total_spans": len(total_spans),
-            "coaching_note_preview": coaching[:100] + "..." if len(coaching) > 100 else coaching,
+            "coaching_note_preview": coaching_note[:100] + "..." if len(coaching_note) > 100 else coaching_note,
         })
 
     n = results["meetings_analyzed"]

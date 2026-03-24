@@ -223,7 +223,7 @@ async def get_baseline_pack(
             parsed_json_str = agg_run_rec.get("fields", {}).get("Parsed JSON") or "{}"
             parsed = json.loads(parsed_json_str)
 
-            coaching = parsed.get("coaching_output", {})
+            coaching = parsed.get("coaching", {})
             executive_summary = coaching.get("executive_summary")
             strengths = [
                 {"pattern_id": s.get("pattern_id", ""), "message": s.get("message", "")}
@@ -263,11 +263,7 @@ async def get_baseline_pack(
                     "score": ps.get("score"),
                     "opportunity_count": ps.get("opportunity_count"),
                     "balance_assessment": ps.get("balance_assessment"),
-                    "notes": ps.get("notes"),
                     "quotes": [],
-                    "coaching_note": ps.get("coaching_note"),
-                    "suggested_rewrite": None,
-                    "rewrite_for_span_id": None,
                     "success_span_ids": [],
                 }
                 for ps in raw_snapshot
@@ -363,7 +359,7 @@ async def get_baseline_pack(
                     sub_parsed, sub_spans, sub_transcript_id, sub_meeting_id, sub_turn_map, sub_target_label
                 )
 
-                sub_coaching = sub_parsed.get("coaching_output", {})
+                sub_coaching = sub_parsed.get("coaching", {})
                 meeting_info["sub_run_executive_summary"] = sub_coaching.get("executive_summary")
                 meeting_info["_sub_strengths"] = sub_strengths
                 meeting_info["_sub_focus"] = sub_focus
