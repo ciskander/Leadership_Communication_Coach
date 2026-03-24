@@ -97,6 +97,12 @@ For each evaluable pattern with score < 1.0:
   - Re-read that span's excerpt (already serialized above). Write a rewrite that
     addresses the SAME topic and conversational moment.
   - Write notes and coaching_note grounded in the cited evidence.
+IMPORTANT: In all coaching text (notes, coaching_note, executive_summary, strengths,
+focus messages), describe moments by what the speaker SAID or DID, not by internal
+identifiers. Never reference turn numbers ("turn 27"), evidence span IDs ("ES-T27"),
+event IDs ("OE-013"), or any internal ID. The coachee has never seen these identifiers.
+Instead, describe the moment: "when you redirected the history debate back to constraints"
+or "your opening where you named the three agenda items."
 For partial experiment attempts: write experiment_coaching with rewrite for
 the detection span.
 Write strengths, focus, micro_experiment, and executive_summary.

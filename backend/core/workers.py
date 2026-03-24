@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+from collections import defaultdict
 from typing import Any, Optional
 
 from .airtable_client import (
@@ -145,6 +146,81 @@ def _extract_coaching_from_run(parsed_json: dict) -> dict:
         "micro_experiment_instruction": micro.get("instruction"),
         "micro_experiment_success_marker": micro.get("success_marker"),
     }
+
+
+def _auto_correct_baseline_scores(
+    parsed_output: dict,
+    meeting_run_data: list[dict],
+) -> list[ValidationIssue]:
+    """Auto-correct baseline pack scores by recomputing weighted averages from sub-run data.
+
+    For each evaluable pattern, computes:
+        score = sum(sub_score_i * opp_count_i) / sum(opp_count_i)
+    and corrects the LLM output in-place if it differs.
+
+    Also validates that opportunity_count equals the sum across sub-runs.
+
+    Returns list of correction issues (warning-level).
+    """
+    issues: list[ValidationIssue] = []
+
+    # Collect (score, opportunity_count) per pattern from each sub-run
+    pattern_data: dict[str, list[tuple[float, int]]] = defaultdict(list)
+    for mrd in meeting_run_data:
+        slim = mrd.get("slim_summary", {})
+        for ps in slim.get("pattern_snapshot", []):
+            pid = ps.get("pattern_id")
+            if ps.get("evaluable_status") != "evaluable" or pid is None:
+                continue
+            score = ps.get("score")
+            opp = ps.get("opportunity_count", 0)
+            if score is not None and opp > 0:
+                pattern_data[pid].append((score, opp))
+
+    # Validate and correct each pattern in the baseline output
+    for idx, item in enumerate(parsed_output.get("pattern_snapshot", [])):
+        pid = item.get("pattern_id")
+        if item.get("evaluable_status") != "evaluable" or pid not in pattern_data:
+            continue
+
+        entries = pattern_data[pid]
+        path = f"pattern_snapshot[{idx}]"
+
+        # Weighted average score
+        weighted_sum = sum(s * o for s, o in entries)
+        total_opp = sum(o for _, o in entries)
+        if total_opp == 0:
+            continue
+
+        expected_score = round(weighted_sum / total_opp, 4)
+        actual_score = item.get("score")
+        if actual_score is not None and abs(actual_score - expected_score) > 0.0005:
+            item["score"] = expected_score
+            issues.append(ValidationIssue(
+                severity="warning",
+                issue_code="BASELINE_SCORE_AUTOCORRECTED",
+                path=f"{path}.score",
+                message=(
+                    f"score corrected from {actual_score} to {expected_score} "
+                    f"(weighted avg = {weighted_sum:.4f} / {total_opp})."
+                ),
+            ))
+
+        # Opportunity count sum
+        actual_opp = item.get("opportunity_count")
+        if actual_opp is not None and actual_opp != total_opp:
+            item["opportunity_count"] = total_opp
+            issues.append(ValidationIssue(
+                severity="warning",
+                issue_code="BASELINE_OPP_COUNT_AUTOCORRECTED",
+                path=f"{path}.opportunity_count",
+                message=(
+                    f"opportunity_count corrected from {actual_opp} to {total_opp} "
+                    f"(sum across {len(entries)} evaluable sub-runs)."
+                ),
+            ))
+
+    return issues
 
 
 def _build_slim_meeting_summary(run_fields: dict, parsed_json: dict) -> dict:
@@ -989,6 +1065,14 @@ def process_baseline_pack_build(
 
     _parsed_output = _patch_parsed_output(_parsed_output)
 
+    # Auto-correct baseline scores from sub-run data (deterministic weighted averages)
+    baseline_corrections = _auto_correct_baseline_scores(_parsed_output, meeting_run_data)
+    if baseline_corrections:
+        logger.info(
+            "Baseline pack %s: %d score corrections applied.",
+            baseline_pack_id, len(baseline_corrections),
+        )
+
     # NOTE: cleanup_parsed_json is intentionally NOT called for baseline packs.
     # Evidence spans are already cleaned in the per-meeting sub-runs; running
     # cleanup again is wasteful (extra LLM call) and can corrupt span text.
@@ -1011,6 +1095,12 @@ def process_baseline_pack_build(
 
     # 6. Gate1 validate (may auto-correct scores in-place)
     gate1_result = gate1_validate(openai_resp.raw_text)
+    # Merge baseline score corrections into Gate1 result
+    if baseline_corrections:
+        gate1_result.issues.extend(baseline_corrections)
+        # Ensure corrected data reflects baseline auto-corrections
+        if gate1_result.corrected_data is None:
+            gate1_result.corrected_data = openai_resp.parsed
     persisted_json = gate1_result.corrected_data or openai_resp.parsed
 
     # Determine user_record_id from baseline pack users link

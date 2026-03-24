@@ -329,6 +329,7 @@ function MeetingAccordionCard({
                   <div className="px-5 py-4">
                     <PatternSnapshot
                       patterns={meeting.sub_run_pattern_snapshot as unknown as PatternSnapshotItem[]}
+                      patternCoaching={meeting.sub_run_pattern_coaching}
                       targetSpeaker={targetSpeaker}
                       groupByCluster
                       strengthPatternIds={strengthPatternIds}
@@ -562,6 +563,7 @@ export default function BaselineDetailPage() {
               <div className="px-5 py-4">
                 <PatternSnapshot
                   patterns={pack.pattern_snapshot as unknown as PatternSnapshotItem[]}
+                  patternCoaching={pack.pattern_coaching}
                   targetSpeaker={pack.target_speaker_label}
                   groupByCluster
                   strengthPatternIds={(pack.strengths ?? []).map((s: CoachingItem) => s.pattern_id)}

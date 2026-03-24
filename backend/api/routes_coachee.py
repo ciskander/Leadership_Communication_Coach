@@ -37,6 +37,7 @@ from .quote_helpers import (
     build_turn_map,
     build_turn_map_from_record,
     resolve_coaching_output,
+    resolve_pattern_coaching,
     resolve_pattern_snapshot,
 )
 from ..queue.tasks import enqueue_single_meeting, enqueue_baseline_pack_build, enqueue_next_experiment_suggestion
@@ -217,6 +218,7 @@ async def get_baseline_pack(
     # ── Parse aggregate run coaching data ─────────────────────────────────
     executive_summary = None
     strengths, focus, micro_experiment, pattern_snapshot = [], None, None, []
+    agg_pattern_coaching = []
     agg_run_rec = phase1_map.get("agg_run")
     if agg_run_rec:
         try:
@@ -267,6 +269,9 @@ async def get_baseline_pack(
                     "success_span_ids": [],
                 }
                 for ps in raw_snapshot
+            ]
+            agg_pattern_coaching = [
+                pc.model_dump() for pc in resolve_pattern_coaching(parsed)
             ]
 
             # Guardrail: filter out strengths whose pattern score is below 50%
@@ -364,6 +369,7 @@ async def get_baseline_pack(
                 meeting_info["_sub_strengths"] = sub_strengths
                 meeting_info["_sub_focus"] = sub_focus
                 meeting_info["_sub_snapshot"] = sub_pattern_snapshot
+                meeting_info["_sub_pattern_coaching"] = resolve_pattern_coaching(sub_parsed)
             except Exception as se:
                 logger.warning("get_baseline_pack: sub-run %s processing failed: %s", run_id, se)
 
@@ -374,8 +380,11 @@ async def get_baseline_pack(
         sub_s = m.pop("_sub_strengths", None)
         sub_f = m.pop("_sub_focus", None)
         sub_snap = m.pop("_sub_snapshot", None)
+        sub_pc = m.pop("_sub_pattern_coaching", None)
         if sub_s:
             m["sub_run_strengths"] = [s.model_dump() for s in sub_s]
+        if sub_pc:
+            m["sub_run_pattern_coaching"] = [pc.model_dump() for pc in sub_pc]
         if sub_f:
             m["sub_run_focus"] = sub_f.model_dump()
         if sub_snap:
@@ -417,6 +426,7 @@ async def get_baseline_pack(
         "focus": focus,
         "micro_experiment": micro_experiment,
         "pattern_snapshot": pattern_snapshot,
+        "pattern_coaching": agg_pattern_coaching,
         "created_at": bp_rec.get("createdTime"),
         "meetings": meetings,
     }

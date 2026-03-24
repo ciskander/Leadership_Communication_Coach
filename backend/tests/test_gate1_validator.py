@@ -458,3 +458,104 @@ def test_gate1_failure_error_is_not_retryable():
     from backend.core.models import Gate1FailureError
 
     assert _is_retryable(Gate1FailureError("Run failed Gate1")) is False
+
+
+# ---------------------------------------------------------------------------
+# Baseline score auto-correction
+# ---------------------------------------------------------------------------
+
+def _make_slim_snapshot(pattern_id, score, opportunity_count, evaluable_status="evaluable"):
+    return {
+        "pattern_id": pattern_id,
+        "cluster_id": "test",
+        "scoring_type": "tiered_rubric",
+        "evaluable_status": evaluable_status,
+        "score": score,
+        "opportunity_count": opportunity_count,
+    }
+
+
+def test_baseline_score_autocorrected():
+    """Weighted average mismatch triggers BASELINE_SCORE_AUTOCORRECTED."""
+    from backend.core.workers import _auto_correct_baseline_scores
+
+    parsed = {
+        "pattern_snapshot": [
+            {
+                "pattern_id": "focus_management",
+                "evaluable_status": "evaluable",
+                "score": 0.9999,  # wrong — should be 0.7
+                "opportunity_count": 8,
+            }
+        ]
+    }
+    meeting_run_data = [
+        {"slim_summary": {"pattern_snapshot": [
+            _make_slim_snapshot("focus_management", 0.6, 5),
+        ]}},
+        {"slim_summary": {"pattern_snapshot": [
+            _make_slim_snapshot("focus_management", 0.8, 3),
+        ]}},
+        {"slim_summary": {"pattern_snapshot": [
+            _make_slim_snapshot("focus_management", 0.5, 0, "insufficient_signal"),
+        ]}},
+    ]
+    issues = _auto_correct_baseline_scores(parsed, meeting_run_data)
+    codes = {i.issue_code for i in issues}
+    assert "BASELINE_SCORE_AUTOCORRECTED" in codes
+    # Expected: (0.6*5 + 0.8*3) / (5+3) = 5.4/8 = 0.675
+    assert parsed["pattern_snapshot"][0]["score"] == 0.675
+
+
+def test_baseline_opp_count_autocorrected():
+    """Opportunity count sum mismatch triggers BASELINE_OPP_COUNT_AUTOCORRECTED."""
+    from backend.core.workers import _auto_correct_baseline_scores
+
+    parsed = {
+        "pattern_snapshot": [
+            {
+                "pattern_id": "focus_management",
+                "evaluable_status": "evaluable",
+                "score": 0.675,
+                "opportunity_count": 99,  # wrong — should be 8
+            }
+        ]
+    }
+    meeting_run_data = [
+        {"slim_summary": {"pattern_snapshot": [
+            _make_slim_snapshot("focus_management", 0.6, 5),
+        ]}},
+        {"slim_summary": {"pattern_snapshot": [
+            _make_slim_snapshot("focus_management", 0.8, 3),
+        ]}},
+    ]
+    issues = _auto_correct_baseline_scores(parsed, meeting_run_data)
+    codes = {i.issue_code for i in issues}
+    assert "BASELINE_OPP_COUNT_AUTOCORRECTED" in codes
+    assert parsed["pattern_snapshot"][0]["opportunity_count"] == 8
+
+
+def test_baseline_score_correct_no_correction():
+    """Correct weighted average produces no correction issues."""
+    from backend.core.workers import _auto_correct_baseline_scores
+
+    parsed = {
+        "pattern_snapshot": [
+            {
+                "pattern_id": "focus_management",
+                "evaluable_status": "evaluable",
+                "score": 0.675,
+                "opportunity_count": 8,
+            }
+        ]
+    }
+    meeting_run_data = [
+        {"slim_summary": {"pattern_snapshot": [
+            _make_slim_snapshot("focus_management", 0.6, 5),
+        ]}},
+        {"slim_summary": {"pattern_snapshot": [
+            _make_slim_snapshot("focus_management", 0.8, 3),
+        ]}},
+    ]
+    issues = _auto_correct_baseline_scores(parsed, meeting_run_data)
+    assert len(issues) == 0
