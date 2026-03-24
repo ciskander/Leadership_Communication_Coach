@@ -270,9 +270,16 @@ async def get_baseline_pack(
                 }
                 for ps in raw_snapshot
             ]
-            agg_pattern_coaching = [
-                pc.model_dump() for pc in resolve_pattern_coaching(parsed)
-            ]
+            agg_pattern_coaching_raw = resolve_pattern_coaching(parsed)
+            # Strip rewrite fields from aggregate coaching — there are no
+            # per-turn quotes at the aggregate level, so suggested_rewrite
+            # and rewrite_for_span_id would render without context.
+            agg_pattern_coaching = []
+            for pc in agg_pattern_coaching_raw:
+                d = pc.model_dump()
+                d.pop("suggested_rewrite", None)
+                d.pop("rewrite_for_span_id", None)
+                agg_pattern_coaching.append(d)
 
             # Guardrail: filter out strengths whose pattern score is below 50%
             score_by_pattern = {

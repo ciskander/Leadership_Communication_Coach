@@ -313,6 +313,7 @@ function MeetingAccordionCard({
                   microExperiment={null}
                   targetSpeaker={targetSpeaker}
                   patternSnapshot={meeting.sub_run_pattern_snapshot as unknown as PatternSnapshotItem[]}
+                  patternCoaching={meeting.sub_run_pattern_coaching}
                 />
               )}
 
@@ -515,6 +516,7 @@ export default function BaselineDetailPage() {
             microExperiment={null}
             targetSpeaker={pack.target_speaker_label}
             patternSnapshot={pack.pattern_snapshot as unknown as PatternSnapshotItem[]}
+            patternCoaching={pack.pattern_coaching}
           />
 
           {/* Hint to check individual meeting sections */}
