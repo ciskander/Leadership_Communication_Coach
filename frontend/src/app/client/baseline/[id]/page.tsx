@@ -45,49 +45,6 @@ function PatternLabel({ id }: { id: string }) {
 
 // ─── Accepted Experiment Panel ────────────────────────────────────────────────
 
-function AcceptedExperimentPanel({ experiment }: { experiment: Experiment }) {
-  return (
-    <div className="bg-cv-teal-50 border border-cv-teal-100 rounded p-5 space-y-4">
-      <div className="flex items-center gap-2">
-        <div className="w-1.5 h-4 rounded-full bg-cv-teal-400 flex-shrink-0" />
-        <span className="text-sm font-medium text-cv-teal-800">
-          {STRINGS.baselineDetail.experimentAccepted}
-        </span>
-      </div>
-      <div className="space-y-1">
-        <PatternLabel id={experiment.pattern_id} />
-        <p className="text-sm font-medium text-cv-stone-900 leading-snug mt-1">
-          {experiment.title}
-        </p>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="bg-cv-warm-50 border border-cv-warm-300 rounded p-3.5">
-          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1.5">
-            {STRINGS.common.whatToDo}
-          </p>
-          <p className="text-sm text-cv-stone-700 leading-relaxed">
-            {experiment.instruction}
-          </p>
-        </div>
-        <div className="bg-cv-warm-50 border border-cv-warm-300 rounded p-3.5">
-          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-1.5">
-            {STRINGS.common.successLooksLike}
-          </p>
-          <p className="text-sm text-cv-stone-700 leading-relaxed">
-            {experiment.success_marker}
-          </p>
-        </div>
-      </div>
-      <Link
-        href="/client/experiment"
-        className="inline-flex items-center text-sm text-cv-teal-600 font-medium hover:text-cv-teal-800 transition-colors"
-      >
-        {STRINGS.baselineDetail.trackExperiment}
-      </Link>
-    </div>
-  );
-}
-
 // ─── Proposed Experiment Card ─────────────────────────────────────────────────
 
 function ProposedExperimentCard({
@@ -95,7 +52,7 @@ function ProposedExperimentCard({
   onAccepted,
 }: {
   experiment: Experiment;
-  onAccepted: (exp: Experiment) => void;
+  onAccepted: () => void;
 }) {
   const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -106,7 +63,7 @@ function ProposedExperimentCard({
     setErrorMsg(null);
     try {
       await api.acceptExperiment(experiment.experiment_record_id);
-      onAccepted(experiment);
+      onAccepted();
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : 'Something went wrong.');
       setState('error');
@@ -170,7 +127,6 @@ function ExperimentSection() {
   const [proposed, setProposed] = useState<Experiment[]>([]);
   const [activeExpData, setActiveExpData] = useState<ActiveExperiment | null>(null);
   const [loading, setLoading] = useState(true);
-  const [accepted, setAccepted] = useState<Experiment | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -193,11 +149,7 @@ function ExperimentSection() {
     );
   }
 
-  if (accepted) {
-    return <AcceptedExperimentPanel experiment={accepted} />;
-  }
-
-  if (proposed.length > 0) {
+  if (proposed.length > 0 && !activeExpData?.experiment) {
     return (
       <section className="space-y-3">
         <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-amber-800">
@@ -205,7 +157,16 @@ function ExperimentSection() {
         </p>
         <ProposedExperimentCard
           experiment={proposed[0]}
-          onAccepted={(e) => setAccepted(e)}
+          onAccepted={() => {
+            // Re-fetch active experiment so ExperimentTracker renders
+            api.getActiveExperiment().then((data) => {
+              setActiveExpData(data);
+              setProposed([]);
+            }).catch(() => {
+              // Fallback: reload page if fetch fails
+              window.location.reload();
+            });
+          }}
         />
       </section>
     );
