@@ -257,7 +257,7 @@ Record attempt (yes/partial/no), count, and evidence_span_ids.
 
 Step 7 — Coaching (output: coaching):
 For each evaluable pattern with score < 1.0:
-  - Choose rewrite_for_span_id from the pattern's NON-success evidence spans.
+  - Choose rewrite_for_span_id from the pattern's NON-success evidence spans. Choose the best coaching example for the pattern.
   - Re-read that span's excerpt (already serialized above). Write a rewrite that
     addresses the SAME topic and conversational moment.
   - Write notes and coaching_note grounded in the cited evidence.
