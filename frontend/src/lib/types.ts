@@ -214,6 +214,7 @@ export interface BaselinePackMeeting {
   sub_run_strengths?: CoachingItem[];
   sub_run_focus?: CoachingItem | null;
   sub_run_pattern_snapshot?: Record<string, unknown>[];
+  sub_run_pattern_coaching?: PatternCoachingItem[];
 }
 
 export interface BaselinePack {
@@ -227,6 +228,7 @@ export interface BaselinePack {
   focus?: CoachingItem | null;
   micro_experiment?: MicroExperiment | null;
   pattern_snapshot?: Record<string, unknown>[];
+  pattern_coaching?: PatternCoachingItem[];
   meetings?: BaselinePackMeeting[];
 }
 
