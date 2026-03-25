@@ -1,0 +1,25 @@
+{
+  "meeting_id": "M-000223",
+  "meeting_type": "cross_functional",
+  "target_role": "chair",
+  "meeting_date": "2026-02-13",
+  "target_speaker_name": "Chris Iskander",
+  "target_speaker_label": "Chris",
+  "memory": {
+    "baseline_profile": {
+      "strengths": ["question_quality", "communication_clarity"],
+      "focus": "participation_management",
+      "baseline_pack_id": "BP-000052"
+    },
+    "recent_pattern_snapshots": [],
+    "active_experiment": {
+      "experiment_id": "EXP-000080",
+      "title": "Name one voice before every close",
+      "instruction": "In your next few meetings, after each major decision, assignment block, or recap, invite one specific person by name before you advance. Use their function or stake as the reason, such as QA on testability, finance on downside risk, or the assignee on feasibility.",
+      "success_marker": "You make at least three named invitations tied to the decision just discussed, and at least two of them happen before you finalize the close rather than after concerns surface.\n",
+      "pattern_id": "participation_management",
+      "status": "active"
+    }
+  },
+  "description": "Cross-functional standup with 3 decisions to lock. Strong facilitation, targeted questions, named invitations before closes."
+}
