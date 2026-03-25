@@ -26,9 +26,12 @@ const STABLE_THRESHOLD = 2; // delta within +/- this value is considered "stable
 
 export function buildTrendData(
   history: RunHistoryPoint[],
-  windowSize: number,
+  _windowSize?: number,
   upToRunId?: string,
 ): Record<string, PatternTrendData> {
+  // Rolling average disabled — always use window of 1 (show each meeting's
+  // actual score). The _windowSize parameter is kept for call-site compat.
+  const windowSize = 1;
   // If upToRunId is provided, only include history up to and including that run.
   let scopedHistory = history;
   if (upToRunId) {

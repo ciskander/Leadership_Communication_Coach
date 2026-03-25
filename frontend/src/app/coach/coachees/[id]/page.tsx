@@ -118,11 +118,9 @@ function SectionHeading({ text }: { text: string }) {
 
 function PatternTrendsCompact({
   history,
-  trendWindowSize = 3,
   experimentPatternId,
 }: {
   history: RunHistoryPoint[];
-  trendWindowSize?: number;
   experimentPatternId?: string | null;
 }) {
   const hasBaseline       = history.some((r) => r.is_baseline);
@@ -152,7 +150,7 @@ function PatternTrendsCompact({
     [allPatterns],
   );
 
-  const chartData     = useMemo(() => buildChartData(history, allPatterns, trendWindowSize), [history, allPatterns, trendWindowSize]);
+  const chartData     = useMemo(() => buildChartData(history, allPatterns, 1), [history, allPatterns]);
   const baselinePoint = useMemo(() => chartData.find((p) => p.isBaseline), [chartData]);
 
   if (history.length === 0) {
@@ -650,7 +648,6 @@ export default function CoacheeDetailPage() {
         ) : progress && progress.pattern_history.length > 0 ? (
           <PatternTrendsCompact
             history={progress.pattern_history}
-            trendWindowSize={progress.trend_window_size}
             experimentPatternId={experimentPatternId}
           />
         ) : (

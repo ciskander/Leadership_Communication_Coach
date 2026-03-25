@@ -178,12 +178,10 @@ type ViewMode = 'focus' | 'top5' | 'all';
 
 function PatternTrendsChart({
   history,
-  trendWindowSize = 3,
   experimentPatternId,
   viewMode,
 }: {
   history: RunHistoryPoint[];
-  trendWindowSize?: number;
   experimentPatternId?: string | null;
   viewMode: ViewMode;
 }) {
@@ -215,7 +213,7 @@ function PatternTrendsChart({
     [allPatterns],
   );
 
-  const chartData     = useMemo(() => buildChartData(history, allPatterns, trendWindowSize), [history, allPatterns, trendWindowSize]);
+  const chartData     = useMemo(() => buildChartData(history, allPatterns, 1), [history, allPatterns]);
   const baselinePoint = useMemo(() => chartData.find((p) => p.isBaseline), [chartData]);
 
   // Custom tooltip — works for both line chart (trend + raw entries) and bar chart (raw-only)
@@ -404,11 +402,9 @@ function PatternTrendsChart({
 function PastExperimentCard({
   exp,
   patternHistory,
-  trendWindowSize,
 }: {
   exp: PastExperiment;
   patternHistory: RunHistoryPoint[];
-  trendWindowSize: number;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -436,7 +432,7 @@ function PastExperimentCard({
 
   const pid       = exp.pattern_id;
   const color     = LINE_COLORS[0]; // teal-600 for past-exp mini-charts
-  const chartData = expHistory.length > 0 ? buildChartData(expHistory, [pid], trendWindowSize) : [];
+  const chartData = expHistory.length > 0 ? buildChartData(expHistory, [pid], 1) : [];
 
   const axisStyle = { fontSize: 10, fill: S.chartAxisFill };
 
@@ -621,7 +617,6 @@ export default function ProgressPage() {
 
             <PatternTrendsChart
               history={data.pattern_history}
-              trendWindowSize={data.trend_window_size}
               experimentPatternId={experimentPatternId}
               viewMode={effectiveViewMode}
             />
@@ -641,7 +636,6 @@ export default function ProgressPage() {
                     key={exp.experiment_record_id}
                     exp={exp}
                     patternHistory={data.pattern_history}
-                    trendWindowSize={data.trend_window_size}
                   />
                 ))}
               </div>
