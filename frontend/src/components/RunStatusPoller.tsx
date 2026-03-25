@@ -73,7 +73,22 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
       // history up to this meeting, not the full timeline.
       api.getClientProgress()
         .then((progress) => {
-          const trends = buildTrendData(progress.pattern_history, progress.trend_window_size, runId);
+          // On the run detail page, always use window=1 so the displayed
+          // score matches this meeting's actual performance rather than a
+          // rolling average across multiple meetings.
+          const trends = buildTrendData(progress.pattern_history, 1, runId);
+
+          // Diagnostic: log what buildTrendData computed vs what the backend sent
+          console.log('[trend-debug]', {
+            runId,
+            backendWindowSize: progress.trend_window_size,
+            historyLength: progress.pattern_history.length,
+            foundInHistory: progress.pattern_history.some((r: { run_id: string }) => r.run_id === runId),
+            trendScores: Object.fromEntries(
+              Object.entries(trends).map(([pid, t]) => [pid, (t as PatternTrendData).currentScore])
+            ),
+          });
+
           setTrendData(Object.keys(trends).length > 0 ? trends : undefined);
         })
         .catch(() => {});
