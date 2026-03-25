@@ -107,7 +107,7 @@ class TestExtractCoachingFromRun:
         strengths_patterns=("purposeful_framing",),
     ) -> dict:
         return {
-            "coaching_output": {
+            "coaching": {
                 "strengths": [{"pattern_id": p, "message": "Good."} for p in strengths_patterns],
                 "focus": [{"pattern_id": focus_pattern, "message": "Improve this."}],
                 "micro_experiment": [
@@ -142,12 +142,12 @@ class TestExtractCoachingFromRun:
         assert strengths == ["purposeful_framing", "question_quality"]
 
     def test_empty_focus_returns_none(self):
-        parsed = {"coaching_output": {"strengths": [], "focus": [], "micro_experiment": []}}
+        parsed = {"coaching": {"strengths": [], "focus": [], "micro_experiment": []}}
         result = _extract_coaching_from_run(parsed)
         assert result["focus_pattern"] is None
 
     def test_empty_micro_experiment_returns_none(self):
-        parsed = {"coaching_output": {"strengths": [], "focus": [], "micro_experiment": []}}
+        parsed = {"coaching": {"strengths": [], "focus": [], "micro_experiment": []}}
         result = _extract_coaching_from_run(parsed)
         assert result["experiment_id"] is None
 
@@ -183,7 +183,8 @@ class TestBuildSlimMeetingSummary:
                     "score": 1.0,
                 }
             ],
-            "coaching_output": {
+            "coaching": {
+                "strengths": [],
                 "focus": [{"pattern_id": "resolution_and_alignment", "message": "Improve."}],
                 "micro_experiment": [
                     {
@@ -192,6 +193,8 @@ class TestBuildSlimMeetingSummary:
                         "pattern_id": "resolution_and_alignment",
                     }
                 ],
+                "pattern_coaching": [],
+                "experiment_coaching": None,
             },
         }
         return run_fields, parsed_json
@@ -232,22 +235,24 @@ class TestBuildSlimMeetingSummary:
 
     def test_pattern_snapshot_includes_coaching_fields_when_present(self):
         run_fields, parsed_json = self._make_inputs()
-        parsed_json["pattern_snapshot"][0]["notes"] = "Good agenda."
         parsed_json["pattern_snapshot"][0]["evidence_span_ids"] = ["ES-001"]
+        parsed_json["coaching"]["pattern_coaching"] = [
+            {"pattern_id": "purposeful_framing", "notes": "Good agenda."}
+        ]
         result = _build_slim_meeting_summary(run_fields, parsed_json)
         snap = result["pattern_snapshot"][0]
         assert snap["notes"] == "Good agenda."
         assert snap["evidence_span_ids"] == ["ES-001"]
 
-    def test_coaching_output_includes_focus(self):
+    def test_coaching_includes_focus(self):
         run_fields, parsed_json = self._make_inputs()
         result = _build_slim_meeting_summary(run_fields, parsed_json)
-        assert result["coaching_output"]["focus"][0]["pattern_id"] == "resolution_and_alignment"
+        assert result["coaching"]["focus"][0]["pattern_id"] == "resolution_and_alignment"
 
-    def test_coaching_output_includes_micro_experiment_title(self):
+    def test_coaching_includes_micro_experiment_title(self):
         run_fields, parsed_json = self._make_inputs()
         result = _build_slim_meeting_summary(run_fields, parsed_json)
-        assert result["coaching_output"]["micro_experiment"]["title"] == "Close decisions"
+        assert result["coaching"]["micro_experiment"]["title"] == "Close decisions"
 
     def test_includes_evidence_spans(self):
         run_fields, parsed_json = self._make_inputs()
