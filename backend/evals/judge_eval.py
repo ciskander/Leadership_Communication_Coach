@@ -5,14 +5,16 @@ Uses a second LLM call to evaluate coaching output quality. The judge
 evaluates as an experienced executive coach reviewing session notes —
 it does NOT have access to the scoring taxonomy.
 
+Accepts raw transcript files (.vtt, .txt, etc.) — same formats as the UI.
+
 Usage:
   python -m backend.evals.judge_eval \
-    --transcript backend/evals/transcripts/t001_m000223/transcript.json \
-    --output backend/evals/results/t001_m000223/run_001.json
+    --transcript backend/evals/transcripts/meeting.vtt \
+    --output backend/evals/results/meeting/run_001.json
 
   python -m backend.evals.judge_eval \
-    --transcript backend/evals/transcripts/t001_m000223/transcript.json \
-    --output-dir backend/evals/results/t001_m000223 \
+    --transcript backend/evals/transcripts/meeting.vtt \
+    --output-dir backend/evals/results/meeting \
     --all
 """
 from __future__ import annotations
@@ -33,6 +35,7 @@ if str(_PROJECT_ROOT) not in sys.path:
 
 from backend.core.config import OPENAI_MODEL_DEFAULT, PATTERN_ORDER
 from backend.core.llm_client import call_llm
+from backend.core.transcript_parser import parse_transcript
 from backend.evals.report import save_json, save_report
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
@@ -181,6 +184,23 @@ Return ONLY the JSON object, no other text.\
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
+
+def load_transcript_for_judge(transcript_path: Path) -> dict:
+    """Load a transcript file (raw or pre-parsed JSON) into a turns dict."""
+    if transcript_path.suffix == ".json":
+        return json.loads(transcript_path.read_text(encoding="utf-8"))
+    else:
+        # Raw file — parse it with the transcript parser
+        raw_bytes = transcript_path.read_bytes()
+        parsed = parse_transcript(raw_bytes, transcript_path.name, transcript_path.stem)
+        return {
+            "source_id": parsed.source_id,
+            "turns": [
+                {"turn_id": t.turn_id, "speaker_label": t.speaker_label, "text": t.text}
+                for t in parsed.turns
+            ],
+        }
+
 
 def _format_transcript_for_judge(transcript_data: dict) -> str:
     """Format transcript turns into readable text for the judge."""
@@ -339,7 +359,7 @@ def main():
     parser.add_argument("--model", type=str, default=None, help="Model for the judge LLM")
     args = parser.parse_args()
 
-    transcript_data = json.loads(args.transcript.read_text(encoding="utf-8"))
+    transcript_data = load_transcript_for_judge(args.transcript)
 
     if args.output:
         # Judge a single output

@@ -3,13 +3,26 @@ replay_eval.py — Layer 1: Score Stability & Discriminant Validity.
 
 Two modes:
   --mode repeat   Run one transcript N times, measure intra-transcript IQR.
-  --mode compare  Run multiple transcripts (optionally N times each),
+  --mode compare  Run all transcripts in a directory (optionally N times each),
                   measure inter-transcript distribution per pattern.
 
-Usage:
-  python -m backend.evals.replay_eval --mode repeat \
-    --transcript backend/evals/transcripts/t001_m000223 --runs 5
+Accepts raw transcript files (.vtt, .txt, .srt, .docx, .pdf) — the same
+formats you upload through the UI. Files are parsed automatically using the
+existing transcript parser.
 
+Transcript directory layout:
+  backend/evals/transcripts/
+    eval_config.json           # shared defaults (meeting_type, target_role, etc.)
+    meeting_alpha.vtt          # raw transcript files
+    meeting_beta.txt
+    meeting_beta.meta.json     # optional per-transcript metadata overrides
+
+Usage:
+  # Repeat: run one transcript 5 times
+  python -m backend.evals.replay_eval --mode repeat \
+    --transcript backend/evals/transcripts/meeting_alpha.vtt --runs 5
+
+  # Compare: run all transcripts in directory, 3 times each
   python -m backend.evals.replay_eval --mode compare \
     --transcripts-dir backend/evals/transcripts --runs 3
 """
@@ -33,9 +46,10 @@ if str(_PROJECT_ROOT) not in sys.path:
 from backend.core.config import OPENAI_MODEL_DEFAULT, OPENAI_MAX_TOKENS, PATTERN_ORDER
 from backend.core.gate1_validator import validate as gate1_validate
 from backend.core.llm_client import call_llm
-from backend.core.models import MemoryBlock, ParsedTranscript, Turn, TranscriptMetadata
+from backend.core.models import MemoryBlock, ParsedTranscript
 from backend.core.openai_client import load_system_prompt
 from backend.core.prompt_builder import build_developer_message, build_single_meeting_prompt
+from backend.core.transcript_parser import parse_transcript
 from backend.evals.report import (
     compute_pattern_stats,
     compute_int_stats,
@@ -48,46 +62,98 @@ from backend.evals.report import (
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-# ── Defaults ─────────────────────────────────────────────────────────────────
-
 _RESULTS_DIR = Path(__file__).parent / "results"
+
+_SUPPORTED_EXTENSIONS = {".vtt", ".txt", ".srt", ".docx", ".pdf"}
+
+# ── Default eval config ──────────────────────────────────────────────────────
+
+_DEFAULT_EVAL_CONFIG = {
+    "meeting_type": "cross_functional",
+    "target_role": "chair",
+    "meeting_date": "2026-01-01",
+    "target_speaker_name": "Speaker",
+    "target_speaker_label": "Speaker",
+    "memory": {
+        "baseline_profile": None,
+        "recent_pattern_snapshots": [],
+        "active_experiment": None,
+    },
+}
 
 
 # ── Transcript loading ───────────────────────────────────────────────────────
 
-def load_transcript_case(case_dir: Path) -> tuple[dict, ParsedTranscript, MemoryBlock]:
-    """Load a transcript case from a directory containing transcript.json and metadata.json."""
-    meta_path = case_dir / "metadata.json"
-    transcript_path = case_dir / "transcript.json"
+def _load_eval_config(transcripts_dir: Path) -> dict:
+    """Load eval_config.json from the transcripts directory, or use defaults."""
+    config_path = transcripts_dir / "eval_config.json"
+    if config_path.exists():
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+        # Merge with defaults (config overrides defaults)
+        merged = {**_DEFAULT_EVAL_CONFIG, **config}
+        if "memory" not in config:
+            merged["memory"] = _DEFAULT_EVAL_CONFIG["memory"]
+        return merged
+    return dict(_DEFAULT_EVAL_CONFIG)
 
-    if not meta_path.exists():
-        raise FileNotFoundError(f"metadata.json not found in {case_dir}")
-    if not transcript_path.exists():
-        raise FileNotFoundError(f"transcript.json not found in {case_dir}")
 
-    metadata = json.loads(meta_path.read_text(encoding="utf-8"))
-    transcript_data = json.loads(transcript_path.read_text(encoding="utf-8"))
+def _load_per_transcript_meta(transcript_path: Path) -> dict | None:
+    """Load optional per-transcript metadata override (e.g., meeting_alpha.meta.json)."""
+    meta_path = transcript_path.with_suffix(".meta.json")
+    if meta_path.exists():
+        return json.loads(meta_path.read_text(encoding="utf-8"))
+    return None
 
-    turns = [Turn(**t) for t in transcript_data["turns"]]
-    parsed_transcript = ParsedTranscript(
-        source_id=transcript_data["source_id"],
-        turns=turns,
-        speaker_labels=list({t.speaker_label for t in turns}),
-        metadata=TranscriptMetadata(
-            original_format="json",
-            turn_count=len(turns),
-            word_count=sum(len(t.text.split()) for t in turns),
-        ),
-    )
 
+def load_raw_transcript(
+    transcript_path: Path,
+    eval_config: dict,
+) -> tuple[dict, ParsedTranscript, MemoryBlock]:
+    """Load and parse a raw transcript file using the existing parser.
+
+    Returns (metadata_dict, ParsedTranscript, MemoryBlock).
+    """
+    # Parse the transcript using the same parser as the UI upload
+    raw_bytes = transcript_path.read_bytes()
+    source_id = transcript_path.stem  # filename without extension as ID
+    parsed = parse_transcript(raw_bytes, transcript_path.name, source_id)
+
+    # Build metadata: start with eval_config, override with per-transcript meta
+    per_meta = _load_per_transcript_meta(transcript_path) or {}
+    metadata = {**eval_config, **per_meta}
+
+    # Auto-detect target_speaker_label if not set and there's a dominant speaker
+    if metadata.get("target_speaker_label") == "Speaker" and parsed.speaker_labels:
+        # Use the most frequent speaker as target
+        speaker_counts: dict[str, int] = defaultdict(int)
+        for turn in parsed.turns:
+            speaker_counts[turn.speaker_label] += 1
+        most_frequent = max(speaker_counts, key=speaker_counts.get)  # type: ignore[arg-type]
+        metadata["target_speaker_label"] = most_frequent
+        if metadata.get("target_speaker_name") == "Speaker":
+            metadata["target_speaker_name"] = most_frequent
+
+    # Ensure meeting_id exists
+    if "meeting_id" not in metadata:
+        metadata["meeting_id"] = f"EVAL-{source_id}"
+
+    # Build memory block
     mem_data = metadata.get("memory", {})
     memory = MemoryBlock(
-        baseline_profile=mem_data.get("baseline_profile"),
-        recent_pattern_snapshots=mem_data.get("recent_pattern_snapshots", []),
-        active_experiment=mem_data.get("active_experiment"),
+        baseline_profile=mem_data.get("baseline_profile") if isinstance(mem_data, dict) else None,
+        recent_pattern_snapshots=mem_data.get("recent_pattern_snapshots", []) if isinstance(mem_data, dict) else [],
+        active_experiment=mem_data.get("active_experiment") if isinstance(mem_data, dict) else None,
     )
 
-    return metadata, parsed_transcript, memory
+    return metadata, parsed, memory
+
+
+def find_transcript_files(transcripts_dir: Path) -> list[Path]:
+    """Find all supported transcript files in a directory."""
+    files = []
+    for ext in _SUPPORTED_EXTENSIONS:
+        files.extend(transcripts_dir.glob(f"*{ext}"))
+    return sorted(files)
 
 
 # ── Single analysis run ──────────────────────────────────────────────────────
@@ -99,15 +165,10 @@ def run_single_analysis(
     model: str | None = None,
     max_tokens: int | None = None,
 ) -> dict[str, Any]:
-    """Run one analysis through the full pipeline (prompt → LLM → gate1).
-
-    Returns dict with: raw_text, parsed_json, gate1_passed, gate1_issues,
-    pattern_scores, pattern_opp_counts, pattern_statuses.
-    """
+    """Run one analysis through the full pipeline (prompt -> LLM -> gate1)."""
     model = model or OPENAI_MODEL_DEFAULT
     max_tokens = max_tokens or OPENAI_MAX_TOKENS
 
-    # Build prompt
     prompt_payload = build_single_meeting_prompt(
         meeting_id=metadata["meeting_id"],
         meeting_type=metadata["meeting_type"],
@@ -119,11 +180,9 @@ def run_single_analysis(
         memory=memory,
     )
 
-    # Load system prompt and developer message
     sys_prompt = load_system_prompt()
     dev_message = build_developer_message()
 
-    # Call LLM
     t0 = time.time()
     response = call_llm(
         system_prompt=sys_prompt,
@@ -134,10 +193,8 @@ def run_single_analysis(
     )
     elapsed = time.time() - t0
 
-    # Gate1 validation
     gate1_result = gate1_validate(response.raw_text)
 
-    # Extract pattern-level data
     parsed = response.parsed
     pattern_scores: dict[str, float | None] = {}
     pattern_opp_counts: dict[str, int | None] = {}
@@ -151,7 +208,6 @@ def run_single_analysis(
             pattern_opp_counts[pid] = snap.get("opportunity_count")
             pattern_statuses[pid] = snap.get("evaluable_status", "unknown")
 
-    # Count OEs per pattern
     for oe in parsed.get("opportunity_events", []):
         pid = oe.get("pattern_id")
         if pid and oe.get("count_decision") == "counted":
@@ -179,15 +235,19 @@ def run_single_analysis(
 # ── Repeat mode ──────────────────────────────────────────────────────────────
 
 def run_repeat(
-    case_dir: Path,
+    transcript_path: Path,
     n_runs: int,
+    eval_config: dict,
     model: str | None = None,
 ) -> dict[str, Any]:
     """Run one transcript N times and compute intra-transcript stats."""
-    metadata, parsed_transcript, memory = load_transcript_case(case_dir)
-    transcript_id = case_dir.name
+    metadata, parsed_transcript, memory = load_raw_transcript(transcript_path, eval_config)
+    transcript_id = transcript_path.stem
 
     logger.info("=== Repeat mode: %s x %d runs ===", transcript_id, n_runs)
+    logger.info("  Target speaker: %s", metadata["target_speaker_label"])
+    logger.info("  Meeting type: %s", metadata["meeting_type"])
+    logger.info("  Turns: %d | Words: %d", len(parsed_transcript.turns), parsed_transcript.metadata.word_count)
 
     runs: list[dict] = []
     for i in range(n_runs):
@@ -205,7 +265,6 @@ def run_repeat(
             logger.error("  Run %d failed: %s", i + 1, e)
             runs.append({"error": str(e), "gate1_passed": False})
 
-    # Compute stats
     gate1_passes = sum(1 for r in runs if r.get("gate1_passed"))
     gate1_pass_rate = gate1_passes / len(runs) if runs else 0
 
@@ -246,7 +305,6 @@ def run_repeat(
     }
     save_json(report_data, results_dir / f"repeat_report_{timestamp}.json")
 
-    # Markdown report
     md = format_intra_transcript_report(transcript_id, n_runs, gate1_pass_rate, pattern_results)
     save_report(md, results_dir / f"repeat_report_{timestamp}.md")
 
@@ -260,30 +318,27 @@ def run_compare(
     n_runs: int,
     model: str | None = None,
 ) -> dict[str, Any]:
-    """Run multiple transcripts (optionally N times each) and compute cross-transcript stats."""
-    case_dirs = sorted([
-        d for d in transcripts_dir.iterdir()
-        if d.is_dir() and (d / "transcript.json").exists()
-    ])
+    """Run all transcripts in a directory and compute cross-transcript stats."""
+    eval_config = _load_eval_config(transcripts_dir)
+    transcript_files = find_transcript_files(transcripts_dir)
 
-    if len(case_dirs) < 2:
-        logger.error("Compare mode requires at least 2 transcripts. Found %d.", len(case_dirs))
+    if len(transcript_files) < 2:
+        logger.error("Compare mode requires at least 2 transcript files. Found %d.", len(transcript_files))
         sys.exit(1)
 
-    logger.info("=== Compare mode: %d transcripts x %d runs ===", len(case_dirs), n_runs)
+    logger.info("=== Compare mode: %d transcripts x %d runs ===", len(transcript_files), n_runs)
+    for f in transcript_files:
+        logger.info("  %s", f.name)
 
-    # Run repeat for each transcript
     per_transcript: dict[str, dict] = {}
-    for case_dir in case_dirs:
-        report = run_repeat(case_dir, n_runs, model=model)
-        per_transcript[case_dir.name] = report["pattern_results"]
+    for transcript_path in transcript_files:
+        report = run_repeat(transcript_path, n_runs, eval_config, model=model)
+        per_transcript[transcript_path.stem] = report["pattern_results"]
 
-    # Compute cross-transcript stats
-    transcript_ids = [d.name for d in case_dirs]
+    transcript_ids = [f.stem for f in transcript_files]
     cross_transcript: dict[str, dict] = {}
 
     for pid in PATTERN_ORDER:
-        # Collect mean scores across transcripts
         means = []
         intra_iqrs = []
         for tid in transcript_ids:
@@ -298,7 +353,6 @@ def run_compare(
             round(sum(intra_iqrs) / len(intra_iqrs), 4) if intra_iqrs else None
         )
 
-        # Signal-to-noise: cross_iqr / mean_intra_iqr
         signal_to_noise = None
         if cross_stats["iqr"] is not None and mean_intra_iqr and mean_intra_iqr > 0:
             signal_to_noise = round(cross_stats["iqr"] / mean_intra_iqr, 2)
@@ -311,7 +365,6 @@ def run_compare(
             "signal_to_noise": signal_to_noise,
         }
 
-    # Save report
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
     report_data = {
         "transcript_ids": transcript_ids,
@@ -331,18 +384,38 @@ def run_compare(
 # ── CLI ──────────────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description="Layer 1: Score Stability & Discriminant Validity")
+    parser = argparse.ArgumentParser(
+        description="Layer 1: Score Stability & Discriminant Validity",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""\
+examples:
+  # Run one transcript 5 times (repeatability test)
+  python -m backend.evals.replay_eval --mode repeat \\
+    --transcript backend/evals/transcripts/meeting.vtt --runs 5
+
+  # Run all transcripts in a directory, 3 times each (discriminant validity)
+  python -m backend.evals.replay_eval --mode compare \\
+    --transcripts-dir backend/evals/transcripts --runs 3
+""",
+    )
     parser.add_argument("--mode", choices=["repeat", "compare"], required=True)
-    parser.add_argument("--transcript", type=Path, help="Path to transcript case dir (repeat mode)")
-    parser.add_argument("--transcripts-dir", type=Path, help="Path to transcripts dir (compare mode)")
-    parser.add_argument("--runs", type=int, default=5, help="Number of runs per transcript")
-    parser.add_argument("--model", type=str, default=None, help="Model override")
+    parser.add_argument(
+        "--transcript", type=Path,
+        help="Path to a raw transcript file (.vtt, .txt, .srt, .docx, .pdf) for repeat mode",
+    )
+    parser.add_argument(
+        "--transcripts-dir", type=Path,
+        help="Directory containing transcript files for compare mode",
+    )
+    parser.add_argument("--runs", type=int, default=5, help="Number of runs per transcript (default: 5)")
+    parser.add_argument("--model", type=str, default=None, help="Model override (e.g., claude-sonnet-4-6)")
     args = parser.parse_args()
 
     if args.mode == "repeat":
         if not args.transcript:
             parser.error("--transcript is required for repeat mode")
-        run_repeat(args.transcript, args.runs, model=args.model)
+        eval_config = _load_eval_config(args.transcript.parent)
+        run_repeat(args.transcript, args.runs, eval_config, model=args.model)
 
     elif args.mode == "compare":
         if not args.transcripts_dir:
