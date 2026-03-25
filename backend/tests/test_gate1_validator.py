@@ -90,7 +90,9 @@ def test_invalid_pattern_id_fails(valid_single_meeting_output):
     assert result.passed is False
 
 
-def test_numeric_pattern_missing_score_fails(valid_single_meeting_output):
+def test_numeric_pattern_missing_score_coerced_to_insufficient(valid_single_meeting_output):
+    """When an evaluable pattern is missing its score, the sanitiser coerces
+    it to insufficient_signal rather than failing schema validation."""
     bad = copy.deepcopy(valid_single_meeting_output)
     # Find first evaluable pattern and remove its score
     for p in bad["pattern_snapshot"]:
@@ -98,7 +100,8 @@ def test_numeric_pattern_missing_score_fails(valid_single_meeting_output):
             del p["score"]
             break
     result = validate(json.dumps(bad))
-    assert result.passed is False
+    # Sanitiser auto-corrects, so validation passes (with possible warnings)
+    assert result.passed is True
 
 
 def test_score_exceeds_one_fails(valid_single_meeting_output):

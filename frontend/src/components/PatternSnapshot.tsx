@@ -579,9 +579,9 @@ export function PatternCard({
           )
         ) : (
           <span className="text-xs text-cv-stone-400 capitalize">
-            {pattern.evaluable_status === 'insufficient_signal'
-              ? STRINGS.evaluableStatus.insufficient_signal
-              : STRINGS.evaluableStatus.not_evaluable}
+            {pattern.evaluable_status === 'not_evaluable'
+              ? STRINGS.evaluableStatus.not_evaluable
+              : STRINGS.evaluableStatus.insufficient_signal}
           </span>
         )}
       </button>

@@ -270,8 +270,40 @@ def _sanitise_output(data: dict) -> int:
     if isinstance(det, dict):
         fixes += _fix_exp_id(det, "experiment_id", "$.experiment_tracking.detection_in_this_meeting.experiment_id")
 
-    # ── Strip OEs for non-evaluable patterns ────────────────────────────
+    # ── Coerce evaluable patterns missing score/opp_count to insufficient_signal ──
     ps_list = data.get("pattern_snapshot", [])
+    eval_summary = data.get("evaluation_summary", {})
+    evaluated_list = eval_summary.get("patterns_evaluated", [])
+    insuff_list = eval_summary.get("patterns_insufficient_signal", [])
+    for snap in ps_list:
+        if (
+            snap.get("evaluable_status") == "evaluable"
+            and ("score" not in snap or "opportunity_count" not in snap)
+        ):
+            pid = snap.get("pattern_id", "?")
+            logger.warning(
+                "Sanitiser: coercing %s from evaluable to insufficient_signal "
+                "(missing score or opportunity_count)",
+                pid,
+            )
+            snap["evaluable_status"] = "insufficient_signal"
+            snap.pop("score", None)
+            snap.pop("opportunity_count", None)
+            snap.pop("success_evidence_span_ids", None)
+            snap.pop("element_a_count", None)
+            snap.pop("element_b_count", None)
+            snap.pop("simple_count", None)
+            snap.pop("complex_count", None)
+            snap.pop("balance_assessment", None)
+            snap["evidence_span_ids"] = []
+            # Sync evaluation_summary arrays
+            if pid in evaluated_list:
+                evaluated_list.remove(pid)
+                if pid not in insuff_list:
+                    insuff_list.append(pid)
+            fixes += 1
+
+    # ── Strip OEs for non-evaluable patterns ────────────────────────────
     non_evaluable_pids = {
         p.get("pattern_id") for p in ps_list
         if p.get("evaluable_status") in ("insufficient_signal", "not_evaluable")

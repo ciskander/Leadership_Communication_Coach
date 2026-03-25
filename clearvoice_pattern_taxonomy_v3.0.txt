@@ -208,7 +208,7 @@ Role notes:
 - 1:1 Report: mark not_evaluable unless they are leading the conversation.
 
 Minimum threshold:
-- 2 drift episodes required. If the meeting has 0–1 drift episodes, mark insufficient_signal. A meeting with no drift is a well-run meeting, not a scoreable one.
+- 1 drift episode required. If the meeting has 0 drift episodes, mark insufficient_signal. A meeting with no drift is a well-run meeting, not a scoreable one.
 
 Detection notes:
 - Identifying drift requires comparing the current discussion content against the most recently stated topic or objective. If no objective was stated (Purposeful Framing scored 0), drift detection becomes unreliable — mark insufficient_signal.
@@ -284,7 +284,7 @@ Role notes:
 - 1:1: mark not_evaluable for the scored portion (no participation to manage). Still provide the balance_assessment annotation.
 
 Minimum threshold:
-- 3 opportunities required for the scored portion. Fewer → insufficient_signal.
+- 2 opportunities required for the scored portion. Fewer → insufficient_signal.
 - balance_assessment can always be provided regardless of opportunity count (except when attribution is unclear).
 
 Detection notes:
@@ -793,14 +793,31 @@ Where a single utterance could be classified under more than one pattern,
 apply the following rules:
 
 EXCLUSIVE (count under only one):
-- question_quality vs. participation_management: If the target speaker's 
-  turn is interrogative in form — i.e., they are asking a question — count 
-  it under question_quality only, not participation_management, even if 
-  asking the question also yields the floor to another speaker. Exception: 
-  if the question is clearly procedural or logistical (excluded from 
-  question_quality per its own exclusion rules), it may still qualify as 
-  a participation_management moment if it functions as a named floor 
-  direction (e.g., "Jake, quick update from you?").
+- question_quality vs. participation_management: Determine the PRIMARY
+  function of the turn. If the turn's main purpose is directing the floor
+  to a specific person, count it under participation_management, even if
+  the invitation is phrased as a question. If the turn's main purpose is
+  probing, testing, or surfacing information and the floor yield is
+  incidental, count it under question_quality.
+  Signals that participation_management is primary:
+    - The speaker explicitly names a person and directs the floor to
+      them ("Thomas, we haven't heard your view…").
+    - The speaker references the person's function or stake as the
+      reason for the invitation ("Rina, support hasn't weighed in yet").
+    - The invitation precedes or accompanies a decision close.
+  Signals that question_quality is primary:
+    - The question targets a specific piece of information, constraint,
+      or risk regardless of who answers.
+    - The speaker is probing deeper into a point the named person
+      already raised.
+    - The question would be equally valuable if directed to anyone
+      with similar expertise.
+  Note: once classified under participation_management, the PM scoring
+  rubric (1.0/0.75/0.5/0.25/0.0) determines the score based on whether
+  the invitee had already contributed, the specificity of the invitation,
+  etc. The priority rule only determines WHICH pattern owns the moment.
+  Exception: generic open-floor prompts ("Any thoughts?", "Questions?")
+  remain excluded from participation_management regardless of form.
 
 - focus_management vs. disagreement_navigation: If a drift episode and 
   a disagreement moment co-occur in the same exchange, score the moment 
