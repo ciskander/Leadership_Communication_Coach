@@ -1,0 +1,12 @@
+{
+  "meeting_type": "cross_functional",
+  "target_role": "chair",
+  "meeting_date": "2026-01-01",
+  "target_speaker_name": "Speaker",
+  "target_speaker_label": "Speaker",
+  "memory": {
+    "baseline_profile": null,
+    "recent_pattern_snapshots": [],
+    "active_experiment": null
+  }
+}

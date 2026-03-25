@@ -1,0 +1,427 @@
+"""
+replay_eval.py — Layer 1: Score Stability & Discriminant Validity.
+
+Two modes:
+  --mode repeat   Run one transcript N times, measure intra-transcript IQR.
+  --mode compare  Run all transcripts in a directory (optionally N times each),
+                  measure inter-transcript distribution per pattern.
+
+Accepts raw transcript files (.vtt, .txt, .srt, .docx, .pdf) — the same
+formats you upload through the UI. Files are parsed automatically using the
+existing transcript parser.
+
+Transcript directory layout:
+  backend/evals/transcripts/
+    eval_config.json           # shared defaults (meeting_type, target_role, etc.)
+    meeting_alpha.vtt          # raw transcript files
+    meeting_beta.txt
+    meeting_beta.meta.json     # optional per-transcript metadata overrides
+
+Usage:
+  # Repeat: run one transcript 5 times
+  python -m backend.evals.replay_eval --mode repeat \
+    --transcript backend/evals/transcripts/meeting_alpha.vtt --runs 5
+
+  # Compare: run all transcripts in directory, 3 times each
+  python -m backend.evals.replay_eval --mode compare \
+    --transcripts-dir backend/evals/transcripts --runs 3
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import logging
+import sys
+import time
+from collections import defaultdict
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+# Add project root to path so imports work when run as module
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
+from backend.core.config import OPENAI_MODEL_DEFAULT, OPENAI_MAX_TOKENS, PATTERN_ORDER
+from backend.core.gate1_validator import validate as gate1_validate
+from backend.core.llm_client import call_llm
+from backend.core.models import MemoryBlock, ParsedTranscript
+from backend.core.openai_client import load_system_prompt
+from backend.core.prompt_builder import build_developer_message, build_single_meeting_prompt
+from backend.core.transcript_parser import parse_transcript
+from backend.evals.report import (
+    compute_pattern_stats,
+    compute_int_stats,
+    format_intra_transcript_report,
+    format_inter_transcript_report,
+    save_report,
+    save_json,
+)
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+logger = logging.getLogger(__name__)
+
+_RESULTS_DIR = Path(__file__).parent / "results"
+
+_SUPPORTED_EXTENSIONS = {".vtt", ".txt", ".srt", ".docx", ".pdf"}
+
+# ── Default eval config ──────────────────────────────────────────────────────
+
+_DEFAULT_EVAL_CONFIG = {
+    "meeting_type": "cross_functional",
+    "target_role": "chair",
+    "meeting_date": "2026-01-01",
+    "target_speaker_name": "Speaker",
+    "target_speaker_label": "Speaker",
+    "memory": {
+        "baseline_profile": None,
+        "recent_pattern_snapshots": [],
+        "active_experiment": None,
+    },
+}
+
+
+# ── Transcript loading ───────────────────────────────────────────────────────
+
+def _load_eval_config(transcripts_dir: Path) -> dict:
+    """Load eval_config.json from the transcripts directory, or use defaults."""
+    config_path = transcripts_dir / "eval_config.json"
+    if config_path.exists():
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+        # Merge with defaults (config overrides defaults)
+        merged = {**_DEFAULT_EVAL_CONFIG, **config}
+        if "memory" not in config:
+            merged["memory"] = _DEFAULT_EVAL_CONFIG["memory"]
+        return merged
+    return dict(_DEFAULT_EVAL_CONFIG)
+
+
+def _load_per_transcript_meta(transcript_path: Path) -> dict | None:
+    """Load optional per-transcript metadata override (e.g., meeting_alpha.meta.json)."""
+    meta_path = transcript_path.with_suffix(".meta.json")
+    if meta_path.exists():
+        return json.loads(meta_path.read_text(encoding="utf-8"))
+    return None
+
+
+def load_raw_transcript(
+    transcript_path: Path,
+    eval_config: dict,
+) -> tuple[dict, ParsedTranscript, MemoryBlock]:
+    """Load and parse a raw transcript file using the existing parser.
+
+    Returns (metadata_dict, ParsedTranscript, MemoryBlock).
+    """
+    # Parse the transcript using the same parser as the UI upload
+    raw_bytes = transcript_path.read_bytes()
+    source_id = transcript_path.stem  # filename without extension as ID
+    parsed = parse_transcript(raw_bytes, transcript_path.name, source_id)
+
+    # Build metadata: start with eval_config, override with per-transcript meta
+    per_meta = _load_per_transcript_meta(transcript_path) or {}
+    metadata = {**eval_config, **per_meta}
+
+    # Auto-detect target_speaker_label if not set and there's a dominant speaker
+    if metadata.get("target_speaker_label") == "Speaker" and parsed.speaker_labels:
+        # Use the most frequent speaker as target
+        speaker_counts: dict[str, int] = defaultdict(int)
+        for turn in parsed.turns:
+            speaker_counts[turn.speaker_label] += 1
+        most_frequent = max(speaker_counts, key=speaker_counts.get)  # type: ignore[arg-type]
+        metadata["target_speaker_label"] = most_frequent
+        if metadata.get("target_speaker_name") == "Speaker":
+            metadata["target_speaker_name"] = most_frequent
+
+    # Ensure meeting_id exists
+    if "meeting_id" not in metadata:
+        metadata["meeting_id"] = f"EVAL-{source_id}"
+
+    # Build memory block
+    mem_data = metadata.get("memory", {})
+    memory = MemoryBlock(
+        baseline_profile=mem_data.get("baseline_profile") if isinstance(mem_data, dict) else None,
+        recent_pattern_snapshots=mem_data.get("recent_pattern_snapshots", []) if isinstance(mem_data, dict) else [],
+        active_experiment=mem_data.get("active_experiment") if isinstance(mem_data, dict) else None,
+    )
+
+    return metadata, parsed, memory
+
+
+def find_transcript_files(transcripts_dir: Path) -> list[Path]:
+    """Find all supported transcript files in a directory."""
+    files = []
+    for ext in _SUPPORTED_EXTENSIONS:
+        files.extend(transcripts_dir.glob(f"*{ext}"))
+    return sorted(files)
+
+
+# ── Single analysis run ──────────────────────────────────────────────────────
+
+def run_single_analysis(
+    metadata: dict,
+    parsed_transcript: ParsedTranscript,
+    memory: MemoryBlock,
+    model: str | None = None,
+    max_tokens: int | None = None,
+) -> dict[str, Any]:
+    """Run one analysis through the full pipeline (prompt -> LLM -> gate1)."""
+    model = model or OPENAI_MODEL_DEFAULT
+    max_tokens = max_tokens or OPENAI_MAX_TOKENS
+
+    prompt_payload = build_single_meeting_prompt(
+        meeting_id=metadata["meeting_id"],
+        meeting_type=metadata["meeting_type"],
+        target_role=metadata["target_role"],
+        meeting_date=metadata["meeting_date"],
+        target_speaker_name=metadata["target_speaker_name"],
+        target_speaker_label=metadata["target_speaker_label"],
+        parsed_transcript=parsed_transcript,
+        memory=memory,
+    )
+
+    sys_prompt = load_system_prompt()
+    dev_message = build_developer_message()
+
+    t0 = time.time()
+    response = call_llm(
+        system_prompt=sys_prompt,
+        developer_message=dev_message,
+        user_message=prompt_payload.raw_user_message,
+        model=model,
+        max_tokens=max_tokens,
+    )
+    elapsed = time.time() - t0
+
+    gate1_result = gate1_validate(response.raw_text)
+
+    parsed = response.parsed
+    pattern_scores: dict[str, float | None] = {}
+    pattern_opp_counts: dict[str, int | None] = {}
+    pattern_statuses: dict[str, str] = {}
+    pattern_oe_counts: dict[str, int] = defaultdict(int)
+
+    for snap in parsed.get("pattern_snapshot", []):
+        pid = snap.get("pattern_id")
+        if pid:
+            pattern_scores[pid] = snap.get("score")
+            pattern_opp_counts[pid] = snap.get("opportunity_count")
+            pattern_statuses[pid] = snap.get("evaluable_status", "unknown")
+
+    for oe in parsed.get("opportunity_events", []):
+        pid = oe.get("pattern_id")
+        if pid and oe.get("count_decision") == "counted":
+            pattern_oe_counts[pid] += 1
+
+    return {
+        "raw_text": response.raw_text,
+        "parsed_json": parsed,
+        "model": response.model,
+        "prompt_tokens": response.prompt_tokens,
+        "completion_tokens": response.completion_tokens,
+        "elapsed_sec": round(elapsed, 1),
+        "gate1_passed": gate1_result.passed,
+        "gate1_issues": [
+            {"severity": i.severity, "code": i.issue_code, "path": i.path, "message": i.message}
+            for i in gate1_result.issues
+        ],
+        "pattern_scores": dict(pattern_scores),
+        "pattern_opp_counts": dict(pattern_opp_counts),
+        "pattern_statuses": dict(pattern_statuses),
+        "pattern_oe_counts": dict(pattern_oe_counts),
+    }
+
+
+# ── Repeat mode ──────────────────────────────────────────────────────────────
+
+def run_repeat(
+    transcript_path: Path,
+    n_runs: int,
+    eval_config: dict,
+    model: str | None = None,
+) -> dict[str, Any]:
+    """Run one transcript N times and compute intra-transcript stats."""
+    metadata, parsed_transcript, memory = load_raw_transcript(transcript_path, eval_config)
+    transcript_id = transcript_path.stem
+
+    logger.info("=== Repeat mode: %s x %d runs ===", transcript_id, n_runs)
+    logger.info("  Target speaker: %s", metadata["target_speaker_label"])
+    logger.info("  Meeting type: %s", metadata["meeting_type"])
+    logger.info("  Turns: %d | Words: %d", len(parsed_transcript.turns), parsed_transcript.metadata.word_count)
+
+    runs: list[dict] = []
+    for i in range(n_runs):
+        logger.info("Run %d/%d for %s ...", i + 1, n_runs, transcript_id)
+        try:
+            result = run_single_analysis(metadata, parsed_transcript, memory, model=model)
+            runs.append(result)
+            logger.info(
+                "  Gate1: %s | Tokens: %d | Time: %ss",
+                "PASS" if result["gate1_passed"] else "FAIL",
+                result["prompt_tokens"] + result["completion_tokens"],
+                result["elapsed_sec"],
+            )
+        except Exception as e:
+            logger.error("  Run %d failed: %s", i + 1, e)
+            runs.append({"error": str(e), "gate1_passed": False})
+
+    gate1_passes = sum(1 for r in runs if r.get("gate1_passed"))
+    gate1_pass_rate = gate1_passes / len(runs) if runs else 0
+
+    pattern_results: dict[str, dict] = {}
+    for pid in PATTERN_ORDER:
+        scores = [r["pattern_scores"].get(pid) for r in runs if "pattern_scores" in r]
+        opp_counts = [r["pattern_opp_counts"].get(pid) for r in runs if "pattern_opp_counts" in r]
+        oe_counts = [r["pattern_oe_counts"].get(pid, 0) for r in runs if "pattern_oe_counts" in r]
+        statuses = [r["pattern_statuses"].get(pid, "unknown") for r in runs if "pattern_statuses" in r]
+
+        status_counts: dict[str, int] = defaultdict(int)
+        for s in statuses:
+            status_counts[s] += 1
+
+        pattern_results[pid] = {
+            "score": compute_pattern_stats(scores),
+            "opportunity_count": compute_int_stats(opp_counts),
+            "oe_count": compute_int_stats(oe_counts),
+            "status_distribution": dict(status_counts),
+        }
+
+    # Save results
+    results_dir = _RESULTS_DIR / transcript_id
+    results_dir.mkdir(parents=True, exist_ok=True)
+
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+    for i, run_data in enumerate(runs):
+        if "parsed_json" in run_data:
+            save_json(run_data["parsed_json"], results_dir / f"run_{i+1:03d}_{timestamp}.json")
+
+    report_data = {
+        "transcript_id": transcript_id,
+        "n_runs": n_runs,
+        "gate1_pass_rate": gate1_pass_rate,
+        "model": runs[0].get("model", "unknown") if runs else "unknown",
+        "timestamp": timestamp,
+        "pattern_results": pattern_results,
+    }
+    save_json(report_data, results_dir / f"repeat_report_{timestamp}.json")
+
+    md = format_intra_transcript_report(transcript_id, n_runs, gate1_pass_rate, pattern_results)
+    save_report(md, results_dir / f"repeat_report_{timestamp}.md")
+
+    return report_data
+
+
+# ── Compare mode ─────────────────────────────────────────────────────────────
+
+def run_compare(
+    transcripts_dir: Path,
+    n_runs: int,
+    model: str | None = None,
+) -> dict[str, Any]:
+    """Run all transcripts in a directory and compute cross-transcript stats."""
+    eval_config = _load_eval_config(transcripts_dir)
+    transcript_files = find_transcript_files(transcripts_dir)
+
+    if len(transcript_files) < 2:
+        logger.error("Compare mode requires at least 2 transcript files. Found %d.", len(transcript_files))
+        sys.exit(1)
+
+    logger.info("=== Compare mode: %d transcripts x %d runs ===", len(transcript_files), n_runs)
+    for f in transcript_files:
+        logger.info("  %s", f.name)
+
+    per_transcript: dict[str, dict] = {}
+    for transcript_path in transcript_files:
+        report = run_repeat(transcript_path, n_runs, eval_config, model=model)
+        per_transcript[transcript_path.stem] = report["pattern_results"]
+
+    transcript_ids = [f.stem for f in transcript_files]
+    cross_transcript: dict[str, dict] = {}
+
+    for pid in PATTERN_ORDER:
+        means = []
+        intra_iqrs = []
+        for tid in transcript_ids:
+            tr = per_transcript.get(tid, {}).get(pid, {}).get("score", {})
+            if tr.get("mean") is not None:
+                means.append(tr["mean"])
+            if tr.get("iqr") is not None:
+                intra_iqrs.append(tr["iqr"])
+
+        cross_stats = compute_pattern_stats(means)
+        mean_intra_iqr = (
+            round(sum(intra_iqrs) / len(intra_iqrs), 4) if intra_iqrs else None
+        )
+
+        signal_to_noise = None
+        if cross_stats["iqr"] is not None and mean_intra_iqr and mean_intra_iqr > 0:
+            signal_to_noise = round(cross_stats["iqr"] / mean_intra_iqr, 2)
+
+        cross_transcript[pid] = {
+            "cross_iqr": cross_stats["iqr"],
+            "cross_stdev": cross_stats["stdev"],
+            "cross_mean": cross_stats["mean"],
+            "mean_intra_iqr": mean_intra_iqr,
+            "signal_to_noise": signal_to_noise,
+        }
+
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+    report_data = {
+        "transcript_ids": transcript_ids,
+        "n_runs_per_transcript": n_runs,
+        "timestamp": timestamp,
+        "per_transcript": per_transcript,
+        "cross_transcript": cross_transcript,
+    }
+    save_json(report_data, _RESULTS_DIR / f"compare_report_{timestamp}.json")
+
+    md = format_inter_transcript_report(transcript_ids, per_transcript, cross_transcript)
+    save_report(md, _RESULTS_DIR / f"compare_report_{timestamp}.md")
+
+    return report_data
+
+
+# ── CLI ──────────────────────────────────────────────────────────────────────
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Layer 1: Score Stability & Discriminant Validity",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""\
+examples:
+  # Run one transcript 5 times (repeatability test)
+  python -m backend.evals.replay_eval --mode repeat \\
+    --transcript backend/evals/transcripts/meeting.vtt --runs 5
+
+  # Run all transcripts in a directory, 3 times each (discriminant validity)
+  python -m backend.evals.replay_eval --mode compare \\
+    --transcripts-dir backend/evals/transcripts --runs 3
+""",
+    )
+    parser.add_argument("--mode", choices=["repeat", "compare"], required=True)
+    parser.add_argument(
+        "--transcript", type=Path,
+        help="Path to a raw transcript file (.vtt, .txt, .srt, .docx, .pdf) for repeat mode",
+    )
+    parser.add_argument(
+        "--transcripts-dir", type=Path,
+        help="Directory containing transcript files for compare mode",
+    )
+    parser.add_argument("--runs", type=int, default=5, help="Number of runs per transcript (default: 5)")
+    parser.add_argument("--model", type=str, default=None, help="Model override (e.g., claude-sonnet-4-6)")
+    args = parser.parse_args()
+
+    if args.mode == "repeat":
+        if not args.transcript:
+            parser.error("--transcript is required for repeat mode")
+        eval_config = _load_eval_config(args.transcript.parent)
+        run_repeat(args.transcript, args.runs, eval_config, model=args.model)
+
+    elif args.mode == "compare":
+        if not args.transcripts_dir:
+            parser.error("--transcripts-dir is required for compare mode")
+        run_compare(args.transcripts_dir, args.runs, model=args.model)
+
+
+if __name__ == "__main__":
+    main()
