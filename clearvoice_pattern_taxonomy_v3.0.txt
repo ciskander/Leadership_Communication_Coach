@@ -820,8 +820,8 @@ EXCLUSIVE (count under only one):
   remain excluded from participation_management regardless of form.
 
 - focus_management vs. disagreement_navigation: If a drift episode and 
-  a disagreement moment co-occur in the same exchange, score the moment 
-  under disagreement_navigation only. Focus Management is the appropriate 
+  a disagreement moment co-occur in the same exchange, determine the PRIMARY
+  function of the turn. Focus Management is the appropriate 
   lens when the primary issue is topical drift; Disagreement Navigation 
   takes priority when interpersonal tension or explicit pushback is 
   the primary dynamic.
