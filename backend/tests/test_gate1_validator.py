@@ -364,8 +364,8 @@ def test_success_threshold_binary_requires_1_0(valid_single_meeting_output):
     assert "SUCCESS_SPAN_INCORRECT" in codes
 
 
-def test_success_threshold_dual_element_requires_1_0(valid_single_meeting_output):
-    """For dual_element scoring, success=0.5 (one element only) is not a success."""
+def test_success_threshold_tiered_rubric_ra_requires_0_75(valid_single_meeting_output):
+    """For tiered_rubric scoring (R&A), success=0.5 is not a success (threshold is 0.75)."""
     out = copy.deepcopy(valid_single_meeting_output)
 
     # Change OE-008 (resolution_and_alignment) success from 1.0 to 0.5
@@ -400,10 +400,8 @@ def test_success_threshold_dual_element_requires_1_0(valid_single_meeting_output
     ra = out["pattern_snapshot"][4]
     ra["score"] = 0.5  # (0.5 + 0.5) / 2
     ra["opportunity_count"] = 2
-    ra["element_a_count"] = 2
-    ra["element_b_count"] = 0
     ra["evidence_span_ids"] = ["ES-T020-021", "ES-T038-039"]
-    # ES-T020-021 has OE-008 score 0.5, listed as success — wrong for dual_element
+    # ES-T020-021 has OE-008 score 0.5, listed as success — wrong for tiered_rubric (threshold 0.75)
     ra["success_evidence_span_ids"] = ["ES-T020-021"]
 
     result = validate(json.dumps(out))

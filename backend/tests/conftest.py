@@ -191,13 +191,11 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
         {
             "pattern_id": "resolution_and_alignment",
             "cluster_id": "decisions_accountability",
-            "scoring_type": "dual_element",
+            "scoring_type": "tiered_rubric",
             "evaluable_status": "evaluable",
             "denominator_rule_id": "explicit_decision_moment_chair",
             "min_required_threshold": 2,
             "opportunity_count": 1,
-            "element_a_count": 1,
-            "element_b_count": 1,
             "score": 1.0,
             "evidence_span_ids": ["ES-T020-021"],
             "success_evidence_span_ids": ["ES-T020-021"],
@@ -219,7 +217,7 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
         {
             "pattern_id": "question_quality",
             "cluster_id": "communication_quality",
-            "scoring_type": "binary",
+            "scoring_type": "three_tier",
             "evaluable_status": "evaluable",
             "denominator_rule_id": "question_to_target",
             "min_required_threshold": 2,

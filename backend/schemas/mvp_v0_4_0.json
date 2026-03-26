@@ -220,7 +220,7 @@
     },
     "ScoringType": {
       "type": "string",
-      "enum": ["dual_element", "tiered_rubric", "binary", "complexity_tiered", "multi_element"]
+      "enum": ["dual_element", "tiered_rubric", "binary", "three_tier", "complexity_tiered", "multi_element"]
     },
 
     "OpportunityEvent": {

@@ -20,7 +20,7 @@ SCORING TYPES
 
 This taxonomy uses three scoring approaches matched to pattern structure:
 
-1. Dual-element scoring (Purposeful Framing, Resolution & Alignment):
+1. Dual-element scoring (Purposeful Framing):
    - Two named elements required for full credit.
    - Both elements present = 1.0 per opportunity.
    - One element present = 0.5 per opportunity.
@@ -28,13 +28,13 @@ This taxonomy uses three scoring approaches matched to pattern structure:
    - Score = sum of opportunity scores / opportunity_count, rounded to 4 decimals.
    - Output must include element_a_count, element_b_count, and opportunity_count separately.
 
-2. Tiered rubric scoring (Participation Management, Disagreement Navigation, Communication Clarity, Focus Management):
+2. Tiered rubric scoring (Resolution & Alignment, Participation Management, Disagreement Navigation, Communication Clarity, Focus Management):
    - Each opportunity scored 0.0, 0.25, 0.5, 0.75, or 1.0 based on rubric level defined per pattern.
    - Score = sum of opportunity scores / opportunity_count, rounded to 4 decimals.
 
-3. Binary scoring (Question Quality):
-   - Each opportunity scored 1.0 (purposeful) or 0.0 (not purposeful).
-   - Score = purposeful_count / opportunity_count, rounded to 4 decimals.
+3. Three-tier scoring (Question Quality):
+   - Each opportunity scored 1.0 (purposeful), 0.5 (partially purposeful), or 0.0 (not purposeful).
+   - Score = sum of opportunity scores / opportunity_count, rounded to 4 decimals.
 
 4. Complexity-tiered scoring (Assignment Clarity):
    - LLM classifies each assignment as simple or complex based on observable signals.
@@ -391,14 +391,14 @@ These patterns measure how the leader closes decisions and confirms shared under
 
 PATTERN 5: resolution_and_alignment
 Cluster: C — Decisions & Accountability
-Scoring type: Dual-element
+Scoring type: Tiered rubric
 
 What it measures:
-- Whether the target speaker brings discussions to clear conclusions and confirms shared understanding before moving on. This combines the acts of naming what was decided with checking that the group agrees.
+- Whether the target speaker brings discussions to clear conclusions and confirms shared understanding before moving on. This combines the quality of naming what was decided with the quality of checking that the group agrees.
 
-Elements:
-- Element A: Named resolution. The speaker states explicitly what was decided, agreed, or concluded in concrete terms. Not vague ("we're roughly aligned") — specific ("we're going with phased rollout, enterprise first").
-- Element B: Alignment confirmation. The speaker checks that the group shares the understanding — either by explicitly asking ("Does that capture it?" / "Any objections?" / "Is everyone aligned?") or by pausing meaningfully for confirmation.
+Key concepts:
+- Named resolution: The speaker states explicitly what was decided, agreed, or concluded in concrete terms. Not vague ("we're roughly aligned") — specific ("we're going with phased rollout, enterprise first").
+- Alignment confirmation: The speaker checks that the group shares the understanding — either by explicitly asking ("Does that capture it?" / "Any objections?" / "Is everyone aligned?") or by pausing meaningfully for confirmation.
 
 Denominator (opportunity_count):
 - Topic closure moments where the target speaker controls or owns the conclusion. This includes:
@@ -407,16 +407,15 @@ Denominator (opportunity_count):
   - End-of-meeting wrap-ups led by the target speaker.
 
 Scoring per opportunity:
-- Both elements present = 1.0. Example: "So we're going with option A — Jen leads implementation, phased rollout starting in Q3. Does that match what everyone heard? [pause] Good."
-- Element A only = 0.5. Example: "So we said we'd go with option B. Moving on…" (restates but does not check for alignment).
-- Element B only = 0.5. Example: "Everyone good? OK, next topic." (checks for alignment but does not restate what was agreed).
-- Neither element = 0.0. Example: The topic simply trails off or the speaker transitions without any recap or check.
+- 1.0 — Specific resolution + explicit alignment check. The speaker names the decision in concrete terms AND checks for shared understanding. Example: "So we're going with option A — Jen leads implementation, phased rollout starting in Q3. Does that match what everyone heard? [pause] Good."
+- 0.75 — Both elements attempted, one is weak. Specific resolution + implied/weak alignment check (e.g., "Moving on unless anyone objects"), OR vague resolution + explicit alignment check. Example: "We're going with phased rollout. OK, moving on unless someone has a problem."
+- 0.5 — One element clearly present (the other absent), OR both elements attempted but both weak/vague. Specific resolution with no alignment check, explicit alignment check with no resolution stated, or vague resolution + perfunctory check. Example: "So we said we'd go with option B. Moving on…" / "Everyone good? OK, next topic." / "So we're roughly aligned, everyone good?"
+- 0.25 — One element attempted but weak/vague, the other absent. Example: "So we're roughly aligned" (vague resolution, no check), or "Everyone good?" with no context of what they're agreeing to (perfunctory check, no resolution).
+- 0.0 — Neither element present. The topic simply trails off or the speaker transitions without any recap or check.
 
 Score = sum of opportunity scores / opportunity_count.
 
 Output fields:
-- element_a_count (named resolution instances)
-- element_b_count (alignment confirmation instances)
 - opportunity_count
 - score
 
@@ -441,9 +440,10 @@ Minimum threshold:
 
 Detection notes:
 - This pattern is about what was decided and whether there's shared understanding. It is distinct from Assignment Clarity, which is about who does what next. A single conversational moment may contain both a resolution and an assignment — score each under the appropriate pattern.
-- A vague summary ("So we're roughly aligned") does not qualify as Element A. The resolution must be specific enough that someone absent from the meeting could understand what was decided.
-- Element B does not require verbal confirmation from others — it requires the target speaker to create space for it (asking, pausing, inviting objections).
-- In 1:1 meetings, or in any two-person conversational exchange, a direct affirmative response from the other party immediately following a named resolution satisfies Element B.
+- A vague summary ("So we're roughly aligned") does not qualify as a named resolution. The resolution must be specific enough that someone absent from the meeting could understand what was decided. Score vague resolutions at 0.25 (if alone) or 0.5 (if paired with a weak alignment check).
+- Alignment confirmation does not require verbal confirmation from others — it requires the target speaker to create space for it (asking, pausing, inviting objections).
+- In 1:1 meetings, or in any two-person conversational exchange, a direct affirmative response from the other party immediately following a named resolution satisfies the alignment confirmation element.
+- Use the full rubric range. A closure where the speaker does something but does it poorly (vague recap, perfunctory "everyone good?" without context) should score 0.25, not 0.5. Reserve 0.5 for moments where one element is clearly and specifically present.
 
 Experiment guidance:
 - What good looks like: "Here's where we landed: we're going with the phased approach, starting with enterprise in Q3. Does that match what everyone heard?"
@@ -558,7 +558,7 @@ how they ask questions (Question Quality), how clearly they communicate
 
 PATTERN 7: question_quality
 Cluster: D — Communication Quality
-Scoring type: Binary
+Scoring type: Three-tier
 
 What it measures:
 - Whether the questions the target speaker asks are purposeful — meaning they serve a clear function in advancing the conversation — rather than aimless or counterproductive.
@@ -576,12 +576,17 @@ Scoring per opportunity:
   - Constraint-testing: Probes a specific limitation or risk. Example: "What breaks if we try to do this in two weeks instead of four?"
   - Deepening: Drives the conversation to a more concrete or specific level. Example: "When you say 'quality dropped,' what specifically did you see?"
 
+- 0.5 — Partially purposeful. The question has a discernible intent or direction but lands weakly. Categories:
+  - Too broad to target: The intent is identifiable but the question is too open to drive a specific insight. Example: "What are the risks here?" (has a direction — risk — but doesn't target a specific risk or decision).
+  - Slightly leading but still inviting input: Leans toward a conclusion while still leaving room for disagreement. Example: "Don't we think the phased approach makes more sense given the timeline?" (leading, but invites pushback more than a pure leading question).
+  - Multi-part with identifiable core: Multiple questions where a useful core question is diluted by extras. Example: "What's the impact on the timeline, and also, do we need to loop in legal, and what about the budget?" (the timeline question is purposeful but buried).
+
 - 0.0 — Not purposeful. The question does not serve a discernible function in moving the conversation forward. Categories:
   - Aimless open questions: No clear target or purpose. Example: "What does everyone think about our approach?" / "Any general thoughts?"
-  - Leading questions: Assert a position in question form rather than genuinely seeking input. Example: "Don't you think we should just go with option A?"
-  - Unfocused multi-part questions: String together multiple questions that invite broad, scattered discussion rather than unlocking a specific insight. Example: "What do you think about the timeline, and are we staffed right, and what about the budget?"
+  - Leading questions: Assert a position in question form rather than genuinely seeking input, leaving no real room for disagreement. Example: "Don't you think we should just go with option A?"
+  - Unfocused multi-part questions: String together multiple questions that invite broad, scattered discussion with no identifiable core. Example: "What do you think about the timeline, and are we staffed right, and what about the budget?"
 
-Score = purposeful_count / opportunity_count.
+Score = sum of opportunity scores / opportunity_count.
 
 Excluded from both numerator AND denominator (not an opportunity):
 - Rhetorical questions not expecting an answer ("Who wouldn't want that?").

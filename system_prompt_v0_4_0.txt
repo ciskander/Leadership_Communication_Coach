@@ -303,10 +303,10 @@ Write a brief coaching summary — typically 2-4 sentences. Be direct and warm. 
 --- STRENGTHS ---
 
 strengths (0-2 items): {pattern_id, message}
-- Only select patterns with score >= 0.5.
+- Only select patterns with score >= 0.70.
 - If no pattern meets this threshold, return empty array.
 - When multiple qualify, rank by score * opportunity_count and choose top 2.
-- participation_management exception: if fewer than 2 patterns qualify as strengths and participation_management has score >= 0.5 with balance_assessment=balanced, participation_management may fill a remaining strength slot. Other patterns with score >= 0.5 always take priority.
+- participation_management exception: if fewer than 2 patterns qualify as strengths and participation_management has score >= 0.70 with balance_assessment=balanced, participation_management may fill a remaining strength slot. Other patterns with score >= 0.70 always take priority.
 
 message field: 2-3 sentences written directly to the coachee. For strengths, name the specific behavior you observed and explain why it was effective in this meeting's context.
 
