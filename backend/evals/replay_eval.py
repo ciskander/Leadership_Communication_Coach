@@ -367,6 +367,8 @@ def run_compare(
             "cross_iqr": cross_stats["iqr"],
             "cross_stdev": cross_stats["stdev"],
             "cross_mean": cross_stats["mean"],
+            "cross_min": cross_stats["min"],
+            "cross_max": cross_stats["max"],
             "mean_intra_iqr": mean_intra_iqr,
             "signal_to_noise": signal_to_noise,
         }
@@ -495,6 +497,8 @@ def run_compare_offline(outputs_dir: Path) -> dict[str, Any]:
             "cross_iqr": cross_stats["iqr"],
             "cross_stdev": cross_stats["stdev"],
             "cross_mean": cross_stats["mean"],
+            "cross_min": cross_stats["min"],
+            "cross_max": cross_stats["max"],
             "mean_intra_iqr": mean_intra_iqr,
             "signal_to_noise": signal_to_noise,
         }

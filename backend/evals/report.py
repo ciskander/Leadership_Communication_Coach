@@ -158,11 +158,14 @@ def format_inter_transcript_report(
     lines.extend([
         "", "## Cross-Transcript Distribution (wider IQR = better discrimination)", ""
     ])
-    headers2 = ["Pattern", "Cross IQR", "Cross StdDev", "Mean Intra IQR", "Signal/Noise"]
+    headers2 = ["Pattern", "Cross Min", "Cross Max", "Cross Mean", "Cross IQR", "Cross StdDev", "Mean Intra IQR", "Signal/Noise"]
     rows2 = []
     for pid, cs in cross_transcript.items():
         rows2.append([
             pid,
+            _fmt(cs.get("cross_min")),
+            _fmt(cs.get("cross_max")),
+            _fmt(cs.get("cross_mean")),
             _fmt(cs.get("cross_iqr")),
             _fmt(cs.get("cross_stdev")),
             _fmt(cs.get("mean_intra_iqr")),
