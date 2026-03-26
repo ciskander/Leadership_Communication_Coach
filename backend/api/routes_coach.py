@@ -354,7 +354,7 @@ async def coachee_progress(
 
     # ── Fetch eligible runs ───────────────────────────────────────────────
     runs_formula = (
-        f"AND({{Coachee ID}} = '{coachee.airtable_user_record_id}', {{Gate1 Pass}} = TRUE())"
+        f"AND({{Coachee ID}} = '{coachee.airtable_user_record_id}', {{Parsed JSON}} != '')"
     )
     try:
         run_records = at_client.search_records("runs", runs_formula, max_records=60)

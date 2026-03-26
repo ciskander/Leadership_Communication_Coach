@@ -831,7 +831,7 @@ async def get_experiment_options(
         runs_formula = (
             f"AND("
             f"{{Coachee ID}} = '{user.airtable_user_record_id}', "
-            f"{{Gate1 Pass}} = TRUE()"
+            f"{{Parsed JSON}} != ''"
             f")"
         )
         run_records = at_client.search_records("runs", runs_formula, max_records=5)
@@ -1223,8 +1223,10 @@ async def client_progress(
         return ClientProgressResponse(pattern_history=[], past_experiments=[])
 
     # ── Fetch eligible runs ───────────────────────────────────────────────────
+    # Include all runs with Parsed JSON (not just Gate1-passing) so that
+    # sparklines render even for runs that failed Gate1 validation.
     runs_formula = (
-        f"AND({{Coachee ID}} = '{user.airtable_user_record_id}', {{Gate1 Pass}} = TRUE())"
+        f"AND({{Coachee ID}} = '{user.airtable_user_record_id}', {{Parsed JSON}} != '')"
     )
     try:
         run_records = at_client.search_records("runs", runs_formula, max_records=60)
