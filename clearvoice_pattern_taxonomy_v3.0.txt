@@ -193,7 +193,7 @@ Scoring per opportunity (rubric):
 Score = sum of opportunity scores / opportunity_count.
 
 Excluded from both numerator AND denominator (not an opportunity):
-- Natural topic evolution where the discussion deepens or extends the current topic (not a departure, just development).
+- Natural topic evolution where the discussion deepens or extends the current topic (not a departure, just development). A topic shift within the same agenda item or decision context is not drift. For example, moving from discussing one risk to discussing a different risk for the same feature is natural topic evolution, not a tangent. Drift requires the conversation to move to a genuinely unrelated or out-of-scope topic.
 - Brief asides (under ~2 turns) that self-correct without intervention needed.
 - Procedural interruptions (tech issues, latecomers) — these are not topical drift.
 - Drift episodes initiated and resolved by other participants without the target speaker's involvement or agency.
@@ -291,6 +291,7 @@ Detection notes:
 - When in doubt about whether a moment constitutes an opportunity, exclude from both numerator and denominator.
 - "Any thoughts?" or "Does anyone have questions?" is always 0.0 — even if someone responds. The scoring is about the leader's behavior, not the outcome.
 - Role-based detection guidance: When the target speaker's role is chair or facilitator in a multi-person meeting, participation_management opportunities should almost always exist. The chair holds the floor at topic transitions, after summarizing, and when calling on speakers. If fewer than 2 opportunities are detected for a chair/facilitator, re-examine the transcript — it is unlikely that a facilitator never had agency to direct the floor. Common floor-direction moments for a chair/facilitator include: opening a new topic and choosing who speaks first, completing a summary and deciding who responds next, receiving a question from one participant and choosing whether to answer or redirect to another, and transitioning between agenda items.
+- Scope guidance: Focus on the clearest floor-direction moments — typically 3–8 in a standard-length meeting for a chair. Do not count every transitional utterance where the facilitator holds the floor; focus on moments where the facilitator made a deliberate choice about who speaks next or actively managed turn distribution. A brief acknowledgment before continuing is not a floor-direction moment.
 
 Experiment guidance:
 - What good looks like: "Priya, you've been closest to the customer data — what's your read?" Names a specific person, invites them on a specific basis, targets someone not yet heard.
@@ -843,9 +844,6 @@ EXCLUSIVE (count under only one):
     is primarily redirecting the conversation's topic, or
     disagreement_navigation if the speaker is primarily managing
     interpersonal tension.
-  Tie-breaking rule: If the primary function is genuinely ambiguous,
-  classify under the pattern with fewer opportunities detected so far.
-  This prevents one pattern from starving the other of evidence.
 
 PERMITTED MULTI-PATTERN (count under both):
 - resolution_and_alignment + assignment_clarity: A single moment may 
