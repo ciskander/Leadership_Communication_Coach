@@ -411,8 +411,8 @@ Scoring per opportunity:
 - 1.0 — Specific resolution + explicit alignment check. The speaker names the decision in concrete terms AND checks for shared understanding. Example: "So we're going with option A — Jen leads implementation, phased rollout starting in Q3. Does that match what everyone heard? [pause] Good."
 - 0.75 — Both elements attempted, one is weak. Specific resolution + implied/weak alignment check (e.g., "Moving on unless anyone objects"), OR vague resolution + explicit alignment check. Example: "We're going with phased rollout. OK, moving on unless someone has a problem."
 - 0.5 — One element clearly present (the other absent), OR both elements attempted but both weak/vague. Specific resolution with no alignment check, explicit alignment check with no resolution stated, or vague resolution + perfunctory check. Example: "So we said we'd go with option B. Moving on…" / "Everyone good? OK, next topic." / "So we're roughly aligned, everyone good?"
-- 0.25 — One element attempted but weak/vague, the other absent. Example: "So we're roughly aligned" (vague resolution, no check), or "Everyone good?" with no context of what they're agreeing to (perfunctory check, no resolution).
-- 0.0 — Neither element present. The topic simply trails off or the speaker transitions without any recap or check.
+- 0.25 — One element attempted but weak/vague, the other absent. Example: "So we're roughly aligned" (vague resolution, no check), or "Everyone good?" with no context of what they're agreeing to (perfunctory check, no resolution). Also: "Let's take that offline and circle back" / "We'll figure it out" (deferral framed as closure — no resolution stated, no alignment check).
+- 0.0 — Neither element present. The topic simply trails off or the speaker transitions without any recap or check. Example: The speaker moves to the next topic mid-discussion without any closure statement — the previous topic simply stops being discussed. Or: "Anyway — so the other thing I wanted to cover is…" (abrupt pivot, no recap, no check).
 
 Score = sum of opportunity scores / opportunity_count.
 
@@ -445,6 +445,7 @@ Detection notes:
 - Alignment confirmation does not require verbal confirmation from others — it requires the target speaker to create space for it (asking, pausing, inviting objections).
 - In 1:1 meetings, or in any two-person conversational exchange, a direct affirmative response from the other party immediately following a named resolution satisfies the alignment confirmation element.
 - Use the full rubric range. A closure where the speaker does something but does it poorly (vague recap, perfunctory "everyone good?" without context) should score 0.25, not 0.5. Reserve 0.5 for moments where one element is clearly and specifically present.
+- A deferral is not a resolution. Statements like "let's take that offline," "we'll figure it out," or "let's keep working on it" do not name what was decided — they name what was NOT decided. If the speaker defers without stating what has been resolved so far or what the interim decision is, score 0.25 at most (weak/vague attempt, no alignment check) or 0.0 if the topic simply gets pushed with no framing at all. A deferral only qualifies as 0.5 if the speaker explicitly names the interim state (e.g., "We're going with tiered as the default for now; the enterprise exception is unresolved and Sam and Dana will bring a recommendation by Friday").
 
 Experiment guidance:
 - What good looks like: "Here's where we landed: we're going with the phased approach, starting with enterprise in Q3. Does that match what everyone heard?"
