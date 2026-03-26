@@ -116,7 +116,7 @@ def _extract_fields(record: dict) -> dict:
 
 
 def _safe_json_dumps(obj: Any) -> str:
-    return json.dumps(obj, ensure_ascii=False)
+    return json.dumps(obj, ensure_ascii=False, indent=2)
 
 
 def _get_str(fields: dict, key: str) -> Optional[str]:
@@ -685,7 +685,7 @@ def process_single_meeting_analysis(
         except Exception:
             logger.warning("Quote cleanup failed in worker; raw text will be persisted", exc_info=True)
 
-    patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
+    patched_raw = _json.dumps(_parsed_output, ensure_ascii=False, indent=2)
     openai_resp = OpenAIResponse(
         parsed=_parsed_output,
         raw_text=patched_raw,
@@ -1077,7 +1077,7 @@ def process_baseline_pack_build(
     # Evidence spans are already cleaned in the per-meeting sub-runs; running
     # cleanup again is wasteful (extra LLM call) and can corrupt span text.
 
-    patched_raw = _json.dumps(_parsed_output, ensure_ascii=False)
+    patched_raw = _json.dumps(_parsed_output, ensure_ascii=False, indent=2)
     openai_resp = OpenAIResponse(
         parsed=_parsed_output,
         raw_text=patched_raw,
