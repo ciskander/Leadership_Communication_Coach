@@ -28,15 +28,12 @@ This taxonomy uses three scoring approaches matched to pattern structure:
    - Score = sum of opportunity scores / opportunity_count, rounded to 4 decimals.
    - Output must include element_a_count, element_b_count, and opportunity_count separately.
 
-2. Tiered rubric scoring (Purposeful Framing, Resolution & Alignment, Participation Management, Disagreement Navigation, Communication Clarity, Focus Management):
+2. Tiered rubric scoring (Purposeful Framing, Resolution & Alignment, Participation Management, Disagreement Navigation, Question Quality, Communication Clarity, Focus Management):
    - Each opportunity scored 0.0, 0.25, 0.5, 0.75, or 1.0 based on rubric level defined per pattern.
    - Score = sum of opportunity scores / opportunity_count, rounded to 4 decimals.
+   - Note: Question Quality uses a 3-level subset of this scale ({0, 0.5, 1.0}). See its pattern definition for rubric details.
 
-3. Three-tier scoring (Question Quality):
-   - Each opportunity scored 1.0 (purposeful), 0.5 (partially purposeful), or 0.0 (not purposeful).
-   - Score = sum of opportunity scores / opportunity_count, rounded to 4 decimals.
-
-4. Complexity-tiered scoring (Assignment Clarity):
+3. Complexity-tiered scoring (Assignment Clarity):
    - LLM classifies each assignment as simple or complex based on observable signals.
    - Simple assignments scored on 3 core elements. Complex assignments scored on 5 core elements.
    - See pattern definition for rubric details.
@@ -560,7 +557,7 @@ how they ask questions (Question Quality), how clearly they communicate
 
 PATTERN 7: question_quality
 Cluster: D — Communication Quality
-Scoring type: Three-tier
+Scoring type: Tiered rubric
 
 What it measures:
 - Whether the questions the target speaker asks are purposeful — meaning they serve a clear function in advancing the conversation — rather than aimless or counterproductive.

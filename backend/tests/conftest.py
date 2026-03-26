@@ -215,7 +215,7 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
         {
             "pattern_id": "question_quality",
             "cluster_id": "communication_quality",
-            "scoring_type": "three_tier",
+            "scoring_type": "tiered_rubric",
             "evaluable_status": "evaluable",
             "denominator_rule_id": "question_to_target",
             "min_required_threshold": 2,
