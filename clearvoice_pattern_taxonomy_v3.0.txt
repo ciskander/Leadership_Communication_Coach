@@ -211,7 +211,7 @@ Minimum threshold:
 
 Detection notes:
 - Identifying drift requires comparing the current discussion content against the most recently stated topic or objective. If no objective was stated (Purposeful Framing scored 0), drift detection becomes unreliable — mark insufficient_signal.
-- When in doubt about whether a discussion shift constitutes drift vs. natural topic evolution, exclude from both numerator and denominator. Undercounting drift is safer than overcounting.
+- When in doubt about whether a discussion shift constitutes drift vs. natural topic evolution, exclude from both numerator and denominator. Undercounting drift is safer than overcounting. If a possible topic shift could reasonably be interpreted as within the broader scope of the current agenda item or decision, assume it is part of that broader scope.
 - The target speaker allowing a tangent to continue is not the same as the target speaker being unable to intervene. Only count drift as an opportunity when the target speaker has agency to redirect.
 
 Experiment guidance:
