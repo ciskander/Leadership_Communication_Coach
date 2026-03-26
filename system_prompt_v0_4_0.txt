@@ -329,12 +329,13 @@ evidence_span_ids in micro_experiment must contain at least one span ID.
 --- PATTERN COACHING ---
 
 pattern_coaching (array of objects, one per evaluable pattern):
-Each object: {pattern_id, notes, coaching_note, suggested_rewrite, rewrite_for_span_id}
+Each object: {pattern_id, notes, coaching_note, suggested_rewrite, rewrite_for_span_id, best_success_span_id}
 
 For each evaluable pattern, provide coaching based on its results:
 
 When score > 0 (at least one success):
 - notes: 1-2 sentence positive observation — what the speaker did well and why it was effective. Required even when the pattern also has missed opportunities.
+- best_success_span_id: the evidence span ID from success_evidence_span_ids that best demonstrates this pattern done well. Pick the single most compelling, specific example. Set to null if there are no success spans.
 
 When score < 1.0 (at least one missed opportunity):
 - coaching_note: 1-2 sentence coaching observation — what the speaker missed and why it matters.
@@ -343,6 +344,7 @@ When score < 1.0 (at least one missed opportunity):
 
 When score == 1.0 (100%):
 - suggested_rewrite, rewrite_for_span_id, and coaching_note should be omitted (or null).
+- best_success_span_id: pick the single most compelling success span from success_evidence_span_ids. Required when success_evidence_span_ids is non-empty.
 
 For participation_management balance_assessment:
 - When balanced: notes (1-2 sentence positive observation about balance). Omit coaching_note, suggested_rewrite, rewrite_for_span_id for the balance aspect.
@@ -409,8 +411,9 @@ Success classification audit:
 16) For each evaluable pattern, re-check success_evidence_span_ids against the threshold for its scoring type (binary/dual_element ≥ 1.0, tiered_rubric/complexity_tiered ≥ 0.75, multi_element ≥ 0.8). For each evidence span in the pattern's evidence_span_ids, find the linked OE(s) via the span's event_ids. If any linked OE for this pattern has success >= the threshold and the span is NOT in success_evidence_span_ids, add it. If a span IS in success_evidence_span_ids but no linked OE meets the threshold, remove it.
 
 17) For each coaching.pattern_coaching item: rewrite_for_span_id appears in the pattern's evidence_span_ids and is NOT in success_evidence_span_ids. If the rewrite targets a success span, choose a different span or remove the rewrite.
-18) Experiment conditional rules satisfied. If attempt=partial, coaching.experiment_coaching has coaching_note/suggested_rewrite/rewrite_for_span_id. If attempt=yes or no or no active experiment, experiment_coaching = null (not [] or {}).
-19) Every OE has a reason_code field (required, not optional). Verify reason_code is snake_case with no spaces.
-20) Scan all string values for unescaped "; replace with ' before output.
+18) For each coaching.pattern_coaching item with non-empty success_evidence_span_ids: verify best_success_span_id is set and appears in the pattern's success_evidence_span_ids.
+19) Experiment conditional rules satisfied. If attempt=partial, coaching.experiment_coaching has coaching_note/suggested_rewrite/rewrite_for_span_id. If attempt=yes or no or no active experiment, experiment_coaching = null (not [] or {}).
+20) Every OE has a reason_code field (required, not optional). Verify reason_code is snake_case with no spaces.
+21) Scan all string values for unescaped "; replace with ' before output.
 
 Return JSON only.

@@ -491,10 +491,10 @@ export function PatternCard({
   const rewriteSpanId   = coaching?.rewrite_for_span_id;
   const successSpanIds  = new Set(pattern.success_span_ids ?? []);
 
-  // Split quotes into three groups using success_span_ids from the LLM:
-  // 1. rewriteTargetQuote — the missed-opportunity quote paired with suggested_rewrite
+  // Split quotes into groups using success_span_ids from the LLM:
+  // 1. rewriteTargetQuotes — the missed-opportunity quote paired with suggested_rewrite
   // 2. successQuotes — spans the speaker did well on
-  // 3. otherFailureQuotes — other missed opportunities (excluding the rewrite target)
+  // 3. bestSuccessQuotes — the single most compelling success example
   const rewriteTargetQuotes = rewriteSpanId
     ? quotes.filter((q) => q.span_id === rewriteSpanId)
     : [];
@@ -503,9 +503,14 @@ export function PatternCard({
     (q) => q.span_id != null && successSpanIds.has(q.span_id)
   );
 
-  const otherFailureQuotes = quotes.filter(
-    (q) => q.span_id !== rewriteSpanId && !(q.span_id != null && successSpanIds.has(q.span_id))
-  );
+  const bestSuccessSpanId = coaching?.best_success_span_id;
+  const bestSuccessQuotes = (() => {
+    if (bestSuccessSpanId) {
+      const matched = successQuotes.filter((q) => q.span_id === bestSuccessSpanId);
+      if (matched.length > 0) return matched;
+    }
+    return successQuotes.length > 0 ? [successQuotes[0]] : [];
+  })();
 
   // Determine if we should show sparkline for this pattern
   const showSparkline = !!trend && trend.points.length >= 2;
@@ -598,31 +603,31 @@ export function PatternCard({
         <div className="border-t border-cv-warm-300 px-4 pb-4 pt-3 space-y-3 bg-white">
 
           {/* Perfect score */}
-          {isPerfectScore && (hasQuotes || hasNotes) && (
+          {isPerfectScore && (bestSuccessQuotes.length > 0 || hasNotes) && (
             <div>
               <SectionLabel text={STRINGS.common.whatYouDidWell} />
               {hasNotes && (
                 <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{coaching?.notes}</p>
               )}
-              <EvidenceQuoteList quotes={quotes} targetSpeaker={targetSpeaker} />
+              <EvidenceQuoteList quotes={bestSuccessQuotes} targetSpeaker={targetSpeaker} />
             </div>
           )}
 
           {/* Mixed score */}
           {isMixedScore && (
             <>
-              {(successQuotes.length > 0 || hasNotes) && (
+              {(bestSuccessQuotes.length > 0 || hasNotes) && (
                 <div>
                   <SectionLabel text={STRINGS.common.whatYouDidWell} />
                   {hasNotes && (
                     <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{coaching?.notes}</p>
                   )}
-                  {successQuotes.length > 0 && (
-                    <EvidenceQuoteList quotes={successQuotes} targetSpeaker={targetSpeaker} />
+                  {bestSuccessQuotes.length > 0 && (
+                    <EvidenceQuoteList quotes={bestSuccessQuotes} targetSpeaker={targetSpeaker} />
                   )}
                 </div>
               )}
-              {(hasCoaching || rewriteTargetQuotes.length > 0 || coaching?.suggested_rewrite || otherFailureQuotes.length > 0) && (
+              {(hasCoaching || rewriteTargetQuotes.length > 0 || coaching?.suggested_rewrite) && (
                 <div>
                   <SectionLabel text={STRINGS.common.whereYouCanImprove} />
                   {hasCoaching && (
@@ -640,12 +645,6 @@ export function PatternCard({
                       <SuggestedRewrite text={coaching?.suggested_rewrite} />
                     </div>
                   )}
-                  {otherFailureQuotes.length > 0 && (
-                    <div className="mt-2">
-                      <SectionLabel text={STRINGS.common.otherMoments} />
-                      <EvidenceQuoteList quotes={otherFailureQuotes} targetSpeaker={targetSpeaker} />
-                    </div>
-                  )}
                 </div>
               )}
             </>
@@ -653,7 +652,7 @@ export function PatternCard({
 
           {/* Zero / no-numerator score */}
           {!isPerfectScore && !isMixedScore &&
-            (hasCoaching || rewriteTargetQuotes.length > 0 || coaching?.suggested_rewrite || otherFailureQuotes.length > 0) && (
+            (hasCoaching || rewriteTargetQuotes.length > 0 || coaching?.suggested_rewrite) && (
             <div>
               <SectionLabel text={STRINGS.common.whereYouCanImprove} />
               {hasCoaching && (
@@ -669,12 +668,6 @@ export function PatternCard({
                 <div className="mt-2">
                   <SectionLabel text={STRINGS.common.nextTimeTry} />
                   <SuggestedRewrite text={coaching?.suggested_rewrite} />
-                </div>
-              )}
-              {otherFailureQuotes.length > 0 && (
-                <div className="mt-2">
-                  <SectionLabel text={STRINGS.common.otherMoments} />
-                  <EvidenceQuoteList quotes={otherFailureQuotes} targetSpeaker={targetSpeaker} />
                 </div>
               )}
             </div>

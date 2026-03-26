@@ -775,6 +775,36 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
                     f"a different topic.",
                 ))
 
+    # ── 3c6. best_success_span_id checks on coaching.pattern_coaching ────────
+    for pci, pc in enumerate(coaching.get("pattern_coaching", [])):
+        pc_path = f"coaching.pattern_coaching[{pci}]"
+        pc_pid = pc.get("pattern_id", "")
+        best_span = pc.get("best_success_span_id")
+
+        pattern = pattern_by_id.get(pc_pid)
+        if not pattern:
+            continue
+
+        success_ids = set(pattern.get("success_evidence_span_ids") or [])
+
+        if best_span and best_span not in success_ids:
+            issues.append(_warn(
+                "BEST_SUCCESS_SPAN_NOT_IN_SUCCESS_LIST",
+                f"{pc_path}.best_success_span_id",
+                f"best_success_span_id {best_span} is not in "
+                f"success_evidence_span_ids for pattern {pc_pid}.",
+            ))
+
+        # Auto-repair: if missing but success spans exist, pick the first one
+        if not best_span and success_ids:
+            pc["best_success_span_id"] = sorted(success_ids)[0]
+            issues.append(_warn(
+                "BEST_SUCCESS_SPAN_AUTO_FILLED",
+                f"{pc_path}.best_success_span_id",
+                f"best_success_span_id was null/missing but success spans "
+                f"exist. Auto-filled with {pc['best_success_span_id']}.",
+            ))
+
     # ── 3d. turn_start_id / turn_end_id in evidence_spans ────────────────────
     for idx, span in enumerate(evidence_spans):
         path = f"evidence_spans[{idx}]"

@@ -50,7 +50,6 @@ export const STRINGS = {
     howYoullKnowItWorked: "How you'll know it worked",
     forExampleYouSaid: 'For example, in this meeting you said',
     nextTimeTry: 'Next time, try something like',
-    otherMoments: 'Other moments where this came up',
     whatYouDidWell: 'What you did well',
     whereYouCanImprove: 'Where you can improve',
     observation: 'Observation',

@@ -126,6 +126,28 @@ rather than genuine coaching>,
     ],
     "overall_notes": "<summary>"
   }},
+  "success_evidence_quality": {{
+    "items": [
+      {{
+        "pattern_id": "<pattern>",
+        "evidence_span_id": "<span ID>",
+        "evidence_excerpt_start": "<first 10 words of the quote>",
+        "genuinely_demonstrates_pattern": <true|false>,
+        "explanation": "<does this quote genuinely show the speaker doing this \
+pattern well, or is it a stretch?>"
+      }}
+    ],
+    "best_example_chosen_well": [
+      {{
+        "pattern_id": "<pattern>",
+        "rating": "best_available|acceptable|better_exists",
+        "explanation": "<why — is the BEST-marked quote the most compelling \
+example of this pattern, or was there a stronger moment?>",
+        "better_span_description": "<if better_exists, describe what was missed>"
+      }}
+    ],
+    "overall_notes": "<summary>"
+  }},
   "rewrite_quality": {{
     "items": [
       {{
@@ -228,10 +250,12 @@ def _format_focus(coaching: dict) -> str:
     )
 
 
-def _format_pattern_coaching(coaching: dict, evidence_spans: list) -> str:
-    """Format per-pattern coaching with evidence quotes and rewrites."""
+def _format_pattern_coaching(coaching: dict, evidence_spans: list, pattern_snapshot: list) -> str:
+    """Format per-pattern coaching with evidence quotes, rewrites, and success evidence."""
     # Build evidence span lookup
     span_map = {es.get("evidence_span_id"): es for es in evidence_spans}
+    # Build pattern snapshot lookup
+    snapshot_by_pid = {ps.get("pattern_id"): ps for ps in pattern_snapshot}
 
     items = coaching.get("pattern_coaching", [])
     if not items:
@@ -253,6 +277,19 @@ def _format_pattern_coaching(coaching: dict, evidence_spans: list) -> str:
             lines.append(f"**Original (from transcript)**: {span.get('excerpt', '')}")
         if pc.get("suggested_rewrite"):
             lines.append(f"**Suggested Rewrite**: {pc['suggested_rewrite']}")
+
+        # Success evidence quotes
+        snap = snapshot_by_pid.get(pid, {})
+        success_span_ids = snap.get("success_evidence_span_ids") or []
+        best_span_id = pc.get("best_success_span_id")
+        if success_span_ids:
+            best_label = f" (best_success_span_id: {best_span_id})" if best_span_id else ""
+            lines.append(f"**Success Evidence**{best_label}:")
+            for sid in success_span_ids:
+                span = span_map.get(sid)
+                if span:
+                    marker = " ← BEST" if sid == best_span_id else ""
+                    lines.append(f"- [{sid}] \"{span.get('excerpt', '')}\"{marker}")
 
         parts.append("\n".join(lines))
 
@@ -315,6 +352,7 @@ def judge_analysis(
 
     coaching = parsed_json.get("coaching", {})
     evidence_spans = parsed_json.get("evidence_spans", [])
+    pattern_snapshot = parsed_json.get("pattern_snapshot", [])
 
     # Build the judge prompt
     transcript_text = _format_transcript_for_judge(transcript_data)
@@ -323,7 +361,7 @@ def judge_analysis(
         executive_summary=coaching.get("executive_summary", "(none)"),
         strengths_text=_format_strengths(coaching),
         focus_text=_format_focus(coaching),
-        pattern_coaching_text=_format_pattern_coaching(coaching, evidence_spans),
+        pattern_coaching_text=_format_pattern_coaching(coaching, evidence_spans, pattern_snapshot),
         experiment_coaching_text=_format_experiment_coaching(coaching),
     )
 
@@ -406,6 +444,14 @@ def _print_summary(result: dict) -> None:
     for item in items:
         if item.get("rating") in ("pedantic", "wrong"):
             print(f"  FLAG: {item['pattern_id']} rated '{item['rating']}': {item.get('explanation', '')[:80]}")
+
+    success_ev = result.get("success_evidence_quality", {})
+    for item in success_ev.get("items", []):
+        if not item.get("genuinely_demonstrates_pattern"):
+            print(f"  FLAG: {item.get('pattern_id', '?')} success evidence doesn't demonstrate pattern: {item.get('explanation', '')[:80]}")
+    for item in success_ev.get("best_example_chosen_well", []):
+        if item.get("rating") == "better_exists":
+            print(f"  FLAG: {item.get('pattern_id', '?')} better success example exists: {item.get('explanation', '')[:80]}")
 
     arith = result.get("scoring_arithmetic", {})
     for check in arith.get("checked_patterns", []):

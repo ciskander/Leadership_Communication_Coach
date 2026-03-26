@@ -177,12 +177,13 @@ micro_experiment (exactly 1 item): {experiment_id, title, instruction, success_m
 --- PATTERN COACHING ---
 
 pattern_coaching (array of objects, one per evaluable pattern):
-Each object: {pattern_id, notes, coaching_note, suggested_rewrite, rewrite_for_span_id}
+Each object: {pattern_id, notes, coaching_note, suggested_rewrite, rewrite_for_span_id, best_success_span_id}
 
 For each evaluable pattern, provide coaching based on the aggregated results:
 
 When score > 0 (at least one success across meetings):
 - notes: 1-2 sentence positive observation describing the speaker's consistent behavior across meetings. Reference the specific evidence spans you selected.
+- best_success_span_id: the evidence span ID from success_evidence_span_ids that best demonstrates this pattern across the meetings analyzed. Pick the single most compelling, specific example. Set to null if there are no success spans.
 
 When score < 1.0 (at least one missed opportunity across meetings):
 - coaching_note: 1-2 sentence coaching observation about the cross-meeting pattern of missed opportunities.
@@ -192,6 +193,7 @@ When score < 1.0 (at least one missed opportunity across meetings):
 
 When score == 1.0 (perfect across all meetings):
 - suggested_rewrite, rewrite_for_span_id, and coaching_note should be omitted (or null).
+- best_success_span_id: pick the single most compelling success span from success_evidence_span_ids. Required when success_evidence_span_ids is non-empty.
 
 For participation_management balance_assessment:
 - When balanced: notes (1-2 sentence positive observation about balance). Omit coaching_note, suggested_rewrite, rewrite_for_span_id for the balance aspect.
@@ -259,26 +261,27 @@ Evidence integrity checks (most important):
 3) For every evidence_span, confirm meeting_id is present and matches the source meeting.
 4) For every evidence_span, confirm event_ids is present and is an empty array [].
 5) Confirm every rewrite_for_span_id in coaching.pattern_coaching references a valid span in your output that is NOT in success_evidence_span_ids.
+6) For each coaching.pattern_coaching item with non-empty success_evidence_span_ids: verify best_success_span_id is set and appears in the pattern's success_evidence_span_ids.
 
 Coaching quality checks:
-6) Re-read each notes and coaching_note field in coaching.pattern_coaching. Does it describe cross-meeting patterns grounded in cited evidence — or is it generic? If generic, rewrite it.
-7) Re-read each suggested_rewrite in coaching.pattern_coaching. Does it sound like something this speaker would say? Is it a plausible replacement for the excerpt at rewrite_for_span_id?
-8) Does the focus area represent the highest-leverage coaching choice across all meetings?
+7) Re-read each notes and coaching_note field in coaching.pattern_coaching. Does it describe cross-meeting patterns grounded in cited evidence — or is it generic? If generic, rewrite it.
+8) Re-read each suggested_rewrite in coaching.pattern_coaching. Does it sound like something this speaker would say? Is it a plausible replacement for the excerpt at rewrite_for_span_id?
+9) Does the focus area represent the highest-leverage coaching choice across all meetings?
 
 Aggregation checks:
-9) For each evaluable pattern, verify the score is the weighted average of meeting-level scores (weighted by opportunity_count).
-10) Verify opportunity_count = sum of meeting opportunity_counts. For dual_element patterns, verify element counts are summed. For complexity_tiered patterns, verify simple/complex counts are summed.
-11) Verify evaluation_summary is consistent with pattern_snapshot evaluable_status values.
+10) For each evaluable pattern, verify the score is the weighted average of meeting-level scores (weighted by opportunity_count).
+11) Verify opportunity_count = sum of meeting opportunity_counts. For dual_element patterns, verify element counts are summed. For complexity_tiered patterns, verify simple/complex counts are summed.
+12) Verify evaluation_summary is consistent with pattern_snapshot evaluable_status values.
 
 Structural checks:
-12) JSON parses. Required top-level keys present (schema_version, meta, context, opportunity_events, evidence_spans, evaluation_summary, pattern_snapshot, experiment_tracking, coaching). No extra keys. coaching includes executive_summary.
-13) pattern_snapshot has exactly 9 items in required order. All pattern_id values are valid enum.
-14) participation_management includes balance_assessment annotation when evaluable.
-15) focus length = 1, micro_experiment length = 1.
-16) turn_start_id / turn_end_id are integers.
-17) detection_in_this_meeting is null.
-18) opportunity_events is an empty array [].
-19) coaching.experiment_coaching is an empty array [].
-20) Scan all string values for unescaped "; replace with ' before output.
+13) JSON parses. Required top-level keys present (schema_version, meta, context, opportunity_events, evidence_spans, evaluation_summary, pattern_snapshot, experiment_tracking, coaching). No extra keys. coaching includes executive_summary.
+14) pattern_snapshot has exactly 9 items in required order. All pattern_id values are valid enum.
+15) participation_management includes balance_assessment annotation when evaluable.
+16) focus length = 1, micro_experiment length = 1.
+17) turn_start_id / turn_end_id are integers.
+18) detection_in_this_meeting is null.
+19) opportunity_events is an empty array [].
+20) coaching.experiment_coaching is an empty array [].
+21) Scan all string values for unescaped "; replace with ' before output.
 
 Return JSON only.

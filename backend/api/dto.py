@@ -101,6 +101,7 @@ class PatternCoachingItem(BaseModel):
     coaching_note: Optional[str] = None
     suggested_rewrite: Optional[str] = None
     rewrite_for_span_id: Optional[str] = None
+    best_success_span_id: Optional[str] = None
 
 
 class ExperimentCoachingItem(BaseModel):

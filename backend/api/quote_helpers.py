@@ -281,6 +281,7 @@ def resolve_pattern_coaching(
             coaching_note=pc.get("coaching_note"),
             suggested_rewrite=pc.get("suggested_rewrite"),
             rewrite_for_span_id=pc.get("rewrite_for_span_id"),
+            best_success_span_id=pc.get("best_success_span_id"),
         )
         for pc in raw_items
     ]

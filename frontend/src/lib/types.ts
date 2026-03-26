@@ -91,6 +91,7 @@ export interface PatternCoachingItem {
   coaching_note?: string | null;
   suggested_rewrite?: string | null;
   rewrite_for_span_id?: string | null;
+  best_success_span_id?: string | null;
 }
 
 export interface ExperimentCoachingItem {
