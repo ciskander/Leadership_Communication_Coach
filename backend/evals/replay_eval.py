@@ -5,6 +5,8 @@ Two modes:
   --mode repeat   Run one transcript N times, measure intra-transcript IQR.
   --mode compare  Run all transcripts in a directory (optionally N times each),
                   measure inter-transcript distribution per pattern.
+                  Supports offline mode via --outputs-dir to analyze existing
+                  output JSON files without making LLM calls.
 
 Accepts raw transcript files (.vtt, .txt, .srt, .docx, .pdf) — the same
 formats you upload through the UI. Files are parsed automatically using the
@@ -25,6 +27,10 @@ Usage:
   # Compare: run all transcripts in directory, 3 times each
   python -m backend.evals.replay_eval --mode compare \
     --transcripts-dir backend/evals/transcripts --runs 3
+
+  # Compare (offline): analyze existing output JSON files (no LLM calls)
+  python -m backend.evals.replay_eval --mode compare \
+    --outputs-dir path/to/output/json/files
 """
 from __future__ import annotations
 
@@ -381,6 +387,136 @@ def run_compare(
     return report_data
 
 
+# ── Offline compare mode ─────────────────────────────────────────────────────
+
+def run_compare_offline(outputs_dir: Path) -> dict[str, Any]:
+    """Load existing output JSON files and compute cross-meeting discriminant validity.
+
+    Groups files by context.meeting_id (falls back to filename stem).
+    Multiple files with the same meeting_id are treated as multiple runs.
+    No LLM calls are made.
+    """
+    json_files = sorted(outputs_dir.glob("*.json"))
+    if not json_files:
+        logger.error("No JSON files found in %s", outputs_dir)
+        sys.exit(1)
+
+    # Load and group by meeting_id
+    meetings: dict[str, list[dict]] = defaultdict(list)
+    skipped = 0
+    for f in json_files:
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning("Skipping %s: %s", f.name, e)
+            skipped += 1
+            continue
+
+        if "pattern_snapshot" not in data:
+            logger.warning("Skipping %s: no pattern_snapshot", f.name)
+            skipped += 1
+            continue
+
+        meeting_id = None
+        if isinstance(data.get("context"), dict):
+            meeting_id = data["context"].get("meeting_id")
+        if not meeting_id:
+            meeting_id = f.stem
+            logger.warning("No context.meeting_id in %s, using filename: %s", f.name, meeting_id)
+
+        meetings[meeting_id].append(data)
+
+    meeting_ids = sorted(meetings.keys())
+    if len(meeting_ids) < 2:
+        logger.error("Offline compare requires at least 2 distinct meeting_ids. Found %d.", len(meeting_ids))
+        sys.exit(1)
+
+    logger.info(
+        "=== Offline compare: %d meetings, %d files (%d skipped) ===",
+        len(meeting_ids), sum(len(v) for v in meetings.values()), skipped,
+    )
+    for mid in meeting_ids:
+        logger.info("  %s: %d run(s)", mid, len(meetings[mid]))
+
+    # Compute per-meeting pattern stats (mirrors run_repeat's pattern_results)
+    per_transcript: dict[str, dict] = {}
+    for mid in meeting_ids:
+        runs = meetings[mid]
+        pattern_results: dict[str, dict] = {}
+
+        for pid in PATTERN_ORDER:
+            scores: list[float | None] = []
+            opp_counts: list[int | None] = []
+            statuses: dict[str, int] = defaultdict(int)
+
+            for run_data in runs:
+                found = False
+                for snap in run_data.get("pattern_snapshot", []):
+                    if snap.get("pattern_id") == pid:
+                        scores.append(snap.get("score"))
+                        opp_counts.append(snap.get("opportunity_count"))
+                        statuses[snap.get("evaluable_status", "unknown")] += 1
+                        found = True
+                        break
+                if not found:
+                    scores.append(None)
+                    opp_counts.append(None)
+
+            pattern_results[pid] = {
+                "score": compute_pattern_stats(scores),
+                "opportunity_count": compute_int_stats(opp_counts),
+                "oe_count": compute_int_stats([]),  # not available offline
+                "status_distribution": dict(statuses),
+            }
+
+        per_transcript[mid] = pattern_results
+
+    # Compute cross-meeting stats (same logic as run_compare)
+    cross_transcript: dict[str, dict] = {}
+    for pid in PATTERN_ORDER:
+        means: list[float] = []
+        intra_iqrs: list[float] = []
+        for mid in meeting_ids:
+            tr = per_transcript.get(mid, {}).get(pid, {}).get("score", {})
+            if tr.get("mean") is not None:
+                means.append(tr["mean"])
+            if tr.get("iqr") is not None:
+                intra_iqrs.append(tr["iqr"])
+
+        cross_stats = compute_pattern_stats(means)
+        mean_intra_iqr = (
+            round(sum(intra_iqrs) / len(intra_iqrs), 4) if intra_iqrs else None
+        )
+        signal_to_noise = None
+        if cross_stats["iqr"] is not None and mean_intra_iqr and mean_intra_iqr > 0:
+            signal_to_noise = round(cross_stats["iqr"] / mean_intra_iqr, 2)
+
+        cross_transcript[pid] = {
+            "cross_iqr": cross_stats["iqr"],
+            "cross_stdev": cross_stats["stdev"],
+            "cross_mean": cross_stats["mean"],
+            "mean_intra_iqr": mean_intra_iqr,
+            "signal_to_noise": signal_to_noise,
+        }
+
+    # Save reports
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+    report_data = {
+        "transcript_ids": meeting_ids,
+        "n_runs_per_transcript": {mid: len(meetings[mid]) for mid in meeting_ids},
+        "source": "offline",
+        "timestamp": timestamp,
+        "per_transcript": per_transcript,
+        "cross_transcript": cross_transcript,
+    }
+    save_json(report_data, _RESULTS_DIR / f"compare_offline_report_{timestamp}.json")
+
+    md = format_inter_transcript_report(meeting_ids, per_transcript, cross_transcript)
+    save_report(md, _RESULTS_DIR / f"compare_offline_report_{timestamp}.md")
+
+    return report_data
+
+
 # ── CLI ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -396,6 +532,10 @@ examples:
   # Run all transcripts in a directory, 3 times each (discriminant validity)
   python -m backend.evals.replay_eval --mode compare \\
     --transcripts-dir backend/evals/transcripts --runs 3
+
+  # Offline compare: analyze existing output JSON files (no LLM calls)
+  python -m backend.evals.replay_eval --mode compare \\
+    --outputs-dir path/to/output/json/files
 """,
     )
     parser.add_argument("--mode", choices=["repeat", "compare"], required=True)
@@ -409,6 +549,10 @@ examples:
     )
     parser.add_argument("--runs", type=int, default=5, help="Number of runs per transcript (default: 5)")
     parser.add_argument("--model", type=str, default=None, help="Model override (e.g., claude-sonnet-4-6)")
+    parser.add_argument(
+        "--outputs-dir", type=Path,
+        help="Directory of existing output JSON files for offline compare (no LLM calls)",
+    )
     args = parser.parse_args()
 
     if args.mode == "repeat":
@@ -418,9 +562,19 @@ examples:
         run_repeat(args.transcript, args.runs, eval_config, model=args.model)
 
     elif args.mode == "compare":
-        if not args.transcripts_dir:
-            parser.error("--transcripts-dir is required for compare mode")
-        run_compare(args.transcripts_dir, args.runs, model=args.model)
+        if args.outputs_dir:
+            # Offline mode: load existing output JSON files
+            if args.transcripts_dir:
+                logger.warning("--transcripts-dir is ignored in offline mode (--outputs-dir)")
+            if args.model:
+                logger.warning("--model is ignored in offline mode (--outputs-dir)")
+            if args.runs != 5:
+                logger.warning("--runs is ignored in offline mode (--outputs-dir)")
+            run_compare_offline(args.outputs_dir)
+        elif args.transcripts_dir:
+            run_compare(args.transcripts_dir, args.runs, model=args.model)
+        else:
+            parser.error("--transcripts-dir or --outputs-dir is required for compare mode")
 
 
 if __name__ == "__main__":
