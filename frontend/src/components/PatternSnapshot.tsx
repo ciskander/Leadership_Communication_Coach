@@ -33,11 +33,15 @@ export function buildTrendData(
   // actual score). The _windowSize parameter is kept for call-site compat.
   const windowSize = 1;
   // If upToRunId is provided, only include history up to and including that run.
+  // If the run isn't found in the history, return empty so the UI falls back to
+  // showing the raw score from the run response instead of stale trend data.
   let scopedHistory = history;
   if (upToRunId) {
     const idx = history.findIndex((r) => r.run_id === upToRunId);
     if (idx !== -1) {
       scopedHistory = history.slice(0, idx + 1);
+    } else {
+      return {};
     }
   }
 
