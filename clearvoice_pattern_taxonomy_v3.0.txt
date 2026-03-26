@@ -181,6 +181,7 @@ Counts as opportunity:
 - A participant introduces a tangent or off-topic point.
 - The discussion gradually shifts away from the stated objective without explicit acknowledgment.
 - A sub-discussion develops that is not aligned with the current topic's framing.
+- The target speaker themselves introduces off-topic material or initiates a tangent. This counts as a drift episode scored 0.0 — the facilitator created the drift rather than managing it. This is a missed opportunity, not an excluded moment.
 
 Scoring per opportunity (rubric):
 - 1.0 — The leader explicitly names the drift AND either redirects the group back to the topic or consciously sanctions the departure. Example: "We're getting into implementation details — let's park that for now and finish the strategy question first." Or: "This is off-agenda but it's important — let's take 5 minutes on it and then come back to pricing."
@@ -289,6 +290,7 @@ Detection notes:
 - Distinguishing 1.0 (targeted inclusion) from 0.75/0.5 (named distribution) requires tracking who has spoken on the current topic. If the transcript doesn't provide enough information to determine who has been heard, default to 0.5 for any named invitation.
 - When in doubt about whether a moment constitutes an opportunity, exclude from both numerator and denominator.
 - "Any thoughts?" or "Does anyone have questions?" is always 0.0 — even if someone responds. The scoring is about the leader's behavior, not the outcome.
+- Role-based detection guidance: When the target speaker's role is chair or facilitator in a multi-person meeting, participation_management opportunities should almost always exist. The chair holds the floor at topic transitions, after summarizing, and when calling on speakers. If fewer than 2 opportunities are detected for a chair/facilitator, re-examine the transcript — it is unlikely that a facilitator never had agency to direct the floor. Common floor-direction moments for a chair/facilitator include: opening a new topic and choosing who speaks first, completing a summary and deciding who responds next, receiving a question from one participant and choosing whether to answer or redirect to another, and transitioning between agenda items.
 
 Experiment guidance:
 - What good looks like: "Priya, you've been closest to the customer data — what's your read?" Names a specific person, invites them on a specific basis, targets someone not yet heard.
@@ -358,7 +360,7 @@ Role notes:
 - 1:1 Report: all disagreements in the conversation.
 
 Minimum threshold:
-- 2 disagreement moments required. If fewer, mark insufficient_signal. A meeting with no disagreement is not scoreable — and is not necessarily a well-run meeting.
+- 1 disagreement moment required. If the meeting has 0 disagreement moments, mark insufficient_signal. A meeting with no disagreement is not scoreable — and is not necessarily a well-run meeting.
 
 Detection notes:
 - Distinguishing firm-but-constructive pushback from escalation is critical. "I disagree strongly, and here's why" is not escalation — it's direct engagement with substance. Escalation requires raising the emotional temperature or shifting from issue to person.
@@ -823,12 +825,27 @@ EXCLUSIVE (count under only one):
   Exception: generic open-floor prompts ("Any thoughts?", "Questions?")
   remain excluded from participation_management regardless of form.
 
-- focus_management vs. disagreement_navigation: If a drift episode and 
+- focus_management vs. disagreement_navigation: If a drift episode and
   a disagreement moment co-occur in the same exchange, determine the PRIMARY
-  function of the turn. Focus Management is the appropriate 
-  lens when the primary issue is topical drift; Disagreement Navigation 
-  takes priority when interpersonal tension or explicit pushback is 
+  function of the turn. Focus Management is the appropriate
+  lens when the primary issue is topical drift; Disagreement Navigation
+  takes priority when interpersonal tension or explicit pushback is
   the primary dynamic.
+  Examples:
+  - "Let's not relitigate the past — let's figure out what we're doing now."
+    PRIMARY = focus_management (redirecting away from a previous topic,
+    regardless of emotional tone).
+  - "I hear your concern, but I disagree — here's why..."
+    PRIMARY = disagreement_navigation (engaging with the substance of
+    the pushback).
+  - "Let's park that for now and come back to it." When this responds to
+    both drift AND pushback, classify under focus_management if the speaker
+    is primarily redirecting the conversation's topic, or
+    disagreement_navigation if the speaker is primarily managing
+    interpersonal tension.
+  Tie-breaking rule: If the primary function is genuinely ambiguous,
+  classify under the pattern with fewer opportunities detected so far.
+  This prevents one pattern from starving the other of evidence.
 
 PERMITTED MULTI-PATTERN (count under both):
 - resolution_and_alignment + assignment_clarity: A single moment may 
