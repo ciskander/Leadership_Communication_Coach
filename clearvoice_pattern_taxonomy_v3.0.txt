@@ -20,7 +20,7 @@ SCORING TYPES
 
 This taxonomy uses three scoring approaches matched to pattern structure:
 
-1. Dual-element scoring (Purposeful Framing):
+1. Dual-element scoring (retained for backward compatibility with older outputs):
    - Two named elements required for full credit.
    - Both elements present = 1.0 per opportunity.
    - One element present = 0.5 per opportunity.
@@ -28,7 +28,7 @@ This taxonomy uses three scoring approaches matched to pattern structure:
    - Score = sum of opportunity scores / opportunity_count, rounded to 4 decimals.
    - Output must include element_a_count, element_b_count, and opportunity_count separately.
 
-2. Tiered rubric scoring (Resolution & Alignment, Participation Management, Disagreement Navigation, Communication Clarity, Focus Management):
+2. Tiered rubric scoring (Purposeful Framing, Resolution & Alignment, Participation Management, Disagreement Navigation, Communication Clarity, Focus Management):
    - Each opportunity scored 0.0, 0.25, 0.5, 0.75, or 1.0 based on rubric level defined per pattern.
    - Score = sum of opportunity scores / opportunity_count, rounded to 4 decimals.
 
@@ -105,14 +105,14 @@ and reactively (Focus Management).
 
 PATTERN 1: purposeful_framing
 Cluster: A — Meeting Structure & Direction
-Scoring type: Dual-element
+Scoring type: Tiered rubric
 
 What it measures:
 - Whether the target speaker frames topics with explicit purpose and direction — both when opening the meeting and when transitioning between topics throughout.
 
-Elements:
-- Element A: Topic identification. The speaker names what the group is discussing or shifting to.
-- Element B: Desired outcome. The speaker states what a good result looks like for this topic — what they want to leave with, what kind of output or decision is expected.
+Key concepts:
+- Topic identification: The speaker names what the group is discussing or shifting to.
+- Desired outcome: The speaker states what a good result looks like for this topic — what they want to leave with, what kind of output or decision is expected.
 
 Denominator (opportunity_count):
 - The meeting opening (if the target speaker leads it) PLUS each subsequent topic transition the target speaker initiates or owns during the meeting body.
@@ -122,16 +122,15 @@ Counts as opportunity:
 - Target speaker shifts from one topic to another, or introduces a new agenda item.
 
 Scoring per opportunity:
-- Both elements present = 1.0. Example: "Let's move to the pricing discussion — the goal is to lock in a direction today, not finalize numbers."
-- Element A only = 0.5. Example: "OK, let's move to pricing." (topic named, but no indication of desired outcome).
-- Element B only = 0.5. Example: "I want us to leave with a decision here." (outcome stated, but the topic isn't named in the transition).
-- Neither element = 0.0. Example: A transition with no framing — the speaker simply starts talking about a new subject without signaling the shift.
+- 1.0 — Specific topic + specific desired outcome. The speaker clearly names the topic AND states what a good result looks like. Example: "Let's move to the pricing discussion — the goal is to lock in a default tier structure and decide the enterprise exception criteria."
+- 0.75 — Both elements attempted, one is weak. Clear topic + vague outcome (e.g., "Let's talk about pricing — I want us to figure this out"), OR vague topic reference + clear outcome (e.g., "OK, next thing — I want to leave with a launch date commitment").
+- 0.5 — One element clearly present (the other absent), OR both attempted but both weak. Clear topic with no outcome stated (e.g., "Let's move to pricing"), clear outcome with topic not named in the transition (e.g., "I want us to make a decision here"), or vague topic + vague outcome (e.g., "OK, next — let's figure this out").
+- 0.25 — One element attempted but weak/vague, the other absent. Example: "So, there's also this other thing we need to discuss" (barely signals a topic shift, no outcome); or "I want us to get through this" (vague outcome, no topic identification).
+- 0.0 — No framing. The speaker starts talking about a new subject without signaling the shift or stating any purpose.
 
 Score = sum of opportunity scores / opportunity_count.
 
 Output fields:
-- element_a_count (topic identification instances)
-- element_b_count (desired outcome instances)
 - opportunity_count
 - score
 
@@ -155,6 +154,8 @@ Minimum threshold:
 Detection notes:
 - The meeting opening counts as the first opportunity. All subsequent transitions count as additional opportunities. Do not double-count the opening.
 - A single utterance may contain both elements woven together. Do not require them to be in separate sentences.
+- A framing moment may unfold across multiple speaking turns. If the speaker opens a transition vaguely but then adds specificity in immediately subsequent turns (before the group moves into substantive discussion), score based on the complete framing sequence — use a multi-turn evidence span (ES-T{start}-{end}). However, if the clarity only emerges because another participant asks for it (e.g., "What are we deciding?"), score one tier lower than the final framing quality would otherwise warrant. Unprompted self-correction shows awareness; prompted correction means the room had to do the leader's framing work for them.
+- Use the full rubric range. A transition where the speaker barely signals a topic shift (e.g., "So, there's also this other thing") should score 0.25, not 0.5. Reserve 0.5 for moments where one element is clearly and specifically present.
 
 Experiment guidance:
 - What good looks like: "Let's move to the retention numbers — I want to leave with agreement on whether we need to intervene this quarter or hold steady." Both topic and outcome are explicit.
