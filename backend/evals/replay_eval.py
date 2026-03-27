@@ -40,6 +40,10 @@ Usage:
   python -m backend.evals.replay_eval --mode compare \
     --outputs-dir path/to/output/json/files
 
+  # Compare (offline + detail): includes raw reason code cross-tabulation
+  python -m backend.evals.replay_eval --mode compare \
+    --outputs-dir path/to/output/json/files --detail
+
 Reports always include:
   - Score stability / discriminant validity tables
   - Per-opportunity tier usage (0.0 / 0.25 / 0.5 / 0.75 / 1.0 distribution)
@@ -518,7 +522,7 @@ def run_compare(
 
 # ── Offline compare mode ─────────────────────────────────────────────────────
 
-def run_compare_offline(outputs_dir: Path) -> dict[str, Any]:
+def run_compare_offline(outputs_dir: Path, detail: bool = False) -> dict[str, Any]:
     """Load existing output JSON files and compute cross-meeting discriminant validity.
 
     Groups files by context.meeting_id (falls back to filename stem).
@@ -569,9 +573,23 @@ def run_compare_offline(outputs_dir: Path) -> dict[str, Any]:
 
     # Compute per-meeting pattern stats (mirrors run_repeat's pattern_results)
     per_transcript: dict[str, dict] = {}
+    per_transcript_tiers: dict[str, dict[str, dict]] = {}   # mid → pid → tier_dist
+    per_transcript_reasons: dict[str, dict[str, list]] = {}  # mid → pid → reason_code list
+
     for mid in meeting_ids:
         runs = meetings[mid]
         pattern_results: dict[str, dict] = {}
+
+        # Extract per-opportunity details from each run's full JSON
+        per_run_opp_details: list[dict[str, list[dict]]] = []
+        for run_data in runs:
+            if "opportunity_events" in run_data:
+                per_run_opp_details.append(extract_opportunity_details(run_data))
+            else:
+                per_run_opp_details.append({})
+
+        tier_distributions: dict[str, dict] = {}
+        reason_codes_by_pattern: dict[str, list[dict]] = {}
 
         for pid in PATTERN_ORDER:
             scores: list[float | None] = []
@@ -591,6 +609,13 @@ def run_compare_offline(outputs_dir: Path) -> dict[str, Any]:
                     scores.append(None)
                     opp_counts.append(None)
 
+            # Compute per-opportunity tier distributions and reason codes
+            pattern_run_details = [rd.get(pid, []) for rd in per_run_opp_details]
+            tier_distributions[pid] = compute_tier_distribution(pattern_run_details, pid)
+            reason_codes_by_pattern[pid] = collect_reason_codes(
+                pattern_run_details, transcript_id=mid,
+            )
+
             pattern_results[pid] = {
                 "score": compute_pattern_stats(scores),
                 "opportunity_count": compute_int_stats(opp_counts),
@@ -599,6 +624,8 @@ def run_compare_offline(outputs_dir: Path) -> dict[str, Any]:
             }
 
         per_transcript[mid] = pattern_results
+        per_transcript_tiers[mid] = tier_distributions
+        per_transcript_reasons[mid] = reason_codes_by_pattern
 
     # Compute cross-meeting stats (same logic as run_compare)
     cross_transcript: dict[str, dict] = {}
@@ -630,19 +657,68 @@ def run_compare_offline(outputs_dir: Path) -> dict[str, Any]:
             "signal_to_noise": signal_to_noise,
         }
 
+    # ── Build cross-meeting tier distributions and reason code analysis ──
+    cross_tier_distributions: dict[str, dict[str, dict]] = {}  # pid → mid → tier_dist
+    reason_code_analysis: dict[str, list[dict]] = {}  # pid → combined reason code list
+
+    for pid in PATTERN_ORDER:
+        cross_tier_distributions[pid] = {}
+        all_reasons: list[dict] = []
+        for mid in meeting_ids:
+            cross_tier_distributions[pid][mid] = per_transcript_tiers.get(mid, {}).get(pid, {
+                "total": 0, "tiers": {}, "tier_pcts": {}, "other_count": 0, "other_pct": 0,
+            })
+            all_reasons.extend(per_transcript_reasons.get(mid, {}).get(pid, []))
+        reason_code_analysis[pid] = all_reasons
+
     # Save reports
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
-    report_data = {
+    report_data: dict[str, Any] = {
         "transcript_ids": meeting_ids,
         "n_runs_per_transcript": {mid: len(meetings[mid]) for mid in meeting_ids},
         "source": "offline",
         "timestamp": timestamp,
         "per_transcript": per_transcript,
         "cross_transcript": cross_transcript,
+        "cross_tier_distributions": {
+            pid: {mid: dist for mid, dist in mids.items()}
+            for pid, mids in cross_tier_distributions.items()
+        },
+        "reason_code_analysis": {
+            pid: codes for pid, codes in reason_code_analysis.items() if codes
+        },
     }
     save_json(report_data, _RESULTS_DIR / f"compare_offline_report_{timestamp}.json")
 
+    # ── Build markdown report ──
     md = format_inter_transcript_report(meeting_ids, per_transcript, cross_transcript)
+
+    # Always: cross-meeting tier distributions
+    md += "\n\n## Cross-Meeting Tier Distributions\n"
+    for pid in PATTERN_ORDER:
+        md += "\n" + format_cross_meeting_tier_distributions(
+            pid, meeting_ids, cross_tier_distributions[pid],
+        )
+        md += "\n"
+
+    # Always: tier-grouped reason code analysis
+    md += "\n## Reason Code Analysis (by tier)\n"
+    for pid in PATTERN_ORDER:
+        if reason_code_analysis.get(pid):
+            md += "\n" + format_reason_code_analysis_by_tier(
+                pid, reason_code_analysis[pid], meeting_ids,
+            )
+
+    # --detail: raw reason code cross-tabulation
+    if detail:
+        md += "\n\n## Reason Code Cross-Tabulation (raw)\n"
+        for pid in PATTERN_ORDER:
+            if reason_code_analysis.get(pid):
+                md += "\n" + format_reason_code_cross_tab(
+                    pid, reason_code_analysis[pid], meeting_ids,
+                )
+                md += "\n"
+
     save_report(md, _RESULTS_DIR / f"compare_offline_report_{timestamp}.md")
 
     return report_data
@@ -705,7 +781,7 @@ examples:
                 logger.warning("--model is ignored in offline mode (--outputs-dir)")
             if args.runs != 5:
                 logger.warning("--runs is ignored in offline mode (--outputs-dir)")
-            run_compare_offline(args.outputs_dir)
+            run_compare_offline(args.outputs_dir, detail=args.detail)
         elif args.transcripts_dir:
             run_compare(args.transcripts_dir, args.runs, model=args.model, detail=args.detail)
         else:
