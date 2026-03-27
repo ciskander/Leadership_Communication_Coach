@@ -73,9 +73,9 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-from backend.core.config import OPENAI_MODEL_DEFAULT, OPENAI_MAX_TOKENS, PATTERN_ORDER
+from backend.core.config import OPENAI_MODEL_DEFAULT, OPENAI_MAX_TOKENS, ANTHROPIC_MAX_TOKENS, PATTERN_ORDER
 from backend.core.gate1_validator import validate as gate1_validate
-from backend.core.llm_client import call_llm
+from backend.core.llm_client import call_llm, is_anthropic_model
 from backend.core.models import MemoryBlock, ParsedTranscript
 from backend.core.openai_client import load_system_prompt
 from backend.core.prompt_builder import build_developer_message, build_single_meeting_prompt
@@ -205,7 +205,8 @@ def run_single_analysis(
 ) -> dict[str, Any]:
     """Run one analysis through the full pipeline (prompt -> LLM -> gate1)."""
     model = model or OPENAI_MODEL_DEFAULT
-    max_tokens = max_tokens or OPENAI_MAX_TOKENS
+    if max_tokens is None:
+        max_tokens = ANTHROPIC_MAX_TOKENS if is_anthropic_model(model) else OPENAI_MAX_TOKENS
 
     prompt_payload = build_single_meeting_prompt(
         meeting_id=metadata["meeting_id"],
