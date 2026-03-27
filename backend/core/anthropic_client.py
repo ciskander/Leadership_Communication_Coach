@@ -208,6 +208,18 @@ def call_anthropic(
                 thinking={"type": "enabled", "budget_tokens": 16000},
             )
 
+            # Log token usage for debugging budget allocation
+            usage = response.usage
+            thinking_tokens = getattr(usage, "thinking_tokens", None) if usage else None
+            logger.info(
+                "Anthropic response: stop_reason=%s input_tokens=%s output_tokens=%s thinking_tokens=%s blocks=%s",
+                response.stop_reason,
+                usage.input_tokens if usage else "?",
+                usage.output_tokens if usage else "?",
+                thinking_tokens,
+                [b.type for b in response.content],
+            )
+
             # Extract text content from response blocks
             raw_text = ""
             for block in response.content:
