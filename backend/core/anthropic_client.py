@@ -191,10 +191,7 @@ def call_anthropic(
 
     combined_system = _build_system_message(system_prompt, developer_message)
 
-    messages = [
-        {"role": "user", "content": user_message},
-        {"role": "assistant", "content": "{"},  # prefill forces JSON output
-    ]
+    messages = [{"role": "user", "content": user_message}]
 
     last_exc: Optional[Exception] = None
     for attempt in range(ANTHROPIC_RETRY_ATTEMPTS):
@@ -208,7 +205,7 @@ def call_anthropic(
                 system=combined_system,
                 messages=messages,
                 max_tokens=effective_max_tokens,
-                thinking={"type": "disabled"},
+                thinking={"type": "adaptive"},
             )
 
             # Extract text content from response blocks
@@ -217,8 +214,6 @@ def call_anthropic(
                 if block.type == "text":
                     raw_text = block.text
                     break
-            # Prepend the "{" prefill — the model's response continues after it
-            raw_text = "{" + raw_text
 
             if not raw_text.strip():
                 raise ValueError(
