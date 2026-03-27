@@ -622,7 +622,8 @@ def process_single_meeting_analysis(
     # Coerce missing evidence_span_ids on micro_experiment items
     coaching = _parsed_output.get("coaching", {})
     for item in coaching.get("micro_experiment", []):
-        item.setdefault("evidence_span_ids", [])
+        if isinstance(item, dict):
+            item.setdefault("evidence_span_ids", [])
 
     # Ensure coaching.pattern_coaching exists
     coaching.setdefault("pattern_coaching", [])
