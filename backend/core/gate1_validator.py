@@ -290,8 +290,6 @@ def _sanitise_output(data: dict) -> int:
             snap.pop("score", None)
             snap.pop("opportunity_count", None)
             snap.pop("success_evidence_span_ids", None)
-            snap.pop("element_a_count", None)
-            snap.pop("element_b_count", None)
             snap.pop("simple_count", None)
             snap.pop("complex_count", None)
             snap.pop("balance_assessment", None)
@@ -451,7 +449,6 @@ def validate(raw_text: str) -> Gate1Result:
 
 _SUCCESS_THRESHOLDS = {
     "binary": 1.0,
-    "dual_element": 1.0,
     "tiered_rubric": 0.75,
     "complexity_tiered": 0.75,
     "multi_element": 0.8,
@@ -460,7 +457,6 @@ _SUCCESS_THRESHOLDS = {
 # ── Allowed per-type success values ──────────────────────────────────────────
 
 _ALLOWED_SUCCESS = {
-    "dual_element":       {0, 0.5, 1.0},
     "tiered_rubric":      {0, 0.25, 0.5, 0.75, 1.0},
     "binary":             {0, 1.0},
     "complexity_tiered":  {0, 0.25, 0.5, 0.75, 1.0},

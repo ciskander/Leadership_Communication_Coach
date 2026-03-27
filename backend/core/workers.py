@@ -259,7 +259,6 @@ def _build_slim_meeting_summary(run_fields: dict, parsed_json: dict) -> dict:
         }
         # Include scoring detail when present
         for key in ("evidence_span_ids", "success_evidence_span_ids",
-                     "element_a_count", "element_b_count",
                      "simple_count", "complex_count"):
             val = p.get(key)
             if val is not None:
