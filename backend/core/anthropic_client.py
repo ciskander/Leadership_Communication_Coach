@@ -246,7 +246,7 @@ def call_anthropic(
             usage = response.usage
             return OpenAIResponse(
                 parsed=parsed,
-                raw_text=raw_text,
+                raw_text=json.dumps(parsed, ensure_ascii=False),
                 model=effective_model,
                 prompt_tokens=usage.input_tokens if usage else 0,
                 completion_tokens=usage.output_tokens if usage else 0,
