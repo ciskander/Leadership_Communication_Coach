@@ -308,7 +308,9 @@ def run_repeat(
             logger.error("  Run %d failed: %s", i + 1, e)
             return i, {"error": str(e), "gate1_passed": False}
 
-    with ThreadPoolExecutor(max_workers=n_runs) as executor:
+    # Cap concurrency at 2 for Anthropic to stay within 90K output TPM limit
+    max_workers = 2 if is_anthropic_model(model) else n_runs
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = [executor.submit(_run_one, i) for i in range(n_runs)]
         for future in as_completed(futures):
             idx, result = future.result()
