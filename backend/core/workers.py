@@ -1,5 +1,5 @@
 """
-workers.py — Core job processing functions (no queue runner).
+workers.py — Core job-processing functions (no queue runner).
 
 Each function is self-contained and idempotent. The queue runner (Prompt 2)
 calls these functions.
