@@ -175,12 +175,14 @@ Counts as opportunity:
 - A sub-discussion develops that is not aligned with the current topic's framing.
 - The target speaker themselves introduces off-topic material or initiates a tangent. This counts as a drift episode scored 0.0 — the facilitator created the drift rather than managing it. This is a missed opportunity, not an excluded moment.
 
-Scoring per opportunity (rubric):
-- 1.0 — The leader explicitly names the drift AND either redirects the group back to the topic or consciously sanctions the departure. Example: "We're getting into implementation details — let's park that for now and finish the strategy question first." Or: "This is off-agenda but it's important — let's take 5 minutes on it and then come back to pricing."
-- 0.75 — The leader names the drift but only partially redirects — e.g., acknowledges the tangent and suggests returning to the topic but doesn't firmly steer the group back or set a clear boundary. Example: "Yeah, we're getting into implementation — we should probably get back to strategy" (names the drift, expresses intent to return, but doesn't decisively redirect or sanction the departure).
-- 0.5 — The leader partially manages the drift — e.g., redirects without naming what happened, or names the drift but doesn't clearly redirect or sanction. Example: "OK, let's get back on track" (redirects, but doesn't name what the drift was or why they're returning). Or: "That's a good point about implementation" (acknowledges the tangent, but lets it continue without a conscious decision).
-- 0.25 — Minimal acknowledgment — the leader makes a vague attempt to intervene but doesn't name the drift or redirect meaningfully. Example: "Hmm, OK…" or a brief hesitation that signals awareness of the tangent but takes no action. The drift continues essentially unmanaged.
-- 0.0 — The leader does not acknowledge the drift and the discussion continues off-topic without intervention.
+Scoring per opportunity (3-level rubric — allowed values: 0.0, 0.5, 1.0):
+- 1.0 — The leader explicitly names the drift AND either redirects the group back to the topic or consciously sanctions the departure with a clear boundary. Example: "We're getting into implementation details — let's park that for now and finish the strategy question first." Or: "This is off-agenda but it's important — let's take 5 minutes on it and then come back to pricing."
+- 0.5 — The leader partially manages the drift. This includes:
+  - Names the drift but doesn't fully redirect — e.g., acknowledges the tangent and suggests returning to the topic but doesn't firmly steer the group back or set a clear boundary. Example: "Yeah, we're getting into implementation — we should probably get back to strategy" (names the drift, expresses intent to return, but doesn't decisively redirect or sanction the departure).
+  - Redirects without naming what happened. Example: "OK, let's get back on track" (redirects, but doesn't name what the drift was or why they're returning).
+  - Acknowledges granularity or scope drift and partially contains it without a clean redirect or sanction.
+  - Makes a vague attempt to intervene that shows awareness of the tangent but doesn't effectively manage the moment. Example: "That's a good point about implementation" (acknowledges the tangent, but lets it continue without a conscious decision).
+- 0.0 — The leader does not acknowledge the drift and the discussion continues off-topic without intervention. OR the leader themselves initiated the tangent without acknowledgment.
 
 Score = sum of opportunity scores / opportunity_count.
 
@@ -590,6 +592,18 @@ Excluded from both numerator AND denominator (not an opportunity):
 - Questions directed at the target speaker by others (wrong direction).
 - Self-directed thinking-aloud phrased as questions ("What was I going to say?").
 
+Inclusion test (all three must be true for a moment to count as a question opportunity):
+1. The utterance is syntactically or pragmatically a question (seeks information or input from others).
+2. The question is directed at one or more other participants (not self-directed).
+3. The question relates to a substantive topic (not logistics or meeting mechanics).
+
+Exclusion bright lines:
+- Statements phrased as questions for emphasis → excluded ("Isn't that exactly what we said?" = rhetorical).
+- Back-channel confirmations → excluded ("Right?", "Yeah?", "You know?").
+- Questions embedded in longer statements where the question is incidental → excluded (count the statement under communication_clarity instead).
+- When a turn contains both a substantive statement and a trailing question, count under question_quality ONLY if the question is the primary purpose of the turn.
+- If uncertain whether a moment qualifies as a substantive question, exclude it. Consistency across analyses matters more than completeness — undercounting is better than inconsistent counting.
+
 Role notes:
 - Apply consistently across all roles. Role affects volume of questions, not the standard.
 
@@ -623,17 +637,30 @@ Denominator (opportunity_count):
 - Substantive speaking turns by the target speaker that are 3+ sentences long. Shorter turns do not provide enough signal to assess clarity.
 
 Scoring per opportunity (rubric):
-- 1.0 — Clear and structured. The turn demonstrates MOST of the following:
+- 1.0 — Clear, structured, AND advances the conversation. The speaker's contribution (which may span multiple turns if others interject) demonstrates ALL of:
   - States the main point early (BLUF — bottom line up front) rather than burying it after extended preamble.
-  - Responds to the question or point that was actually on the table (not a different question or a tangent).
-  - Completes one thought before moving to the next (does not interleave or abandon lines of reasoning).
+  - Is relevant to the conversational context — responds to the question, topic, or moment that prompted this contribution (for meeting openings or unprompted contributions, "relevant" means clearly connected to the meeting's purpose).
+  - Completes one line of reasoning before moving to the next (does not interleave or abandon lines of reasoning).
   - Is proportionate — the length matches the complexity and importance of the point.
   - Uses concrete, specific language rather than vague abstractions.
+  AND demonstrates at least one of:
+  - Synthesizes multiple inputs or threads into a coherent position.
+  - Makes an implicit tradeoff or tension explicit for the group.
+  - Tailors the message to the specific audience or context in a way that goes beyond default competent communication.
+  - Advances the conversation materially — after this contribution, the group knows something or can do something they couldn't before.
+  Note: When the evidence span includes interjections by others between the target speaker's turns, evaluate the speaker's communication across their turns in the span, not each turn in isolation. Brief interjections do not break the speaker's line of reasoning.
 
-- 0.75 — Mostly clear with a minor shortfall. The turn has a clear main point stated early and is mostly well-structured, but falls short on one dimension. Examples:
+- 0.75 — Clear and well-structured. The speaker's contribution demonstrates MOST of:
+  - States the main point early (BLUF).
+  - Is relevant to the conversational context.
+  - Completes one line of reasoning before moving to the next.
+  - Is proportionate in length.
+  - Uses concrete, specific language.
+  BUT does not synthesize, surface tradeoffs, or materially advance the conversation beyond restating, summarizing, or directing. This is competent, professional communication — just not exceptional.
+  Also use 0.75 when the contribution has a clear main point stated early and is mostly well-structured, but falls short on one dimension:
   - Clear BLUF and on-topic, but slightly disproportionate in length — the point is made but the speaker over-explains or adds unnecessary elaboration.
   - Clear point and good structure, but one patch of vagueness amid otherwise concrete language.
-  - Responds directly to the question and is concise, but briefly touches an adjacent concern before returning to the main thread.
+  - Relevant and concise, but briefly touches an adjacent concern before returning to the main thread.
 
 - 0.5 — Partially clear. The turn has a discernible point but falls short on structure or focus. Examples:
   - The point is present but buried — the speaker arrives at their conclusion only after extended preamble or reasoning.
@@ -733,6 +760,17 @@ Excluded from both numerator AND denominator (not an opportunity):
 - Task direction or instruction that is not evaluative ("Please update the spreadsheet by Friday" — this is Assignment Clarity, not feedback).
 - Questions or coaching inquiries (these belong to Question Quality).
 - Vague expressions of dissatisfaction with no attempt at structured feedback ("This isn't working" without any specific behavioral observation). Note: these should be flagged in coaching commentary as missed feedback opportunities, but are not scored because they don't meet the threshold of a feedback attempt.
+
+Inclusion test (all three must be true for a moment to count as a feedback opportunity):
+1. The speaker is explicitly evaluating another person's behavior or work product.
+2. The evaluation goes beyond a single word or phrase ("good", "nice work", "thanks").
+3. The speaker's intent is developmental — to reinforce or change future behavior.
+
+Exclusion bright lines:
+- Single-sentence praise without behavioral specificity → excluded (e.g., "Great job on that" without naming what was great).
+- Coaching questions that invite self-reflection → excluded (count under question_quality instead).
+- Task direction or correction without evaluative content → excluded (count under assignment_clarity instead).
+- If uncertain whether a moment is feedback vs. coaching question vs. task direction, exclude it from feedback_quality. Consistency across analyses matters more than completeness — undercounting is better than inconsistent counting.
 
 Role notes:
 - 1:1 Manager: primary context for this pattern. Expect the highest denominator.

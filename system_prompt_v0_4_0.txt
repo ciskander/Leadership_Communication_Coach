@@ -189,7 +189,7 @@ Numeric invariants (checked by the validator):
 - For each pattern: score in pattern_snapshot = sum(success for counted OEs with that pattern_id) / opportunity_count, rounded to 4 decimals
 
 Per-scoring-type allowed success values:
-- tiered_rubric: {0, 0.25, 0.5, 0.75, 1.0}
+- tiered_rubric: {0, 0.25, 0.5, 0.75, 1.0} (except focus_management: {0, 0.5, 1.0})
 - binary: {0, 1.0}
 - complexity_tiered: {0, 0.25, 0.5, 0.75, 1.0}
 - multi_element: {0, 0.2, 0.4, 0.6, 0.8, 1.0}
@@ -372,6 +372,17 @@ DETERMINISTIC STABILITY
 - Evidence selection: prefer the strongest and clearest supporting span — the one that most convincingly illustrates the behavior. When two spans are equally clear, prefer the earlier one for stability.
 - Use conservative counting consistently across runs.
 - If uncertain, use null only where schema allows.
+
+Opportunity identification stability:
+- When a moment is borderline between two patterns (e.g., feedback vs. coaching question,
+  question vs. rhetorical statement), apply the taxonomy's exclusion bright lines
+  deterministically. If the taxonomy says "if unsure, exclude," always exclude.
+- For feedback_quality: only count moments where the speaker is clearly in "feedback delivery"
+  mode — explicitly evaluating past behavior with developmental intent. Coaching questions,
+  even if they surface feedback themes, belong to question_quality.
+- For question_quality: only count freestanding questions that are the primary communicative
+  act of the turn. Do not count questions embedded in longer statements where the statement
+  is the main content.
 
 ═══════════════════════════════════════════════════════════════
 FORBIDDEN KEYS

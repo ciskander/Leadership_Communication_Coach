@@ -463,6 +463,11 @@ _ALLOWED_SUCCESS = {
     "multi_element":      {0, 0.2, 0.4, 0.6, 0.8, 1.0},
 }
 
+# Pattern-specific overrides for allowed success values
+_PATTERN_ALLOWED_SUCCESS: dict[str, set[float]] = {
+    "focus_management": {0, 0.5, 1.0},
+}
+
 
 def _business_rules(data: dict) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
@@ -611,9 +616,9 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
                     f"OE references pattern '{epid}' which is not evaluable.",
                 ))
 
-        # Per-type success value validation
+        # Per-type success value validation (pattern-specific override first)
         if event.get("count_decision") == "counted" and scoring_type:
-            allowed = _ALLOWED_SUCCESS.get(scoring_type)
+            allowed = _PATTERN_ALLOWED_SUCCESS.get(epid) or _ALLOWED_SUCCESS.get(scoring_type)
             if allowed is not None:
                 sv = event.get("success", 0)
                 if sv not in allowed:
@@ -621,7 +626,7 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
                         "SUCCESS_VALUE_INVALID_FOR_TYPE",
                         f"{epath}.success",
                         f"success={sv} not in allowed set {sorted(allowed)} "
-                        f"for scoring_type={scoring_type}.",
+                        f"for scoring_type={scoring_type} (pattern={epid}).",
                     ))
 
     # ── 3c3. OE→pattern reconciliation + score arithmetic ────────────────────

@@ -203,7 +203,8 @@ Hard reminders:
 - CRITICAL: After writing suggested_rewrite in coaching.pattern_coaching, re-read the excerpt of rewrite_for_span_id and confirm the rewrite addresses the SAME topic and conversational moment. If the topics differ, either fix the span ID or rewrite the text.
 - CRITICAL: Before finalizing, self-audit: (1) every counted OE must have a corresponding evidence span; (2) every evidence_span_id in pattern_snapshot must exist in evidence_spans; (3) opportunity_count must equal counted OEs; (4) rewrite_for_span_id must reference an existing, non-success span.
 - CRITICAL: Never reference turn numbers, evidence_span_ids, event_ids, or any internal identifier in coaching text (notes, coaching_note, executive_summary, strengths, focus). Describe moments by what the speaker said or did.
-- If a pattern's counted OE count is below its min_required_threshold, mark it insufficient_signal with evidence_span_ids=[]. Do NOT mark it evaluable without providing score and opportunity_count."""
+- If a pattern's counted OE count is below its min_required_threshold, mark it insufficient_signal with evidence_span_ids=[]. Do NOT mark it evaluable without providing score and opportunity_count.
+- For feedback_quality and question_quality: apply the taxonomy's inclusion tests and exclusion bright lines strictly. When uncertain whether a moment qualifies as an opportunity, exclude it. Consistency across runs matters more than completeness — undercounting is better than inconsistent counting."""
 
 
 def _generate_analysis_id() -> str:
