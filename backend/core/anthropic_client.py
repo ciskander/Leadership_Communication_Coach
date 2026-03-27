@@ -205,7 +205,6 @@ def call_anthropic(
                 system=combined_system,
                 messages=messages,
                 max_tokens=effective_max_tokens,
-                thinking={"type": "adaptive"},
             )
 
             # Extract text content from response blocks

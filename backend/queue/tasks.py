@@ -81,33 +81,38 @@ def enqueue_single_meeting(self, run_request_id: str) -> str:
         logger.exception(
             "Single meeting analysis failed for run_request %s", run_request_id
         )
-        # Mark run_request as error in Airtable (best-effort)
-        try:
-            client = AirtableClient()
-            client.update_run_request_status(
-                run_request_id,
-                "error",
-                error=str(exc)[:2000],
-            )
-        except Exception:
-            pass
 
         if not _is_retryable(exc):
             logger.error(
                 "Non-retryable error for run_request %s: %s", run_request_id, exc
             )
-            raise
-
-        try:
-            # Update progress to indicate retry
+            # Mark as error only for non-retryable failures
             try:
-                AirtableClient().update_run_request_progress(
-                    run_request_id, "Retrying analysis…"
+                AirtableClient().update_run_request_status(
+                    run_request_id, "error", error=str(exc)[:2000],
                 )
             except Exception:
                 pass
+            raise
+
+        # Retryable — update progress but don't mark as error yet
+        try:
+            AirtableClient().update_run_request_progress(
+                run_request_id, "Retrying analysis…"
+            )
+        except Exception:
+            pass
+
+        try:
             raise self.retry(exc=exc)
         except MaxRetriesExceededError:
+            # All retries exhausted — now mark as error
+            try:
+                AirtableClient().update_run_request_status(
+                    run_request_id, "error", error=str(exc)[:2000],
+                )
+            except Exception:
+                pass
             raise
 
 
@@ -135,29 +140,32 @@ def enqueue_baseline_pack_build(self, baseline_pack_id: str) -> str:
         logger.exception(
             "Baseline pack build failed for pack %s", baseline_pack_id
         )
-        # Mark baseline pack as error in Airtable (best-effort)
-        try:
-            client = AirtableClient()
-            client.update_baseline_pack(baseline_pack_id, {"Status": "error"})
-        except Exception:
-            pass
 
         if not _is_retryable(exc):
             logger.error(
                 "Non-retryable error for baseline pack %s: %s", baseline_pack_id, exc
             )
-            raise
-
-        try:
-            # Update progress to indicate retry
             try:
-                AirtableClient().update_baseline_pack_progress(
-                    baseline_pack_id, "Retrying — this can take a moment…"
-                )
+                AirtableClient().update_baseline_pack(baseline_pack_id, {"Status": "error"})
             except Exception:
                 pass
+            raise
+
+        # Retryable — update progress but don't mark as error yet
+        try:
+            AirtableClient().update_baseline_pack_progress(
+                baseline_pack_id, "Retrying — this can take a moment…"
+            )
+        except Exception:
+            pass
+
+        try:
             raise self.retry(exc=exc)
         except MaxRetriesExceededError:
+            try:
+                AirtableClient().update_baseline_pack(baseline_pack_id, {"Status": "error"})
+            except Exception:
+                pass
             raise
 
 

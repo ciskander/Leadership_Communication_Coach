@@ -29,7 +29,7 @@ OPENAI_MAX_CONCURRENCY: int = 3     # semaphore cap per process
 
 # ── Anthropic ──────────────────────────────────────────────────────────────────
 ANTHROPIC_MAX_TOKENS: int = 16384
-ANTHROPIC_READ_TIMEOUT: float = 300.0  # Sonnet with adaptive thinking on large transcripts
+ANTHROPIC_READ_TIMEOUT: float = 300.0  # Sonnet on large prompts (~123K chars)
 ANTHROPIC_READ_TIMEOUT_OPUS: float = 300.0  # Opus with extended thinking needs more headroom
 ANTHROPIC_JSON_REPAIR_MODEL: str = os.getenv("ANTHROPIC_JSON_REPAIR_MODEL", "claude-sonnet-4-6")
 ANTHROPIC_RETRY_ATTEMPTS: int = 2  # Fewer retries than OpenAI — long timeouts make 4 attempts too slow
