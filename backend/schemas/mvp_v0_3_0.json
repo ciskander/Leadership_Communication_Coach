@@ -321,7 +321,6 @@
     "ScoringType": {
       "type": "string",
       "enum": [
-        "dual_element",
         "tiered_rubric",
         "binary",
         "complexity_tiered",
@@ -463,20 +462,6 @@
           "maximum": 1
         },
         "opportunity_count": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "minimum": 0
-        },
-        "element_a_count": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "minimum": 0
-        },
-        "element_b_count": {
           "type": [
             "integer",
             "null"

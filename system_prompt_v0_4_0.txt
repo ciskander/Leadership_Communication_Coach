@@ -35,6 +35,11 @@ Conservative counting:
 - When a behavior is borderline between "failed opportunity" and "not an opportunity," prefer excluding from both. Undercounting is safer than miscounting.
 - Do not stretch evidence to make patterns evaluable. If the evidence is thin, mark the pattern insufficient_signal. This is the correct outcome, not a failure.
 
+Scoring calibration:
+- LLMs tend to cluster tiered rubric scores at 0.5 and above. This compresses the scale and reduces coaching value. Use the full rubric range for every pattern.
+- For each opportunity, start from the rubric's 0.0 anchor and work upward — assign the tier whose description best matches the observed behavior. Do not default to 0.5 as a "baseline" or "minimum attempt" score.
+- A score of 0.0 on a counted opportunity is a valid, expected outcome — it means the speaker had a clear opportunity but exhibited none of the pattern's target behavior. Do not avoid 0.0 out of politeness or uncertainty.
+
 question_quality — procedural exclusion:
 - EXCLUDE procedural, logistical, and technical questions from BOTH numerator AND denominator: audio/video checks, roll call, quorum checks, scheduling logistics. These must also NEVER appear in evidence_span_ids, coaching_note, suggested_rewrite, or any coaching for this pattern. Only count questions that relate to decisions, problem-solving, accountability, or substantive content.
 
@@ -84,7 +89,7 @@ If two patterns share the same turns, create ONE shared span with both event_ids
 Step 5 — Pattern scoring (output: pattern_snapshot):
 For each pattern, compute: score = sum(success for counted OEs) / counted_OE_count.
 Classify each evidence span as success or missed opportunity using the threshold for its
-scoring type: binary/dual_element ≥ 1.0, tiered_rubric/complexity_tiered ≥ 0.75,
+scoring type: binary ≥ 1.0, tiered_rubric/complexity_tiered ≥ 0.75,
 multi_element ≥ 0.8. List success spans in success_evidence_span_ids.
 
 Step 6 — Experiment detection (output: experiment_tracking):
@@ -184,7 +189,6 @@ Numeric invariants (checked by the validator):
 - For each pattern: score in pattern_snapshot = sum(success for counted OEs with that pattern_id) / opportunity_count, rounded to 4 decimals
 
 Per-scoring-type allowed success values:
-- dual_element: {0, 0.5, 1.0}
 - tiered_rubric: {0, 0.25, 0.5, 0.75, 1.0}
 - binary: {0, 1.0}
 - complexity_tiered: {0, 0.25, 0.5, 0.75, 1.0}
@@ -239,18 +243,16 @@ pattern_id, cluster_id, scoring_type, evaluable_status(evaluable|insufficient_si
 
 cluster_id enum: meeting_structure|participation_dynamics|decisions_accountability|communication_quality
 
-scoring_type enum: dual_element|tiered_rubric|binary|complexity_tiered|multi_element
+scoring_type enum: tiered_rubric|binary|complexity_tiered|multi_element
 
 Evaluable patterns:
 - evaluable_status = "evaluable"
 - require score (0-1, rounded to 4 decimals), opportunity_count (>= 1)
-- For dual_element patterns: also include element_a_count, element_b_count
 - For complexity_tiered patterns: also include simple_count, complex_count
 - participation_management: also include balance_assessment (over_indexed|balanced|under_indexed|unclear)
 - evidence_span_ids: ALL evidence spans for this pattern (both successes and missed opportunities)
 - success_evidence_span_ids: subset listing only spans where the linked OEs have success >= the threshold for the scoring type:
     - binary: success >= 1.0
-    - dual_element: success >= 1.0
     - tiered_rubric: success >= 0.75
     - complexity_tiered: success >= 0.75
     - multi_element: success >= 0.8
@@ -409,7 +411,7 @@ Cross-reference audit (CRITICAL — common error source):
 15) For insufficient_signal or not_evaluable patterns, evidence_span_ids is empty array.
 
 Success classification audit:
-16) For each evaluable pattern, re-check success_evidence_span_ids against the threshold for its scoring type (binary/dual_element ≥ 1.0, tiered_rubric/complexity_tiered ≥ 0.75, multi_element ≥ 0.8). For each evidence span in the pattern's evidence_span_ids, find the linked OE(s) via the span's event_ids. If any linked OE for this pattern has success >= the threshold and the span is NOT in success_evidence_span_ids, add it. If a span IS in success_evidence_span_ids but no linked OE meets the threshold, remove it.
+16) For each evaluable pattern, re-check success_evidence_span_ids against the threshold for its scoring type (binary ≥ 1.0, tiered_rubric/complexity_tiered ≥ 0.75, multi_element ≥ 0.8). For each evidence span in the pattern's evidence_span_ids, find the linked OE(s) via the span's event_ids. If any linked OE for this pattern has success >= the threshold and the span is NOT in success_evidence_span_ids, add it. If a span IS in success_evidence_span_ids but no linked OE meets the threshold, remove it.
 
 17) For each coaching.pattern_coaching item: rewrite_for_span_id appears in the pattern's evidence_span_ids and is NOT in success_evidence_span_ids. If the rewrite targets a success span, choose a different span or remove the rewrite.
 18) For each coaching.pattern_coaching item with non-empty success_evidence_span_ids: verify best_success_span_id is set and appears in the pattern's success_evidence_span_ids.

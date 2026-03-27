@@ -31,7 +31,6 @@ Score aggregation:
 
 Opportunity count aggregation:
 - Sum the opportunity_counts across evaluable meetings.
-- For dual_element patterns: sum element_a_count and element_b_count separately.
 - For complexity_tiered patterns: sum simple_count and complex_count separately.
 
 Evaluable status:
@@ -116,13 +115,12 @@ pattern_id, cluster_id, scoring_type, evaluable_status(evaluable|insufficient_si
 
 cluster_id enum: meeting_structure|participation_dynamics|decisions_accountability|communication_quality
 
-scoring_type enum: dual_element|tiered_rubric|binary|complexity_tiered|multi_element
+scoring_type enum: tiered_rubric|binary|complexity_tiered|multi_element
 
 Evaluable patterns:
 - evaluable_status = "evaluable"
 - require score (0-1, rounded to 4 decimals), opportunity_count
 - These are AGGREGATE values: score = WEIGHTED AVERAGE of meeting-level scores, opportunity_count = sum across meetings.
-- For dual_element patterns: also include element_a_count, element_b_count (summed).
 - For complexity_tiered patterns: also include simple_count, complex_count (summed).
 - participation_management: also include balance_assessment.
 
@@ -270,7 +268,7 @@ Coaching quality checks:
 
 Aggregation checks:
 10) For each evaluable pattern, verify the score is the weighted average of meeting-level scores (weighted by opportunity_count).
-11) Verify opportunity_count = sum of meeting opportunity_counts. For dual_element patterns, verify element counts are summed. For complexity_tiered patterns, verify simple/complex counts are summed.
+11) Verify opportunity_count = sum of meeting opportunity_counts. For complexity_tiered patterns, verify simple/complex counts are summed.
 12) Verify evaluation_summary is consistent with pattern_snapshot evaluable_status values.
 
 Structural checks:

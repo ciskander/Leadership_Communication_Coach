@@ -220,7 +220,7 @@
     },
     "ScoringType": {
       "type": "string",
-      "enum": ["dual_element", "tiered_rubric", "binary", "complexity_tiered", "multi_element"]
+      "enum": ["tiered_rubric", "binary", "complexity_tiered", "multi_element"]
     },
 
     "OpportunityEvent": {
@@ -353,8 +353,6 @@
           "type": ["integer", "null"],
           "minimum": 0
         },
-        "element_a_count": { "type": ["integer", "null"], "minimum": 0 },
-        "element_b_count": { "type": ["integer", "null"], "minimum": 0 },
         "simple_count": { "type": ["integer", "null"], "minimum": 0 },
         "complex_count": { "type": ["integer", "null"], "minimum": 0 },
         "balance_assessment": {
