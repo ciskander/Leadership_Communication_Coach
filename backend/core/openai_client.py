@@ -124,11 +124,11 @@ def call_openai(
                 time.sleep(wait)
             else:
                 raise
-        except openai.APITimeoutError as exc:
-            last_exc = exc
-            wait = _backoff(attempt)
-            logger.warning("OpenAI timeout on attempt %d; sleeping %.1fs", attempt + 1, wait)
-            time.sleep(wait)
+        except openai.APITimeoutError:
+            # Don't retry timeouts at this level — a 300s timeout won't
+            # succeed on immediate retry.  Let Celery handle it with a
+            # proper delay between attempts.
+            raise
         except (openai.APIConnectionError,) as exc:
             last_exc = exc
             wait = _backoff(attempt)

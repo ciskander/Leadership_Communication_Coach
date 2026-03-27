@@ -61,7 +61,7 @@ class BaseWorkerTask(Task):
     name="backend.queue.tasks.process_single_meeting_task",
     bind=True,
     base=BaseWorkerTask,
-    max_retries=3,
+    max_retries=1,
     default_retry_delay=15,
 )
 def enqueue_single_meeting(self, run_request_id: str) -> str:

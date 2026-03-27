@@ -262,14 +262,11 @@ def call_anthropic(
                 time.sleep(wait)
             else:
                 raise
-        except anthropic.APITimeoutError as exc:
-            last_exc = exc
-            wait = _backoff(attempt)
-            logger.warning(
-                "Anthropic timeout on attempt %d; sleeping %.1fs",
-                attempt + 1, wait,
-            )
-            time.sleep(wait)
+        except anthropic.APITimeoutError:
+            # Don't retry timeouts at this level — a 300s timeout won't
+            # succeed on immediate retry.  Let Celery handle it with a
+            # proper delay between attempts.
+            raise
         except anthropic.APIConnectionError as exc:
             last_exc = exc
             wait = _backoff(attempt)
