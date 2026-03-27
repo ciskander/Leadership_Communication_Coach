@@ -54,21 +54,37 @@ def _backoff(attempt: int) -> float:
     return delay + jitter
 
 
-def _build_system_message(system_prompt: str, developer_message: str) -> str:
-    """Combine system prompt and developer message into a single system parameter.
+def _build_system_message(system_prompt: str, developer_message: str) -> list[dict]:
+    """Combine system prompt and developer message into cached content blocks.
 
     Anthropic has no "developer" role. The developer message (taxonomy, rubrics)
     is appended after the system prompt with a clear delimiter so the model treats
     it with high priority.
-    """
-    if not developer_message:
-        return system_prompt
 
-    return (
-        f"{system_prompt}\n\n"
-        "─── TAXONOMY & EVALUATION RUBRICS (apply these strictly) ───\n\n"
-        f"{developer_message}"
-    )
+    Both blocks are marked with cache_control={"type": "ephemeral"} so that
+    Anthropic's prompt caching keeps them in cache across consecutive calls
+    (5-minute TTL). Only the user message (transcript) changes per call,
+    so subsequent calls pay ~90% less for input tokens.
+    """
+    blocks = [
+        {
+            "type": "text",
+            "text": system_prompt,
+            "cache_control": {"type": "ephemeral"},
+        },
+    ]
+
+    if developer_message:
+        blocks.append({
+            "type": "text",
+            "text": (
+                "─── TAXONOMY & EVALUATION RUBRICS (apply these strictly) ───\n\n"
+                f"{developer_message}"
+            ),
+            "cache_control": {"type": "ephemeral"},
+        })
+
+    return blocks
 
 
 def _extract_json(raw_text: str) -> dict:
@@ -232,6 +248,20 @@ def call_anthropic(
                 parsed = _repair_json_via_llm(raw_text, api_key)
 
             usage = response.usage
+            cache_created = getattr(usage, "cache_creation_input_tokens", 0) or 0
+            cache_read = getattr(usage, "cache_read_input_tokens", 0) or 0
+
+            if cache_read > 0:
+                logger.info(
+                    "Anthropic cache HIT: %d tokens read from cache, %d created",
+                    cache_read, cache_created,
+                )
+            elif cache_created > 0:
+                logger.info(
+                    "Anthropic cache MISS (warming): %d tokens written to cache",
+                    cache_created,
+                )
+
             return OpenAIResponse(
                 parsed=parsed,
                 raw_text=raw_text,
@@ -241,6 +271,8 @@ def call_anthropic(
                 total_tokens=(
                     (usage.input_tokens + usage.output_tokens) if usage else 0
                 ),
+                cache_creation_input_tokens=cache_created,
+                cache_read_input_tokens=cache_read,
             )
 
         except anthropic.RateLimitError as exc:
