@@ -24,13 +24,32 @@ Usage:
   python -m backend.evals.replay_eval --mode repeat \
     --transcript backend/evals/transcripts/meeting_alpha.vtt --runs 5
 
+  # Repeat with per-opportunity alignment tables and evidence text
+  python -m backend.evals.replay_eval --mode repeat \
+    --transcript backend/evals/transcripts/meeting_alpha.vtt --runs 5 --detail
+
   # Compare: run all transcripts in directory, 3 times each
   python -m backend.evals.replay_eval --mode compare \
     --transcripts-dir backend/evals/transcripts --runs 3
 
+  # Compare with raw reason code cross-tabulation
+  python -m backend.evals.replay_eval --mode compare \
+    --transcripts-dir backend/evals/transcripts --runs 3 --detail
+
   # Compare (offline): analyze existing output JSON files (no LLM calls)
   python -m backend.evals.replay_eval --mode compare \
     --outputs-dir path/to/output/json/files
+
+Reports always include:
+  - Score stability / discriminant validity tables
+  - Per-opportunity tier usage (0.0 / 0.25 / 0.5 / 0.75 / 1.0 distribution)
+  - Cross-meeting tier distributions per pattern (compare mode)
+  - Reason code analysis grouped by tier (compare mode)
+
+With --detail, reports additionally include:
+  - Per-opportunity alignment tables (scores + reason codes across runs)
+  - Truncated transcript evidence text per opportunity
+  - Raw reason code frequency cross-tabulation (compare mode)
 """
 from __future__ import annotations
 
