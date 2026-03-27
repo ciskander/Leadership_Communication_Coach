@@ -216,13 +216,14 @@ def call_anthropic(
                 "Anthropic call attempt %d/%d model=%s",
                 attempt + 1, ANTHROPIC_RETRY_ATTEMPTS, effective_model,
             )
-            response = client.messages.create(
+            with client.messages.stream(
                 model=effective_model,
                 system=combined_system,
                 messages=messages,
                 max_tokens=effective_max_tokens,
                 thinking={"type": "enabled", "budget_tokens": 16000},
-            )
+            ) as stream:
+                response = stream.get_final_message()
 
             # Log token usage for debugging budget allocation
             usage = response.usage
