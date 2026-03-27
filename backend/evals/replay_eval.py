@@ -57,10 +57,18 @@ from backend.core.openai_client import load_system_prompt
 from backend.core.prompt_builder import build_developer_message, build_single_meeting_prompt
 from backend.core.transcript_parser import parse_transcript
 from backend.evals.report import (
+    collect_reason_codes,
     compute_pattern_stats,
     compute_int_stats,
+    compute_tier_distribution,
+    extract_opportunity_details,
+    format_cross_meeting_tier_distributions,
     format_intra_transcript_report,
     format_inter_transcript_report,
+    format_opportunity_alignment_table,
+    format_reason_code_analysis_by_tier,
+    format_reason_code_cross_tab,
+    format_tier_distribution_table,
     save_report,
     save_json,
 )
@@ -201,7 +209,8 @@ def run_single_analysis(
 
     gate1_result = gate1_validate(response.raw_text)
 
-    parsed = response.parsed
+    # Use corrected data when gate1 auto-fixed arithmetic errors
+    parsed = gate1_result.corrected_data if gate1_result.corrected_data else response.parsed
     pattern_scores: dict[str, float | None] = {}
     pattern_opp_counts: dict[str, int | None] = {}
     pattern_statuses: dict[str, str] = {}
@@ -245,6 +254,7 @@ def run_repeat(
     n_runs: int,
     eval_config: dict,
     model: str | None = None,
+    detail: bool = False,
 ) -> dict[str, Any]:
     """Run one transcript N times and compute intra-transcript stats."""
     metadata, parsed_transcript, memory = load_raw_transcript(transcript_path, eval_config)
@@ -274,7 +284,18 @@ def run_repeat(
     gate1_passes = sum(1 for r in runs if r.get("gate1_passed"))
     gate1_pass_rate = gate1_passes / len(runs) if runs else 0
 
+    # ── Extract per-opportunity details from each run ──
+    per_run_opp_details: list[dict[str, list[dict]]] = []
+    for r in runs:
+        if "parsed_json" in r:
+            per_run_opp_details.append(extract_opportunity_details(r["parsed_json"]))
+        else:
+            per_run_opp_details.append({})
+
     pattern_results: dict[str, dict] = {}
+    tier_distributions: dict[str, dict] = {}
+    reason_codes_by_pattern: dict[str, list[dict]] = {}
+
     for pid in PATTERN_ORDER:
         scores = [r["pattern_scores"].get(pid) for r in runs if "pattern_scores" in r]
         opp_counts = [r["pattern_opp_counts"].get(pid) for r in runs if "pattern_opp_counts" in r]
@@ -292,6 +313,13 @@ def run_repeat(
             "status_distribution": dict(status_counts),
         }
 
+        # Collect per-run opportunity details for this pattern
+        pattern_run_details = [rd.get(pid, []) for rd in per_run_opp_details]
+        tier_distributions[pid] = compute_tier_distribution(pattern_run_details, pid)
+        reason_codes_by_pattern[pid] = collect_reason_codes(
+            pattern_run_details, transcript_id=transcript_id,
+        )
+
     # Save results
     results_dir = _RESULTS_DIR / transcript_id
     results_dir.mkdir(parents=True, exist_ok=True)
@@ -301,19 +329,44 @@ def run_repeat(
         if "parsed_json" in run_data:
             save_json(run_data["parsed_json"], results_dir / f"run_{i+1:03d}_{timestamp}.json")
 
-    report_data = {
+    report_data: dict[str, Any] = {
         "transcript_id": transcript_id,
         "n_runs": n_runs,
         "gate1_pass_rate": gate1_pass_rate,
         "model": runs[0].get("model", "unknown") if runs else "unknown",
         "timestamp": timestamp,
         "pattern_results": pattern_results,
+        "tier_distributions": tier_distributions,
     }
+    if detail:
+        report_data["reason_codes"] = reason_codes_by_pattern
+
     save_json(report_data, results_dir / f"repeat_report_{timestamp}.json")
 
+    # ── Build markdown report ──
     md = format_intra_transcript_report(transcript_id, n_runs, gate1_pass_rate, pattern_results)
+
+    # Always: tier distribution summary table
+    md += "\n" + format_tier_distribution_table(tier_distributions)
+
+    # --detail: per-pattern opportunity alignment tables
+    if detail:
+        md += "\n\n## Opportunity Event Detail\n"
+        for pid in PATTERN_ORDER:
+            pattern_run_details = [rd.get(pid, []) for rd in per_run_opp_details]
+            if any(pattern_run_details):
+                md += "\n" + format_opportunity_alignment_table(
+                    pid, pattern_run_details, n_runs,
+                    parsed_transcript=parsed_transcript,
+                    include_text=True,
+                )
+                md += "\n"
+
     save_report(md, results_dir / f"repeat_report_{timestamp}.md")
 
+    # Return extra data for use by run_compare()
+    report_data["_tier_distributions"] = tier_distributions
+    report_data["_reason_codes"] = reason_codes_by_pattern
     return report_data
 
 
@@ -323,6 +376,7 @@ def run_compare(
     transcripts_dir: Path,
     n_runs: int,
     model: str | None = None,
+    detail: bool = False,
 ) -> dict[str, Any]:
     """Run all transcripts in a directory and compute cross-transcript stats."""
     eval_config = _load_eval_config(transcripts_dir)
@@ -337,9 +391,14 @@ def run_compare(
         logger.info("  %s", f.name)
 
     per_transcript: dict[str, dict] = {}
+    per_transcript_tiers: dict[str, dict[str, dict]] = {}   # tid → pid → tier_dist
+    per_transcript_reasons: dict[str, dict[str, list]] = {}  # tid → pid → reason_code list
     for transcript_path in transcript_files:
-        report = run_repeat(transcript_path, n_runs, eval_config, model=model)
-        per_transcript[transcript_path.stem] = report["pattern_results"]
+        report = run_repeat(transcript_path, n_runs, eval_config, model=model, detail=detail)
+        tid = transcript_path.stem
+        per_transcript[tid] = report["pattern_results"]
+        per_transcript_tiers[tid] = report.get("_tier_distributions", {})
+        per_transcript_reasons[tid] = report.get("_reason_codes", {})
 
     transcript_ids = [f.stem for f in transcript_files]
     cross_transcript: dict[str, dict] = {}
@@ -373,17 +432,66 @@ def run_compare(
             "signal_to_noise": signal_to_noise,
         }
 
+    # ── Build cross-meeting tier distributions and reason code analysis ──
+    cross_tier_distributions: dict[str, dict[str, dict]] = {}  # pid → tid → tier_dist
+    reason_code_analysis: dict[str, list[dict]] = {}  # pid → combined reason code list
+
+    for pid in PATTERN_ORDER:
+        cross_tier_distributions[pid] = {}
+        all_reasons: list[dict] = []
+        for tid in transcript_ids:
+            cross_tier_distributions[pid][tid] = per_transcript_tiers.get(tid, {}).get(pid, {
+                "total": 0, "tiers": {}, "tier_pcts": {}, "other_count": 0, "other_pct": 0,
+            })
+            all_reasons.extend(per_transcript_reasons.get(tid, {}).get(pid, []))
+        reason_code_analysis[pid] = all_reasons
+
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
-    report_data = {
+    report_data: dict[str, Any] = {
         "transcript_ids": transcript_ids,
         "n_runs_per_transcript": n_runs,
         "timestamp": timestamp,
         "per_transcript": per_transcript,
         "cross_transcript": cross_transcript,
+        "cross_tier_distributions": {
+            pid: {tid: dist for tid, dist in tids.items()}
+            for pid, tids in cross_tier_distributions.items()
+        },
+        "reason_code_analysis": {
+            pid: codes for pid, codes in reason_code_analysis.items() if codes
+        },
     }
     save_json(report_data, _RESULTS_DIR / f"compare_report_{timestamp}.json")
 
+    # ── Build markdown report ──
     md = format_inter_transcript_report(transcript_ids, per_transcript, cross_transcript)
+
+    # Always: cross-meeting tier distributions
+    md += "\n\n## Cross-Meeting Tier Distributions\n"
+    for pid in PATTERN_ORDER:
+        md += "\n" + format_cross_meeting_tier_distributions(
+            pid, transcript_ids, cross_tier_distributions[pid],
+        )
+        md += "\n"
+
+    # Always: tier-grouped reason code analysis
+    md += "\n## Reason Code Analysis (by tier)\n"
+    for pid in PATTERN_ORDER:
+        if reason_code_analysis.get(pid):
+            md += "\n" + format_reason_code_analysis_by_tier(
+                pid, reason_code_analysis[pid], transcript_ids,
+            )
+
+    # --detail: raw reason code cross-tabulation
+    if detail:
+        md += "\n\n## Reason Code Cross-Tabulation (raw)\n"
+        for pid in PATTERN_ORDER:
+            if reason_code_analysis.get(pid):
+                md += "\n" + format_reason_code_cross_tab(
+                    pid, reason_code_analysis[pid], transcript_ids,
+                )
+                md += "\n"
+
     save_report(md, _RESULTS_DIR / f"compare_report_{timestamp}.md")
 
     return report_data
@@ -557,13 +665,17 @@ examples:
         "--outputs-dir", type=Path,
         help="Directory of existing output JSON files for offline compare (no LLM calls)",
     )
+    parser.add_argument(
+        "--detail", action="store_true", default=False,
+        help="Include per-opportunity alignment tables, evidence text, and raw reason code cross-tabs",
+    )
     args = parser.parse_args()
 
     if args.mode == "repeat":
         if not args.transcript:
             parser.error("--transcript is required for repeat mode")
         eval_config = _load_eval_config(args.transcript.parent)
-        run_repeat(args.transcript, args.runs, eval_config, model=args.model)
+        run_repeat(args.transcript, args.runs, eval_config, model=args.model, detail=args.detail)
 
     elif args.mode == "compare":
         if args.outputs_dir:
@@ -576,7 +688,7 @@ examples:
                 logger.warning("--runs is ignored in offline mode (--outputs-dir)")
             run_compare_offline(args.outputs_dir)
         elif args.transcripts_dir:
-            run_compare(args.transcripts_dir, args.runs, model=args.model)
+            run_compare(args.transcripts_dir, args.runs, model=args.model, detail=args.detail)
         else:
             parser.error("--transcripts-dir or --outputs-dir is required for compare mode")
 

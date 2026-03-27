@@ -1,10 +1,11 @@
 """
-report.py — Shared reporting utilities for eval scripts.
+report.py - Shared reporting utilities for eval scripts.
 """
 from __future__ import annotations
 
 import json
 import statistics
+from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -173,6 +174,397 @@ def format_inter_transcript_report(
         ])
     lines.append(format_markdown_table(headers2, rows2))
 
+    return "\n".join(lines)
+
+
+# ── Per-opportunity detail extraction ────────────────────────────────────────
+
+_STANDARD_TIERS = [0.0, 0.25, 0.5, 0.75, 1.0]
+
+
+def extract_opportunity_details(
+    parsed_json: dict,
+) -> dict[str, list[dict[str, Any]]]:
+    """Extract per-opportunity detail from a single run's parsed JSON.
+
+    Returns dict keyed by pattern_id → list of opportunity dicts with:
+      event_id, pattern_id, success, reason_code, turn_range
+    """
+    details: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for oe in parsed_json.get("opportunity_events", []):
+        pid = oe.get("pattern_id")
+        if not pid or oe.get("count_decision") != "counted":
+            continue
+
+        turn_start = oe.get("turn_start_id")
+        turn_end = oe.get("turn_end_id")
+        if turn_start is not None and turn_end is not None:
+            turn_range = f"T{turn_start}" if turn_start == turn_end else f"T{turn_start}-{turn_end}"
+        elif turn_start is not None:
+            turn_range = f"T{turn_start}"
+        else:
+            turn_range = "?"
+
+        details[pid].append({
+            "event_id": oe.get("event_id", "?"),
+            "pattern_id": pid,
+            "success": oe.get("success"),
+            "reason_code": oe.get("reason_code", ""),
+            "turn_range": turn_range,
+            "turn_start_id": turn_start,
+            "turn_end_id": turn_end,
+        })
+    return dict(details)
+
+
+def compute_tier_distribution(
+    all_opportunity_details: list[list[dict[str, Any]]],
+    pattern_id: str,
+) -> dict[str, Any]:
+    """Compute tier distribution for a pattern across multiple runs.
+
+    all_opportunity_details: list of per-run detail lists (each from extract_opportunity_details()[pid])
+    Returns dict with tier counts, percentages, and total.
+    """
+    scores: list[float] = []
+    for run_details in all_opportunity_details:
+        for opp in run_details:
+            if opp.get("success") is not None:
+                scores.append(opp["success"])
+
+    total = len(scores)
+    if total == 0:
+        return {"total": 0, "tiers": {}, "other_count": 0, "other_pct": 0}
+
+    tier_counts: dict[str, int] = {}
+    other_count = 0
+    for tier in _STANDARD_TIERS:
+        tier_counts[f"{tier:.2f}"] = 0
+
+    for s in scores:
+        # Check if score matches a standard tier (within float tolerance)
+        matched = False
+        for tier in _STANDARD_TIERS:
+            if abs(s - tier) < 0.001:
+                tier_counts[f"{tier:.2f}"] += 1
+                matched = True
+                break
+        if not matched:
+            other_count += 1
+
+    tier_pcts: dict[str, float] = {
+        k: round(v / total * 100, 1) for k, v in tier_counts.items()
+    }
+
+    # If there are non-standard scores, break them down too
+    other_breakdown: dict[str, int] = {}
+    if other_count > 0:
+        for s in scores:
+            matched = any(abs(s - tier) < 0.001 for tier in _STANDARD_TIERS)
+            if not matched:
+                key = f"{s:.2f}"
+                other_breakdown[key] = other_breakdown.get(key, 0) + 1
+
+    return {
+        "total": total,
+        "tiers": tier_counts,
+        "tier_pcts": tier_pcts,
+        "other_count": other_count,
+        "other_pct": round(other_count / total * 100, 1),
+        "other_breakdown": other_breakdown,
+    }
+
+
+def collect_reason_codes(
+    all_opportunity_details: list[list[dict[str, Any]]],
+    transcript_id: str | None = None,
+) -> list[dict[str, Any]]:
+    """Collect reason codes with their associated score tiers.
+
+    Returns list of dicts: {reason_code, tier, transcript_id, count}
+    """
+    code_counts: dict[tuple[str, float], int] = defaultdict(int)
+    for run_details in all_opportunity_details:
+        for opp in run_details:
+            rc = opp.get("reason_code", "")
+            score = opp.get("success")
+            if rc and score is not None:
+                code_counts[(rc, score)] += 1
+
+    result = []
+    for (rc, tier), count in sorted(code_counts.items(), key=lambda x: (-x[1], x[0][1], x[0][0])):
+        entry: dict[str, Any] = {"reason_code": rc, "tier": tier, "count": count}
+        if transcript_id:
+            entry["transcript_id"] = transcript_id
+        result.append(entry)
+    return result
+
+
+# ── Intra-meeting detail formatting ─────────────────────────────────────────
+
+def format_tier_distribution_table(
+    tier_distributions: dict[str, dict[str, Any]],
+) -> str:
+    """Format per-pattern tier distribution as a summary markdown table."""
+    lines = ["", "## Per-Opportunity Tier Usage", ""]
+
+    headers = ["Pattern", "n_opps", "0.0", "0.25", "0.5", "0.75", "1.0", "Other"]
+    rows = []
+    other_notes: list[str] = []
+    for pid, dist in tier_distributions.items():
+        total = dist["total"]
+        if total == 0:
+            rows.append([pid, "0", "-", "-", "-", "-", "-", "-"])
+            continue
+        pcts = dist["tier_pcts"]
+        other_label = "0%"
+        if dist["other_count"] > 0:
+            other_label = f"{dist['other_pct']:.0f}%"
+            # Build breakdown note
+            breakdown = dist.get("other_breakdown", {})
+            if breakdown:
+                parts = [f"{k}={v}" for k, v in sorted(breakdown.items())]
+                other_notes.append(f"- **{pid}** Other breakdown: {', '.join(parts)}")
+        rows.append([
+            pid,
+            str(total),
+            f"{pcts.get('0.00', 0):.0f}%",
+            f"{pcts.get('0.25', 0):.0f}%",
+            f"{pcts.get('0.50', 0):.0f}%",
+            f"{pcts.get('0.75', 0):.0f}%",
+            f"{pcts.get('1.00', 0):.0f}%",
+            other_label,
+        ])
+    lines.append(format_markdown_table(headers, rows))
+
+    if other_notes:
+        lines.extend(["", "**Non-standard tier breakdown:**"] + other_notes)
+
+    return "\n".join(lines)
+
+
+def format_opportunity_alignment_table(
+    pattern_id: str,
+    all_run_details: list[list[dict[str, Any]]],
+    n_runs: int,
+    parsed_transcript: Any | None = None,
+    include_text: bool = False,
+) -> str:
+    """Format per-opportunity alignment across runs for a single pattern.
+
+    Shows how each evidence span was scored in each run, with optional transcript text.
+    """
+    # Collect all unique turn_ranges across all runs
+    all_turn_ranges: list[str] = []
+    seen: set[str] = set()
+    for run_details in all_run_details:
+        for opp in run_details:
+            tr = opp["turn_range"]
+            if tr not in seen:
+                all_turn_ranges.append(tr)
+                seen.add(tr)
+
+    # Sort turn_ranges by numeric value of first turn
+    def _sort_key(tr: str) -> int:
+        num_str = tr.lstrip("T").split("-")[0]
+        try:
+            return int(num_str)
+        except ValueError:
+            return 9999
+    all_turn_ranges.sort(key=_sort_key)
+
+    if not all_turn_ranges:
+        return ""
+
+    lines = [f"### {pattern_id}", ""]
+
+    # Build header
+    header_parts = ["Turn"]
+    if include_text and parsed_transcript:
+        header_parts.append("Text (truncated)")
+    for i in range(n_runs):
+        header_parts.append(f"Run {i+1}")
+
+    rows = []
+    for tr in all_turn_ranges:
+        row_parts = [tr]
+
+        # Add transcript text if requested
+        if include_text and parsed_transcript:
+            text = _lookup_turn_text(tr, parsed_transcript)
+            row_parts.append(text)
+
+        # For each run, find the matching opportunity
+        for run_details in all_run_details:
+            match = [o for o in run_details if o["turn_range"] == tr]
+            if match:
+                opp = match[0]
+                score = opp["success"]
+                rc = opp["reason_code"]
+                row_parts.append(f"{score} {rc}")
+            else:
+                row_parts.append("-")
+        rows.append(row_parts)
+
+    lines.append(format_markdown_table(header_parts, rows))
+    return "\n".join(lines)
+
+
+def _lookup_turn_text(turn_range: str, parsed_transcript: Any, max_chars: int = 200) -> str:
+    """Look up transcript text for a turn range like 'T5' or 'T5-7'."""
+    try:
+        parts = turn_range.lstrip("T").split("-")
+        start = int(parts[0])
+        end = int(parts[-1]) if len(parts) > 1 else start
+    except (ValueError, IndexError):
+        return "?"
+
+    turns = getattr(parsed_transcript, "turns", [])
+    texts = []
+    extra_turns = 0
+    for turn in turns:
+        turn_id = getattr(turn, "turn_id", None)
+        if turn_id is not None and start <= turn_id <= end:
+            speaker = getattr(turn, "speaker_label", "?")
+            text = getattr(turn, "text", "")
+            if not texts:
+                truncated = text[:max_chars] + ("..." if len(text) > max_chars else "")
+                texts.append(f"({speaker}) {truncated}")
+            else:
+                extra_turns += 1
+
+    result = texts[0] if texts else "?"
+    if extra_turns > 0:
+        result += f" (+{extra_turns} more turns)"
+    return result
+
+
+# ── Inter-meeting detail formatting ──────────────────────────────────────────
+
+def format_cross_meeting_tier_distributions(
+    pattern_id: str,
+    transcript_ids: list[str],
+    per_transcript_tiers: dict[str, dict[str, Any]],
+) -> str:
+    """Format cross-meeting tier distribution table for a single pattern."""
+    lines = [f"### {pattern_id}", ""]
+
+    headers = ["Meeting", "n_opps", "0.0", "0.25", "0.5", "0.75", "1.0", "Other"]
+    rows = []
+    other_notes: list[str] = []
+    for tid in transcript_ids:
+        dist = per_transcript_tiers.get(tid)
+        if not dist or dist["total"] == 0:
+            rows.append([tid, "0", "-", "-", "-", "-", "-", "-"])
+            continue
+        pcts = dist["tier_pcts"]
+        other_label = "0%"
+        if dist["other_count"] > 0:
+            other_label = f"{dist['other_pct']:.0f}%"
+            breakdown = dist.get("other_breakdown", {})
+            if breakdown:
+                parts = [f"{k}={v}" for k, v in sorted(breakdown.items())]
+                other_notes.append(f"- **{tid}**: {', '.join(parts)}")
+        rows.append([
+            tid,
+            str(dist["total"]),
+            f"{pcts.get('0.00', 0):.0f}%",
+            f"{pcts.get('0.25', 0):.0f}%",
+            f"{pcts.get('0.50', 0):.0f}%",
+            f"{pcts.get('0.75', 0):.0f}%",
+            f"{pcts.get('1.00', 0):.0f}%",
+            other_label,
+        ])
+    lines.append(format_markdown_table(headers, rows))
+
+    if other_notes:
+        lines.extend(["", "Non-standard tier breakdown:"] + other_notes)
+
+    return "\n".join(lines)
+
+
+def format_reason_code_analysis_by_tier(
+    pattern_id: str,
+    all_reason_codes: list[dict[str, Any]],
+    transcript_ids: list[str],
+) -> str:
+    """Format reason codes grouped by tier for a single pattern.
+
+    all_reason_codes: combined list from collect_reason_codes() across all transcripts.
+    Each entry has: reason_code, tier, count, transcript_id.
+    """
+    if not all_reason_codes:
+        return ""
+
+    lines = [f"### {pattern_id}", ""]
+
+    # Group by tier
+    by_tier: dict[float, dict[str, dict[str, int]]] = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+    for entry in all_reason_codes:
+        tier = entry["tier"]
+        rc = entry["reason_code"]
+        tid = entry.get("transcript_id", "?")
+        by_tier[tier][rc][tid] += entry["count"]
+
+    for tier in sorted(by_tier.keys(), reverse=True):
+        lines.append(f"**Tier {tier}**")
+        codes = by_tier[tier]
+        # Sort by total count descending
+        sorted_codes = sorted(
+            codes.items(),
+            key=lambda x: sum(x[1].values()),
+            reverse=True,
+        )
+        for rc, tid_counts in sorted_codes:
+            total = sum(tid_counts.values())
+            breakdown = ", ".join(
+                f"{tid}={c}" for tid, c in sorted(tid_counts.items()) if c > 0
+            )
+            lines.append(f"- {rc} (x{total}: {breakdown})")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def format_reason_code_cross_tab(
+    pattern_id: str,
+    all_reason_codes: list[dict[str, Any]],
+    transcript_ids: list[str],
+) -> str:
+    """Format raw reason code frequency cross-tabulation (--detail mode)."""
+    if not all_reason_codes:
+        return ""
+
+    lines = [f"### {pattern_id} (raw cross-tabulation)", ""]
+
+    # Build cross-tab: reason_code → {tier, per-transcript count}
+    cross: dict[str, dict[str, Any]] = {}
+    for entry in all_reason_codes:
+        rc = entry["reason_code"]
+        tid = entry.get("transcript_id", "?")
+        if rc not in cross:
+            cross[rc] = {"tier": entry["tier"]}
+            for t in transcript_ids:
+                cross[rc][t] = 0
+        cross[rc][tid] = cross[rc].get(tid, 0) + entry["count"]
+
+    # Sort by tier descending, then by total count descending
+    sorted_codes = sorted(
+        cross.items(),
+        key=lambda x: (-x[1]["tier"], -sum(x[1].get(t, 0) for t in transcript_ids)),
+    )
+
+    headers = ["Reason Code", "Tier"] + transcript_ids + ["Total"]
+    rows = []
+    for rc, data in sorted_codes:
+        total = sum(data.get(t, 0) for t in transcript_ids)
+        row = [rc, f"{data['tier']:.2f}"]
+        for tid in transcript_ids:
+            row.append(str(data.get(tid, 0)))
+        row.append(str(total))
+        rows.append(row)
+
+    lines.append(format_markdown_table(headers, rows))
     return "\n".join(lines)
 
 
