@@ -63,6 +63,7 @@ import logging
 import sys
 import time
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -288,21 +289,29 @@ def run_repeat(
     logger.info("  Meeting type: %s", metadata["meeting_type"])
     logger.info("  Turns: %d | Words: %d", len(parsed_transcript.turns), parsed_transcript.metadata.word_count)
 
-    runs: list[dict] = []
-    for i in range(n_runs):
+    runs: list[dict] = [{}] * n_runs  # preserve order
+
+    def _run_one(i: int) -> tuple[int, dict]:
         logger.info("Run %d/%d for %s ...", i + 1, n_runs, transcript_id)
         try:
             result = run_single_analysis(metadata, parsed_transcript, memory, model=model)
-            runs.append(result)
             logger.info(
-                "  Gate1: %s | Tokens: %d | Time: %ss",
+                "  Run %d: Gate1=%s | Tokens=%d | Time=%ss",
+                i + 1,
                 "PASS" if result["gate1_passed"] else "FAIL",
                 result["prompt_tokens"] + result["completion_tokens"],
                 result["elapsed_sec"],
             )
+            return i, result
         except Exception as e:
             logger.error("  Run %d failed: %s", i + 1, e)
-            runs.append({"error": str(e), "gate1_passed": False})
+            return i, {"error": str(e), "gate1_passed": False}
+
+    with ThreadPoolExecutor(max_workers=n_runs) as executor:
+        futures = [executor.submit(_run_one, i) for i in range(n_runs)]
+        for future in as_completed(futures):
+            idx, result = future.result()
+            runs[idx] = result
 
     gate1_passes = sum(1 for r in runs if r.get("gate1_passed"))
     gate1_pass_rate = gate1_passes / len(runs) if runs else 0
