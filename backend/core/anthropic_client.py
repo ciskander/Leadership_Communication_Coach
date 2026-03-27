@@ -151,7 +151,7 @@ def _repair_json_via_llm(raw_text: str, api_key: Optional[str] = None) -> dict:
         max_retries=0,
     )
 
-    repair_response = repair_client.messages.create(
+    with repair_client.messages.stream(
         model=repair_model,
         system=(
             "You are a JSON extraction tool. The user will provide text that "
@@ -162,7 +162,8 @@ def _repair_json_via_llm(raw_text: str, api_key: Optional[str] = None) -> dict:
         ),
         messages=[{"role": "user", "content": raw_text}],
         max_tokens=ANTHROPIC_MAX_TOKENS,
-    )
+    ) as repair_stream:
+        repair_response = repair_stream.get_final_message()
 
     repair_text = ""
     for block in repair_response.content:
