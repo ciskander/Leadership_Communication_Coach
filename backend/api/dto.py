@@ -104,6 +104,14 @@ class PatternCoachingItem(BaseModel):
     best_success_span_id: Optional[str] = None
 
 
+class CoachingTheme(BaseModel):
+    """Cross-pattern coaching theme that synthesizes insights across multiple patterns."""
+    theme: str
+    explanation: str
+    related_patterns: list[str] = Field(default_factory=list)
+    priority: str = "primary"  # "primary" or "secondary"
+
+
 class ExperimentCoachingItem(BaseModel):
     """Experiment coaching output for partial attempts (v0.4.0)."""
     coaching_note: Optional[str] = None
@@ -121,6 +129,7 @@ class RunStatusResponse(BaseModel):
     error: Optional[dict] = None
     # Populated when status=complete and gate1_pass=True
     executive_summary: Optional[str] = None
+    coaching_themes: list[CoachingTheme] = Field(default_factory=list)
     strengths: list[HighlightItem] = Field(default_factory=list)
     focus: Optional[HighlightItem] = None
     micro_experiment: Optional[MicroExperimentWithQuotes] = None

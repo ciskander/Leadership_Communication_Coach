@@ -209,6 +209,7 @@ Detection notes:
 - Identifying drift requires comparing the current discussion content against the most recently stated topic or objective. If no objective was stated (Purposeful Framing scored 0), drift detection becomes unreliable — mark insufficient_signal.
 - When in doubt about whether a discussion shift constitutes drift vs. natural topic evolution, exclude from both numerator and denominator. Undercounting drift is safer than overcounting. If a possible topic shift could reasonably be interpreted as within the broader scope of the current agenda item or decision, assume it is part of that broader scope.
 - The target speaker allowing a tangent to continue is not the same as the target speaker being unable to intervene. Only count drift as an opportunity when the target speaker has agency to redirect.
+- Suppression vs. management: When the target speaker redirects or shuts down a participant's contribution, evaluate whether the contribution was a genuine tangent (unrelated to the current decision) or a decision-relevant risk signal (quality concern, dependency, stakeholder impact). Redirecting a genuine tangent = focus management. Silencing a decision-relevant input = suppression, not management — score 0.0 even if the redirect was procedurally crisp. Ask: "Would a reasonable decision-maker want this information before committing?" If yes, shutting it down is not drift management.
 
 Experiment guidance:
 - What good looks like: "We've moved into staffing questions — that's important but let's finish the budget decision first, then circle back." Names the drift, redirects, and acknowledges the value of the tangent.
@@ -365,6 +366,7 @@ Detection notes:
 - De-escalation language (lowering stakes, narrowing scope, acknowledging emotion) is a positive signal but alone does not warrant 1.0 — the speaker must also engage with the substance.
 - Solution-oriented language ("how do we fix this," "what would it take to…") vs. blame-oriented language ("the reason this happened is," "you should have…") is a primary detection signal.
 - When in doubt about whether a moment constitutes genuine disagreement vs. mild difference, exclude from both numerator and denominator.
+- Disagreement can be expressed through persistent requests for clarification or specificity, not just overt opposition. When a participant directly asks "What do I need to do differently?" and the target speaker responds with abstraction or deflection, this IS a disagreement moment — the participant's stated need (specific actionable guidance) is in tension with the target speaker's response (vague reassurance). Collegial tone does not negate disagreement.
 
 Event boundary rules:
 - A disagreement event is a thematic arc, not a single exchange. It starts when the first pushback/tension signal appears on a specific issue and ends when (a) the target speaker intervenes conclusively (resolution or explicit parking), (b) the topic changes, or (c) the tension naturally dissipates without intervention.
@@ -542,7 +544,8 @@ Detection notes:
 Element specificity thresholds:
 - Deadline: Present if the listener can determine when work is due from the speaker's words alone. "By Thursday," "end of sprint," "this week," "over the weekend," "by end of day tomorrow" all count. "When you get a chance," "soon," "at some point," or no time reference = absent.
 - Deliverable: Present if the listener could verify completion. "Draft the addendum," "code freeze on QA branch," "regression pass certified," "email sent" all count. Process verbs without implied output ("sync," "think about," "look into," "touch base") = absent UNLESS the purpose clause makes the output self-evident (e.g., "sync on the defect list and flag ship-blockers" — the flagged list is the implicit deliverable).
-- Owner: Present if a specific named person or "I" is assigned. "Someone should," "we need to," or group assignments without a named point person = absent.
+- Owner: Present if a specific named person or "I" is assigned. Joint assignment to two or more named individuals counts as owner-present (e.g., "Sam and Dana, align on the numbers" — both are named owners). "Someone should," "we need to," or group assignments without a named point person = absent.
+- Deliverable context tolerance: Domain-specific shorthand clear to participants counts as a verifiable deliverable (e.g., "production config," "launch comms," "draft the addendum"). Do not require formal output descriptions when the work product is well-understood in context.
 
 Experiment guidance:
 - What good looks like: Simple — "James, send the client the revised proposal by Thursday end of day." (owner, deadline, deliverable). Complex — "Priya, I'd like you to own the Q3 retention analysis. The board wants to see cohort-level trends, not just aggregate numbers — so focus there. Aim for a draft by March 15, and let's sync the week before to review. Does that make sense? Are you good to lead this?" (owner, deadline, deliverable, context, confirmation).

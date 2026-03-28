@@ -687,6 +687,37 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         </section>
       )}
 
+      {/* Coaching themes */}
+      {run.coaching_themes && run.coaching_themes.length > 0 && (
+        <section className="bg-white rounded border border-emerald-300 overflow-hidden">
+          <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-emerald-200 bg-emerald-50">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-emerald-700 shrink-0" aria-hidden="true">
+              <path d="M10 1a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 1zM5.05 3.05a.75.75 0 011.06 0l1.062 1.06A.75.75 0 016.11 5.173L5.05 4.11a.75.75 0 010-1.06zm9.9 0a.75.75 0 010 1.06l-1.06 1.062a.75.75 0 01-1.062-1.061l1.061-1.06a.75.75 0 011.06 0zM10 7a3 3 0 100 6 3 3 0 000-6zm-6.25 3a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5H4.5a.75.75 0 01-.75-.75zm12 0a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75zM7.172 13.828a.75.75 0 010 1.061l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm5.656 0a.75.75 0 011.06 0l1.06 1.06a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15z" />
+            </svg>
+            <h3 className="text-sm font-semibold text-emerald-800">{STRINGS.runStatusPoller.coachingThemesHeading}</h3>
+          </div>
+          <div className="divide-y divide-emerald-100">
+            {run.coaching_themes.map((theme, idx) => (
+              <div key={idx} className="px-5 py-4">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                    theme.priority === 'primary'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-stone-100 text-stone-600'
+                  }`}>
+                    {theme.priority === 'primary'
+                      ? STRINGS.runStatusPoller.primaryThemeLabel
+                      : STRINGS.runStatusPoller.secondaryThemeLabel}
+                  </span>
+                </div>
+                <p className="text-sm font-medium text-stone-800 mb-1">{theme.theme}</p>
+                <p className="text-sm text-stone-600 leading-relaxed">{theme.explanation}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <CoachingCard
         strengths={run.strengths}
         focus={run.focus}

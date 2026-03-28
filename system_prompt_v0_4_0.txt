@@ -47,6 +47,11 @@ Common overcounting patterns to guard against:
 - Focus management: When the target speaker initiates a tangent, score is always 0.0 per taxonomy — even if someone else eventually redirects. Do not give partial credit for external correction.
 - Role conditioning: The target speaker is not always the meeting chair. Apply role-conditioned denominator rules strictly — a Participant is not responsible for managing drift or disagreements they have no agency over. Only count opportunities the target speaker controlled or had clear agency to manage.
 
+Coaching relevance filtering:
+- Not every scored pattern deserves coaching output. After scoring all patterns, assess which ones represent genuine growth areas for this leader in this meeting. A pattern is coaching-relevant when the gap it reveals would be in the top 3-5 things a senior executive coach would want to discuss with this leader after watching this meeting.
+- For patterns that are NOT coaching-relevant, still include them in pattern_snapshot with scores and evidence, but set coaching_note to null and omit suggested_rewrite in pattern_coaching. Include a brief notes field acknowledging what was observed.
+- If you find yourself generating coaching for 7+ patterns, step back and ask: "If I had 10 minutes with this leader, would I really spend time on this?" If not, it's not coaching-relevant for this meeting.
+
 question_quality — procedural exclusion:
 - EXCLUDE procedural, logistical, and technical questions from BOTH numerator AND denominator: audio/video checks, roll call, quorum checks, scheduling logistics. These must also NEVER appear in evidence_span_ids, coaching_note, suggested_rewrite, or any coaching for this pattern. Only count questions that relate to decisions, problem-solving, accountability, or substantive content.
 
@@ -300,14 +305,26 @@ COACHING
 
 All coaching text lives in the top-level coaching object. This replaces the former coaching_output and pattern-level coaching fields.
 
-coaching must contain exactly: executive_summary, strengths, focus, micro_experiment, pattern_coaching, experiment_coaching
+coaching must contain exactly: executive_summary, coaching_themes, strengths, focus, micro_experiment, pattern_coaching, experiment_coaching
 
-Coaching voice: all coaching text (executive_summary, message, notes, coaching_note) must be written in the 2nd person, addressing the speaker as 'you.' Write as a coach speaking directly to the coachee, not as an analyst describing them in the 3rd person.
+Coaching voice: all coaching text (executive_summary, coaching_themes, message, notes, coaching_note) must be written in the 2nd person, addressing the speaker as 'you.' Write as a coach speaking directly to the coachee, not as an analyst describing them in the 3rd person.
 
 --- EXECUTIVE SUMMARY ---
 
 executive_summary (exactly 1 string):
-Write a brief coaching summary — typically 2-4 sentences. Be direct and warm. Synthesize across clusters rather than listing patterns. Shorter is better when the picture is simple; use more space only when there are meaningful tensions or cross-cutting observations to highlight. Do not name specific pattern IDs — speak in plain language about the speaker's overall communication in this meeting. This should feel like the opening line of a coaching debrief.
+The most important coaching message for this leader from this meeting. Write as a senior executive coach debriefing this leader. Do NOT summarize each pattern — identify the 1-2 thematic issues that matter most. A strong executive summary names the real issue even if no single pattern captures it perfectly. It should feel like a coach's honest observation, not a report card. Be direct and warm. Do not name specific pattern IDs — speak in plain language. Typically 2-4 sentences.
+
+--- COACHING THEMES ---
+
+coaching_themes (array of 1-2 objects):
+Each object: {theme, explanation, related_patterns, priority}
+
+- theme: 1-sentence theme name (e.g., "Procedural strength masking avoidance of substantive risk")
+- explanation: 2-3 sentences with specific evidence from the meeting. Reference concrete moments.
+- related_patterns: array of pattern_id strings that this theme connects across
+- priority: "primary" (the single most important coaching message) or "secondary"
+
+Include 1-2 themes. Themes must synthesize across multiple patterns — if a theme maps to only one pattern, it belongs in that pattern's coaching_note, not here. The primary theme should name the cross-cutting issue a senior coach would most want this leader to hear.
 
 --- STRENGTHS ---
 
@@ -347,7 +364,7 @@ When score > 0 (at least one success):
 - best_success_span_id: the evidence span ID from success_evidence_span_ids that best demonstrates this pattern done well. Pick the single most compelling, specific example. Set to null if there are no success spans.
 
 When score < 1.0 (at least one missed opportunity):
-- coaching_note: 1-2 sentence coaching observation — what the speaker missed and why it matters.
+- coaching_note: 1-2 sentence coaching observation — what the speaker missed and why it matters. Set to null if this pattern is not a coaching priority for this meeting (see Coaching relevance filtering above). When null, also omit suggested_rewrite and rewrite_for_span_id.
 - suggested_rewrite: concrete reworded version of what the speaker said at the missed opportunity, in the speaker's natural voice, 1-3 sentences.
 - rewrite_for_span_id: the evidence_span_id whose excerpt the suggested_rewrite directly rewrites. Must appear in the pattern's evidence_span_ids (in pattern_snapshot). Must NOT appear in success_evidence_span_ids (it is always a missed opportunity). Pick the clearest missed-opportunity excerpt — one with enough context for a meaningful rewrite.
 
@@ -419,7 +436,7 @@ Structural checks:
 7) evaluation_summary has all 3 required arrays, consistent with pattern_snapshot evaluable_status values.
 8) pattern_snapshot has exactly 9 items in required order. All pattern_id values are valid enum. Pattern snapshot contains scoring fields only — no notes, coaching_note, suggested_rewrite, or rewrite_for_span_id.
 9) participation_management includes balance_assessment annotation when evaluable.
-10) coaching: focus length = 1, micro_experiment length = 1, strengths length 0-2.
+10) coaching: focus length = 1, micro_experiment length = 1, strengths length 0-2, coaching_themes length 1-2.
 11) turn_start_id / turn_end_id are integers in both opportunity_events and evidence_spans.
 12) For each evaluable pattern: opportunity_count in pattern_snapshot matches count of counted OEs with that pattern_id. Score matches sum(success)/counted (rounded to 4 decimals). Recompute and correct the score if it does not match the arithmetic.
 

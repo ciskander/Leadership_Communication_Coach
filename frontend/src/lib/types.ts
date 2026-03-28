@@ -94,6 +94,13 @@ export interface PatternCoachingItem {
   best_success_span_id?: string | null;
 }
 
+export interface CoachingTheme {
+  theme: string;
+  explanation: string;
+  related_patterns: string[];
+  priority: 'primary' | 'secondary';
+}
+
 export interface ExperimentCoachingItem {
   coaching_note?: string | null;
   suggested_rewrite?: string | null;
@@ -109,6 +116,7 @@ export interface RunStatus {
   target_speaker_label: string | null;
   error: Record<string, unknown> | null;
   executive_summary: string | null;
+  coaching_themes: CoachingTheme[];
   strengths: CoachingItem[];
   focus: CoachingItem | null;
   micro_experiment: MicroExperiment | null;
