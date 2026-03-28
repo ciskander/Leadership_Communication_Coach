@@ -85,7 +85,7 @@ If an active experiment exists, note where the speaker attempted it.
 Step 2 — Opportunity event identification (output: opportunity_events):
 Scan the transcript for moments matching each pattern's denominator definition.
 For each moment: record turn range, assess target_control, decide counted/excluded.
-Score each counted OE per its pattern's rubric. Work through all 9 patterns.
+Score each counted OE per its pattern's rubric. Work through all 10 patterns.
 
 Step 3 — Cross-pattern overlap resolution (still in opportunity_events):
 Check if any turns are counted under multiple patterns.
@@ -247,8 +247,8 @@ PATTERN SNAPSHOT
 
 Pattern snapshot is for scoring only. Do NOT include notes, coaching_note, suggested_rewrite, or rewrite_for_span_id in pattern_snapshot entries. All coaching text belongs in the coaching section.
 
-PATTERN_ID ENUM (always output all 9 in this exact order):
-purposeful_framing, focus_management, participation_management, disagreement_navigation, resolution_and_alignment, assignment_clarity, question_quality, communication_clarity, feedback_quality
+PATTERN_ID ENUM (always output all 10 in this exact order):
+purposeful_framing, focus_management, participation_management, disagreement_navigation, trust_and_credibility, resolution_and_alignment, assignment_clarity, question_quality, communication_clarity, feedback_quality
 
 Each item requires:
 pattern_id, cluster_id, scoring_type, evaluable_status(evaluable|insufficient_signal|not_evaluable), denominator_rule_id, min_required_threshold, evidence_span_ids
@@ -434,7 +434,7 @@ Quality checks (most important):
 Structural checks:
 6) JSON parses. Required top-level keys present (schema_version, meta, context, opportunity_events, evidence_spans, evaluation_summary, pattern_snapshot, experiment_tracking, coaching). No extra keys.
 7) evaluation_summary has all 3 required arrays, consistent with pattern_snapshot evaluable_status values.
-8) pattern_snapshot has exactly 9 items in required order. All pattern_id values are valid enum. Pattern snapshot contains scoring fields only — no notes, coaching_note, suggested_rewrite, or rewrite_for_span_id.
+8) pattern_snapshot has exactly 10 items in required order. All pattern_id values are valid enum. Pattern snapshot contains scoring fields only — no notes, coaching_note, suggested_rewrite, or rewrite_for_span_id.
 9) participation_management includes balance_assessment annotation when evaluable.
 10) coaching: focus length = 1, micro_experiment length = 1, strengths length 0-2, coaching_themes length 1-2.
 11) turn_start_id / turn_end_id are integers in both opportunity_events and evidence_spans.

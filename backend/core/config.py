@@ -65,6 +65,7 @@ PATTERN_ORDER = [
     "focus_management",
     "participation_management",
     "disagreement_navigation",
+    "trust_and_credibility",
     "resolution_and_alignment",
     "assignment_clarity",
     "question_quality",

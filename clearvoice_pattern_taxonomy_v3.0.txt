@@ -383,6 +383,79 @@ Experiment guidance:
 
 ────────────────────────────────────────────────────────────────
 
+### BEGIN:PATTERN:trust_and_credibility ###
+
+PATTERN 5: trust_and_credibility
+Cluster: B — Participation & Interpersonal Dynamics
+Scoring type: Tiered rubric
+
+What it measures:
+- Whether the target speaker's behavior during high-stakes moments builds or erodes trust and credibility with the room. Does the speaker follow through on commitments, engage honestly with expertise, own their positions, and maintain consistency between words and actions?
+
+This is distinct from disagreement_navigation (which measures handling of conflict) and feedback_quality (which measures feedback delivery technique). Trust_and_credibility measures the relational impact of the speaker's choices — does the room trust this person more or less after this moment?
+
+Denominator (opportunity_count):
+Moments where the target speaker's behavior has a meaningful impact on their credibility or the room's trust. These are high-stakes moments where how the speaker behaves signals something about their character, judgment, or reliability.
+
+Counts as opportunity:
+- The target speaker makes a commitment, promise, or claim that the room can evaluate (follow-through visible or not in transcript).
+- The target speaker receives expert input or a challenge and must decide how to engage with it (accept, challenge, dismiss, ignore, steel-man).
+- The target speaker cites external sources (feedback from others, data, authority) and the room can assess whether the citation is credible and fair.
+- The target speaker takes a position that affects others and must own it (or deflects responsibility).
+- The target speaker responds to an opposing view in a way that reveals how they handle intellectual disagreement (separate from the interpersonal dynamics scored by DN).
+- The target speaker faces a moment of accountability — something went wrong, a commitment was missed, or a shortcoming is exposed — and must decide how to respond.
+- The target speaker's stated priorities or values conflict with their observed behavior in the meeting.
+
+Scoring per opportunity (5-tier rubric — allowed values: 0.0, 0.25, 0.5, 0.75, 1.0):
+
+- 1.0 — Actively trust-building: The speaker's behavior visibly strengthens credibility with the room. Examples: takes ownership of a failure, mistake, or shortcoming ("That delay was my call and it was wrong — here's what I'm doing differently"); displays appropriate vulnerability or acknowledges uncertainty honestly ("I don't have a good answer for that yet"); steel-mans an opposing view before responding — represents the other position fairly and at full strength before presenting their own; engages genuinely and substantively with expert challenge, demonstrating they take the input seriously; cites specific, verifiable evidence for claims rather than vague assertions; follows through on a stated commitment within the meeting.
+
+- 0.75 — Honest and consistent, or self-correcting: The speaker's behavior is straightforward, transparent, and credibility-maintaining. They may not go out of their way to demonstrate vulnerability or intellectual generosity (that's 1.0), but the room walks away thinking "this person is honest and trying." This tier also applies when the speaker does something imperfect but shows self-awareness that resolves the contradiction — the corrective behavior tips the net impact positive. Examples: engages with a challenge reasonably and transparently, without either steel-manning (1.0) or deflecting (0.25); cites unnamed feedback but proactively acknowledges the limitation and offers to follow up with specifics; dismisses an expert's recommendation but provides a clear, substantive rationale that shows genuine engagement with their point; makes a difficult decision that affects others and communicates the reasoning openly, even if the room disagrees with the call.
+
+- 0.5 — Mixed signals, unresolved: The speaker sends contradictory trust signals within a single moment and does NOT resolve the contradiction — a reasonable observer is left genuinely uncertain about the speaker's credibility or intentions. Different people in the room might read the same behavior differently. Examples: cites unnamed sources AND doesn't acknowledge the limitation — but the content is specific enough to be partially credible; makes a commitment with visible hedging that leaves accountability unclear; partially engages with a challenge (addresses some aspects) but sidesteps the hardest part without acknowledging what they're skipping; says one thing but their tone or immediate follow-up behavior suggests something different.
+
+- 0.25 — Passively erodes trust: The speaker's behavior undermines credibility through avoidance, evasion, or deflection rather than active hostility. Examples: gives non-answers, changes the subject, or responds to direct questions with tangential information rather than addressing the question asked; omits information that is directly relevant to the decision being discussed and that the speaker would reasonably be expected to provide; makes excuses, deflects blame, or justifies rather than taking ownership for broken commitments or poor outcomes; cites unnamed, unverifiable sources ("some folks have said...") without offering specifics or acknowledging the limitation; makes commitments on behalf of others without their validation.
+
+- 0.0 — Actively destroys trust: The speaker's behavior causes significant, visible damage to credibility and psychological safety. Examples: states something demonstrably false based on information already available in the conversation, or withholds information that was visibly raised in the meeting and is directly relevant to a decision the group is making; uses coercion or positional authority rather than engaging with substance ("We're doing it my way"); pulls rank to override expert input without addressing the substance of their concern; throws others under the bus or shifts blame publicly; intimidates, threatens, belittles, or puts others down; applies a double standard — holds others to expectations they visibly don't meet themselves; publicly dismisses expert input without engaging, then asks for "alignment" (coerced compliance disguised as consensus); contradicts stated values with observed behavior in a way the room can see.
+
+Score = sum of opportunity scores / opportunity_count.
+
+Excluded from both numerator AND denominator (not an opportunity):
+- Routine procedural moments with no trust stakes.
+- Moments where the target speaker is passively listening.
+- Low-stakes exchanges where trust/credibility is not meaningfully at play.
+- Disagreements that are fully captured by disagreement_navigation (no additional trust dimension beyond the conflict handling itself).
+
+Role notes:
+Trust and credibility is personal — it applies to the target speaker's own behavior regardless of their role. The denominator is always: moments where the target speaker's behavior impacts their own credibility with the room. Another participant's bad behavior is NOT a trust_and_credibility opportunity for the target speaker unless the target speaker had agency and chose how to respond.
+- All roles: Score trust moments where the target speaker's behavior is directly at stake. The role determines the frequency of trust moments (a chair has more high-stakes moments than a quiet participant), but the scoring criteria are identical.
+- Chair/Facilitator: Likely the highest denominator because they hold the floor most, make the most commitments, and respond to the most challenges.
+- Participant/Presenter: Smaller denominator — only moments where they speak, make claims, respond to challenges, or take positions. If the target speaker is mostly quiet, this pattern may be insufficient_signal.
+- 1:1 Manager and 1:1 Report: Both are equally subject to trust moments. A report can massively damage their own credibility (e.g., deflecting accountability for missed work). A manager can massively damage theirs (e.g., citing unnamed feedback without specifics).
+
+Minimum threshold:
+- 1 trust-relevant moment required. If the meeting has 0 high-stakes moments where trust is at play, mark insufficient_signal.
+
+Detection notes:
+- The key detection signal is consistency between words and actions. When the speaker says one thing and does another within the meeting, that's a trust moment.
+- The active/passive dimension is the primary scoring axis: 1.0 and 0.0 are both active behaviors (building vs. destroying trust). 0.75 and 0.25 are more passive (maintaining vs. eroding). 0.5 is genuinely mixed. When scoring, first determine the direction (building vs. eroding), then determine the intensity (active vs. passive).
+- Unnamed sources are a negative signal. Severity depends on whether the speaker acknowledges the limitation (0.5 — mixed) or presents unnamed feedback as fact (0.25 — evasive).
+- Engagement with expertise is a primary signal. Steel-manning an opposing view (1.0) vs. dismissing it without engagement (0.0) vs. acknowledging the person but not the substance (0.25-0.5).
+- Ownership vs. deflection is a primary signal. Taking responsibility for a failure (1.0) vs. making excuses (0.25) vs. blaming others (0.0).
+- Power dynamics matter. Using positional authority to override substance (0.0) is distinct from legitimate decision-making after genuine engagement (0.75+).
+- Do NOT score every interaction — only moments where the stakes are high enough that the speaker's behavior meaningfully affects the room's trust in them.
+- Separate from disagreement_navigation: DN scores how you handle the interpersonal dynamics of conflict. T&C scores whether your behavior makes people trust you more or less. A speaker can handle a disagreement constructively (DN=1.0) but still erode trust by pulling rank afterward (T&C=0.0). Conversely, a speaker can fumble the interpersonal handling (DN=0.5) but build trust by owning the mistake ("I handled that badly — let me try again").
+- Observable behavior only. Consistent with the taxonomy's core rule: do not infer intent or personality. Score what the speaker said and did, not what they might have been thinking or feeling. "Gives non-answers when asked a direct question" is observable; "appears to be hiding something" is inference. "States something contradicted by information raised earlier in the meeting" is observable; "is lying" is inference about intent. When in doubt, describe the behavior and let the coaching note frame the trust impact.
+
+Experiment guidance:
+- What good looks like: "I want to share some feedback I've received about your stakeholder communication. Specifically, after the Graystone call last week, both Dana and Sam flagged that the technical detail may have lost the client. I agree with them — here's what I noticed..." (Sources named, evidence specific, speaker owns the assessment.) Or: "I hear you — you're saying the timeline is unrealistic given the dependency on the QA team. Let me make sure I understand your concern correctly before I respond..." (Steel-mans the opposing view before engaging.)
+- Common failure mode: "Some folks have mentioned you could be more concise in client calls. It's not a big deal, but just something to be aware of." (Source unnamed, evidence absent, minimized after raising.) Or: "We're doing it this way — I've already decided." (Authority substituted for engagement.)
+- Experiment focus: Help the coachee build habits that actively strengthen credibility — taking ownership when things go wrong, representing opposing views fairly before responding, naming sources when citing feedback, engaging genuinely with expert challenge, and making specific commitments they can be held to.
+
+### END:PATTERN:trust_and_credibility ###
+
+────────────────────────────────────────────────────────────────
+
 ### BEGIN:CLUSTER_C ###
 
 CLUSTER C — DECISIONS & ACCOUNTABILITY
@@ -395,7 +468,7 @@ These patterns measure how the leader closes decisions and confirms shared under
 
 ### BEGIN:PATTERN:resolution_and_alignment ###
 
-PATTERN 5: resolution_and_alignment
+PATTERN 6: resolution_and_alignment
 Cluster: C — Decisions & Accountability
 Scoring type: Tiered rubric
 
@@ -463,7 +536,7 @@ Experiment guidance:
 
 ### BEGIN:PATTERN:assignment_clarity ###
 
-PATTERN 6: assignment_clarity
+PATTERN 7: assignment_clarity
 Cluster: C — Decisions & Accountability
 Scoring type: Complexity-tiered
 
@@ -569,7 +642,7 @@ how they ask questions (Question Quality), how clearly they communicate
 
 ### BEGIN:PATTERN:question_quality ###
 
-PATTERN 7: question_quality
+PATTERN 8: question_quality
 Cluster: D — Communication Quality
 Scoring type: Tiered rubric
 
@@ -642,7 +715,7 @@ Experiment guidance:
 
 ### BEGIN:PATTERN:communication_clarity ###
 
-PATTERN 8: communication_clarity
+PATTERN 9: communication_clarity
 Cluster: D — Communication Quality
 Scoring type: Tiered rubric
 
@@ -732,7 +805,7 @@ Experiment guidance:
 
 ### BEGIN:PATTERN:feedback_quality ###
 
-PATTERN 9: feedback_quality
+PATTERN 10: feedback_quality
 Cluster: D — Communication Quality
 Scoring type: Multi-element (SBI-RC framework)
 
@@ -874,6 +947,17 @@ EXCLUSIVE (count under only one):
   Exception: generic open-floor prompts ("Any thoughts?", "Questions?")
   remain excluded from participation_management regardless of form.
 
+- disagreement_navigation vs. trust_and_credibility: If a moment involves
+  both conflict handling AND trust impact, determine the PRIMARY dynamic.
+  disagreement_navigation = the primary issue is interpersonal tension,
+  pushback, or conflict handling. trust_and_credibility = the primary
+  issue is the speaker's credibility or the room's trust in them (e.g.,
+  citing unnamed sources, pulling rank, taking or deflecting ownership).
+  Heuristic: if the moment would still be trust-relevant even without
+  the conflict element, it belongs to trust_and_credibility. If the trust
+  impact only exists because of how the conflict was handled, it belongs
+  to disagreement_navigation.
+
 - focus_management vs. disagreement_navigation: If a drift episode and
   a disagreement moment co-occur in the same exchange, determine the PRIMARY
   function of the turn. Focus Management is the appropriate
@@ -913,11 +997,24 @@ PERMITTED MULTI-PATTERN (count under both):
   communication_clarity evaluates the turn's overall clarity and 
   proportionality. These are distinct dimensions.
 
-- purposeful_framing + communication_clarity: A topic transition of 
-  3+ sentences may be scored under both. purposeful_framing evaluates 
-  the presence of Elements A and B; communication_clarity evaluates 
-  the turn's structure and clarity. Do not double-count the same 
-  moment's content when writing coaching notes — each pattern's 
+- purposeful_framing + communication_clarity: A topic transition of
+  3+ sentences may be scored under both. purposeful_framing evaluates
+  the presence of Elements A and B; communication_clarity evaluates
+  the turn's structure and clarity. Do not double-count the same
+  moment's content when writing coaching notes — each pattern's
   coaching note should address its own dimension only.
+
+- trust_and_credibility + feedback_quality: A feedback delivery turn
+  may be scored under both. feedback_quality evaluates SBI-RC structure;
+  trust_and_credibility evaluates the trust impact of the feedback
+  approach (e.g., citing unnamed sources, owning vs. deflecting the
+  assessment). These are distinct dimensions.
+
+- trust_and_credibility + resolution_and_alignment: A decision moment
+  may be scored under both. resolution_and_alignment evaluates whether
+  alignment was reached; trust_and_credibility evaluates whether the
+  speaker's behavior during the decision strengthened or eroded trust
+  (e.g., making commitments on behalf of absent parties, pulling rank
+  vs. engaging with substance before deciding).
 
 ### END:GENERAL_DETECTION_GUIDANCE ###

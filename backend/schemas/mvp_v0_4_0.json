@@ -210,8 +210,8 @@
       "type": "string",
       "enum": [
         "purposeful_framing", "focus_management", "participation_management",
-        "disagreement_navigation", "resolution_and_alignment", "assignment_clarity",
-        "question_quality", "communication_clarity", "feedback_quality"
+        "disagreement_navigation", "trust_and_credibility", "resolution_and_alignment",
+        "assignment_clarity", "question_quality", "communication_clarity", "feedback_quality"
       ]
     },
     "ClusterId": {

@@ -94,6 +94,7 @@ export const STRINGS = {
     focus_management: 'Focus Management',
     participation_management: 'Participation Management',
     disagreement_navigation: 'Disagreement Navigation',
+    trust_and_credibility: 'Trust & Credibility',
     resolution_and_alignment: 'Resolution & Alignment',
     assignment_clarity: 'Assignment Clarity',
     question_quality: 'Question Quality',
@@ -111,6 +112,8 @@ export const STRINGS = {
       'Whether you actively manage speaking turns — distributing the floor, bringing in unheard voices, and ensuring appropriate balance. Scored from generic prompts (0) to targeted inclusion (1).',
     disagreement_navigation:
       'How you handle moments of disagreement or pushback. Scored on whether you engage with the substance, acknowledge the opposing view, maintain solution focus, and drive toward resolution.',
+    trust_and_credibility:
+      'Whether your behavior during high-stakes moments builds or erodes trust with the room. Scored on ownership, engagement with expertise, consistency between words and actions, and how you use authority.',
     resolution_and_alignment:
       'Whether you close discussions with a clear statement of what was decided and an explicit check that the group agrees. Scored on two elements: named resolution and alignment confirmation.',
     assignment_clarity:
@@ -129,6 +132,7 @@ export const STRINGS = {
     focus_management: '🧭',
     participation_management: '👥',
     disagreement_navigation: '🤝',
+    trust_and_credibility: '🛡️',
     resolution_and_alignment: '✅',
     assignment_clarity: '📋',
     question_quality: '❓',

@@ -493,12 +493,13 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
     # Pattern lookup by pattern_id
     pattern_by_id = {p.get("pattern_id"): p for p in pattern_snapshot}
 
-    # ── 3a. pattern_snapshot must have exactly 9 items in required order ──────
-    if len(pattern_snapshot) != 9:
+    # ── 3a. pattern_snapshot must have exactly N items in required order ──────
+    expected_count = len(PATTERN_ORDER)
+    if len(pattern_snapshot) != expected_count:
         issues.append(_err(
             "PATTERN_SNAPSHOT_COUNT",
             "pattern_snapshot",
-            f"Expected 9 items, got {len(pattern_snapshot)}.",
+            f"Expected {expected_count} items, got {len(pattern_snapshot)}.",
         ))
     else:
         for idx, (item, expected_id) in enumerate(zip(pattern_snapshot, PATTERN_ORDER)):
@@ -510,7 +511,7 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
                     f"Expected '{expected_id}', got '{pid}'.",
                 ))
 
-    # ── 3b. evaluation_summary arrays partition all 9 pattern_ids ────────────
+    # ── 3b. evaluation_summary arrays partition all pattern_ids ─────────────
     eval_summary = data.get("evaluation_summary", {})
     all_reported: list[str] = (
         eval_summary.get("patterns_evaluated", [])
