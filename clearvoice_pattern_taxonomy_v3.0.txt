@@ -143,8 +143,9 @@ Minimum threshold:
 Detection notes:
 - The meeting opening counts as the first opportunity. All subsequent transitions count as additional opportunities. Do not double-count the opening.
 - A single utterance may contain both elements woven together. Do not require them to be in separate sentences.
-- A framing moment may unfold across multiple speaking turns. If the speaker opens a transition vaguely but then adds specificity in immediately subsequent turns (before the group moves into substantive discussion), score based on the complete framing sequence — use a multi-turn evidence span (ES-T{start}-{end}). However, if the clarity only emerges because another participant asks for it (e.g., "What are we deciding?"), score one tier lower than the final framing quality would otherwise warrant. Unprompted self-correction shows awareness; prompted correction means the room had to do the leader's framing work for them.
+- A framing moment may unfold across multiple speaking turns. If the speaker opens a transition vaguely but then adds specificity in immediately subsequent turns (before the group moves into substantive discussion), score based on the complete framing sequence — use a multi-turn evidence span (ES-T{start}-{end}). However, if the clarity only emerges because another participant asks for it (e.g., "What are we deciding?"), score one tier lower than the final framing quality would otherwise warrant. Unprompted self-correction shows awareness; prompted correction means the room had to do the target speaker's framing work for them.
 - Use the full rubric range. A transition where the speaker barely signals a topic shift (e.g., "So, there's also this other thing") should score 0.25, not 0.5. Reserve 0.5 for moments where one element is clearly and specifically present.
+- Outcome explicitness: A desired outcome must be stated in the speaker's words to count. Do not infer outcomes from topic specificity, contextual urgency, or the type of meeting. "Let me shift to the production bug" names a topic but does NOT state a desired outcome. "Let me shift to the production bug — I need us to agree on a fix owner and timeline" names both. When only the topic is stated, score under the rubric level for "topic present, outcome absent" (0.5 if topic is specific; 0.25 if topic is also vague). Assigning 0.75-1.0 to transitions that name a topic with contextual specificity but no stated outcome is incorrect — the rubric requires BOTH elements for scores above 0.5.
 
 Experiment guidance:
 - What good looks like: "Let's move to the retention numbers — I want to leave with agreement on whether we need to intervene this quarter or hold steady." Both topic and outcome are explicit.
@@ -162,7 +163,7 @@ Cluster: A — Meeting Structure & Direction
 Scoring type: Tiered rubric
 
 What it measures:
-- Whether the target speaker keeps the discussion aligned with stated objectives and manages drift. When conversation departs from the current topic, does the leader explicitly name the departure and either redirect or consciously sanction it?
+- Whether the target speaker keeps the discussion aligned with stated objectives and manages drift. When conversation departs from the current topic, does the target speaker explicitly name the departure and either redirect or consciously sanction it?
 
 This is the reactive counterpart to Purposeful Framing's proactive behavior.
 
@@ -173,21 +174,22 @@ Counts as opportunity:
 - A participant introduces a tangent or off-topic point.
 - The discussion gradually shifts away from the stated objective without explicit acknowledgment.
 - A sub-discussion develops that is not aligned with the current topic's framing.
-- The target speaker themselves introduces off-topic material or initiates a tangent. This counts as a drift episode scored 0.0 — the facilitator created the drift rather than managing it. This is a missed opportunity, not an excluded moment.
+- The target speaker themselves introduces off-topic material or initiates a tangent. This counts as a drift episode scored 0.0 — the target speaker created the drift rather than managing it. This is a missed opportunity, not an excluded moment.
 
 Scoring per opportunity (3-level rubric — allowed values: 0.0, 0.5, 1.0):
-- 1.0 — The leader explicitly names the drift AND either redirects the group back to the topic or consciously sanctions the departure with a clear boundary. Example: "We're getting into implementation details — let's park that for now and finish the strategy question first." Or: "This is off-agenda but it's important — let's take 5 minutes on it and then come back to pricing."
-- 0.5 — The leader partially manages the drift. This includes:
+- 1.0 — The target speaker explicitly names the drift AND either redirects the group back to the topic or consciously sanctions the departure with a clear boundary. Example: "We're getting into implementation details — let's park that for now and finish the strategy question first." Or: "This is off-agenda but it's important — let's take 5 minutes on it and then come back to pricing."
+- 0.5 — The target speaker partially manages the drift. This includes:
   - Names the drift but doesn't fully redirect — e.g., acknowledges the tangent and suggests returning to the topic but doesn't firmly steer the group back or set a clear boundary. Example: "Yeah, we're getting into implementation — we should probably get back to strategy" (names the drift, expresses intent to return, but doesn't decisively redirect or sanction the departure).
   - Redirects without naming what happened. Example: "OK, let's get back on track" (redirects, but doesn't name what the drift was or why they're returning).
   - Acknowledges granularity or scope drift and partially contains it without a clean redirect or sanction.
   - Makes a vague attempt to intervene that shows awareness of the tangent but doesn't effectively manage the moment. Example: "That's a good point about implementation" (acknowledges the tangent, but lets it continue without a conscious decision).
-- 0.0 — The leader does not acknowledge the drift and the discussion continues off-topic without intervention. OR the leader themselves initiated the tangent without acknowledgment.
+- 0.0 — The target speaker does not acknowledge the drift and the discussion continues off-topic without intervention. OR the target speaker themselves initiated the tangent without acknowledgment.
+  Note: A target-speaker-initiated tangent is always scored 0.0 regardless of what happens afterward. If another participant redirects the conversation (e.g., "Can we stay on the pricing decision?"), the target speaker still failed — they created the drift. Do not give partial credit because someone else cleaned up the mess.
 
 Score = sum of opportunity scores / opportunity_count.
 
 Excluded from both numerator AND denominator (not an opportunity):
-- Natural topic evolution where the discussion deepens or extends the current topic (not a departure, just development). A topic shift within the same agenda item or decision context is not drift. For example, moving from discussing one risk to discussing a different risk for the same feature is natural topic evolution, not a tangent. Drift requires the conversation to move to a genuinely unrelated or out-of-scope topic.
+- Natural topic evolution where the discussion deepens or extends the current topic (not a departure, just development). A topic shift within the same agenda item or decision context is not drift — for example, moving from discussing one risk to discussing a different risk for the same feature, or raising QA certification risks during a ship-date conversation, or surfacing staffing implications during a scope discussion. These are direct prerequisites, consequences, or dependencies of the current decision and count as natural evolution even if they temporarily shift the specific question being discussed. Drift requires the conversation to move to a genuinely unrelated or out-of-scope topic that would require its own agenda item.
 - Brief asides (under ~2 turns) that self-correct without intervention needed.
 - Procedural interruptions (tech issues, latecomers) — these are not topical drift.
 - Drift episodes initiated and resolved by other participants without the target speaker's involvement or agency.
@@ -210,7 +212,7 @@ Detection notes:
 
 Experiment guidance:
 - What good looks like: "We've moved into staffing questions — that's important but let's finish the budget decision first, then circle back." Names the drift, redirects, and acknowledges the value of the tangent.
-- Common failure mode: Discussion drifts for several minutes with no acknowledgment, or the leader says "let's stay focused" without naming what they're returning to.
+- Common failure mode: Discussion drifts for several minutes with no acknowledgment, or the target speaker says "let's stay focused" without naming what they're returning to.
 - Experiment focus: Help the coachee recognize drift moments in real time and make the redirect explicit — naming what the group drifted to, what they're returning to, and why. If the coachee tends to let tangents run, focus on building the intervention habit. If they redirect too abruptly, focus on acknowledging the tangent's value before steering back.
 
 ### END:PATTERN:focus_management ###
@@ -283,7 +285,7 @@ Minimum threshold:
 Detection notes:
 - Distinguishing 1.0 (targeted inclusion) from 0.75/0.5 (named distribution) requires tracking who has spoken on the current topic. If the transcript doesn't provide enough information to determine who has been heard, default to 0.5 for any named invitation.
 - When in doubt about whether a moment constitutes an opportunity, exclude from both numerator and denominator.
-- "Any thoughts?" or "Does anyone have questions?" is always 0.0 — even if someone responds. The scoring is about the leader's behavior, not the outcome.
+- "Any thoughts?" or "Does anyone have questions?" is always 0.0 — even if someone responds. The scoring is about the target speaker's behavior, not the outcome.
 - Role-based detection guidance: When the target speaker's role is chair or facilitator in a multi-person meeting, participation_management opportunities should almost always exist. The chair holds the floor at topic transitions, after summarizing, and when calling on speakers. If fewer than 2 opportunities are detected for a chair/facilitator, re-examine the transcript — it is unlikely that a facilitator never had agency to direct the floor. Common floor-direction moments for a chair/facilitator include: opening a new topic and choosing who speaks first, completing a summary and deciding who responds next, receiving a question from one participant and choosing whether to answer or redirect to another, and transitioning between agenda items.
 - Scope guidance: Focus on the clearest floor-direction moments — typically 3–8 in a standard-length meeting for a chair. Do not count every transitional utterance where the facilitator holds the floor; focus on moments where the facilitator made a deliberate choice about who speaks next or actively managed turn distribution. A brief acknowledgment before continuing is not a floor-direction moment.
 - Use the full rubric range. When the speaker addresses a subgroup rather than a named individual (e.g., "Engineering team, any concerns?"), score 0.25 — unless context makes clear that only one person represents that group, in which case this functions as a named invitation and should score higher. The distinction is about precision of invitation, not literal word choice.
@@ -304,7 +306,7 @@ Cluster: B — Participation & Interpersonal Dynamics
 Scoring type: Tiered rubric
 
 What it measures:
-- How the target speaker handles moments of disagreement, pushback, or conflict during the meeting. Does the leader engage constructively with the substance of the disagreement, or do they dismiss, escalate, or bulldoze past it?
+- How the target speaker handles moments of disagreement, pushback, or conflict during the meeting. Does the target speaker engage constructively with the substance of the disagreement, or do they dismiss, escalate, or bulldoze past it?
 
 Denominator (opportunity_count):
 - Moments where the target speaker encounters or is involved in explicit disagreement, pushback, or tension — either directed at them, between other participants that they have agency to manage, or that they initiate.
@@ -363,6 +365,12 @@ Detection notes:
 - De-escalation language (lowering stakes, narrowing scope, acknowledging emotion) is a positive signal but alone does not warrant 1.0 — the speaker must also engage with the substance.
 - Solution-oriented language ("how do we fix this," "what would it take to…") vs. blame-oriented language ("the reason this happened is," "you should have…") is a primary detection signal.
 - When in doubt about whether a moment constitutes genuine disagreement vs. mild difference, exclude from both numerator and denominator.
+
+Event boundary rules:
+- A disagreement event is a thematic arc, not a single exchange. It starts when the first pushback/tension signal appears on a specific issue and ends when (a) the target speaker intervenes conclusively (resolution or explicit parking), (b) the topic changes, or (c) the tension naturally dissipates without intervention.
+- Score the target speaker's overall handling of each thematic arc as a single opportunity. Do not fragment a continuous back-and-forth on the same issue into multiple OEs.
+- If the target speaker intervenes mid-disagreement and the same tension resurfaces later on the same issue, the resurfacing is a new OE only if there was a clear topic change between the two episodes. If the tension simply continues or escalates after a failed intervention, it is still part of the original arc.
+- Example: Speaker A pushes back on a scope decision (T4), the target speaker responds (T5), Speaker A escalates (T6), the target speaker bulldozes (T7), Speaker A escalates further (T8), the target speaker dismisses again (T9). This is ONE disagreement arc about the scope decision, scored once on the target speaker's overall handling. It is NOT 4-5 separate events.
 
 Experiment guidance:
 - What good looks like: "I see this differently — you're saying we should delay launch because of the QA risk, and that's a real concern. I think the market timing risk of delay is bigger. Can we map out both risk scenarios and decide based on that?"
@@ -530,6 +538,11 @@ Detection notes:
 - The distinction between Resolution & Alignment and Assignment Clarity is: Resolution & Alignment asks "what did we decide?" and Assignment Clarity asks "who is doing what, by when, and how?" A single conversational moment often contains both — score each under the appropriate pattern.
 - For the 1:1 Report role, "accepting a vague assignment without pushback" is a coaching-relevant signal but should not be scored as a failed opportunity for the report — it should be noted in the coaching feedback as a growth area (the report could have asked clarifying questions).
 - The LLM should not score complexity classification retroactively based on the number of elements present. Classify first based on the nature of the work, then score based on elements present for that classification.
+
+Element specificity thresholds:
+- Deadline: Present if the listener can determine when work is due from the speaker's words alone. "By Thursday," "end of sprint," "this week," "over the weekend," "by end of day tomorrow" all count. "When you get a chance," "soon," "at some point," or no time reference = absent.
+- Deliverable: Present if the listener could verify completion. "Draft the addendum," "code freeze on QA branch," "regression pass certified," "email sent" all count. Process verbs without implied output ("sync," "think about," "look into," "touch base") = absent UNLESS the purpose clause makes the output self-evident (e.g., "sync on the defect list and flag ship-blockers" — the flagged list is the implicit deliverable).
+- Owner: Present if a specific named person or "I" is assigned. "Someone should," "we need to," or group assignments without a named point person = absent.
 
 Experiment guidance:
 - What good looks like: Simple — "James, send the client the revised proposal by Thursday end of day." (owner, deadline, deliverable). Complex — "Priya, I'd like you to own the Q3 retention analysis. The board wants to see cohort-level trends, not just aggregate numbers — so focus there. Aim for a draft by March 15, and let's sync the week before to review. Does that make sense? Are you good to lead this?" (owner, deadline, deliverable, context, confirmation).
@@ -876,6 +889,16 @@ EXCLUSIVE (count under only one):
     is primarily redirecting the conversation's topic, or
     disagreement_navigation if the speaker is primarily managing
     interpersonal tension.
+  Special case — unmanaged argument without target speaker intervention:
+  When two participants argue and the target speaker does not intervene at all,
+  classify under disagreement_navigation (scored 0.0 — allowed conflict to continue
+  without intervention) rather than focus_management — but ONLY if the target
+  speaker's role gives them agency to manage the conflict (see disagreement_navigation
+  Role notes). If the target speaker is a Participant with no facilitative
+  responsibility, exclude from both patterns per existing role-conditioning rules.
+  Exception: if the argument is clearly tangential to the current topic AND the
+  target speaker has agency to redirect, count under focus_management (scored 0.0 —
+  drift unmanaged) only if the argument's topic is unrelated to the stated agenda item.
 
 PERMITTED MULTI-PATTERN (count under both):
 - resolution_and_alignment + assignment_clarity: A single moment may 

@@ -40,6 +40,13 @@ Scoring calibration:
 - For each opportunity, start from the rubric's 0.0 anchor and work upward — assign the tier whose description best matches the observed behavior. Do not default to 0.5 as a "baseline" or "minimum attempt" score.
 - A score of 0.0 on a counted opportunity is a valid, expected outcome — it means the speaker had a clear opportunity but exhibited none of the pattern's target behavior. Do not avoid 0.0 out of politeness or uncertainty.
 
+Common overcounting patterns to guard against:
+- Purposeful framing: Do not credit implied or inferred outcomes. If the speaker names a topic but does not state what the discussion should achieve, the outcome element is ABSENT — score accordingly (0.5 max for topic-only).
+- Assignment clarity: Do not require extreme temporal precision for deadlines ("over the weekend" is specific enough), but do require that deliverables name a verifiable output, not just a process ("sync" alone is not a deliverable; "sync and flag ship-blockers" is).
+- Disagreement navigation: Each thematic arc of disagreement is ONE opportunity event. Do not fragment a continuous back-and-forth into multiple OEs.
+- Focus management: When the target speaker initiates a tangent, score is always 0.0 per taxonomy — even if someone else eventually redirects. Do not give partial credit for external correction.
+- Role conditioning: The target speaker is not always the meeting chair. Apply role-conditioned denominator rules strictly — a Participant is not responsible for managing drift or disagreements they have no agency over. Only count opportunities the target speaker controlled or had clear agency to manage.
+
 question_quality — procedural exclusion:
 - EXCLUDE procedural, logistical, and technical questions from BOTH numerator AND denominator: audio/video checks, roll call, quorum checks, scheduling logistics. These must also NEVER appear in evidence_span_ids, coaching_note, suggested_rewrite, or any coaching for this pattern. Only count questions that relate to decisions, problem-solving, accountability, or substantive content.
 
