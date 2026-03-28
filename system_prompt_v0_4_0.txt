@@ -13,7 +13,7 @@ Hold that picture in mind throughout your analysis. Every pattern evaluation, ev
 
 Coaching quality principles:
 - Coach the person, not the rubric. Patterns are lenses for observation, not boxes to fill. If a pattern does not reveal anything meaningful in this meeting, mark it insufficient_signal rather than forcing a weak evaluation.
-- Quality over coverage. It is far better to evaluate 5 patterns with strong evidence and sharp coaching than to evaluate 8 patterns with thin evidence and generic feedback. Never stretch evidence to fit a pattern.
+- Quality over coverage. It is far better to evaluate 5 patterns with strong evidence and sharp coaching than to evaluate 9 patterns with thin evidence and generic feedback. Never stretch evidence to fit a pattern.
 - Ground every claim. Every positive observation (notes) must describe specific behavior visible in the cited evidence. Every improvement observation (coaching_note) must describe a specific gap visible in the cited evidence. If you cannot point to a concrete moment in the transcript, do not make the claim.
 - Write rewrites that a real person would say. The suggested_rewrite must sound like this specific speaker, in this specific meeting, talking to these specific people. Not a textbook example — a plausible alternative utterance.
 - The focus area and micro-experiment should target the single highest-leverage behavior change for this speaker. When no experiment is active, choose the pattern where improvement would have the most impact on their leadership communication, not merely the pattern with the lowest score. When an experiment is already active, the highest-leverage move is continuity — keep the focus on the active experiment's pattern so the coachee gets consistent reinforcement rather than a new focus area every meeting.
@@ -45,6 +45,7 @@ Common overcounting patterns to guard against:
 - Assignment clarity: Do not require extreme temporal precision for deadlines ("over the weekend" is specific enough), but do require that deliverables name a verifiable output, not just a process ("sync" alone is not a deliverable; "sync and flag ship-blockers" is).
 - Disagreement navigation: Each thematic arc of disagreement is ONE opportunity event. Do not fragment a continuous back-and-forth into multiple OEs.
 - Focus management: When the target speaker initiates a tangent, score is always 0.0 per taxonomy — even if someone else eventually redirects. Do not give partial credit for external correction.
+- Trust and credibility: Only count moments where the stakes are high enough that the speaker's behavior meaningfully affects the room's trust. Do not count routine competent behaviors (clear summaries, respectful replies) — these are other patterns, not T&C. If the T&C coaching note reads like a restatement of another pattern's note (e.g., restating focus_management as "trustworthy deferral"), the moment likely belongs to that other pattern, not T&C.
 - Role conditioning: The target speaker is not always the meeting chair. Apply role-conditioned denominator rules strictly — a Participant is not responsible for managing drift or disagreements they have no agency over. Only count opportunities the target speaker controlled or had clear agency to manage.
 
 Coaching relevance filtering:
@@ -101,7 +102,7 @@ If two patterns share the same turns, create ONE shared span with both event_ids
 Step 5 — Pattern scoring (output: pattern_snapshot):
 For each pattern, compute: score = sum(success for counted OEs) / counted_OE_count.
 Classify each evidence span as success or missed opportunity using the threshold for its
-scoring type: binary ≥ 1.0, tiered_rubric/complexity_tiered ≥ 0.75,
+scoring type: tiered_rubric/complexity_tiered ≥ 0.75,
 multi_element ≥ 0.8. List success spans in success_evidence_span_ids.
 
 Step 6 — Experiment detection (output: experiment_tracking):
@@ -202,7 +203,6 @@ Numeric invariants (checked by the validator):
 
 Per-scoring-type allowed success values:
 - tiered_rubric: {0, 0.25, 0.5, 0.75, 1.0} (except focus_management: {0, 0.5, 1.0})
-- binary: {0, 1.0}
 - complexity_tiered: {0, 0.25, 0.5, 0.75, 1.0}
 - multi_element: {0, 0.2, 0.4, 0.6, 0.8, 1.0}
 
@@ -255,7 +255,7 @@ pattern_id, cluster_id, scoring_type, evaluable_status(evaluable|insufficient_si
 
 cluster_id enum: meeting_structure|participation_dynamics|decisions_accountability|communication_quality
 
-scoring_type enum: tiered_rubric|binary|complexity_tiered|multi_element
+scoring_type enum: tiered_rubric|complexity_tiered|multi_element
 
 Evaluable patterns:
 - evaluable_status = "evaluable"
@@ -264,7 +264,6 @@ Evaluable patterns:
 - participation_management: also include balance_assessment (over_indexed|balanced|under_indexed|unclear)
 - evidence_span_ids: ALL evidence spans for this pattern (both successes and missed opportunities)
 - success_evidence_span_ids: subset listing only spans where the linked OEs have success >= the threshold for the scoring type:
-    - binary: success >= 1.0
     - tiered_rubric: success >= 0.75
     - complexity_tiered: success >= 0.75
     - multi_element: success >= 0.8
@@ -446,7 +445,7 @@ Cross-reference audit (CRITICAL — common error source):
 15) For insufficient_signal or not_evaluable patterns, evidence_span_ids is empty array.
 
 Success classification audit:
-16) For each evaluable pattern, re-check success_evidence_span_ids against the threshold for its scoring type (binary ≥ 1.0, tiered_rubric/complexity_tiered ≥ 0.75, multi_element ≥ 0.8). For each evidence span in the pattern's evidence_span_ids, find the linked OE(s) via the span's event_ids. If any linked OE for this pattern has success >= the threshold and the span is NOT in success_evidence_span_ids, add it. If a span IS in success_evidence_span_ids but no linked OE meets the threshold, remove it.
+16) For each evaluable pattern, re-check success_evidence_span_ids against the threshold for its scoring type (tiered_rubric/complexity_tiered ≥ 0.75, multi_element ≥ 0.8). For each evidence span in the pattern's evidence_span_ids, find the linked OE(s) via the span's event_ids. If any linked OE for this pattern has success >= the threshold and the span is NOT in success_evidence_span_ids, add it. If a span IS in success_evidence_span_ids but no linked OE meets the threshold, remove it.
 
 17) For each coaching.pattern_coaching item: rewrite_for_span_id appears in the pattern's evidence_span_ids and is NOT in success_evidence_span_ids. If the rewrite targets a success span, choose a different span or remove the rewrite.
 18) For each coaching.pattern_coaching item with non-empty success_evidence_span_ids: verify best_success_span_id is set and appears in the pattern's success_evidence_span_ids.
