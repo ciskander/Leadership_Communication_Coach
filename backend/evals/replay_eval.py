@@ -81,12 +81,18 @@ from backend.core.openai_client import load_system_prompt
 from backend.core.prompt_builder import build_developer_message, build_single_meeting_prompt
 from backend.core.transcript_parser import parse_transcript
 from backend.evals.report import (
+    align_opportunities_cross_model,
+    classify_opportunity_slots,
     collect_reason_codes,
+    compute_consensus_comparison,
+    compute_cross_pattern_summary,
     compute_pattern_stats,
     compute_int_stats,
     compute_tier_distribution,
     extract_opportunity_details,
+    extract_opportunity_details_with_excerpts,
     format_cross_meeting_tier_distributions,
+    format_cross_model_report,
     format_intra_transcript_report,
     format_inter_transcript_report,
     format_opportunity_alignment_table,
@@ -557,10 +563,12 @@ def run_compare_offline(outputs_dir: Path, detail: bool = False) -> dict[str, An
             skipped += 1
             continue
 
-        if "pattern_snapshot" not in data:
-            logger.warning("Skipping %s: no pattern_snapshot", f.name)
+        if "pattern_snapshot" not in data and "opportunity_events" not in data:
+            logger.warning("Skipping %s: no pattern_snapshot or opportunity_events", f.name)
             skipped += 1
             continue
+        if "pattern_snapshot" not in data:
+            logger.info("No pattern_snapshot in %s; will reconstruct from opportunity_events", f.name)
 
         meeting_id = None
         if isinstance(data.get("context"), dict):
@@ -608,7 +616,7 @@ def run_compare_offline(outputs_dir: Path, detail: bool = False) -> dict[str, An
             opp_counts: list[int | None] = []
             statuses: dict[str, int] = defaultdict(int)
 
-            for run_data in runs:
+            for run_idx, run_data in enumerate(runs):
                 found = False
                 for snap in run_data.get("pattern_snapshot", []):
                     if snap.get("pattern_id") == pid:
@@ -618,8 +626,19 @@ def run_compare_offline(outputs_dir: Path, detail: bool = False) -> dict[str, An
                         found = True
                         break
                 if not found:
-                    scores.append(None)
-                    opp_counts.append(None)
+                    # Reconstruct from opportunity_events if available
+                    oe_details = per_run_opp_details[run_idx].get(pid, [])
+                    oe_scores = [o["success"] for o in oe_details if o.get("success") is not None]
+                    if oe_scores:
+                        reconstructed = sum(oe_scores) / len(oe_scores)
+                        scores.append(reconstructed)
+                        opp_counts.append(len(oe_scores))
+                        statuses["reconstructed_from_oe"] += 1
+                        logger.info("Reconstructed %s score (%.4f, %d opps) from OE data for run %d",
+                                    pid, reconstructed, len(oe_scores), run_idx + 1)
+                    else:
+                        scores.append(None)
+                        opp_counts.append(None)
 
             # Compute per-opportunity tier distributions and reason codes
             pattern_run_details = [rd.get(pid, []) for rd in per_run_opp_details]
@@ -736,6 +755,171 @@ def run_compare_offline(outputs_dir: Path, detail: bool = False) -> dict[str, An
     return report_data
 
 
+# ── Cross-model comparison ───────────────────────────────────────────────
+
+
+def _load_model_runs(
+    model_dir: Path,
+) -> dict[str, list[dict]]:
+    """Load run JSONs from a model directory, grouped by meeting subdirectory.
+
+    Returns meeting_id → list of parsed JSON dicts.
+    """
+    meetings: dict[str, list[dict]] = defaultdict(list)
+    for subdir in sorted(model_dir.iterdir()):
+        if not subdir.is_dir():
+            continue
+        meeting_id = subdir.name
+        for f in sorted(subdir.glob("*.json")):
+            # Skip report files
+            if "report" in f.name or "compare" in f.name:
+                continue
+            try:
+                data = json.loads(f.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError) as e:
+                logger.warning("Skipping %s: %s", f, e)
+                continue
+            if "opportunity_events" not in data and "pattern_snapshot" not in data:
+                logger.warning("Skipping %s: no opportunity_events or pattern_snapshot", f.name)
+                continue
+            meetings[meeting_id].append(data)
+    return dict(meetings)
+
+
+def run_cross_model(
+    model_a_dir: Path,
+    model_b_dir: Path,
+    model_a_label: str | None = None,
+    model_b_label: str | None = None,
+    detail: bool = False,
+) -> dict:
+    """Compare OE-level results between two models.
+
+    No LLM calls — purely offline analysis of existing run JSONs.
+    """
+    # Load runs
+    a_meetings = _load_model_runs(model_a_dir)
+    b_meetings = _load_model_runs(model_b_dir)
+
+    # Find common meetings
+    common = sorted(set(a_meetings) & set(b_meetings))
+    a_only_meetings = sorted(set(a_meetings) - set(b_meetings))
+    b_only_meetings = sorted(set(b_meetings) - set(a_meetings))
+
+    if not common:
+        logger.error("No common meetings found between %s and %s", model_a_dir, model_b_dir)
+        sys.exit(1)
+
+    label_a = model_a_label or model_a_dir.name
+    label_b = model_b_label or model_b_dir.name
+
+    logger.info("=== Cross-model comparison: %s vs %s ===", label_a, label_b)
+    logger.info("  Common meetings: %d", len(common))
+    for mid in common:
+        logger.info("    %s: A=%d runs, B=%d runs", mid, len(a_meetings[mid]), len(b_meetings[mid]))
+    if a_only_meetings:
+        logger.info("  Model A only: %s", a_only_meetings)
+    if b_only_meetings:
+        logger.info("  Model B only: %s", b_only_meetings)
+
+    # Extract OE details with excerpts for each run
+    a_run_details: dict[str, list[dict]] = {}
+    b_run_details: dict[str, list[dict]] = {}
+    for mid in common:
+        a_run_details[mid] = [
+            extract_opportunity_details_with_excerpts(run_data)
+            for run_data in a_meetings[mid]
+        ]
+        b_run_details[mid] = [
+            extract_opportunity_details_with_excerpts(run_data)
+            for run_data in b_meetings[mid]
+        ]
+
+    # Align and classify per meeting × pattern
+    all_results: dict[str, dict[str, dict[str, list[dict]]]] = {}
+    for mid in common:
+        all_results[mid] = {}
+        for pid in PATTERN_ORDER:
+            slots = align_opportunities_cross_model(
+                a_run_details[mid], b_run_details[mid], pid,
+            )
+            classified = classify_opportunity_slots(slots)
+            all_results[mid][pid] = classified
+
+            # Log summary
+            n_cons = len(classified["consensus"])
+            n_ao = len(classified["a_only"])
+            n_bo = len(classified["b_only"])
+            n_disp = len(classified["disputed"])
+            total = n_cons + n_ao + n_bo + n_disp
+            if total > 0:
+                logger.info(
+                    "  %s/%s: %d slots — %d consensus, %d A-only, %d B-only, %d disputed",
+                    mid, pid, total, n_cons, n_ao, n_bo, n_disp,
+                )
+
+    # Cross-pattern summary
+    cross_summary = compute_cross_pattern_summary(all_results, PATTERN_ORDER)
+
+    # Build report data
+    timestamp = datetime.now().strftime("%Y%m%dT%H%M%S")
+    report_data = {
+        "model_a_label": label_a,
+        "model_b_label": label_b,
+        "model_a_dir": str(model_a_dir),
+        "model_b_dir": str(model_b_dir),
+        "common_meetings": common,
+        "a_only_meetings": a_only_meetings,
+        "b_only_meetings": b_only_meetings,
+        "timestamp": timestamp,
+        "cross_pattern_summary": cross_summary,
+        "per_meeting_pattern": {},
+    }
+
+    # Serialize per-meeting detail for JSON (compute consensus comparisons)
+    for mid in common:
+        report_data["per_meeting_pattern"][mid] = {}
+        for pid in PATTERN_ORDER:
+            classified = all_results[mid][pid]
+            serialized: dict[str, list] = {}
+            for category in ["consensus", "a_only", "b_only", "disputed"]:
+                items = []
+                for slot in classified.get(category, []):
+                    if category == "consensus":
+                        items.append(compute_consensus_comparison(slot))
+                    else:
+                        items.append({
+                            "turn_start_id": slot["turn_start_id"],
+                            "a_rate": slot["a_rate"],
+                            "b_rate": slot["b_rate"],
+                            "a_count": slot["a_count"],
+                            "b_count": slot["b_count"],
+                            "a_scores": slot["a_scores"],
+                            "b_scores": slot["b_scores"],
+                            "a_reason_codes": slot["a_reason_codes"],
+                            "b_reason_codes": slot["b_reason_codes"],
+                        })
+                serialized[category] = items
+            report_data["per_meeting_pattern"][mid][pid] = serialized
+
+    # Save JSON
+    save_json(report_data, _RESULTS_DIR / f"cross_model_report_{timestamp}.json")
+
+    # Generate and save markdown
+    md = format_cross_model_report(
+        model_a_label=label_a,
+        model_b_label=label_b,
+        common_meetings=common,
+        all_results=all_results,
+        cross_pattern_summary=cross_summary,
+        pattern_order=PATTERN_ORDER,
+        detail=detail,
+    )
+    save_report(md, _RESULTS_DIR / f"cross_model_report_{timestamp}.md")
+
+    return report_data
+
+
 # ── CLI ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -755,9 +939,14 @@ examples:
   # Offline compare: analyze existing output JSON files (no LLM calls)
   python -m backend.evals.replay_eval --mode compare \\
     --outputs-dir path/to/output/json/files
+
+  # Cross-model comparison: compare OEs from two model output dirs
+  python -m backend.evals.replay_eval --mode cross-model \\
+    --model-a-dir path/to/model_a/results \\
+    --model-b-dir path/to/model_b/results
 """,
     )
-    parser.add_argument("--mode", choices=["repeat", "compare"], required=True)
+    parser.add_argument("--mode", choices=["repeat", "compare", "cross-model"], required=True)
     parser.add_argument(
         "--transcript", type=Path,
         help="Path to a raw transcript file (.vtt, .txt, .srt, .docx, .pdf) for repeat mode",
@@ -775,6 +964,22 @@ examples:
     parser.add_argument(
         "--detail", action="store_true", default=False,
         help="Include per-opportunity alignment tables, evidence text, and raw reason code cross-tabs",
+    )
+    parser.add_argument(
+        "--model-a-dir", type=Path,
+        help="Directory of Model A output JSON files for cross-model mode",
+    )
+    parser.add_argument(
+        "--model-b-dir", type=Path,
+        help="Directory of Model B output JSON files for cross-model mode",
+    )
+    parser.add_argument(
+        "--model-a-label", type=str, default=None,
+        help="Display label for Model A (default: inferred from directory name)",
+    )
+    parser.add_argument(
+        "--model-b-label", type=str, default=None,
+        help="Display label for Model B (default: inferred from directory name)",
     )
     args = parser.parse_args()
 
@@ -798,6 +1003,17 @@ examples:
             run_compare(args.transcripts_dir, args.runs, model=args.model, detail=args.detail)
         else:
             parser.error("--transcripts-dir or --outputs-dir is required for compare mode")
+
+    elif args.mode == "cross-model":
+        if not args.model_a_dir or not args.model_b_dir:
+            parser.error("--model-a-dir and --model-b-dir are required for cross-model mode")
+        run_cross_model(
+            model_a_dir=args.model_a_dir,
+            model_b_dir=args.model_b_dir,
+            model_a_label=args.model_a_label,
+            model_b_label=args.model_b_label,
+            detail=args.detail,
+        )
 
 
 if __name__ == "__main__":

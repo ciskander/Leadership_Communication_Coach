@@ -210,6 +210,7 @@ def extract_opportunity_details(
             "pattern_id": pid,
             "success": oe.get("success"),
             "reason_code": oe.get("reason_code", ""),
+            "notes": oe.get("notes", ""),
             "turn_range": turn_range,
             "turn_start_id": turn_start,
             "turn_end_id": turn_end,
@@ -565,6 +566,448 @@ def format_reason_code_cross_tab(
         rows.append(row)
 
     lines.append(format_markdown_table(headers, rows))
+    return "\n".join(lines)
+
+
+# ── Cross-model OE comparison ─────────────────────────────────────────────
+
+
+def build_evidence_span_index(parsed_json: dict) -> dict[str, str]:
+    """Build event_id → excerpt lookup from evidence_spans."""
+    index: dict[str, str] = {}
+    for span in parsed_json.get("evidence_spans", []):
+        excerpt = span.get("excerpt", "")
+        for eid in span.get("event_ids", []):
+            if eid not in index:
+                index[eid] = excerpt
+    return index
+
+
+def extract_opportunity_details_with_excerpts(
+    parsed_json: dict,
+) -> dict[str, list[dict[str, Any]]]:
+    """Like extract_opportunity_details but also resolves transcript excerpts."""
+    excerpt_index = build_evidence_span_index(parsed_json)
+    details: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for oe in parsed_json.get("opportunity_events", []):
+        pid = oe.get("pattern_id")
+        if not pid or oe.get("count_decision") != "counted":
+            continue
+        turn_start = oe.get("turn_start_id")
+        turn_end = oe.get("turn_end_id")
+        if turn_start is not None and turn_end is not None:
+            turn_range = f"T{turn_start}" if turn_start == turn_end else f"T{turn_start}-{turn_end}"
+        elif turn_start is not None:
+            turn_range = f"T{turn_start}"
+        else:
+            turn_range = "?"
+        event_id = oe.get("event_id", "?")
+        details[pid].append({
+            "event_id": event_id,
+            "pattern_id": pid,
+            "success": oe.get("success"),
+            "reason_code": oe.get("reason_code", ""),
+            "notes": oe.get("notes", ""),
+            "excerpt": excerpt_index.get(event_id, ""),
+            "turn_range": turn_range,
+            "turn_start_id": turn_start,
+            "turn_end_id": turn_end,
+        })
+    return dict(details)
+
+
+def align_opportunities_cross_model(
+    a_run_details: list[dict[str, list[dict]]],
+    b_run_details: list[dict[str, list[dict]]],
+    pattern_id: str,
+) -> list[dict[str, Any]]:
+    """Align OEs across two models by turn_start_id for a given pattern.
+
+    a_run_details / b_run_details: list of per-run dicts from
+        extract_opportunity_details_with_excerpts(), one per run.
+
+    Returns list of OpportunitySlot dicts sorted by turn_start_id.
+    """
+    # Collect all unique turn_start_ids
+    all_starts: set[int] = set()
+    for rd in a_run_details:
+        for oe in rd.get(pattern_id, []):
+            if oe.get("turn_start_id") is not None:
+                all_starts.add(oe["turn_start_id"])
+    for rd in b_run_details:
+        for oe in rd.get(pattern_id, []):
+            if oe.get("turn_start_id") is not None:
+                all_starts.add(oe["turn_start_id"])
+
+    if not all_starts:
+        return []
+
+    a_total = len(a_run_details)
+    b_total = len(b_run_details)
+
+    slots: list[dict[str, Any]] = []
+    for ts in sorted(all_starts):
+        slot: dict[str, Any] = {
+            "turn_start_id": ts,
+            "pattern_id": pattern_id,
+            "a_total_runs": a_total,
+            "b_total_runs": b_total,
+            "a_scores": [],
+            "b_scores": [],
+            "a_reason_codes": [],
+            "b_reason_codes": [],
+            "a_notes": [],
+            "b_notes": [],
+            "a_turn_ends": [],
+            "b_turn_ends": [],
+            "a_excerpts": [],
+            "b_excerpts": [],
+        }
+
+        # Collect from model A runs
+        for rd in a_run_details:
+            matched = False
+            for oe in rd.get(pattern_id, []):
+                if oe.get("turn_start_id") == ts and not matched:
+                    slot["a_scores"].append(oe["success"])
+                    slot["a_reason_codes"].append(oe.get("reason_code", ""))
+                    slot["a_notes"].append(oe.get("notes", ""))
+                    slot["a_turn_ends"].append(oe.get("turn_end_id"))
+                    slot["a_excerpts"].append(oe.get("excerpt", ""))
+                    matched = True
+
+        # Collect from model B runs
+        for rd in b_run_details:
+            matched = False
+            for oe in rd.get(pattern_id, []):
+                if oe.get("turn_start_id") == ts and not matched:
+                    slot["b_scores"].append(oe["success"])
+                    slot["b_reason_codes"].append(oe.get("reason_code", ""))
+                    slot["b_notes"].append(oe.get("notes", ""))
+                    slot["b_turn_ends"].append(oe.get("turn_end_id"))
+                    slot["b_excerpts"].append(oe.get("excerpt", ""))
+                    matched = True
+
+        slot["a_count"] = len(slot["a_scores"])
+        slot["b_count"] = len(slot["b_scores"])
+        slot["a_rate"] = slot["a_count"] / a_total if a_total else 0
+        slot["b_rate"] = slot["b_count"] / b_total if b_total else 0
+
+        slots.append(slot)
+
+    return slots
+
+
+def classify_opportunity_slots(
+    slots: list[dict[str, Any]],
+) -> dict[str, list[dict[str, Any]]]:
+    """Classify slots into consensus, a_only, b_only, disputed."""
+    result: dict[str, list[dict[str, Any]]] = {
+        "consensus": [], "a_only": [], "b_only": [], "disputed": [],
+    }
+    for slot in slots:
+        a_rate = slot["a_rate"]
+        b_rate = slot["b_rate"]
+        if a_rate > 0.50 and b_rate > 0.50:
+            result["consensus"].append(slot)
+        elif a_rate > 0.50 and b_rate < 0.25:
+            result["a_only"].append(slot)
+        elif b_rate > 0.50 and a_rate < 0.25:
+            result["b_only"].append(slot)
+        else:
+            result["disputed"].append(slot)
+    return result
+
+
+def compute_consensus_comparison(slot: dict[str, Any]) -> dict[str, Any]:
+    """Compute score comparison for a consensus slot."""
+    a_scores = [s for s in slot["a_scores"] if s is not None]
+    b_scores = [s for s in slot["b_scores"] if s is not None]
+
+    a_mean = statistics.mean(a_scores) if a_scores else None
+    b_mean = statistics.mean(b_scores) if b_scores else None
+    delta = round(a_mean - b_mean, 4) if a_mean is not None and b_mean is not None else None
+
+    # Reason code overlap (Jaccard)
+    a_codes = set(slot["a_reason_codes"])
+    b_codes = set(slot["b_reason_codes"])
+    a_codes.discard("")
+    b_codes.discard("")
+    union = a_codes | b_codes
+    overlap = len(a_codes & b_codes) / len(union) if union else 1.0
+
+    # Pick representative excerpt
+    excerpt = ""
+    if slot["a_excerpts"]:
+        excerpt = slot["a_excerpts"][0]
+    elif slot["b_excerpts"]:
+        excerpt = slot["b_excerpts"][0]
+
+    # Dominant reason codes
+    def _dominant(codes: list[str]) -> str:
+        filtered = [c for c in codes if c]
+        if not filtered:
+            return ""
+        from collections import Counter
+        return Counter(filtered).most_common(1)[0][0]
+
+    return {
+        **slot,
+        "a_mean_score": round(a_mean, 4) if a_mean is not None else None,
+        "b_mean_score": round(b_mean, 4) if b_mean is not None else None,
+        "score_delta": delta,
+        "reason_code_overlap": round(overlap, 4),
+        "a_dominant_reason": _dominant(slot["a_reason_codes"]),
+        "b_dominant_reason": _dominant(slot["b_reason_codes"]),
+        "transcript_excerpt": excerpt,
+    }
+
+
+def compute_cross_pattern_summary(
+    all_results: dict[str, dict[str, dict[str, list[dict]]]],
+    pattern_order: list[str],
+) -> dict[str, dict[str, Any]]:
+    """Aggregate cross-model results across all meetings per pattern.
+
+    all_results: meeting_id → pattern_id → {"consensus": [...], "a_only": [...], ...}
+    Returns: pattern_id → summary stats.
+    """
+    summary: dict[str, dict[str, Any]] = {}
+    for pid in pattern_order:
+        total = 0
+        consensus = 0
+        a_only = 0
+        b_only = 0
+        disputed = 0
+        abs_deltas: list[float] = []
+        overlaps: list[float] = []
+
+        for mid, patterns in all_results.items():
+            classified = patterns.get(pid, {})
+            consensus_slots = classified.get("consensus", [])
+            a_only_slots = classified.get("a_only", [])
+            b_only_slots = classified.get("b_only", [])
+            disputed_slots = classified.get("disputed", [])
+
+            n = len(consensus_slots) + len(a_only_slots) + len(b_only_slots) + len(disputed_slots)
+            total += n
+            consensus += len(consensus_slots)
+            a_only += len(a_only_slots)
+            b_only += len(b_only_slots)
+            disputed += len(disputed_slots)
+
+            for s in consensus_slots:
+                comp = compute_consensus_comparison(s)
+                if comp["score_delta"] is not None:
+                    abs_deltas.append(abs(comp["score_delta"]))
+                overlaps.append(comp["reason_code_overlap"])
+
+        summary[pid] = {
+            "total_slots": total,
+            "consensus": consensus,
+            "consensus_pct": round(100 * consensus / total, 1) if total else 0,
+            "a_only": a_only,
+            "b_only": b_only,
+            "disputed": disputed,
+            "mean_abs_score_delta": round(statistics.mean(abs_deltas), 4) if abs_deltas else None,
+            "max_abs_score_delta": round(max(abs_deltas), 4) if abs_deltas else None,
+            "mean_reason_overlap": round(statistics.mean(overlaps), 4) if overlaps else None,
+        }
+    return summary
+
+
+# ── Cross-model report formatting ─────────────────────────────────────────
+
+
+def format_cross_model_report(
+    model_a_label: str,
+    model_b_label: str,
+    common_meetings: list[str],
+    all_results: dict[str, dict[str, dict[str, list[dict]]]],
+    cross_pattern_summary: dict[str, dict[str, Any]],
+    pattern_order: list[str],
+    detail: bool = False,
+) -> str:
+    """Render the full cross-model comparison markdown report."""
+    lines: list[str] = []
+
+    # Header
+    lines.append("# Cross-Model OE Comparison Report\n")
+    lines.append(f"**Model A**: {model_a_label}  ")
+    lines.append(f"**Model B**: {model_b_label}  ")
+    lines.append(f"**Meetings**: {len(common_meetings)}\n")
+
+    # Section 1: Cross-pattern agreement summary
+    lines.append("## Cross-Pattern Agreement Summary\n")
+    lines.append(f"| Pattern | Slots | Consensus | A-only | B-only | Disputed | Consens% | Mean|Δ| | ReasonOverlap |")
+    lines.append(f"| ------- | ----- | --------- | ------ | ------ | -------- | -------- | ------- | ------------- |")
+    for pid in pattern_order:
+        s = cross_pattern_summary.get(pid, {})
+        if s.get("total_slots", 0) == 0:
+            continue
+        lines.append(
+            f"| {pid} | {s['total_slots']} | {s['consensus']} | {s['a_only']} "
+            f"| {s['b_only']} | {s['disputed']} | {s['consensus_pct']:.1f}% "
+            f"| {_fmt(s['mean_abs_score_delta'])} | {_fmt(s['mean_reason_overlap'])} |"
+        )
+    lines.append("")
+
+    # Section 2: Per-meeting × per-pattern summary
+    lines.append("## Per-Meeting Summary\n")
+    for mid in common_meetings:
+        lines.append(f"### {mid}\n")
+        lines.append("| Pattern | Consensus | A-only | B-only | Disputed | Mean Δ (A−B) |")
+        lines.append("| ------- | --------- | ------ | ------ | -------- | ------------ |")
+        for pid in pattern_order:
+            classified = all_results.get(mid, {}).get(pid, {})
+            cons = classified.get("consensus", [])
+            ao = classified.get("a_only", [])
+            bo = classified.get("b_only", [])
+            disp = classified.get("disputed", [])
+            if not cons and not ao and not bo and not disp:
+                continue
+            deltas = []
+            for s in cons:
+                comp = compute_consensus_comparison(s)
+                if comp["score_delta"] is not None:
+                    deltas.append(comp["score_delta"])
+            mean_d = round(statistics.mean(deltas), 4) if deltas else None
+            sign = "+" if mean_d and mean_d > 0 else ""
+            lines.append(
+                f"| {pid} | {len(cons)} | {len(ao)} | {len(bo)} | {len(disp)} "
+                f"| {sign}{_fmt(mean_d)} |"
+            )
+        lines.append("")
+
+    # Section 3: Consensus OE detail tables
+    lines.append("## Consensus OE Detail\n")
+    for mid in common_meetings:
+        for pid in pattern_order:
+            classified = all_results.get(mid, {}).get(pid, {})
+            cons = classified.get("consensus", [])
+            if not cons:
+                continue
+            lines.append(f"### {mid} — {pid}\n")
+            lines.append("| Turn | Transcript Text | A Mean | B Mean | Δ | A Reason | B Reason |")
+            lines.append("| ---- | --------------- | ------ | ------ | - | -------- | -------- |")
+            for slot in cons:
+                comp = compute_consensus_comparison(slot)
+                ts = slot["turn_start_id"]
+                a_ends = slot["a_turn_ends"]
+                b_ends = slot["b_turn_ends"]
+                max_end = max((a_ends or [ts]) + (b_ends or [ts]))
+                turn_label = f"T{ts}" if max_end == ts else f"T{ts}-{max_end}"
+                excerpt = comp["transcript_excerpt"][:120].replace("|", "\\|").replace("\n", " ")
+                if len(comp["transcript_excerpt"]) > 120:
+                    excerpt += "..."
+                sign = "+" if comp["score_delta"] and comp["score_delta"] > 0 else ""
+                lines.append(
+                    f"| {turn_label} | {excerpt} "
+                    f"| {_fmt(comp['a_mean_score'])} | {_fmt(comp['b_mean_score'])} "
+                    f"| {sign}{_fmt(comp['score_delta'])} "
+                    f"| {comp['a_dominant_reason']} | {comp['b_dominant_reason']} |"
+                )
+                # Show notes for large deltas
+                if comp["score_delta"] is not None and abs(comp["score_delta"]) > 0.25:
+                    a_note = (slot["a_notes"][0] if slot["a_notes"] else "").replace("\n", " ")[:200]
+                    b_note = (slot["b_notes"][0] if slot["b_notes"] else "").replace("\n", " ")[:200]
+                    lines.append(f"| | **A notes**: {a_note} | | | | | |")
+                    lines.append(f"| | **B notes**: {b_note} | | | | | |")
+            lines.append("")
+
+    # Section 4: Model-specific OE lists
+    lines.append("## Model-Specific Opportunities\n")
+    for mid in common_meetings:
+        has_exclusive = False
+        for pid in pattern_order:
+            classified = all_results.get(mid, {}).get(pid, {})
+            ao = classified.get("a_only", [])
+            bo = classified.get("b_only", [])
+            if ao or bo:
+                has_exclusive = True
+                break
+        if not has_exclusive:
+            continue
+
+        lines.append(f"### {mid}\n")
+        for pid in pattern_order:
+            classified = all_results.get(mid, {}).get(pid, {})
+            ao = classified.get("a_only", [])
+            bo = classified.get("b_only", [])
+            if not ao and not bo:
+                continue
+            lines.append(f"#### {pid}\n")
+            if ao:
+                lines.append(f"**Model A only** ({model_a_label}):\n")
+                for slot in ao:
+                    ts = slot["turn_start_id"]
+                    a_mean = statistics.mean(slot["a_scores"]) if slot["a_scores"] else None
+                    excerpt = (slot["a_excerpts"][0] if slot["a_excerpts"] else "")[:150].replace("\n", " ")
+                    note = (slot["a_notes"][0] if slot["a_notes"] else "")[:200].replace("\n", " ")
+                    from collections import Counter
+                    rc = Counter(c for c in slot["a_reason_codes"] if c).most_common(1)
+                    rc_str = rc[0][0] if rc else ""
+                    lines.append(
+                        f"- **T{ts}** (rate={slot['a_rate']:.0%}, score={_fmt(a_mean)}): "
+                        f"`{rc_str}`"
+                    )
+                    if excerpt:
+                        lines.append(f"  > {excerpt}...")
+                    if note:
+                        lines.append(f"  > *{note}*")
+                lines.append("")
+            if bo:
+                lines.append(f"**Model B only** ({model_b_label}):\n")
+                for slot in bo:
+                    ts = slot["turn_start_id"]
+                    b_mean = statistics.mean(slot["b_scores"]) if slot["b_scores"] else None
+                    excerpt = (slot["b_excerpts"][0] if slot["b_excerpts"] else "")[:150].replace("\n", " ")
+                    note = (slot["b_notes"][0] if slot["b_notes"] else "")[:200].replace("\n", " ")
+                    from collections import Counter
+                    rc = Counter(c for c in slot["b_reason_codes"] if c).most_common(1)
+                    rc_str = rc[0][0] if rc else ""
+                    lines.append(
+                        f"- **T{ts}** (rate={slot['b_rate']:.0%}, score={_fmt(b_mean)}): "
+                        f"`{rc_str}`"
+                    )
+                    if excerpt:
+                        lines.append(f"  > {excerpt}...")
+                    if note:
+                        lines.append(f"  > *{note}*")
+                lines.append("")
+
+    # Section 5: Disputed OEs
+    has_disputed = any(
+        classified.get("disputed")
+        for mid_patterns in all_results.values()
+        for classified in mid_patterns.values()
+    )
+    if has_disputed:
+        lines.append("## Disputed Opportunities\n")
+        for mid in common_meetings:
+            for pid in pattern_order:
+                classified = all_results.get(mid, {}).get(pid, {})
+                disp = classified.get("disputed", [])
+                if not disp:
+                    continue
+                lines.append(f"### {mid} — {pid}\n")
+                for slot in disp:
+                    ts = slot["turn_start_id"]
+                    a_mean = statistics.mean(slot["a_scores"]) if slot["a_scores"] else None
+                    b_mean = statistics.mean(slot["b_scores"]) if slot["b_scores"] else None
+                    excerpt = ""
+                    if slot["a_excerpts"]:
+                        excerpt = slot["a_excerpts"][0][:150].replace("\n", " ")
+                    elif slot["b_excerpts"]:
+                        excerpt = slot["b_excerpts"][0][:150].replace("\n", " ")
+                    lines.append(
+                        f"- **T{ts}** A rate={slot['a_rate']:.0%} score={_fmt(a_mean)} | "
+                        f"B rate={slot['b_rate']:.0%} score={_fmt(b_mean)}"
+                    )
+                    if excerpt:
+                        lines.append(f"  > {excerpt}...")
+                lines.append("")
+
     return "\n".join(lines)
 
 
