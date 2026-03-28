@@ -298,6 +298,11 @@ def run_repeat(
 
     runs: list[dict] = [{}] * n_runs  # preserve order
 
+    # Prepare output dir and timestamp for incremental JSON saves
+    results_dir = _RESULTS_DIR / transcript_id
+    results_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+
     def _run_one(i: int) -> tuple[int, dict]:
         logger.info("Run %d/%d for %s ...", i + 1, n_runs, transcript_id)
         try:
@@ -309,6 +314,9 @@ def run_repeat(
                 result["prompt_tokens"] + result["completion_tokens"],
                 result["elapsed_sec"],
             )
+            # Save JSON immediately so results survive crashes
+            if "parsed_json" in result:
+                save_json(result["parsed_json"], results_dir / f"run_{i+1:03d}_{timestamp}.json")
             return i, result
         except Exception as e:
             logger.error("  Run %d failed: %s", i + 1, e)
@@ -361,14 +369,7 @@ def run_repeat(
             pattern_run_details, transcript_id=transcript_id,
         )
 
-    # Save results
-    results_dir = _RESULTS_DIR / transcript_id
-    results_dir.mkdir(parents=True, exist_ok=True)
-
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
-    for i, run_data in enumerate(runs):
-        if "parsed_json" in run_data:
-            save_json(run_data["parsed_json"], results_dir / f"run_{i+1:03d}_{timestamp}.json")
+    # Run JSONs already saved incrementally above; save report + markdown below
 
     report_data: dict[str, Any] = {
         "transcript_id": transcript_id,
