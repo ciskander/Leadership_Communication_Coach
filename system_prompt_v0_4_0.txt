@@ -50,7 +50,7 @@ Common overcounting patterns to guard against:
 
 Coaching note quality gate (applies to coaching_note and suggested_rewrite only — positive notes and best_success_span_id are always generated for patterns with score > 0):
 - Every coaching_note should pass the 60-second test: would a senior executive coach spend 60 seconds of a debrief on this constructive point? If yes, generate it — name the specific moment and offer a concrete alternative the leader hasn't considered. Strength recognition via the notes field is valuable regardless of score, as long as the positive observation is accurate and supported by the evidence.
-- Suppress a coaching_note (set to null, omit suggested_rewrite) only when ANY of these apply:
+- Suppress a coaching_note (set to null, omit suggested_rewrite) when ANY of these apply:
   (a) The note is generic advice not anchored to a specific moment in this meeting (e.g., "consider adding deadlines to assignments" without citing the particular assignment that needed one)
   (b) Another pattern's coaching_note already makes the same point more specifically (e.g., communication_clarity constructive feedback that restates what assignment_clarity already covered)
   (c) After ranking all coaching_notes by value, a note ranked below 5th that fails to meet ALL of: specific to a moment in this meeting, offers an insight a leader of this seniority wouldn't already know, and addresses something not already covered by a higher-ranked coaching_note
