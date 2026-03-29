@@ -208,7 +208,7 @@ Detection notes:
 - Identifying drift requires comparing the current discussion content against the most recently stated topic or objective. If no objective was stated (Purposeful Framing scored 0), drift detection becomes unreliable — mark insufficient_signal.
 - When in doubt about whether a discussion shift constitutes drift vs. natural topic evolution, exclude from both numerator and denominator. Undercounting drift is safer than overcounting. If a possible topic shift could reasonably be interpreted as within the broader scope of the current agenda item or decision, assume it is part of that broader scope.
 - The target speaker allowing a tangent to continue is not the same as the target speaker being unable to intervene. Only count drift as an opportunity when the target speaker has agency to redirect.
-- Suppression vs. management: When the target speaker redirects or shuts down a participant's contribution, evaluate whether the contribution was a genuine tangent (unrelated to the current decision) or a decision-relevant risk signal (quality concern, dependency, stakeholder impact). Redirecting a genuine tangent = focus management. Silencing a decision-relevant input = suppression, not management — score 0.0 even if the redirect was procedurally crisp. Ask: "Would a reasonable decision-maker want this information before committing?" If yes, shutting it down is not drift management.
+- Suppression vs. management: When the target speaker redirects or shuts down a participant's contribution, evaluate whether the contribution was a genuine tangent (unrelated to the current decision) or a decision-relevant risk signal (quality concern, dependency, stakeholder impact). Redirecting a genuine tangent = focus management. However, a redirect that silences a strategically relevant concern is not clean focus management — it is dismissiveness wearing a facilitation hat. If the redirected topic was a substantive concern that the speaker stepped over or avoided, exclude the moment from FM entirely and classify under the more appropriate pattern: disagreement_navigation (if there was pushback) or trust_and_credibility (if the avoidance affects the room's confidence). Ask: "Would a reasonable decision-maker want this information before committing?" If yes, shutting it down is not drift management — it belongs to DN or T&C.
 - 1:1 and feedback conversations: Focus management opportunities should be rare in 1:1s, especially feedback conversations where the report naturally raises concrete examples or adjacent concerns. If the only detected drift is a brief topic pivot that naturally relates to the feedback being delivered (e.g., a report raising a specific client situation while discussing communication style), consider whether this is genuine drift or a natural conversational extension of the feedback topic. Prefer insufficient_signal over a forced evaluation on a single marginal OE in these contexts.
 
 Experiment guidance:
@@ -293,6 +293,7 @@ Detection notes:
 - Decision-meeting filter: In time-pressed decision meetings where the chair is sequencing functional inputs to reach a decision, routine turn-giving to the obvious next speaker is NOT a participation_management opportunity. Following the natural functional sequence (engineering then design then QA) is meeting management, not participation management. After applying this filter, if fewer than 2 genuine opportunities remain, insufficient_signal is the correct outcome — even for a chair. Not every meeting has meaningful participation management dynamics.
 - Reconciliation with role-based guidance: The re-examination guidance for chairs (above) applies after filtering. If a chair has fewer than 2 opportunities after excluding routine sequencing, re-examine to confirm nothing was missed — but if the meeting genuinely lacked deliberate floor-direction choices, insufficient_signal is acceptable.
 - Use the full rubric range. When the speaker addresses a subgroup rather than a named individual (e.g., "Engineering team, any concerns?"), score 0.25 — unless context makes clear that only one person represents that group, in which case this functions as a named invitation and should score higher. The distinction is about precision of invitation, not literal word choice.
+- Behavioral context: A named invitation has coaching value only if the speaker genuinely engages with the input that follows. If the target speaker invites someone to speak and then dismisses, overrides, or ignores their contribution, evaluate the full invitation-response-acknowledgment sequence. The invitation alone does not earn a high score if the response was suppressed. Score the OE based on the complete sequence: invitation + genuine engagement with the response = high score; invitation + dismissal of the response = 0.25 at most.
 
 Experiment guidance:
 - What good looks like: "Priya, you've been closest to the customer data — what's your read?" Names a specific person, invites them on a specific basis, targets someone not yet heard.
@@ -800,6 +801,8 @@ Detection notes:
 - In 1:1 meetings, coaching conversations, and any turn where the speaker's primary communicative goal is acknowledgment, empathy, or feedback delivery: do not penalize for not leading with the task point. Leading with acknowledgment is appropriate structure in these contexts. Evaluate proportionality and relevance, but not BLUF. Apply the full BLUF standard only to task-oriented turns in task-oriented meetings.
 - Scope guidance: Each candidate turn must clearly meet the 3-sentence substantive threshold. If a turn is borderline (2-3 short sentences, or 3 sentences but mostly procedural/social), exclude it. When you have a high OE count, re-examine each turn against this threshold — borderline inclusions are the primary source of instability in this pattern. The test: would you confidently classify this turn as "substantive content of 3+ full sentences" if you saw it in isolation? If you hesitate, exclude it.
 - Turn boundary consistency: When the transcript shows rapid back-and-forth interjections between the target speaker's sentences, treat the speaker's complete thought as a single turn rather than splitting at each interjection. This prevents double-counting the same contribution.
+- Behavioral context: Communication clarity evaluates whether the speaker's message was clear, structured, and proportionate. However, clarity deployed in service of an ulterior or counterproductive purpose (e.g., crisply shutting down a valid concern, clearly overriding an objection without engagement, using directness to rush past complexity) should not be praised as a CC strength. If the turn's primary dynamic is the speaker using clarity to bulldoze rather than to communicate, the coaching note should acknowledge the clarity but flag that it was undermined by the interpersonal dynamic. Do not generate a positive-only CC coaching note for turns where the speaker's clarity primarily served an ulterior or counterproductive purpose.
+- Coaching-note redundancy: A CC coaching_note is redundant if it essentially restates the positive observation already in the notes field without adding a specific constructive point that other patterns haven't already covered. Positive reinforcement belongs in the notes field; the coaching_note should only be generated when it identifies a specific clarity problem (jargon, burying the point, disproportionate length) that is distinct from what PF, AC, or RA already coach. If the coaching_note just says "you were clear and structured" — that belongs in notes, not coaching_note.
 
 Experiment guidance:
 - What good looks like: "I think we should delay launch by two weeks. Here's why: QA flagged three issues in the payment flow, and we can't ship with unresolved payment bugs. Two weeks gives us time to fix and retest. The trade-off is we miss the conference window, but I'd rather ship clean." Point first, reasoning second, trade-off acknowledged, proportionate length.
@@ -954,6 +957,15 @@ EXCLUSIVE (count under only one):
   Exception: generic open-floor prompts ("Any thoughts?", "Questions?")
   remain excluded from participation_management regardless of form.
 
+- participation_management vs. disagreement_navigation: If the evidence
+  shows the leader inviting input and then dismissing or suppressing the
+  expertise offered, the moment's primary dynamic is disagreement avoidance,
+  not participation mechanics. Reclassify: the OE belongs to DN (scored on
+  how the speaker handled the substantive pushback), not PM (which only
+  evaluates floor-direction choices).
+  Quick test: remove the named invitation — does the coaching point still
+  hold? If yes, the issue is DN, not PM.
+
 - disagreement_navigation vs. trust_and_credibility: If a moment involves
   both conflict handling AND trust impact, determine the PRIMARY dynamic.
   disagreement_navigation = the primary issue is interpersonal tension,
@@ -1014,6 +1026,15 @@ EXCLUSIVE (count under only one):
   different topic, would the trust observation still hold? If yes -> T&C.
   If the trust observation only exists because of what was being deferred
   -> FM.
+
+- trust_and_credibility repackaging check: If a T&C OE's coaching
+  reads as a restatement of focus_management (topic deferral),
+  resolution_and_alignment (decision closure), or assignment_clarity
+  (commitment specificity), the moment likely belongs to those patterns,
+  not T&C. Apply the "swap the topic" test above. Also watch for the same
+  moment being sliced into multiple pattern badges — if T&C coaching
+  covers the same behavioral moment already scored under FM, RA, or AC,
+  the T&C OE is likely redundant. Remove it.
 
 PERMITTED MULTI-PATTERN (count under both):
 - resolution_and_alignment + assignment_clarity: A single moment may 

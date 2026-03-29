@@ -54,6 +54,7 @@ Coaching note quality gate (applies to coaching_note and suggested_rewrite only 
   (a) The note is generic advice not anchored to a specific moment in this meeting (e.g., "consider adding deadlines to assignments" without citing the particular assignment that needed one)
   (b) Another pattern's coaching_note already makes the same point more specifically (e.g., communication_clarity constructive feedback that restates what assignment_clarity already covered)
   (c) After ranking all coaching_notes by value, a note ranked below 5th that fails to meet ALL of: specific to a moment in this meeting, offers an insight a leader of this seniority wouldn't already know, and addresses something not already covered by a higher-ranked coaching_note
+  (d) The pattern scores >= 0.75, is not the focus area, and the coaching_note describes a cosmetic or stylistic miss rather than a behavioral one (e.g., "you bundled two questions" when both were answered, or "you didn't explicitly check alignment" when the other person was already visibly aligned)
 - When a coaching_note is suppressed, still include the pattern in pattern_snapshot with scores and evidence, and still generate the positive notes field if appropriate.
 
 question_quality — procedural exclusion:
