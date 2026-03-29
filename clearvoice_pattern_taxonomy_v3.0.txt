@@ -444,6 +444,7 @@ Detection notes:
 - The key detection signal is consistency between words and actions. When the speaker says one thing and does another within the meeting, that's a trust moment.
 - The active/passive dimension is the primary scoring axis: 1.0 and 0.0 are both active behaviors (building vs. destroying trust). 0.75 and 0.25 are more passive (maintaining vs. eroding). 0.5 is genuinely mixed. When scoring, first determine the direction (building vs. eroding), then determine the intensity (active vs. passive). The rubric tier descriptions reference room perception as explanatory context (e.g., "the room walks away thinking…"), but score based on the observable behavior itself using the behavioral examples in each tier as the primary scoring anchors.
 - Unnamed sources are a negative signal. Severity depends on whether the speaker acknowledges the limitation (0.5 — mixed) or presents unnamed feedback as fact (0.25 — evasive).
+- Named vs. unnamed sourcing: Citing a named individual's specific, observable reaction (e.g., "Claire told me she skimmed the email and missed the ask") or a credible third-party source (e.g., a published study, a named team's documented experience) is transparent evidence-sharing, not unnamed sourcing. Unnamed sourcing means the identity of the source is deliberately withheld (e.g., "some people have mentioned you could be more concise") or possibly non-existent. The distinction: can the coachee verify the claim? If yes, it is transparent. If the source is hidden, dubious, or not referenced at all, it is unnamed.
 - Engagement with expertise is a primary signal. Steel-manning an opposing view (1.0) vs. dismissing it without engagement (0.0) vs. acknowledging the person but not the substance (0.25-0.5).
 - Ownership vs. deflection is a primary signal. Taking responsibility for a failure (1.0) vs. making excuses (0.25) vs. blaming others (0.0).
 - Power dynamics matter. Using positional authority to override substance (0.0) is distinct from legitimate decision-making after genuine engagement (0.75+).
@@ -709,6 +710,7 @@ Detection notes:
 - Context matters for determining purpose. "What do you think?" directed at a specific person on a specific topic after a substantive discussion may be purposeful (inviting a perspective). The same question to the room at large with no specific context is aimless.
 - When in doubt about whether a question is purposeful or aimless, consider: could you explain why this question was asked at this moment? If yes, it's purposeful. If no, it's aimless.
 - Functional classification: A question's syntactic form does not automatically make it a question_quality opportunity. When the question's primary function in context is NOT inquiry — e.g., it serves to accelerate past a substantive objection (disagreement_navigation), to redirect the conversation (focus_management), or to assert authority (trust_and_credibility) — classify the moment under the pattern that captures its primary function, not under question_quality. The test: if the question were rephrased as a statement, would the moment's coaching significance change? If "What's the timeline?" functions as "Let's move past this design concern and talk about schedule," the moment is a DN or T&C opportunity, not a QQ opportunity. Only count questions under question_quality when the speaker's primary purpose is genuinely to elicit information, test assumptions, surface perspectives, or deepen understanding.
+- Behavioral context: A question's surface quality (specific, decision-linked, constraint-testing) does not make it a QQ strength if it primarily serves to redirect past a substantive objection or to confirm a predetermined path. Before scoring a question as purposeful (1.0), consider the conversational sequence: if the question immediately follows the speaker dismissing, overriding, or stepping over a substantive concern, the question likely serves avoidance rather than genuine inquiry. Score based on the full sequence, not the question in isolation.
 
 Experiment guidance:
 - What good looks like: Short, specific questions that target a decision, assumption, risk, or perspective. "What breaks if we ship this two weeks early?" is sharp. "What does everyone think?" is not.
@@ -1027,14 +1029,22 @@ EXCLUSIVE (count under only one):
   If the trust observation only exists because of what was being deferred
   -> FM.
 
-- trust_and_credibility repackaging check: If a T&C OE's coaching
-  reads as a restatement of focus_management (topic deferral),
-  resolution_and_alignment (decision closure), or assignment_clarity
-  (commitment specificity), the moment likely belongs to those patterns,
-  not T&C. Apply the "swap the topic" test above. Also watch for the same
-  moment being sliced into multiple pattern badges — if T&C coaching
-  covers the same behavioral moment already scored under FM, RA, or AC,
-  the T&C OE is likely redundant. Remove it.
+- trust_and_credibility repackaging check: T&C can legitimately co-occur
+  with other patterns when there is a distinct trust dimension (see
+  PERMITTED MULTI-PATTERN rules). However, if the T&C coaching observation
+  adds nothing beyond what the co-occurring pattern already captures, the
+  T&C OE is repackaging, not a distinct dimension. Apply the existing
+  "swap the topic" test for FM vs T&C cases. For other co-occurrences,
+  ask: does the T&C coaching describe a behavior that distinctly affects
+  whether the room trusts the speaker as a person, beyond just managing
+  the meeting competently?
+  Examples of repackaging (NOT a distinct T&C dimension):
+  - Being transparent about why a deliverable is needed → assignment_clarity
+  - Treating a risk seriously and setting a checkpoint → focus_management
+  - Acknowledging a concern before deferring it → focus_management
+  These are competent management behaviors, not trust-defining moments. If
+  the only T&C observation is "the speaker managed well, which builds
+  trust," that is not a distinct T&C OE.
 
 PERMITTED MULTI-PATTERN (count under both):
 - resolution_and_alignment + assignment_clarity: A single moment may 
