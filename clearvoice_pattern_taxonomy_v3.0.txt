@@ -18,7 +18,7 @@ CORE RULES (apply to all patterns)
 
 SCORING TYPES
 
-This taxonomy uses four scoring approaches matched to pattern structure:
+This taxonomy uses three scoring approaches matched to pattern structure:
 
 1. Tiered rubric scoring (Purposeful Framing, Focus Management, Participation Management, Disagreement Navigation, Trust & Credibility, Resolution & Alignment, Question Quality, Communication Clarity):
    - Each opportunity scored 0.0, 0.25, 0.5, 0.75, or 1.0 based on rubric level defined per pattern.
@@ -32,7 +32,6 @@ This taxonomy uses four scoring approaches matched to pattern structure:
 
 3. Multi-element scoped scoring (Feedback Quality):
    - Five sequential elements. Score = elements_present_count / 5 per opportunity.
-   - Scoped primarily to 1:1s and feedback-rich meeting types.
 
 PATTERN LIST (fixed output order)
 
@@ -75,7 +74,6 @@ COACHING OUTPUT RULES
 - focus: exactly 1 pattern representing the highest-leverage area for improvement.
 - micro_experiment: exactly 1 concrete, specific behavioral experiment tied to the focus area.
 - Focus/micro-experiment selection should prioritize leverageable recurring behavior.
-- Tie-breaker priority when multiple patterns have similar scores: prefer patterns with more opportunities (larger denominator), then prefer patterns earlier in the cluster order A > B > C > D.
 
 ### END:CORE_RULES ###
 
