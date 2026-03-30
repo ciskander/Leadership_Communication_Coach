@@ -224,6 +224,12 @@ def merge_editor_output(
     if pc_edits:
         _apply_pattern_coaching_edits(merged, pc_edits, demoted_patterns)
 
+    # -- Step 3b: Clean up fully-suppressed patterns --------------------------
+    # When both notes and coaching_note are null after edits, null out
+    # best_success_span_id too — showing a success quote with no coaching
+    # context is worse than showing nothing (judge rates it as taxonomy-filling).
+    _cleanup_fully_suppressed(merged, demoted_patterns)
+
     # -- Step 4: Apply span reference changes with validation ------------------
     if pc_edits:
         _validate_span_references(merged, pc_edits, original)
@@ -367,6 +373,30 @@ def _discard_coaching_for_demoted(
                 "Editor: discarded coaching for demoted pattern %s",
                 pc.get("pattern_id"),
             )
+
+
+def _cleanup_fully_suppressed(
+    merged: dict,
+    demoted_patterns: set[str],
+) -> None:
+    """Null out best_success_span_id for patterns where both notes and coaching_note are null.
+
+    When both coaching text fields are suppressed, showing just a success evidence
+    quote with no coaching context makes the pattern look like taxonomy-filling.
+    Patterns already handled by demotion are skipped.
+    """
+    coaching = merged.get("coaching", {})
+    for pc in coaching.get("pattern_coaching", []):
+        pid = pc.get("pattern_id")
+        if pid in demoted_patterns:
+            continue  # already fully nulled by demotion
+        if not pc.get("notes") and not pc.get("coaching_note"):
+            if pc.get("best_success_span_id"):
+                logger.info(
+                    "Editor: nulling best_success_span_id for fully-suppressed pattern %s",
+                    pid,
+                )
+                pc["best_success_span_id"] = None
 
 
 # -- Pattern coaching edits ----------------------------------------------------
