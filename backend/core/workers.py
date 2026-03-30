@@ -503,7 +503,7 @@ def process_single_meeting_analysis(
     baseline_pack_record_id = baseline_pack_links[0] if baseline_pack_links else None
     active_exp_record_id = active_exp_links[0] if active_exp_links else None
 
-    # Config
+    # Config — try linked config first, fall back to active config
     config_name = None
     cfg_fields: dict = {}
     config_links = _get_link_ids(rr_fields, "Config")
@@ -511,6 +511,14 @@ def process_single_meeting_analysis(
         cfg_record = client.get_record("config", config_links[0])
         cfg_fields = _extract_fields(cfg_record)
         config_name = cfg_fields.get("Config Name")
+    if not cfg_fields:
+        try:
+            active_cfg = client.get_active_config()
+            if active_cfg:
+                cfg_fields = _extract_fields(active_cfg)
+                config_name = cfg_fields.get("Config Name")
+        except Exception:
+            pass
 
     config_version = CONFIG_VERSION
 
