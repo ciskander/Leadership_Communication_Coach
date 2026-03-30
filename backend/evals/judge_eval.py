@@ -264,6 +264,14 @@ def _format_pattern_coaching(coaching: dict, evidence_spans: list, pattern_snaps
     parts = []
     for pc in items:
         pid = pc.get("pattern_id", "?")
+
+        # Skip patterns where both notes and coaching_note are null —
+        # these have been suppressed by the editor and won't be shown to
+        # the user. Presenting them to the judge as empty headings causes
+        # false "taxonomy-filling" pedantic ratings.
+        if not pc.get("notes") and not pc.get("coaching_note"):
+            continue
+
         lines = [f"#### {pid}"]
 
         if pc.get("notes"):
