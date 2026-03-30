@@ -1,8 +1,8 @@
 """
-editor.py — 2nd LLM pass ("coaching editor") for the analysis pipeline.
+editor.py -- 2nd LLM pass ("coaching editor") for the analysis pipeline.
 
 Reviews the 1st call's coaching output from an executive coach's perspective
-— without access to the pattern taxonomy — and can suppress, rewrite, or
+-- without access to the pattern taxonomy -- and can suppress, rewrite, or
 improve coaching content before it reaches the user.
 
 The editor uses a delta-based output format: it returns only what it changed.
@@ -22,77 +22,197 @@ from .models import MemoryBlock, OpenAIResponse
 logger = logging.getLogger(__name__)
 
 
-# ── Editor system prompt ──────────────────────────────────────────────────────
+# -- Pattern definitions for editor alignment checks --------------------------
+
+PATTERN_DEFINITIONS = """\
+--- purposeful_framing ---
+What it measures: Whether the speaker frames topics with explicit purpose and \
+direction -- both when opening the meeting and when transitioning between topics.
+NOT this pattern: Continuations within the same topic; procedural transitions \
+("Let me share my screen"); transitions initiated by others; greetings without framing.
+
+--- focus_management ---
+What it measures: Whether the speaker keeps discussion aligned with stated \
+objectives and manages drift. The reactive counterpart to purposeful_framing.
+NOT this pattern: Natural topic evolution within the same agenda item; brief \
+self-correcting asides; meetings with no stated agenda.
+Disambiguation: If the speaker redirects risk signals or stakeholder concerns \
+rather than genuine tangents, classify under disagreement_navigation or \
+trust_and_credibility, not focus_management.
+
+--- participation_management ---
+What it measures: Whether the speaker actively manages participation -- distributing \
+speaking turns, bringing in unheard voices, ensuring conversational balance.
+NOT this pattern: Substantive questions (-> question_quality); moments where only \
+two speakers are present; moments where someone else is facilitating.
+Disambiguation: If the leader invites input then dismisses the expertise offered, \
+the primary dynamic is disagreement avoidance (DN), not participation mechanics.
+
+--- disagreement_navigation ---
+What it measures: How the speaker handles moments of disagreement, pushback, or \
+conflict. Does the speaker engage constructively with substance, or dismiss/bulldoze?
+NOT this pattern: Polite differences with no tension; factual corrections without \
+friction; disagreements between others the speaker has no role in.
+Disambiguation: Distinct from trust_and_credibility -- DN scores conflict handling \
+mechanics, T&C scores whether behavior makes people trust the speaker more or less.
+
+--- trust_and_credibility ---
+What it measures: Whether the speaker's behavior during high-stakes moments builds \
+or erodes trust with the room -- follow-through, honest engagement with expertise, \
+owning positions, consistency between words and actions.
+NOT this pattern: Routine procedural moments; low-stakes exchanges; disagreements \
+fully captured by disagreement_navigation with no additional trust dimension.
+Disambiguation: T&C coaching on shared moments only when it names a trust consequence \
+the co-occurring pattern misses. If the observation adds nothing beyond what FM, DN, \
+or another pattern already captures, the T&C coaching is repackaging.
+
+--- resolution_and_alignment ---
+What it measures: Whether the speaker brings discussions to clear conclusions and \
+confirms shared understanding before moving on. (1) Named resolution -- states what \
+was decided. (2) Alignment confirmation -- checks the group agrees.
+NOT this pattern: Decisions closed by another speaker; informational items with \
+no decision at stake; exploratory discussions not yet ready for closure.
+
+--- assignment_clarity ---
+What it measures: Whether the speaker assigns work with sufficient clarity -- owner, \
+deadline, deliverable definition, context, and confirmation of understanding.
+NOT this pattern: Assignments by others; vague references to future work; status \
+updates on prior assignments; decisions without action items (-> resolution_and_alignment).
+
+--- question_quality ---
+What it measures: Whether the questions the speaker asks are purposeful -- serving a \
+clear function in advancing the conversation rather than aimless or counterproductive.
+NOT this pattern: Rhetorical questions; clarifying echoes; procedural/logistics \
+questions; back-channel confirmations ("Right?").
+Disambiguation: If a question's primary function is to redirect (-> FM), accelerate \
+past an objection (-> DN), or assert authority (-> T&C), classify there, not QQ.
+
+--- communication_clarity ---
+What it measures: Whether the speaker's substantive contributions are clear, \
+structured, and proportionate -- as opposed to meandering or disconnected.
+NOT this pattern: Turns shorter than 3 sentences; reading from slides/scripts; \
+procedural statements; brainstorming (intentionally unstructured).
+Disambiguation: If the observation is really about framing quality (-> PF), \
+deliverable specification (-> AC), or decision closure (-> RA), it belongs there.
+
+--- feedback_quality ---
+What it measures: Whether the speaker delivers feedback using a structured approach \
+-- grounding in situation and observable behavior, naming impact, offering a \
+recommendation, and checking in with the recipient (SBI-RC model).
+NOT this pattern: Factual corrections without developmental intent; general praise \
+with no behavioral reference; task direction (-> assignment_clarity).\
+"""
+
+
+# -- Editor system prompt ------------------------------------------------------
 
 EDITOR_SYSTEM_PROMPT = """\
 You are an experienced executive coach with 20+ years of experience
 coaching senior leaders. You are reviewing AI-generated coaching feedback
 before it is delivered to a leader.
 
-Your job is to make this coaching genuinely useful — the kind of feedback
+Your job is to make this coaching genuinely useful -- the kind of feedback
 a senior leader would pay attention to and act on. The AI system that
 produced this output is good at identifying behavioral patterns in
 meeting transcripts, but it sometimes pattern-matches for its own sake,
 generating coaching that is technically accurate but not meaningfully
 helpful. Your role is to be the quality gate between analysis and delivery.
 
-You do NOT have access to the system's internal scoring taxonomy. Evaluate
-and improve the coaching from a COACH'S perspective — would this help
-this specific leader develop?
-
 You will receive:
 1. The meeting transcript (speaker turns with turn IDs)
 2. The AI system's full analysis output (scores, evidence quotes, coaching
    notes, suggested rewrites, executive summary)
 3. Context about the speaker's active experiment/focus area (if any)
+4. Pattern definitions -- what each behavioral pattern measures and what
+   it does NOT measure (use these for alignment checks)
 
-═══��═══════════════════════════════════════════════════════════
-YOUR EDITORIAL TOOLS
-═══════════════════════════════════════════════════════════════
+===============================================================
+STEP 1: PATTERN ALIGNMENT CHECK (do this first)
+===============================================================
 
-You return a DELTA — only the fields you want to change. Omit any field
-or pattern you want to leave unchanged. Use null to indicate "no change"
-within an included object.
+Before editing any text, review each pattern's coaching output (both the
+"notes" positive observation AND the "coaching_note" developmental
+feedback) and ask:
 
-For each pattern's coaching output, you have three choices:
+  Does this coaching describe behavior that genuinely belongs to THIS
+  specific behavioral pattern? Or is it describing behavior that really
+  belongs to a different pattern?
 
-SUPPRESS a coaching_note (set to "SUPPRESS") when it is:
-- Generic praise that any observer could make without deep analysis
-- Redundant — another pattern's coaching already makes the same point
+Use the PATTERN DEFINITIONS below to make this judgment. Common failure
+modes the AI system produces:
+
+- trust_and_credibility observations that are really about
+  focus_management (e.g., "deferring a topic to a future meeting" is FM
+  behavior, not trust-building)
+- participation_management coaching that stretches a single routine
+  invitation into a meaningful observation when the meeting shows poor
+  participation overall
+- communication_clarity observations that are really about
+  purposeful_framing, assignment_clarity, or resolution_and_alignment
+- Any pattern where the coaching repackages what a co-occurring pattern
+  already covers, adding no distinct insight
+
+If a pattern's coaching doesn't belong, SUPPRESS it -- don't rewrite it.
+No amount of sharpening fixes coaching that's about the wrong thing.
+
+The "notes" field and "coaching_note" field are INDEPENDENT. Evaluate
+each on its own merits:
+- A pattern may have a strong positive observation (notes) but weak
+  developmental feedback (coaching_note) -- suppress the coaching_note
+  but keep the notes
+- A pattern may have a misaligned positive observation (notes describes
+  behavior belonging to another pattern) but the coaching_note is valid
+  -- suppress the notes but keep the coaching_note
+- If both are misaligned or thin, suppress both
+
+{pattern_definitions}
+
+===============================================================
+STEP 2: EDITORIAL DECISIONS
+===============================================================
+
+You return a DELTA -- only the fields you want to change. Omit any field
+or pattern you want to leave unchanged.
+
+Your highest-impact editorial decision is SUPPRESSION -- whether each
+pattern's coaching belongs and adds value. A leader with 6 well-targeted
+coaching points learns more than one with 9 where 3 are about the wrong
+thing. Every pattern you suppress makes the remaining patterns more
+impactful.
+
+SUPPRESS a coaching_note or notes field (set to "SUPPRESS") when it:
+- Fails the pattern alignment check (describes behavior belonging to a
+  different pattern)
+- Is stretching to fill a category with thin evidence (a single routine
+  action presented as meaningful coaching)
+- Is redundant -- another pattern's coaching already makes the same point
   more specifically
-- Pedantic — technically true but not a meaningful development edge
+- Is pedantic -- technically true but not a meaningful development edge
   for a leader at this level
-- Pattern-filling — generated because the system has a category for it,
-  not because it matters for this person in this meeting
+- Is generic praise that any observer could make without deep analysis
 
 REWRITE a coaching_note, notes field, or suggested_rewrite when it:
-- Is vague where it could be specific ("you managed the discussion well"
-  → name what they actually did)
+- IS correctly aligned to its pattern but could be sharper
+- Is vague where it could be specific
 - Buries the insight under qualifications or hedging
-- Misses the real coaching point that's visible in the evidence
-- Could be sharper, more direct, or more actionable
+- Misses the real coaching point visible in the evidence
 - Describes what happened without saying why it matters or what to do
-  differently
 
-LEAVE UNCHANGED — simply omit that pattern from pattern_coaching_edits
-when the coaching is already insightful, well-grounded in the transcript,
-and actionable.
+LEAVE UNCHANGED -- simply omit that pattern from pattern_coaching_edits
+when the coaching is already insightful, well-grounded, and actionable.
 
 Beyond per-pattern coaching, you can also:
 
 REWRITE the executive_summary and coaching_themes if they are generic,
 bury the lead, or don't reflect the most important coaching points.
-These should tell the leader what matters most from this meeting in
-language that is direct and specific to what happened.
 
 REWRITE strengths messages to be more grounded and specific. You can
-change the message text but NOT which patterns are highlighted as
-strengths.
+change the message text but NOT which patterns are highlighted.
 
 REWRITE the focus area message (focus_message) and micro-experiment text
 (micro_experiment_edits: title, instruction, success_marker) to be
 sharper. You CANNOT change which pattern is the focus or the experiment
-structure — only improve the wording.
+structure -- only improve the wording.
 
 REWRITE experiment_coaching text (coaching_note, suggested_rewrite) if
 present and improvable.
@@ -101,21 +221,17 @@ CHOOSE BETTER EVIDENCE when a pattern's best_success_span_id is not the
 most compelling example, or when rewrite_for_span_id doesn't target the
 best coaching moment. You may select any existing evidence span for that
 pattern. CRITICAL: If you change rewrite_for_span_id, you MUST write a
-completely new suggested_rewrite that matches the new span. The
-suggested_rewrite models what the speaker should have said at THAT
-specific moment — changing the target without rewriting is invalid.
+completely new suggested_rewrite that matches the new span.
 
 FLAG OPPORTUNITY EVENTS FOR REMOVAL when a scored behavioral moment
-doesn't genuinely belong to the pattern it's assigned to — e.g., a
-trust_and_credibility moment that is really just focus_management
-relabeled, or a trivial operational follow-up scored as an
-assignment_clarity opportunity. List these in the oe_removals array.
-You cannot change individual OE scores — only flag OEs to remove.
-The system will recalculate pattern scores after removal.
+doesn't genuinely belong to the pattern it's assigned to. List these in
+the oe_removals array. You cannot change individual OE scores -- only
+flag OEs to remove. The system will recalculate pattern scores after
+removal.
 
-═══════════════════════════════════════════════════════════════
+===============================================================
 PRINCIPLES
-═══════════════════════════��═══════════════════════════════════
+===============================================================
 
 Coach the person, not the rubric. If a coaching note could apply to
 any competent professional in any meeting, it's not specific enough.
@@ -123,7 +239,7 @@ Every note should name what THIS speaker did in THIS meeting.
 
 Quality over coverage. It is better to deliver 4 sharp coaching notes
 than 8 mediocre ones. Suppressing weak coaching is a quality improvement,
-not a loss. The leader's time and attention are finite — earn them.
+not a loss. The leader's time and attention are finite -- earn them.
 
 Ground every claim. When you rewrite, preserve the connection to specific
 transcript moments. Do not make coaching more generic. A rewrite should
@@ -137,9 +253,9 @@ In all coaching text, describe moments by what the speaker SAID or DID,
 not by internal identifiers. Never reference turn numbers, evidence span
 IDs, event IDs, or any internal ID.
 
-═══════════════════════════════════════════════════════════════
+===============================================================
 SCOPE BOUNDARIES
-═══════════════════════════════════════════════════════════════
+===============================================================
 
 You MAY change: coaching_notes, notes, suggested_rewrites,
 rewrite_for_span_id, best_success_span_id, executive_summary,
@@ -156,13 +272,16 @@ evidence_span definitions, or experiment_tracking fields.
 
 {experiment_context}
 
-═══════════════════════════════════════════════════════════════
+===============================================================
 OUTPUT FORMAT
-��═══════════════════════���══════════════════════════════════════
+===============================================================
 
 Return a JSON object with ONLY the fields you want to change. Omit any
-field or pattern that should stay as-is. Use "SUPPRESS" as the value for
-coaching_note to suppress that pattern's coaching entirely.
+field or pattern that should stay as-is.
+
+Use "SUPPRESS" as the value for coaching_note to suppress that pattern's
+developmental feedback. Use "SUPPRESS" as the value for notes to suppress
+that pattern's positive observation. Each can be suppressed independently.
 
 {{
   "executive_summary": "<new text, or omit if unchanged>",
@@ -178,8 +297,8 @@ coaching_note to suppress that pattern's coaching entirely.
   }},
   "pattern_coaching_edits": {{
     "<pattern_id>": {{
-      "notes": "<new or omit if unchanged>",
-      "coaching_note": "<new text, or 'SUPPRESS' to suppress>",
+      "notes": "<new text, or 'SUPPRESS' to suppress, or omit if unchanged>",
+      "coaching_note": "<new text, or 'SUPPRESS' to suppress, or omit if unchanged>",
       "suggested_rewrite": "<new or omit if unchanged>",
       "rewrite_for_span_id": "<changed span or omit>",
       "best_success_span_id": "<changed span or omit>"
@@ -198,7 +317,7 @@ coaching_note to suppress that pattern's coaching entirely.
   ]
 }}
 
-The "changes" array is your changelog — document every change you made
+The "changes" array is your changelog -- document every change you made
 and why. Include entries for suppressions, rewrites, span changes, and
 OE removals. This is critical for auditing.
 
@@ -207,7 +326,7 @@ If you have NO changes to make, return:
 """
 
 
-# ── Experiment context builder ────────────────────────────────────────────────
+# -- Experiment context builder ------------------------------------------------
 
 def build_experiment_context(
     memory: Optional[MemoryBlock],
@@ -256,7 +375,7 @@ def build_experiment_context(
     if model_status in ("mastered", "completed") or (score is not None and score >= 0.8):
         return (
             f"EXPERIMENT CONTEXT: Active experiment on {pattern_id}, "
-            f"score {score}. Recommendation: TRANSITION — speaker may be "
+            f"score {score}. Recommendation: TRANSITION -- speaker may be "
             f"ready for a new experiment. Reflect this achievement and "
             f"transition in your summary. You MUST preserve this "
             f"recommendation."
@@ -270,7 +389,7 @@ def build_experiment_context(
     )
 
 
-# ── User message builder ─────────────────────────────────────────────────────
+# -- User message builder -----------------------------------------------------
 
 def build_editor_user_message(
     parsed_output: dict,
@@ -285,14 +404,14 @@ def build_editor_user_message(
     analysis_json = json.dumps(parsed_output, ensure_ascii=False, indent=2)
 
     return (
-        "═══ MEETING TRANSCRIPT (speaker turns) ═══\n\n"
+        "=== MEETING TRANSCRIPT (speaker turns) ===\n\n"
         f"{transcript_json}\n\n"
-        "═══ AI ANALYSIS OUTPUT ═══\n\n"
+        "=== AI ANALYSIS OUTPUT ===\n\n"
         f"{analysis_json}"
     )
 
 
-# ── Editor LLM call ─────��────────────────────────────────────────────────────
+# -- Editor LLM call ----------------------------------------------------------
 
 def run_editor(
     parsed_output: dict,
@@ -313,6 +432,7 @@ def run_editor(
     """
     system_prompt = EDITOR_SYSTEM_PROMPT.format(
         experiment_context=experiment_context,
+        pattern_definitions=PATTERN_DEFINITIONS,
     )
     user_message = build_editor_user_message(parsed_output, transcript_turns)
 
@@ -326,7 +446,7 @@ def run_editor(
     return response.parsed, response.prompt_tokens, response.completion_tokens
 
 
-# ── Merge logic ────────���────────────────────────────��─────────────────────────
+# -- Merge logic ---------------------------------------------------------------
 
 def merge_editor_output(
     original: dict,
@@ -335,7 +455,7 @@ def merge_editor_output(
     """Merge the editor's delta output into the original analysis.
 
     Processing order (critical for correctness):
-    1. OE removals → score recalculation → status updates
+    1. OE removals -> score recalculation -> status updates
     2. Coaching discard for patterns demoted to insufficient_signal
     3. Apply coaching text edits (pattern_coaching_edits)
     4. Apply span reference changes with validation
@@ -365,32 +485,32 @@ def merge_editor_output(
         if not has_any_edit:
             return merged, changelog
 
-    # ── Step 1: OE removals ───────────────────────────────────────────────
+    # -- Step 1: OE removals ---------------------------------------------------
     demoted_patterns: set[str] = set()
     oe_removals = editor_output.get("oe_removals", [])
     if oe_removals:
         demoted_patterns = _process_oe_removals(merged, oe_removals)
 
-    # ── Step 2: Coaching discard for demoted patterns ─────────────────────
+    # -- Step 2: Coaching discard for demoted patterns -------------------------
     if demoted_patterns:
         _discard_coaching_for_demoted(merged, demoted_patterns)
 
-    # ── Step 3: Apply pattern coaching text edits ─────────────────────────
+    # -- Step 3: Apply pattern coaching text edits -----------------------------
     pc_edits = editor_output.get("pattern_coaching_edits", {})
     if pc_edits:
         _apply_pattern_coaching_edits(merged, pc_edits, demoted_patterns)
 
-    # ── Step 4: Apply span reference changes with validation ──────────────
+    # -- Step 4: Apply span reference changes with validation ------------------
     if pc_edits:
         _validate_span_references(merged, pc_edits, original)
 
-    # ── Step 5: Apply top-level text edits ────────────────────────────────
+    # -- Step 5: Apply top-level text edits ------------------------------------
     _apply_toplevel_edits(merged, editor_output)
 
     return merged, changelog
 
 
-# ── OE removal processing ────────────────────────────────────────────────────
+# -- OE removal processing ----------------------------------------------------
 
 def _process_oe_removals(
     merged: dict,
@@ -493,22 +613,15 @@ def _recalculate_pattern_score(
         snap["evaluable_status"] = "insufficient_signal"
         snap["score"] = None
         demoted.add(pattern_id)
-        logger.info("Editor: pattern %s demoted — 0 counted OEs remain", pattern_id)
+        logger.info("Editor: pattern %s demoted -- 0 counted OEs remain", pattern_id)
         return
 
     # Recalculate score: sum of success values / count
     total = sum(oe.get("success", 0) for oe in counted_oes)
     snap["score"] = round(total / len(counted_oes), 4)
 
-    # Rebuild evidence span IDs from remaining OEs
-    remaining_oe_spans: set[str] = set()
-    for oe in merged.get("opportunity_events", []):
-        if oe.get("pattern_id") == pattern_id:
-            # OE spans are derived from evidence_spans that cover the turn range
-            pass  # Evidence spans are managed separately
-
     logger.info(
-        "Editor: pattern %s recalculated — %d counted OEs, score %.4f",
+        "Editor: pattern %s recalculated -- %d counted OEs, score %.4f",
         pattern_id, len(counted_oes), snap["score"],
     )
 
@@ -532,7 +645,7 @@ def _discard_coaching_for_demoted(
             )
 
 
-# ── Pattern coaching edits ────────────────────────────────────────────────────
+# -- Pattern coaching edits ----------------------------------------------------
 
 def _apply_pattern_coaching_edits(
     merged: dict,
@@ -560,17 +673,26 @@ def _apply_pattern_coaching_edits(
             )
             continue
 
-        # Handle suppression
+        # Handle notes suppression (independent of coaching_note)
+        if edits.get("notes") == "SUPPRESS":
+            pc["notes"] = None
+
+        # Handle coaching_note suppression
         if edits.get("coaching_note") == "SUPPRESS":
             pc["coaching_note"] = None
             pc["suggested_rewrite"] = None
             pc["rewrite_for_span_id"] = None
+            # If notes wasn't also suppressed above, it keeps its value
+            if edits.get("notes") != "SUPPRESS":
+                # Apply notes rewrite if provided (non-SUPPRESS, non-null)
+                if "notes" in edits and edits["notes"] is not None:
+                    pc["notes"] = edits["notes"]
             continue
 
-        # Apply non-null field edits
+        # Apply non-null, non-SUPPRESS field edits
         for field in ("notes", "coaching_note", "suggested_rewrite",
                        "rewrite_for_span_id", "best_success_span_id"):
-            if field in edits and edits[field] is not None:
+            if field in edits and edits[field] is not None and edits[field] != "SUPPRESS":
                 pc[field] = edits[field]
 
 
@@ -610,7 +732,7 @@ def _validate_span_references(
             success_spans = snap.get("success_evidence_span_ids", [])
             if pc.get("best_success_span_id") not in success_spans:
                 logger.warning(
-                    "Editor: best_success_span_id '%s' not in success spans for %s — reverting",
+                    "Editor: best_success_span_id '%s' not in success spans for %s -- reverting",
                     pc.get("best_success_span_id"), pid,
                 )
                 pc["best_success_span_id"] = orig_pc.get("best_success_span_id")
@@ -624,7 +746,7 @@ def _validate_span_references(
             new_rewrite_span = pc.get("rewrite_for_span_id")
             if new_rewrite_span not in non_success_spans:
                 logger.warning(
-                    "Editor: rewrite_for_span_id '%s' not valid for %s — reverting",
+                    "Editor: rewrite_for_span_id '%s' not valid for %s -- reverting",
                     new_rewrite_span, pid,
                 )
                 pc["rewrite_for_span_id"] = orig_pc.get("rewrite_for_span_id")
@@ -638,14 +760,14 @@ def _validate_span_references(
                     if new_rewrite_text == orig_rewrite_text:
                         logger.warning(
                             "Editor: rewrite_for_span_id changed for %s but "
-                            "suggested_rewrite unchanged — reverting both",
+                            "suggested_rewrite unchanged -- reverting both",
                             pid,
                         )
                         pc["rewrite_for_span_id"] = orig_rewrite_span
                         pc["suggested_rewrite"] = orig_rewrite_text
 
 
-# ── Top-level text edits ───────��──────────────────────────────────────────────
+# -- Top-level text edits ------------------------------------------------------
 
 def _apply_toplevel_edits(merged: dict, editor_output: dict) -> None:
     """Apply top-level text edits from the editor delta."""
