@@ -149,4 +149,4 @@ The ~10% pedantic floor is structural, not fixable by taxonomy boundary-tighteni
 
 ## Next Phase
 
-Taxonomy redesign (Level 3): Reorganize patterns around observable behavioral mechanics to achieve genuine MECE separation. This is a foundational rethink, not boundary tweaking.
+Architecture redesign (Phase L): Separate the pipeline into two stages — behavioral detection/scoring (Stage 1, per-pattern tunnel vision) and coaching synthesis (Stage 2, holistic cross-pattern judgment). This addresses the root cause: the current architecture fuses detection, scoring, and coaching into one pass, but these have fundamentally conflicting requirements. See `Phase_K_continuation_prompt.md` for the full architectural proposal and open design questions.
