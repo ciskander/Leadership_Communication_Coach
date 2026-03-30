@@ -255,12 +255,15 @@ def run_single_analysis(
     editor_changes_count = 0
     editor_prompt_tokens = 0
     editor_completion_tokens = 0
+    editor_changelog: list[dict] = []
+    editor_raw_output: dict | None = None
     if _EDITOR_ENABLED:
         exp_context = build_experiment_context(memory, patched_output)
         transcript_turns = prompt_payload.transcript_payload["turns"]
         editor_result, editor_prompt_tokens, editor_completion_tokens = run_editor(
             patched_output, transcript_turns, exp_context, model=model,
         )
+        editor_raw_output = editor_result  # preserve full editor response
         patched_output, editor_changelog = merge_editor_output(
             patched_output, editor_result,
         )
@@ -322,6 +325,8 @@ def run_single_analysis(
         "editor_changes_count": editor_changes_count,
         "editor_prompt_tokens": editor_prompt_tokens,
         "editor_completion_tokens": editor_completion_tokens,
+        "editor_changelog": editor_changelog,
+        "editor_raw_output": editor_raw_output,
     }
 
 
@@ -364,6 +369,12 @@ def run_repeat(
             # Save JSON immediately so results survive crashes
             if "parsed_json" in result:
                 save_json(result["parsed_json"], results_dir / f"run_{i+1:03d}_{timestamp}.json")
+            # Save editor output if present
+            if result.get("editor_raw_output"):
+                save_json(
+                    result["editor_raw_output"],
+                    results_dir / f"editor_{i+1:03d}_{timestamp}.json",
+                )
             return i, result
         except Exception as e:
             logger.error("  Run %d failed: %s", i + 1, e)
