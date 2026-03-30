@@ -60,6 +60,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import sys
 import time
 from collections import defaultdict
@@ -74,10 +75,12 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 from backend.core.config import OPENAI_MODEL_DEFAULT, OPENAI_MAX_TOKENS, ANTHROPIC_MAX_TOKENS, PATTERN_ORDER
+from backend.core.editor import build_experiment_context, run_editor, merge_editor_output
 from backend.core.gate1_validator import validate as gate1_validate
 from backend.core.llm_client import call_llm, is_anthropic_model
-from backend.core.models import MemoryBlock, ParsedTranscript
+from backend.core.models import MemoryBlock, OpenAIResponse, ParsedTranscript
 from backend.core.openai_client import load_system_prompt
+from backend.core.output_patches import patch_analysis_output
 from backend.core.prompt_builder import build_developer_message, build_single_meeting_prompt
 from backend.core.transcript_parser import parse_transcript
 from backend.evals.report import (
@@ -105,6 +108,8 @@ from backend.evals.report import (
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
+
+_EDITOR_ENABLED = os.getenv("EDITOR_ENABLED", "0") == "1"
 
 _RESULTS_DIR = Path(__file__).parent / "results"
 
@@ -238,6 +243,44 @@ def run_single_analysis(
     )
     elapsed = time.time() - t0
 
+    # Apply shared post-LLM patches (same as production pipeline)
+    patched_output = patch_analysis_output(
+        response.parsed,
+        prompt_meta=prompt_payload.meta,
+        active_experiment=memory.active_experiment if memory else None,
+        has_active_experiment=bool(memory and memory.active_experiment),
+    )
+
+    # Editor pass (optional 2nd LLM call)
+    editor_changes_count = 0
+    editor_prompt_tokens = 0
+    editor_completion_tokens = 0
+    if _EDITOR_ENABLED:
+        exp_context = build_experiment_context(memory, patched_output)
+        transcript_turns = prompt_payload.transcript_payload["turns"]
+        editor_result, editor_prompt_tokens, editor_completion_tokens = run_editor(
+            patched_output, transcript_turns, exp_context, model=model,
+        )
+        patched_output, editor_changelog = merge_editor_output(
+            patched_output, editor_result,
+        )
+        editor_changes_count = len(editor_changelog)
+        logger.info(
+            "Editor: %d changes, %d prompt tokens, %d completion tokens",
+            editor_changes_count, editor_prompt_tokens, editor_completion_tokens,
+        )
+
+    # Rebuild response with patched output for Gate1
+    patched_raw = json.dumps(patched_output, ensure_ascii=False, indent=2)
+    response = OpenAIResponse(
+        parsed=patched_output,
+        raw_text=patched_raw,
+        model=response.model,
+        prompt_tokens=response.prompt_tokens,
+        completion_tokens=response.completion_tokens,
+        total_tokens=response.total_tokens,
+    )
+
     gate1_result = gate1_validate(response.raw_text)
 
     # Use corrected data when gate1 auto-fixed arithmetic errors
@@ -275,6 +318,10 @@ def run_single_analysis(
         "pattern_opp_counts": dict(pattern_opp_counts),
         "pattern_statuses": dict(pattern_statuses),
         "pattern_oe_counts": dict(pattern_oe_counts),
+        "editor_enabled": _EDITOR_ENABLED,
+        "editor_changes_count": editor_changes_count,
+        "editor_prompt_tokens": editor_prompt_tokens,
+        "editor_completion_tokens": editor_completion_tokens,
     }
 
 

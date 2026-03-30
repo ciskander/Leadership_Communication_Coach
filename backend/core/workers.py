@@ -79,6 +79,8 @@ from .airtable_client import (
     F_EXP_LAST_ATTEMPT_MODEL,
     F_EXP_LAST_ATTEMPT_DATE,
     F_RUN_ACTIVE_EXPERIMENT,
+    F_RUN_EDITOR_CHANGELOG,
+    F_RUN_EDITOR_TOKENS,
 )
 from .config import CONFIG_VERSION
 from .gate1_validator import validate as gate1_validate
@@ -93,12 +95,14 @@ from .models import Gate1FailureError, MemoryBlock, ValidationIssue, OpenAIRespo
 from .llm_client import call_llm
 from .openai_client import load_baseline_system_prompt, load_next_experiment_system_prompt, load_system_prompt
 from .prompt_builder import build_baseline_pack_prompt, build_memory_block, build_single_meeting_prompt
+from .output_patches import patch_analysis_output
 from .quote_cleanup import cleanup_parsed_json
 from .transcript_parser import parse_transcript
 
-# Feature flag: mirrors QUOTE_CLEANUP_ENABLED from quote_helpers.py
+# Feature flags
 import os as _os
 _CLEANUP_ENABLED = _os.getenv("QUOTE_CLEANUP_ENABLED", "0") == "1"
+_EDITOR_ENABLED = _os.getenv("EDITOR_ENABLED", "0") == "1"
 
 _VALID_MEETING_TYPES = {
     'exec_staff', 'board', 'all_hands', 'cross_functional', 'project_review',
@@ -392,6 +396,8 @@ def _persist_run_fields(
     idempotency_key: str,
     coachee_id: str,
     user_record_id: Optional[str] = None,
+    editor_changelog: Optional[list] = None,
+    editor_tokens: Optional[int] = None,
 ) -> dict:
     """Create the run record in Airtable and return it."""
     fields: dict = {
@@ -444,6 +450,11 @@ def _persist_run_fields(
         fields[F_RUN_EXPERIMENT_STATUS_MODEL] = active_exp.get("status")
         if detection and isinstance(detection, dict):
             fields[F_RUN_ATTEMPT_MODEL] = detection.get("attempt")
+
+    if editor_changelog:
+        fields[F_RUN_EDITOR_CHANGELOG] = _safe_json_dumps(editor_changelog)
+    if editor_tokens is not None:
+        fields[F_RUN_EDITOR_TOKENS] = editor_tokens
 
     return client.create_run(fields)
 
@@ -584,106 +595,16 @@ def process_single_meeting_analysis(
         max_tokens=_get_config_max_tokens(client, config_links),
     )
 
-    # 6c. Inject/fix meta fields the model may omit
+    # 6c. Apply all post-LLM output patches (shared with eval pipeline)
     import json as _json
     _parsed_output = _json.loads(openai_resp.raw_text)
-    if "meta" in _parsed_output:
-        _parsed_output["meta"].setdefault("analysis_id", prompt_payload.meta.get("analysis_id"))
-        _parsed_output["meta"].setdefault("analysis_type", prompt_payload.meta.get("analysis_type"))
-        _parsed_output["meta"].setdefault("generated_at", prompt_payload.meta.get("generated_at"))
-    # Fix experiment_tracking
-    exp_track = _parsed_output.get("experiment_tracking", {})
-    active_exp = exp_track.get("active_experiment", {})
-    detection = exp_track.get("detection_in_this_meeting")
-
-    # Coerce non-dict detection values to a no-attempt sentinel object
-    active_status = exp_track.get("active_experiment", {}).get("status", "none")
-    if active_status == "active":
-        if not isinstance(detection, dict):
-            exp_track["detection_in_this_meeting"] = {
-                "experiment_id": exp_track.get("active_experiment", {}).get("experiment_id", "EXP-000000"),
-                "attempt": "no",
-                "count_attempts": 0,
-                "evidence_span_ids": [],
-            }
-    else:
-        exp_track["detection_in_this_meeting"] = {
-            "experiment_id": "EXP-000000",
-            "attempt": "no",
-            "count_attempts": 0,
-            "evidence_span_ids": [],
-        }
-
-    if active_exp:
-        if active_exp.get("experiment_id") is None:
-            exp_track["active_experiment"] = {"experiment_id": "EXP-000000", "status": "none"}
-            exp_track["detection_in_this_meeting"] = None
-            
-    # Coerce missing evidence_span_ids on micro_experiment items
-    coaching = _parsed_output.get("coaching", {})
-    for item in coaching.get("micro_experiment", []):
-        if isinstance(item, dict):
-            item.setdefault("evidence_span_ids", [])
-
-    # Ensure coaching.pattern_coaching exists
-    coaching.setdefault("pattern_coaching", [])
-    coaching.setdefault("experiment_coaching", None)
-
-    # Focus override safety gate: when an active experiment exists, force the
-    # focus pattern_id to match the experiment's pattern_id. The system prompt
-    # instructs the LLM to do this, but we enforce it as a backend guarantee.
-    if active_exp_record_id and memory.active_experiment:
-        expected_pattern = memory.active_experiment.get("pattern_id")
-        focus_items = coaching.get("focus", [])
-        if expected_pattern and focus_items:
-            actual_pattern = focus_items[0].get("pattern_id")
-            if actual_pattern != expected_pattern:
-                logger.warning(
-                    "Focus override: LLM returned '%s' but active experiment requires '%s'",
-                    actual_pattern, expected_pattern,
-                )
-                focus_items[0]["pattern_id"] = expected_pattern
-                # Replace the message with the coaching_note from the matching
-                # pattern_coaching entry so the text is relevant to the
-                # overridden pattern.
-                pattern_coaching = coaching.get("pattern_coaching", [])
-                match = next(
-                    (pc for pc in pattern_coaching
-                     if pc.get("pattern_id") == expected_pattern),
-                    None,
-                )
-                if match and match.get("coaching_note"):
-                    focus_items[0]["message"] = match["coaching_note"]
-
-    # Ensure rewrite_for_span_id references in coaching.pattern_coaching are
-    # included in the corresponding pattern's evidence_span_ids and NOT in
-    # success_evidence_span_ids (it is always a failure).
-    _pc_rewrite_by_pattern = {
-        pc.get("pattern_id"): pc.get("rewrite_for_span_id")
-        for pc in coaching.get("pattern_coaching", [])
-        if pc.get("rewrite_for_span_id")
-    }
-    for ps in _parsed_output.get("pattern_snapshot", []):
-        rewrite_span = _pc_rewrite_by_pattern.get(ps.get("pattern_id"))
-        if not rewrite_span:
-            continue
-        es_ids = ps.get("evidence_span_ids", [])
-        if rewrite_span not in es_ids:
-            es_ids.append(rewrite_span)
-        success_ids = ps.get("success_evidence_span_ids", [])
-        if rewrite_span in success_ids:
-            success_ids.remove(rewrite_span)
-
-    _parsed_output = _patch_parsed_output(_parsed_output)
-
-    # 6d. Clean up ASR artifacts in evidence_span excerpts and coaching blurbs.
-    # This mutates _parsed_output in-place so the cleaned text is persisted
-    # to Airtable, eliminating the need for LLM calls on every page load.
-    if _CLEANUP_ENABLED:
-        try:
-            cleanup_parsed_json(_parsed_output)
-        except Exception:
-            logger.warning("Quote cleanup failed in worker; raw text will be persisted", exc_info=True)
+    _parsed_output = patch_analysis_output(
+        _parsed_output,
+        prompt_meta=prompt_payload.meta,
+        active_experiment=memory.active_experiment if memory else None,
+        has_active_experiment=bool(active_exp_record_id),
+        cleanup_enabled=_CLEANUP_ENABLED,
+    )
 
     patched_raw = _json.dumps(_parsed_output, ensure_ascii=False, indent=2)
     openai_resp = OpenAIResponse(
@@ -695,7 +616,43 @@ def process_single_meeting_analysis(
         total_tokens=openai_resp.total_tokens,
     )
 
-    # Progress: LLM call complete
+    # 6e. Editor pass (optional 2nd LLM call for coaching quality)
+    editor_changelog = None
+    editor_tokens = None
+    if _EDITOR_ENABLED:
+        from .editor import build_experiment_context, run_editor, merge_editor_output
+
+        try:
+            client.update_run_request_progress(run_request_id, "Editing coaching quality…")
+        except Exception:
+            pass  # non-blocking
+
+        exp_context = build_experiment_context(memory, _parsed_output)
+        transcript_turns = prompt_payload.transcript_payload["turns"]
+        editor_result, ed_prompt_tokens, ed_completion_tokens = run_editor(
+            _parsed_output, transcript_turns, exp_context, model=openai_resp.model,
+        )
+        _parsed_output, editor_changelog = merge_editor_output(
+            _parsed_output, editor_result,
+        )
+        editor_tokens = ed_prompt_tokens + ed_completion_tokens
+
+        # Reconstruct openai_resp with editor-merged output
+        patched_raw = _json.dumps(_parsed_output, ensure_ascii=False, indent=2)
+        openai_resp = OpenAIResponse(
+            parsed=_parsed_output,
+            raw_text=patched_raw,
+            model=openai_resp.model,
+            prompt_tokens=openai_resp.prompt_tokens,
+            completion_tokens=openai_resp.completion_tokens,
+            total_tokens=openai_resp.total_tokens,
+        )
+        logger.info(
+            "Editor: %d prompt tokens, %d completion tokens, %d changes",
+            ed_prompt_tokens, ed_completion_tokens, len(editor_changelog),
+        )
+
+    # Progress: LLM call(s) complete
     try:
         client.update_run_request_progress(run_request_id, "Reviewing output quality…")
     except Exception:
@@ -727,6 +684,8 @@ def process_single_meeting_analysis(
         idempotency_key=idem_key,
         coachee_id=coachee_id,
         user_record_id=user_record_id or None,
+        editor_changelog=editor_changelog,
+        editor_tokens=editor_tokens,
     )
     run_record_id = run_record["id"]
 

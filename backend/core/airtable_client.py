@@ -102,6 +102,8 @@ F_RUN_RUN_REQUESTS = "run_requests"          # Link
 F_RUN_EXPERIMENT_INSTANTIATED = "Experiment Instantiated?"
 F_RUN_ATTEMPT_EVENT_CREATED = "Attempt Event Created?"
 F_RUN_ACTIVE_EXPERIMENT = "Active Experiment"   # Link to experiments table
+F_RUN_EDITOR_CHANGELOG = "Editor Changelog"
+F_RUN_EDITOR_TOKENS = "Editor Tokens"
 
 # Transcript metadata on the Runs table — all Airtable lookup fields that
 # auto-populate from the linked transcript record (returned as single-element
