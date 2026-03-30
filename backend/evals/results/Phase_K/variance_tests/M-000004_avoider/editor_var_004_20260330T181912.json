@@ -1,0 +1,32 @@
+{
+  "pattern_coaching_edits": {
+    "communication_clarity": {
+      "coaching_note": "SUPPRESS",
+      "suggested_rewrite": "SUPPRESS"
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "question_quality",
+      "oe_index": 1,
+      "reason": "This is a logistics/scheduling question ('can that happen tomorrow?'), which the pattern definition explicitly excludes from question_quality."
+    }
+  ],
+  "changes": [
+    {
+      "field": "pattern_coaching_edits.communication_clarity.coaching_note",
+      "action": "suppressed",
+      "reason": "The developmental point is not really about communication clarity; it is about how directness was used to shut down objections, which is more squarely covered by disagreement_navigation and trust_and_credibility."
+    },
+    {
+      "field": "pattern_coaching_edits.communication_clarity.suggested_rewrite",
+      "action": "suppressed",
+      "reason": "The rewrite targets engagement with customer risk rather than clearer communication structure, so it does not belong under communication_clarity."
+    },
+    {
+      "field": "oe_removals[0]",
+      "action": "removed",
+      "reason": "The counted question-quality opportunity is a procedural logistics question, not a substantive question that advances thinking."
+    }
+  ]
+}

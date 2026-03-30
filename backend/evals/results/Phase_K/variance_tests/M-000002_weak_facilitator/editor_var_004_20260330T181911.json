@@ -1,0 +1,84 @@
+{
+  "focus_message": "Your highest-leverage gap is credibility under pressure. In this meeting, confidence dropped when you named dates and commitments that the actual owners had not validated, especially with Priya on data export. The fix is simple but hard: stop closing uncertainty with confidence. When the work owner has not confirmed the commitment, say that plainly and get the validation in the room before you declare anything.",
+  "micro_experiment_edits": {
+    "instruction": "For every high-stakes decision or commitment, pause and validate before you declare it. Use language like: 'What can you commit to right now?' or 'I'm not going to name a date until the owner confirms it.' Do not state a date, promise, or owner acceptance on someone else's behalf until they have said it themselves in the room.",
+    "success_marker": "In your next meeting, you explicitly validate at least three commitments before naming them, and you do not make any unvalidated promise on behalf of another person."
+  },
+  "pattern_coaching_edits": {
+    "purposeful_framing": {
+      "notes": "SUPPRESS"
+    },
+    "participation_management": {
+      "notes": "SUPPRESS"
+    },
+    "communication_clarity": {
+      "notes": "SUPPRESS"
+    },
+    "assignment_clarity": {
+      "notes": "When pressed, you did occasionally make your own commitments concrete. Telling Morgan you would provide the pricing parameters by Thursday, and telling the group you would send a recap that night, gave the room something specific they could hold you to.",
+      "coaching_note": "Your assignments were often directionally right but too vague to execute cleanly. The exchange with Priya made that visible: after 'plan it and let me know,' she had to ask whether you wanted a validated date, a sprint plan, or both. In a launch meeting, that kind of ambiguity creates churn because people have to clarify the assignment before they can do the work."
+    },
+    "resolution_and_alignment": {
+      "notes": "Near the end, your recap usefully named what was partly decided and what was still open. That helped the room converge on the actual status instead of pretending everything had been settled."
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "assignment_clarity",
+      "oe_index": 5,
+      "reason": "Saying 'This week. Definitely by Thursday.' is only a deadline fragment, not a full assignment or accepted work statement on its own."
+    }
+  ],
+  "changes": [
+    {
+      "field": "focus_message",
+      "action": "rewritten",
+      "reason": "Sharpened the trust-and-credibility focus to the core behavioral issue: declaring unvalidated commitments on others' behalf."
+    },
+    {
+      "field": "micro_experiment_edits.instruction",
+      "action": "rewritten",
+      "reason": "Made the experiment language crisper and more directly tied to the observed credibility failures."
+    },
+    {
+      "field": "micro_experiment_edits.success_marker",
+      "action": "rewritten",
+      "reason": "Clarified the observable success condition and aligned it to the key trust behavior."
+    },
+    {
+      "field": "pattern_coaching_edits.purposeful_framing.notes",
+      "action": "suppressed",
+      "reason": "The positive observation is too thin; merely naming the next topic with a rough aim does not add meaningful coaching value for this pattern."
+    },
+    {
+      "field": "pattern_coaching_edits.participation_management.notes",
+      "action": "suppressed",
+      "reason": "There was no real positive evidence for active participation management in this meeting."
+    },
+    {
+      "field": "pattern_coaching_edits.communication_clarity.notes",
+      "action": "suppressed",
+      "reason": "The positive point is modest and already covered more specifically by the resolution recap; keeping it would be redundant."
+    },
+    {
+      "field": "pattern_coaching_edits.assignment_clarity.notes",
+      "action": "rewritten",
+      "reason": "Grounded the strength more carefully; the original overstated consistency when the broader assignment pattern was uneven."
+    },
+    {
+      "field": "pattern_coaching_edits.assignment_clarity.coaching_note",
+      "action": "rewritten",
+      "reason": "Kept the coaching aligned to assignment clarity while making the cost of the ambiguity more explicit."
+    },
+    {
+      "field": "pattern_coaching_edits.resolution_and_alignment.notes",
+      "action": "rewritten",
+      "reason": "Tightened the positive observation to reflect what was genuinely useful without overstating the quality of closure."
+    },
+    {
+      "field": "oe_removals",
+      "action": "removed",
+      "reason": "Flagged a misclassified assignment-clarity opportunity event that is just a deadline fragment, not a standalone assignment."
+    }
+  ]
+}

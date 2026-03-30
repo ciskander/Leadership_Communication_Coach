@@ -1,0 +1,26 @@
+{
+  "pattern_coaching_edits": {
+    "trust_and_credibility": {
+      "notes": "SUPPRESS"
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "trust_and_credibility",
+      "oe_index": 0,
+      "reason": "This is primarily focus management: Jordan parks a late-breaking topic with a clear boundary and follow-up. The coaching does not surface a distinct trust consequence beyond the deferral itself, so trust_and_credibility is redundant with focus_management here."
+    }
+  ],
+  "changes": [
+    {
+      "field": "pattern_coaching_edits.trust_and_credibility.notes",
+      "action": "suppressed",
+      "reason": "Misaligned to the pattern and redundant with focus_management; the moment is about parking a tangent with next steps, not a distinct trust-building behavior."
+    },
+    {
+      "field": "oe_removals",
+      "action": "removed",
+      "reason": "Flagged the sole trust_and_credibility opportunity event for removal because it is better classified as focus_management and adds no separate trust insight."
+    }
+  ]
+}

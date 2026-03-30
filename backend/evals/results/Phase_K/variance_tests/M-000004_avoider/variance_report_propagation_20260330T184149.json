@@ -1,0 +1,61 @@
+{
+  "n_variants": 10,
+  "n_valid": 10,
+  "coached_patterns": [
+    "purposeful_framing",
+    "disagreement_navigation",
+    "trust_and_credibility",
+    "resolution_and_alignment",
+    "assignment_clarity",
+    "communication_clarity"
+  ],
+  "per_pattern_ratings": {
+    "purposeful_framing": {
+      "adequate": 10
+    },
+    "disagreement_navigation": {
+      "insightful": 10
+    },
+    "trust_and_credibility": {
+      "insightful": 10
+    },
+    "resolution_and_alignment": {
+      "adequate": 10
+    },
+    "assignment_clarity": {
+      "adequate": 10
+    },
+    "communication_clarity": {
+      "pedantic": 6
+    }
+  },
+  "unanimous_rate": 1.0,
+  "unanimous_count": 6,
+  "total_patterns": 6,
+  "flip_patterns": [],
+  "flip_details": [],
+  "aggregate_pcts": {
+    "insightful": {
+      "mean": 0.36,
+      "stdev": 0.0344
+    },
+    "adequate": {
+      "mean": 0.54,
+      "stdev": 0.0516
+    },
+    "pedantic": {
+      "mean": 0.1,
+      "stdev": 0.0861
+    },
+    "wrong": {
+      "mean": 0.0,
+      "stdev": 0.0
+    }
+  },
+  "coaching_value": {
+    "medium": 10
+  },
+  "would_approve": {
+    "True": 10
+  }
+}

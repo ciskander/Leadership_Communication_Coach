@@ -1,0 +1,949 @@
+{
+  "schema_version": "mvp.v0.4.0",
+  "meta": {
+    "analysis_id": "A-260330",
+    "taxonomy_version": "v3.0",
+    "output_mode": "coaching_first_2s1e",
+    "analysis_type": "single_meeting",
+    "generated_at": "2026-03-30T19:37:46.468159+00:00"
+  },
+  "context": {
+    "meeting_id": "M-000006",
+    "meeting_type": "cross_functional",
+    "target_role": "chair",
+    "meeting_date": "2026-01-01",
+    "target_speaker_name": "Robin",
+    "target_speaker_label": "Robin"
+  },
+  "opportunity_events": [
+    {
+      "event_id": "OE-001",
+      "pattern_id": "purposeful_framing",
+      "turn_start_id": 1,
+      "turn_end_id": 1,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "opening_with_topic_and_outcome"
+    },
+    {
+      "event_id": "OE-002",
+      "pattern_id": "purposeful_framing",
+      "turn_start_id": 12,
+      "turn_end_id": 12,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "topic_shift_with_vague_outcome"
+    },
+    {
+      "event_id": "OE-003",
+      "pattern_id": "purposeful_framing",
+      "turn_start_id": 39,
+      "turn_end_id": 39,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "topic_shift_with_specific_outcome"
+    },
+    {
+      "event_id": "OE-004",
+      "pattern_id": "focus_management",
+      "turn_start_id": 45,
+      "turn_end_id": 47,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "names_scope_boundary_and_redirects"
+    },
+    {
+      "event_id": "OE-005",
+      "pattern_id": "participation_management",
+      "turn_start_id": 8,
+      "turn_end_id": 8,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "targeted_inclusion_unheard_voice"
+    },
+    {
+      "event_id": "OE-006",
+      "pattern_id": "participation_management",
+      "turn_start_id": 14,
+      "turn_end_id": 14,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "targeted_inclusion_unheard_voice"
+    },
+    {
+      "event_id": "OE-007",
+      "pattern_id": "participation_management",
+      "turn_start_id": 41,
+      "turn_end_id": 41,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "targeted_inclusion_unheard_voice"
+    },
+    {
+      "event_id": "OE-008",
+      "pattern_id": "disagreement_navigation",
+      "turn_start_id": 25,
+      "turn_end_id": 33,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.25,
+      "reason_code": "pushback_redirected_without_substantive_engagement"
+    },
+    {
+      "event_id": "OE-009",
+      "pattern_id": "trust_and_credibility",
+      "turn_start_id": 45,
+      "turn_end_id": 47,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "transparent_boundary_with_forward_action"
+    },
+    {
+      "event_id": "OE-010",
+      "pattern_id": "resolution_and_alignment",
+      "turn_start_id": 12,
+      "turn_end_id": 12,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "specific_resolution_without_alignment_check"
+    },
+    {
+      "event_id": "OE-011",
+      "pattern_id": "resolution_and_alignment",
+      "turn_start_id": 63,
+      "turn_end_id": 68,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "specific_resolution_with_explicit_alignment_check"
+    },
+    {
+      "event_id": "OE-012",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 19,
+      "turn_end_id": 20,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "simple_assignment_all_elements_present",
+      "notes": "simple"
+    },
+    {
+      "event_id": "OE-013",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 43,
+      "turn_end_id": 44,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "simple_assignment_all_elements_present",
+      "notes": "simple"
+    },
+    {
+      "event_id": "OE-014",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 47,
+      "turn_end_id": 48,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "simple_assignment_all_elements_present",
+      "notes": "simple"
+    },
+    {
+      "event_id": "OE-015",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 49,
+      "turn_end_id": 50,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "simple_assignment_all_elements_present",
+      "notes": "simple"
+    },
+    {
+      "event_id": "OE-016",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 51,
+      "turn_end_id": 52,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "complex_assignment_missing_acceptance_criteria",
+      "notes": "complex"
+    },
+    {
+      "event_id": "OE-017",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 53,
+      "turn_end_id": 58,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "complex_assignment_all_elements_present",
+      "notes": "complex"
+    },
+    {
+      "event_id": "OE-018",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 59,
+      "turn_end_id": 60,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "complex_assignment_all_elements_present",
+      "notes": "complex"
+    },
+    {
+      "event_id": "OE-019",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 61,
+      "turn_end_id": 62,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "simple_assignment_all_elements_present",
+      "notes": "simple"
+    },
+    {
+      "event_id": "OE-020",
+      "pattern_id": "question_quality",
+      "turn_start_id": 3,
+      "turn_end_id": 3,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "decision_linked_question"
+    },
+    {
+      "event_id": "OE-021",
+      "pattern_id": "question_quality",
+      "turn_start_id": 10,
+      "turn_end_id": 10,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "constraint_testing_question"
+    },
+    {
+      "event_id": "OE-022",
+      "pattern_id": "question_quality",
+      "turn_start_id": 21,
+      "turn_end_id": 21,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "decision_linked_question"
+    },
+    {
+      "event_id": "OE-023",
+      "pattern_id": "question_quality",
+      "turn_start_id": 23,
+      "turn_end_id": 23,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "partially_purposeful_broad_question"
+    },
+    {
+      "event_id": "OE-024",
+      "pattern_id": "question_quality",
+      "turn_start_id": 27,
+      "turn_end_id": 27,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "deepening_question"
+    },
+    {
+      "event_id": "OE-025",
+      "pattern_id": "question_quality",
+      "turn_start_id": 35,
+      "turn_end_id": 35,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "deepening_question"
+    },
+    {
+      "event_id": "OE-026",
+      "pattern_id": "question_quality",
+      "turn_start_id": 43,
+      "turn_end_id": 43,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "decision_linked_question"
+    },
+    {
+      "event_id": "OE-027",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 1,
+      "turn_end_id": 1,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "clear_structured_opening"
+    },
+    {
+      "event_id": "OE-028",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 12,
+      "turn_end_id": 12,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "clear_transition_and_decision"
+    },
+    {
+      "event_id": "OE-029",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 39,
+      "turn_end_id": 39,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "clear_topic_shift_with_context"
+    },
+    {
+      "event_id": "OE-030",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 45,
+      "turn_end_id": 45,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "clear_scope_boundary_and_next_step"
+    },
+    {
+      "event_id": "OE-031",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 53,
+      "turn_end_id": 53,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "clear_complex_assignment"
+    },
+    {
+      "event_id": "OE-032",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 59,
+      "turn_end_id": 59,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "clear_risk_based_assignment"
+    }
+  ],
+  "evidence_spans": [
+    {
+      "evidence_span_id": "ES-T1",
+      "turn_start_id": 1,
+      "turn_end_id": 1,
+      "excerpt": "Robin: Okay, let's get into sprint planning. We've got two weeks ahead of us and three things to sort out — which features make it into this sprint and in what order, who's doing what, and the production bug that came in over the weekend. Let's start with prioritization. We've got four candidates on the board: the dashboard analytics feature, the notification preferences overhaul, the caching layer for the search API, and the database migration to Postgres 16. We can't do all four in one sprint, so we need to pick two, maybe three. Kai, where does engineering see the most urgency?",
+      "event_ids": [
+        "OE-001",
+        "OE-027"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T12",
+      "turn_start_id": 12,
+      "turn_end_id": 12,
+      "excerpt": "Robin: Good. So we're going with database migration and dashboard analytics this sprint. Notification preferences and caching layer move to sprint 4. Alright, let's get into the dashboard feature specifically because there are some open questions. Sage, your team has been scoping the frontend — what's the build plan?",
+      "event_ids": [
+        "OE-002",
+        "OE-010",
+        "OE-028"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T39",
+      "turn_start_id": 39,
+      "turn_end_id": 39,
+      "excerpt": "Robin: Alright, let me shift to the production bug. Over the weekend we got reports from three customers that the export function is generating corrupted CSV files when the dataset exceeds 10,000 rows. Support has been fielding tickets since Saturday. Kai, your team looked at it — what's the diagnosis?",
+      "event_ids": [
+        "OE-003",
+        "OE-029"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T45-47",
+      "turn_start_id": 45,
+      "turn_end_id": 47,
+      "excerpt": "Robin: Good. Parker, coordinate with Tomas on the test cases. I want the fix shipped by Wednesday. Now — the test coverage gap Parker just flagged. Is this a broader problem? Are there other modules where we're underweight on coverage? / Parker: The export module is the worst but it's not the only one. The notification system is around 65 percent. The reporting endpoints are maybe 70. The core API is in good shape, high 80s, but the newer features have been shipping with thinner coverage because we've been prioritizing speed over thoroughness. / Robin: I don't want to solve that problem today but I do want to make sure the dashboard feature doesn't ship with the same gaps. Parker, can you write up coverage requirements for the dashboard module before the team starts building? That way everyone knows what the QA bar is from day one.",
+      "event_ids": [
+        "OE-004",
+        "OE-009"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T8",
+      "turn_start_id": 8,
+      "turn_end_id": 8,
+      "excerpt": "Robin: Drew, product hasn't weighed in on the priority order yet — what's your take on which feature goes first?",
+      "event_ids": [
+        "OE-005"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T14",
+      "turn_start_id": 14,
+      "turn_end_id": 14,
+      "excerpt": "Robin: Reese, I want to hear design's perspective before we commit to this approach. Are the specs finalized for all three components?",
+      "event_ids": [
+        "OE-006"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T41",
+      "turn_start_id": 41,
+      "turn_end_id": 41,
+      "excerpt": "Robin: Parker, QA hasn't had a chance to flag risks on this — are there test coverage gaps that would block a release?",
+      "event_ids": [
+        "OE-007"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T25-33",
+      "turn_start_id": 25,
+      "turn_end_id": 33,
+      "excerpt": "Drew: Two to three seconds is too slow. Our performance target is under one second for all dashboard loads. / Kai: Agreed. But we don't need the full caching layer to solve this. Jun and I talked about a lightweight pre-aggregation job that runs nightly and materializes the chart data. It's not as elegant as the full caching solution but it gets us under a second for 95 percent of accounts. We could build that in two days as part of the dashboard work. / Robin: And the remaining 5 percent? / Kai: Those are the highest-volume accounts. They'd still see slower loads until we build the full caching layer in sprint 4. We could show a loading state for them. / Drew: How many accounts are we talking about? / Kai: Maybe fifteen. Our top-tier enterprise accounts. / Drew: Those are the accounts that care the most about the dashboard feature. Showing them a loading spinner when everyone else gets instant results is not a great look. / Kai: I hear you but the alternative is building the full caching layer this sprint, which means either the migration or the dashboard slips. / Robin: Sage, the frontend bundle size concern you raised in standup yesterday — does that affect our timeline for the dashboard feature? Because if the new charting library adds significant weight, we might need to factor in optimization work too.",
+      "event_ids": [
+        "OE-008"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T63-68",
+      "turn_start_id": 63,
+      "turn_end_id": 68,
+      "excerpt": "Robin: Okay. Last thing. I want to make sure we're all on the same page about this sprint. We're committing to database migration and dashboard analytics. The migration is backend-contained, Kai owns it, target is done by end of week one. Dashboard is the full sprint, frontend and backend in parallel, with a QA pass in the last two days. The CSV bug is a hotfix on a separate track, shipped by Wednesday. Notification preferences and caching move to sprint 4. Everyone clear? / Kai: Clear. / Sage: Yep. / Drew: Good. / Parker: Clear. / Reese: All good.",
+      "event_ids": [
+        "OE-011"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T19-20",
+      "turn_start_id": 19,
+      "turn_end_id": 20,
+      "excerpt": "Robin: Can you make the call on slide-over versus modal by end of day tomorrow, Reese? That way Sage's team can plan around it. / Reese: Yeah, I'll have a decision tomorrow. I'll send it to the Slack channel.",
+      "event_ids": [
+        "OE-012"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T43-44",
+      "turn_start_id": 43,
+      "turn_end_id": 44,
+      "excerpt": "Robin: So a day total — half-day fix, half-day test coverage. Kai, can Tomas start on that today? / Kai: Yeah, I'll have him on it this morning.",
+      "event_ids": [
+        "OE-013",
+        "OE-026"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T47-48",
+      "turn_start_id": 47,
+      "turn_end_id": 48,
+      "excerpt": "Robin: I don't want to solve that problem today but I do want to make sure the dashboard feature doesn't ship with the same gaps. Parker, can you write up coverage requirements for the dashboard module before the team starts building? That way everyone knows what the QA bar is from day one. / Parker: Sure. I can have that ready by tomorrow afternoon.",
+      "event_ids": [
+        "OE-014"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T49-50",
+      "turn_start_id": 49,
+      "turn_end_id": 50,
+      "excerpt": "Robin: Great. Let me start pulling together assignments. Kai, get the migration script reviewed by Thursday. I want a second set of eyes on it before we run it in staging. / Kai: Tomas can review it. I'll have it to him by Wednesday.",
+      "event_ids": [
+        "OE-015"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T51-52",
+      "turn_start_id": 51,
+      "turn_end_id": 52,
+      "excerpt": "Robin: Good. And the CSV bug fix shipped by Wednesday, Tomas owns that with Parker on test coverage. Parker, regression suite updated by end of sprint to include the new dashboard module tests. / Parker: Got it. End of sprint.",
+      "event_ids": [
+        "OE-016"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T53-58",
+      "turn_start_id": 53,
+      "turn_end_id": 58,
+      "excerpt": "Robin: Drew, I need you to own the customer impact analysis for the priority change. We're pushing notification preferences and caching to sprint 4, and the exec team needs to understand the tradeoff — specifically the dashboard latency issue for the top-tier accounts and the timeline on notifications. Can you have a draft to me by Wednesday so I can review it before the Thursday stakeholder sync? Does that work for you? / Drew: Wednesday's tight but doable. Do you want the full analysis or just the talking points? / Robin: Full analysis. I want to be able to hand it to Vivian as-is if she asks for it. One-pager, customer impact, risk mitigation, recommended messaging for sales. / Drew: Okay. I'll need the specific account list from Kai — the fifteen enterprise accounts that'll see slower dashboard loads. / Kai: I'll pull that list today and send it to you. / Drew: Thanks. Wednesday it is.",
+      "event_ids": [
+        "OE-017",
+        "OE-031"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T59-60",
+      "turn_start_id": 59,
+      "turn_end_id": 60,
+      "excerpt": "Robin: Sage, I need you to own the charting library decision for the team. Spike on the tree-shaking approach Monday morning, because if we can't get the bundle under 500K total, we may need to evaluate a lighter-weight alternative and I'd rather know that on Monday than on Thursday. Can you have a recommendation with bundle size numbers to me by Monday standup so we can adjust the sprint plan if needed? Does that timeline work? / Sage: Yeah, Monday standup. I'll have numbers.",
+      "event_ids": [
+        "OE-018",
+        "OE-032"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T61-62",
+      "turn_start_id": 61,
+      "turn_end_id": 62,
+      "excerpt": "Robin: And Reese, slide-over versus modal decision in the Slack channel by end of day tomorrow. Don't overthink it — pick the one you'd defend to a customer. / Reese: Got it.",
+      "event_ids": [
+        "OE-019"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T3",
+      "turn_start_id": 3,
+      "turn_end_id": 3,
+      "excerpt": "Robin: How much of the sprint does the migration eat?",
+      "event_ids": [
+        "OE-020"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T10",
+      "turn_start_id": 10,
+      "turn_end_id": 10,
+      "excerpt": "Robin: That lines up with what I'm hearing. Kai, you mentioned the database migration risk with the stored procedures — how does that change if we parallelize the migration with the dashboard feature? Does running both create any resource conflicts on the backend?",
+      "event_ids": [
+        "OE-021"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T21",
+      "turn_start_id": 21,
+      "turn_end_id": 21,
+      "excerpt": "Robin: Good. What about the backend for the dashboard? Kai, I know your focus is the migration but who's handling the analytics API?",
+      "event_ids": [
+        "OE-022"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T23",
+      "turn_start_id": 23,
+      "turn_end_id": 23,
+      "excerpt": "Robin: What's the actual latency impact if we defer the caching layer to sprint 4? Because the caching work was originally scoped to support the dashboard queries.",
+      "event_ids": [
+        "OE-023"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T27",
+      "turn_start_id": 27,
+      "turn_end_id": 27,
+      "excerpt": "Robin: And the remaining 5 percent?",
+      "event_ids": [
+        "OE-024"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T35",
+      "turn_start_id": 35,
+      "turn_end_id": 35,
+      "excerpt": "Robin: Is that half-day already in your eight-to-nine-day estimate?",
+      "event_ids": [
+        "OE-025"
+      ],
+      "meeting_id": "M-000006",
+      "speaker_role": "chair"
+    }
+  ],
+  "evaluation_summary": {
+    "patterns_evaluated": [
+      "purposeful_framing",
+      "focus_management",
+      "participation_management",
+      "disagreement_navigation",
+      "trust_and_credibility",
+      "resolution_and_alignment",
+      "assignment_clarity",
+      "question_quality",
+      "communication_clarity"
+    ],
+    "patterns_insufficient_signal": [],
+    "patterns_not_evaluable": [
+      "feedback_quality"
+    ]
+  },
+  "pattern_snapshot": [
+    {
+      "pattern_id": "purposeful_framing",
+      "cluster_id": "meeting_structure",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "pf_open_plus_owned_transitions",
+      "min_required_threshold": 2,
+      "evidence_span_ids": [
+        "ES-T1",
+        "ES-T12",
+        "ES-T39"
+      ],
+      "score": 0.9167,
+      "opportunity_count": 3,
+      "success_evidence_span_ids": [
+        "ES-T1",
+        "ES-T12",
+        "ES-T39"
+      ]
+    },
+    {
+      "pattern_id": "focus_management",
+      "cluster_id": "meeting_structure",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "fm_drift_episodes",
+      "min_required_threshold": 1,
+      "evidence_span_ids": [
+        "ES-T45-47"
+      ],
+      "score": 1,
+      "opportunity_count": 1,
+      "success_evidence_span_ids": [
+        "ES-T45-47"
+      ]
+    },
+    {
+      "pattern_id": "participation_management",
+      "cluster_id": "participation_dynamics",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "pm_floor_direction_moments",
+      "min_required_threshold": 2,
+      "evidence_span_ids": [
+        "ES-T8",
+        "ES-T14",
+        "ES-T41"
+      ],
+      "score": 1,
+      "opportunity_count": 3,
+      "balance_assessment": "balanced",
+      "success_evidence_span_ids": [
+        "ES-T8",
+        "ES-T14",
+        "ES-T41"
+      ]
+    },
+    {
+      "pattern_id": "disagreement_navigation",
+      "cluster_id": "participation_dynamics",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "dn_disagreement_arcs",
+      "min_required_threshold": 1,
+      "evidence_span_ids": [
+        "ES-T25-33"
+      ],
+      "score": 0.25,
+      "opportunity_count": 1,
+      "success_evidence_span_ids": []
+    },
+    {
+      "pattern_id": "trust_and_credibility",
+      "cluster_id": "participation_dynamics",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "tc_high_stakes_trust_moments",
+      "min_required_threshold": 1,
+      "evidence_span_ids": [
+        "ES-T45-47"
+      ],
+      "score": 0.75,
+      "opportunity_count": 1,
+      "success_evidence_span_ids": [
+        "ES-T45-47"
+      ]
+    },
+    {
+      "pattern_id": "resolution_and_alignment",
+      "cluster_id": "decisions_accountability",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "ra_target_owned_closures",
+      "min_required_threshold": 2,
+      "evidence_span_ids": [
+        "ES-T12",
+        "ES-T63-68"
+      ],
+      "score": 0.75,
+      "opportunity_count": 2,
+      "success_evidence_span_ids": [
+        "ES-T63-68"
+      ]
+    },
+    {
+      "pattern_id": "assignment_clarity",
+      "cluster_id": "decisions_accountability",
+      "scoring_type": "complexity_tiered",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "ac_assignments_initiated_or_accepted",
+      "min_required_threshold": 2,
+      "evidence_span_ids": [
+        "ES-T19-20",
+        "ES-T43-44",
+        "ES-T47-48",
+        "ES-T49-50",
+        "ES-T51-52",
+        "ES-T53-58",
+        "ES-T59-60",
+        "ES-T61-62"
+      ],
+      "score": 0.9688,
+      "opportunity_count": 8,
+      "simple_count": 5,
+      "complex_count": 3,
+      "success_evidence_span_ids": [
+        "ES-T19-20",
+        "ES-T43-44",
+        "ES-T47-48",
+        "ES-T49-50",
+        "ES-T51-52",
+        "ES-T53-58",
+        "ES-T59-60",
+        "ES-T61-62"
+      ]
+    },
+    {
+      "pattern_id": "question_quality",
+      "cluster_id": "communication_quality",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "qq_substantive_questions",
+      "min_required_threshold": 3,
+      "evidence_span_ids": [
+        "ES-T3",
+        "ES-T10",
+        "ES-T21",
+        "ES-T23",
+        "ES-T27",
+        "ES-T35",
+        "ES-T43-44"
+      ],
+      "score": 0.9286,
+      "opportunity_count": 7,
+      "success_evidence_span_ids": [
+        "ES-T3",
+        "ES-T10",
+        "ES-T21",
+        "ES-T27",
+        "ES-T35",
+        "ES-T43-44"
+      ]
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "cluster_id": "communication_quality",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "cc_substantive_turns_3plus_sentences",
+      "min_required_threshold": 3,
+      "evidence_span_ids": [
+        "ES-T1",
+        "ES-T12",
+        "ES-T39",
+        "ES-T53-58",
+        "ES-T59-60"
+      ],
+      "score": 0.9583,
+      "opportunity_count": 5,
+      "success_evidence_span_ids": [
+        "ES-T1",
+        "ES-T12",
+        "ES-T39",
+        "ES-T53-58",
+        "ES-T59-60"
+      ]
+    },
+    {
+      "pattern_id": "feedback_quality",
+      "cluster_id": "communication_quality",
+      "scoring_type": "multi_element",
+      "evaluable_status": "not_evaluable",
+      "denominator_rule_id": "fq_feedback_instances",
+      "min_required_threshold": 2,
+      "evidence_span_ids": []
+    }
+  ],
+  "experiment_tracking": {
+    "active_experiment": {
+      "experiment_id": "EXP-000000",
+      "status": "none"
+    },
+    "detection_in_this_meeting": null
+  },
+  "coaching": {
+    "executive_summary": "You ran this meeting with strong structure, sharp questions, and unusually clear assignments, so the team left knowing what the sprint is and who owns what. Your biggest leverage point is what happened when the dashboard performance concern got real: instead of working the disagreement to closure, you pivoted to another risk. That keeps momentum in the moment, but it can leave substantive tension unresolved and make the room feel like hard tradeoffs are being managed around rather than managed through.",
+    "coaching_themes": [
+      {
+        "theme": "Strong meeting control, but not yet strong conflict closure",
+        "explanation": "You consistently framed topics, pulled in the right functions, and translated discussion into concrete action items. The main exception was the exchange about top-tier accounts getting slower dashboard loads: once product challenged the compromise, you redirected to bundle-size risk instead of naming the tradeoff and working the disagreement toward a decision or explicit park.",
+        "related_patterns": [
+          "purposeful_framing",
+          "participation_management",
+          "disagreement_navigation",
+          "resolution_and_alignment"
+        ],
+        "priority": "primary"
+      },
+      {
+        "theme": "Operational clarity is a real strength for you",
+        "explanation": "You made it easy for people to contribute and then leave with crisp ownership. The opening laid out the sprint choices clearly, your questions exposed capacity and risk constraints, and your assignment sequence near the end gave owners, deadlines, and deliverables with very little ambiguity.",
+        "related_patterns": [
+          "purposeful_framing",
+          "assignment_clarity",
+          "question_quality",
+          "communication_clarity"
+        ],
+        "priority": "secondary"
+      }
+    ],
+    "strengths": [
+      {
+        "pattern_id": "assignment_clarity",
+        "message": "You were especially strong when you turned discussion into work. When you gave Drew the customer impact analysis and Sage the charting-library recommendation, you paired ownership, deadline, concrete output, and the reason it mattered, then checked whether the timing worked. That kind of delegation reduces rework and keeps accountability clean."
+      },
+      {
+        "pattern_id": "communication_clarity",
+        "message": "Your verbal structure was consistently strong. In the opening and again in the final recap, you stated the main point early, named the tradeoffs plainly, and kept the discussion moving without people having to decode what you meant. That clarity gave the team a stable frame for a fairly complex planning conversation."
+      }
+    ],
+    "focus": [
+      {
+        "pattern_id": "disagreement_navigation",
+        "message": "Your highest-leverage improvement is staying with the hard disagreement long enough to either resolve it or explicitly park it with a next step. In the dashboard latency exchange, you had a real strategic tension on the table, but by pivoting to another issue you left the customer-impact concern hanging. If you get better at naming and closing those moments, your already-strong meeting leadership will feel more decisive and more trustworthy."
+      }
+    ],
+    "micro_experiment": [
+      {
+        "experiment_id": "EXP-260330",
+        "title": "Name the tradeoff before you move on",
+        "instruction": "The next three times someone pushes back on a plan in a meeting, pause before redirecting. Say one sentence that fairly names their concern, one sentence that names the competing constraint, and then either make the call or assign a concrete follow-up owner and timing.",
+        "success_marker": "You can point to three disagreement moments where you explicitly named both sides of the tradeoff before redirecting, and each one ended with either a decision or a clear next step.",
+        "pattern_id": "disagreement_navigation",
+        "evidence_span_ids": [
+          "ES-T25-33"
+        ]
+      }
+    ],
+    "pattern_coaching": [
+      {
+        "pattern_id": "purposeful_framing",
+        "notes": "You gave the meeting a strong backbone from the start. In your opening, you named the three things the team needed to sort out and what the prioritization section needed to produce, and later you marked the shift to the production bug with enough context that people immediately knew why it mattered. That made the conversation feel intentional rather than reactive.",
+        "coaching_note": null,
+        "best_success_span_id": "ES-T1"
+      },
+      {
+        "pattern_id": "focus_management",
+        "notes": "When the conversation on test coverage started to widen into a larger quality discussion, you handled the scope boundary well. You explicitly said you did not want to solve the broader problem in that moment, but you still converted the concern into a useful next action for the dashboard work. That protected the meeting's purpose without dismissing the risk.",
+        "coaching_note": null,
+        "best_success_span_id": "ES-T45-47"
+      },
+      {
+        "pattern_id": "participation_management",
+        "notes": "You did more than just ask for input broadly; you brought in the functions that had not yet spoken on the specific issue. Inviting product on priority order, design before committing to the dashboard approach, and QA before release decisions helped the plan reflect real dependencies instead of whoever spoke first.",
+        "coaching_note": null,
+        "best_success_span_id": "ES-T8"
+      },
+      {
+        "pattern_id": "disagreement_navigation",
+        "notes": "You at least surfaced more detail by asking about the remaining 5 percent, which kept the tradeoff visible for a moment instead of glossing over it immediately. That showed you recognized there was a real issue underneath the proposed workaround.",
+        "coaching_note": "When product pushed on the impact to top-tier accounts, that was the moment to name the disagreement explicitly and work it. Instead, you redirected to bundle-size risk, which moved the meeting forward procedurally but left the core tension unresolved: are you willing to accept a degraded experience for the most important accounts in order to preserve sprint scope? Your next step is not to avoid these moments, but to summarize both sides and either make the call or park it with a clear owner and timing.",
+        "suggested_rewrite": "I'm hearing a real tradeoff here. Drew is saying slower loads for our top-tier accounts may undercut the value of shipping the dashboard, and Kai is saying full caching this sprint likely pushes either the migration or the feature. Let's make the call explicitly: are we comfortable shipping with the pre-aggregation workaround for one sprint, or do we want an alternative recommendation by tomorrow?",
+        "rewrite_for_span_id": "ES-T25-33",
+        "best_success_span_id": null
+      },
+      {
+        "pattern_id": "trust_and_credibility",
+        "notes": null,
+        "coaching_note": null,
+        "best_success_span_id": null
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "notes": "Your final sprint recap was strong. You restated the commitments in concrete terms, including owners and timing, and then explicitly checked that everyone was clear. That is the kind of closure that makes downstream execution much cleaner.",
+        "coaching_note": "Earlier, when you decided on database migration plus dashboard analytics, you named the decision clearly but moved on without checking whether everyone shared the implications. In this meeting that mattered because unresolved concerns about dashboard performance surfaced shortly afterward. A quick alignment check right there could have exposed that tension sooner and made the later disagreement easier to handle.",
+        "suggested_rewrite": "So we're going with database migration and dashboard analytics this sprint, and notifications plus caching move to sprint 4. Before we move into build planning, is anyone carrying a concern with that tradeoff we need to surface now?",
+        "rewrite_for_span_id": "ES-T12",
+        "best_success_span_id": "ES-T63-68"
+      },
+      {
+        "pattern_id": "assignment_clarity",
+        "notes": "This was one of your strongest areas in the meeting. Your assignments were specific and executable, especially when you told Drew exactly what the one-pager needed to include and when you told Sage what decision needed to come back by Monday standup with bundle-size numbers. People did not have to guess what done looked like.",
+        "coaching_note": null,
+        "best_success_span_id": "ES-T53-58"
+      },
+      {
+        "pattern_id": "question_quality",
+        "notes": "Your questions were mostly sharp and decision-serving. You used them to test capacity, surface resource conflicts, and deepen risk details, like asking whether parallelizing the migration created backend conflicts and whether the half-day optimization work was already in the estimate. Those questions advanced the plan instead of just generating more talk.",
+        "coaching_note": null,
+        "best_success_span_id": "ES-T10"
+      },
+      {
+        "pattern_id": "communication_clarity",
+        "notes": null,
+        "coaching_note": null,
+        "best_success_span_id": null
+      }
+    ],
+    "experiment_coaching": null
+  }
+}

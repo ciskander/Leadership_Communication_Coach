@@ -1,0 +1,22 @@
+{
+  "pattern_coaching_edits": {
+    "trust_and_credibility": {
+      "notes": "SUPPRESS"
+    },
+    "communication_clarity": {
+      "notes": "SUPPRESS"
+    }
+  },
+  "changes": [
+    {
+      "field": "pattern_coaching_edits.trust_and_credibility.notes",
+      "action": "suppressed",
+      "reason": "The observation is mainly about naming a scope boundary and redirecting to next action, which belongs under focus_management. It does not add a distinct trust consequence beyond the focus-management point."
+    },
+    {
+      "field": "pattern_coaching_edits.communication_clarity.notes",
+      "action": "suppressed",
+      "reason": "The praise is largely repackaging strengths already covered more specifically by purposeful_framing and assignment_clarity. It adds little distinct insight about substantive clarity versus framing, closure, or task specification."
+    }
+  ]
+}

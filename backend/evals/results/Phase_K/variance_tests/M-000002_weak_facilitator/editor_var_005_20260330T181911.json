@@ -1,0 +1,86 @@
+{
+  "executive_summary": "You kept trying to create momentum in a meeting that lacked enough structure to support it. The main issue was not effort; it was repeatedly declaring progress before the underlying constraints, owners, or tradeoffs were actually resolved. That showed up most sharply when you made commitments engineering had not validated and when you closed decisions the room was still actively contesting. Your highest-leverage shift is to get more disciplined at high-stakes junctions: state the decision, test whether the dependencies are actually resolved, and only then close or assign.",
+  "focus_message": "Your highest-leverage gap is credibility under pressure. In this meeting, confidence dropped when you gave dates and commitments that Priya had not validated and when you spoke for her in front of the group. The fix is simple but high impact: in tense moments, stop short of certainty until the owner has confirmed what they can actually support.",
+  "micro_experiment_edits": {
+    "instruction": "For every high-stakes decision or commitment, pause and validate before you declare. Use one sentence such as: 'What can you actually commit to?' or 'I'm not going to put a date on this until the owner confirms it.' Do not state a date, promise, or owner acceptance on someone else's behalf until they have said it themselves in the room.",
+    "success_marker": "In your next meeting, you explicitly validate at least three commitments before naming them, and you avoid making any unvalidated promise on behalf of another person."
+  },
+  "pattern_coaching_edits": {
+    "participation_management": {
+      "notes": "SUPPRESS",
+      "coaching_note": "The issue here was not that you never invited input; it was that you relied on generic open-floor prompts at moments that needed directed facilitation. Questions like 'are we all good with that?' and 'what do you guys think?' let the strongest voices keep dominating while the specific functions you needed were not explicitly brought in. In this room, better participation management would have meant naming the people whose input was required before trying to close.",
+      "suggested_rewrite": "Before we close this, Dana, I need your read on the enterprise impact. Morgan, I need your view on whether legal can support the exception path. Then we'll decide."
+    },
+    "assignment_clarity": {
+      "notes": "SUPPRESS",
+      "coaching_note": "Too many assignments were vague enough that people had to stop and clarify what you meant. The exchange with Priya after 'plan it and let me know' is the clearest example: she immediately had to ask what you wanted, in what order, and whether she was validating a date or planning the work first. In a launch meeting, that kind of ambiguity slows execution because the owner leaves without a usable next step."
+    },
+    "question_quality": {
+      "best_success_span_id": "ES-T72"
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "resolution_and_alignment",
+      "oe_index": 4,
+      "reason": "Saying 'So we're good on launch date. April 7th' while open objections and unresolved dependencies remained is not a genuine resolution/alignment success moment. This is premature closure already captured elsewhere in the pattern and should not count as a positive closure event."
+    }
+  ],
+  "changes": [
+    {
+      "field": "executive_summary",
+      "action": "rewritten",
+      "reason": "Sharpened the lead and tied the main issue more directly to premature closure, unresolved dependencies, and unvalidated commitments."
+    },
+    {
+      "field": "focus_message",
+      "action": "rewritten",
+      "reason": "Made the trust-and-credibility focus more concrete and grounded in the meeting's most visible credibility losses."
+    },
+    {
+      "field": "micro_experiment_edits.instruction",
+      "action": "rewritten",
+      "reason": "Tightened the experiment language so the behavioral move is simpler and more usable in real time."
+    },
+    {
+      "field": "micro_experiment_edits.success_marker",
+      "action": "rewritten",
+      "reason": "Kept the structure but made the success condition clearer and easier to observe."
+    },
+    {
+      "field": "pattern_coaching_edits.participation_management.notes",
+      "action": "suppressed",
+      "reason": "There was no meaningful positive participation-management behavior here; adding praise would overstate thin evidence."
+    },
+    {
+      "field": "pattern_coaching_edits.participation_management.coaching_note",
+      "action": "rewritten",
+      "reason": "Kept the coaching aligned to participation mechanics and made the developmental point more specific to this meeting."
+    },
+    {
+      "field": "pattern_coaching_edits.participation_management.suggested_rewrite",
+      "action": "rewritten",
+      "reason": "Made the rewrite sound more like targeted facilitation in this specific room."
+    },
+    {
+      "field": "pattern_coaching_edits.assignment_clarity.notes",
+      "action": "suppressed",
+      "reason": "The positive note overstated assignment quality. The few clearer commitments were exceptions, while the overall assignment pattern in the meeting was inconsistent and confusing."
+    },
+    {
+      "field": "pattern_coaching_edits.assignment_clarity.coaching_note",
+      "action": "rewritten",
+      "reason": "Sharpened the core issue: vague sequencing and deliverable ambiguity, especially with Priya."
+    },
+    {
+      "field": "pattern_coaching_edits.question_quality.best_success_span_id",
+      "action": "changed",
+      "reason": "The risk-probing question to Priya is the stronger success example because it surfaces a decision-relevant constraint more directly than the Covington question."
+    },
+    {
+      "field": "oe_removals",
+      "action": "removed",
+      "reason": "Flagged a misclassified resolution-and-alignment event that should not count as a positive closure moment."
+    }
+  ]
+}

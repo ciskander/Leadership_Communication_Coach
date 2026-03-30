@@ -1,0 +1,94 @@
+{
+  "executive_summary": "You created motion in a meeting that needed decisions, but several times you declared answers before the underlying owners, constraints, or tradeoffs were actually settled. That hurt you most in two places: credibility and closure. When you named dates engineering had not validated, or spoke for Priya before she had committed, the room lost confidence. And when you tried to close pricing or launch questions before objections were resolved, people had to reopen the issue in real time. Your highest-leverage shift is simple: stop closing faster than the work is ready. In the key moment, validate the dependency, name what is still unresolved, and only commit to what the actual owner can stand behind.",
+  "focus_message": "Your highest-leverage gap is credibility under pressure. In this meeting, confidence dropped when you committed to dates and next steps that the accountable owners had not validated, especially with Priya on the data export timeline. If you become stricter about not promising what hasn't been confirmed, your decisions will face less pushback and land with more authority.",
+  "micro_experiment_edits": {
+    "instruction": "For every high-stakes commitment, pause before you declare it and validate it out loud: 'What can you actually commit to?' or 'I'm not going to name a date until the owner confirms it.' Do not give a date, promise a deliverable, or answer on someone else's behalf until that person has said it themselves in the room.",
+    "success_marker": "In your next meeting, you explicitly validate at least three commitments before closing them, and you avoid making any promise or date commitment on behalf of another person."
+  },
+  "pattern_coaching_edits": {
+    "participation_management": {
+      "notes": "SUPPRESS"
+    },
+    "resolution_and_alignment": {
+      "notes": "Near the end, your recap gave the room the clearest shared picture of where things actually stood: pricing direction without final numbers, the need for an enterprise framework, April 7 as the launch date, data export still undated, and onboarding still open. That kind of explicit state-of-play summary is useful when a meeting has gotten messy.",
+      "best_success_span_id": "ES-T114-116"
+    },
+    "assignment_clarity": {
+      "notes": "SUPPRESS"
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "resolution_and_alignment",
+      "oe_index": 0,
+      "reason": "This is not a genuine successful closure moment. Jordan proposes tiered pricing and asks if everyone is good with it, but a substantive objection follows immediately. The event over-credits premature closure as alignment."
+    },
+    {
+      "pattern_id": "resolution_and_alignment",
+      "oe_index": 4,
+      "reason": "This is misclassified as topic closure. 'So we're good on launch date' is immediately contradicted by an unresolved communication issue raised by Lee. This belongs with premature closure concerns, not successful resolution."
+    },
+    {
+      "pattern_id": "assignment_clarity",
+      "oe_index": 5,
+      "reason": "This assignment is thinner than scored. 'This week. Definitely by Thursday.' provides timing but not a clearly restated deliverable in the moment; the surrounding exchange shows ongoing ambiguity and weak confidence."
+    },
+    {
+      "pattern_id": "assignment_clarity",
+      "oe_index": 7,
+      "reason": "This is not a true all-elements assignment. 'I'll send a recap email tonight' gives owner and timing, but Casey's question highlights that the actual open items and owners are still vague."
+    },
+    {
+      "pattern_id": "assignment_clarity",
+      "oe_index": 8,
+      "reason": "This is too thin to count as full assignment clarity. 'I'll ping you after lunch' is a contact commitment, not a clearly defined work assignment with deliverable and outcome."
+    }
+  ],
+  "changes": [
+    {
+      "field": "executive_summary",
+      "action": "rewritten",
+      "reason": "Sharpened the lead and emphasized the two highest-value issues visible in the transcript: premature closure and credibility loss from unvalidated commitments."
+    },
+    {
+      "field": "focus_message",
+      "action": "rewritten",
+      "reason": "Made the trust-and-credibility focus more direct and grounded in the Priya/data export moments."
+    },
+    {
+      "field": "micro_experiment_edits.instruction",
+      "action": "rewritten",
+      "reason": "Tightened the experiment language so the behavioral move is clearer and easier to apply in live meetings."
+    },
+    {
+      "field": "micro_experiment_edits.success_marker",
+      "action": "rewritten",
+      "reason": "Made the success condition more concrete and aligned to the trust-and-credibility behavior being targeted."
+    },
+    {
+      "field": "pattern_coaching_edits.participation_management.notes",
+      "action": "suppressed",
+      "reason": "There is no meaningful positive participation-management behavior here; the meeting shows weak turn management overall and no strong evidence of active distribution of voice."
+    },
+    {
+      "field": "pattern_coaching_edits.resolution_and_alignment.notes",
+      "action": "rewritten",
+      "reason": "Kept the aligned positive observation but made it more specific to what Jordan actually did in the recap and why it mattered."
+    },
+    {
+      "field": "pattern_coaching_edits.resolution_and_alignment.best_success_span_id",
+      "action": "changed",
+      "reason": "Confirmed the late recap as the strongest genuine success example for this pattern."
+    },
+    {
+      "field": "pattern_coaching_edits.assignment_clarity.notes",
+      "action": "suppressed",
+      "reason": "The positive note overstates assignment clarity. The meeting shows repeated ambiguity even when deadlines are named, so the praise is misleading."
+    },
+    {
+      "field": "oe_removals",
+      "action": "removed",
+      "reason": "Flagged misclassified or over-credited opportunity events that treat premature closure or thin commitments as stronger examples than the transcript supports."
+    }
+  ]
+}

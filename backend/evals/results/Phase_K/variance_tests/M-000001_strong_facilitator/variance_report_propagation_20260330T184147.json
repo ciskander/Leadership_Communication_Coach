@@ -1,0 +1,436 @@
+{
+  "n_variants": 10,
+  "n_valid": 10,
+  "coached_patterns": [
+    "purposeful_framing",
+    "focus_management",
+    "participation_management",
+    "disagreement_navigation",
+    "resolution_and_alignment",
+    "assignment_clarity",
+    "question_quality",
+    "communication_clarity"
+  ],
+  "per_pattern_ratings": {
+    "purposeful_framing": {
+      "adequate": 7,
+      "insightful": 3
+    },
+    "focus_management": {
+      "insightful": 10
+    },
+    "participation_management": {
+      "adequate": 8,
+      "insightful": 2
+    },
+    "disagreement_navigation": {
+      "adequate": 10
+    },
+    "resolution_and_alignment": {
+      "pedantic": 9,
+      "adequate": 1
+    },
+    "assignment_clarity": {
+      "adequate": 10
+    },
+    "question_quality": {
+      "insightful": 8,
+      "adequate": 2
+    },
+    "communication_clarity": {
+      "adequate": 9,
+      "insightful": 1
+    }
+  },
+  "unanimous_rate": 0.375,
+  "unanimous_count": 3,
+  "total_patterns": 8,
+  "flip_patterns": [
+    {
+      "pattern_id": "purposeful_framing",
+      "ratings": {
+        "adequate": 7,
+        "insightful": 3
+      }
+    },
+    {
+      "pattern_id": "participation_management",
+      "ratings": {
+        "adequate": 8,
+        "insightful": 2
+      }
+    },
+    {
+      "pattern_id": "resolution_and_alignment",
+      "ratings": {
+        "pedantic": 9,
+        "adequate": 1
+      }
+    },
+    {
+      "pattern_id": "question_quality",
+      "ratings": {
+        "insightful": 8,
+        "adequate": 2
+      }
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "ratings": {
+        "adequate": 9,
+        "insightful": 1
+      }
+    }
+  ],
+  "flip_details": [
+    {
+      "pattern_id": "purposeful_framing",
+      "variants": [
+        {
+          "variant": 1,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 2,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "insightful"
+        },
+        {
+          "variant": 3,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 4,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "insightful"
+        },
+        {
+          "variant": 5,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 6,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "insightful"
+        },
+        {
+          "variant": 7,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 8,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 9,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 10,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        }
+      ]
+    },
+    {
+      "pattern_id": "participation_management",
+      "variants": [
+        {
+          "variant": 1,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 2,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 3,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 4,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "insightful"
+        },
+        {
+          "variant": 5,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 6,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "insightful"
+        },
+        {
+          "variant": 7,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 8,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 9,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 10,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        }
+      ]
+    },
+    {
+      "pattern_id": "resolution_and_alignment",
+      "variants": [
+        {
+          "variant": 1,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "pedantic"
+        },
+        {
+          "variant": 2,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "pedantic"
+        },
+        {
+          "variant": 3,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "pedantic"
+        },
+        {
+          "variant": 4,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 5,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "pedantic"
+        },
+        {
+          "variant": 6,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "pedantic"
+        },
+        {
+          "variant": 7,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "pedantic"
+        },
+        {
+          "variant": 8,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "pedantic"
+        },
+        {
+          "variant": 9,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "pedantic"
+        },
+        {
+          "variant": 10,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "pedantic"
+        }
+      ]
+    },
+    {
+      "pattern_id": "question_quality",
+      "variants": [
+        {
+          "variant": 1,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "insightful"
+        },
+        {
+          "variant": 2,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "insightful"
+        },
+        {
+          "variant": 3,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "insightful"
+        },
+        {
+          "variant": 4,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "insightful"
+        },
+        {
+          "variant": 5,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "insightful"
+        },
+        {
+          "variant": 6,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "insightful"
+        },
+        {
+          "variant": 7,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "insightful"
+        },
+        {
+          "variant": 8,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 9,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "insightful"
+        },
+        {
+          "variant": 10,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        }
+      ]
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "variants": [
+        {
+          "variant": 1,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 2,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 3,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 4,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "insightful"
+        },
+        {
+          "variant": 5,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 6,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 7,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 8,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 9,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        },
+        {
+          "variant": 10,
+          "editor_notes": "pass",
+          "editor_cnote": "pass",
+          "judge_rating": "adequate"
+        }
+      ]
+    }
+  ],
+  "aggregate_pcts": {
+    "insightful": {
+      "mean": 0.3,
+      "stdev": 0.1581
+    },
+    "adequate": {
+      "mean": 0.5875,
+      "stdev": 0.1324
+    },
+    "pedantic": {
+      "mean": 0.1125,
+      "stdev": 0.0395
+    },
+    "wrong": {
+      "mean": 0.0,
+      "stdev": 0.0
+    }
+  },
+  "coaching_value": {
+    "medium": 10
+  },
+  "would_approve": {
+    "True": 10
+  }
+}

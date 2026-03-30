@@ -1,0 +1,14 @@
+{
+  "pattern_coaching_edits": {
+    "trust_and_credibility": {
+      "notes": "SUPPRESS"
+    }
+  },
+  "changes": [
+    {
+      "field": "pattern_coaching.trust_and_credibility.notes",
+      "action": "suppressed",
+      "reason": "This observation is better captured as focus management. The behavior highlighted is a clean deferral and boundary-setting move, and the note does not add a distinct trust consequence beyond what the focus_management coaching already covers."
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "executive_summary": "You kept trying to create momentum in a messy meeting, but the main failure mode was credibility under pressure: you repeatedly declared decisions, dates, and next steps before the underlying owners or constraints were actually settled. That forced people to reopen issues in real time and weakened confidence in your calls. Your biggest leverage is to stop closing the room faster than the work is ready: validate the dependency, name what is still unresolved, and only state commitments the accountable owner can actually support.",
+  "focus_message": "Your highest-leverage gap is credibility under pressure. In this meeting, confidence dropped when you announced commitments that key owners had not validated — especially the April 21 date for data export and the expectation that Priya would produce a date before launch. If you get more disciplined about not speaking past the facts in the room, your decisions will face less pushback and your follow-through will carry more weight.",
+  "micro_experiment_edits": {
+    "instruction": "For every high-stakes decision or commitment, pause and validate it out loud before you declare it. Use a sentence like: 'What can you actually commit to?' or 'I'm not going to name a date until the owner confirms it.' Do not state a date, promise, or owner commitment on someone else's behalf until they have said it themselves.",
+    "success_marker": "In your next meeting, you explicitly validate at least three commitments before naming them, and you avoid making any promise or timeline on behalf of another person that they have not confirmed themselves."
+  },
+  "pattern_coaching_edits": {
+    "participation_management": {
+      "notes": "SUPPRESS"
+    },
+    "assignment_clarity": {
+      "notes": "SUPPRESS",
+      "coaching_note": "Your issue was less the presence of deadlines than the fact that several assignments were too vague to execute without immediate follow-up. The clearest example was telling Priya to 'plan it and let me know,' which left her unclear whether you wanted a validated ship date, a sprint plan, or both. In a launch meeting, that kind of ambiguity pushes unresolved thinking downstream and creates more churn.",
+      "suggested_rewrite": "Priya, don't commit to a date yet. First, plan the work and tell me by tomorrow what date you can credibly stand behind for data export, plus any decisions you need from me to make that plan real."
+    },
+    "resolution_and_alignment": {
+      "notes": "SUPPRESS"
+    }
+  },
+  "changes": [
+    {
+      "field": "executive_summary",
+      "action": "rewritten",
+      "reason": "Sharpened the lead to emphasize the highest-leverage issue: credibility erosion from declaring unvalidated decisions and commitments."
+    },
+    {
+      "field": "focus_message",
+      "action": "rewritten",
+      "reason": "Made the trust-and-credibility focus more specific to the meeting evidence and clearer about the behavioral shift required."
+    },
+    {
+      "field": "micro_experiment_edits.instruction",
+      "action": "rewritten",
+      "reason": "Tightened the experiment language so the behavior is easier to apply in real time during high-stakes decisions."
+    },
+    {
+      "field": "micro_experiment_edits.success_marker",
+      "action": "rewritten",
+      "reason": "Clarified what success looks like in observable terms tied directly to the focus pattern."
+    },
+    {
+      "field": "pattern_coaching_edits.participation_management.notes",
+      "action": "suppressed",
+      "reason": "There was no meaningful positive participation-management behavior in the meeting; keeping a positive note here would overstate a weak signal."
+    },
+    {
+      "field": "pattern_coaching_edits.assignment_clarity.notes",
+      "action": "suppressed",
+      "reason": "The positive note is technically grounded but not meaningfully helpful given the broader pattern of ambiguous assignments and follow-up confusion."
+    },
+    {
+      "field": "pattern_coaching_edits.assignment_clarity.coaching_note",
+      "action": "rewritten",
+      "reason": "Kept the coaching aligned to assignment clarity while making the development point more specific and consequential."
+    },
+    {
+      "field": "pattern_coaching_edits.assignment_clarity.suggested_rewrite",
+      "action": "rewritten",
+      "reason": "Made the rewrite sound more natural and more precise about owner, output, and timing."
+    },
+    {
+      "field": "pattern_coaching_edits.resolution_and_alignment.notes",
+      "action": "suppressed",
+      "reason": "The recap was structurally clear, but it did not represent an actual strength in resolution and alignment because the room immediately challenged that little had truly been resolved."
+    }
+  ]
+}

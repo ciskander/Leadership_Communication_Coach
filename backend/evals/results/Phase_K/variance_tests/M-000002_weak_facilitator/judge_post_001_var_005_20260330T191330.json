@@ -1,0 +1,426 @@
+{
+  "coaching_insight_quality": {
+    "items": [
+      {
+        "pattern_id": "purposeful_framing",
+        "rating": "insightful",
+        "explanation": "This is real coaching, not taxonomy theater. The leader opened a high-stakes meeting with no agenda, no decision framing, and no sequencing. The note correctly links that weak opening to later sprawl and re-litigation."
+      },
+      {
+        "pattern_id": "focus_management",
+        "rating": "insightful",
+        "explanation": "Strong and useful. It correctly identifies that Jordan was not merely failing to manage tangents but actively generating them. That distinction matters to a senior leader."
+      },
+      {
+        "pattern_id": "participation_management",
+        "rating": "adequate",
+        "explanation": "Reasonable point, but somewhat narrower than the real issue. The problem was less generic participation balance and more failure to deliberately sequence the key decision-makers and dependency owners. Still useful, but a bit pattern-labeled."
+      },
+      {
+        "pattern_id": "disagreement_navigation",
+        "rating": "insightful",
+        "explanation": "This gets to the heart of Jordan's behavior: he kept trying to bypass live conflict with workarounds, which caused the conflict to resurface harder. That is senior-leader-relevant coaching."
+      },
+      {
+        "pattern_id": "trust_and_credibility",
+        "rating": "insightful",
+        "explanation": "This is the sharpest and highest-value insight in the report. Jordan repeatedly made commitments others had not validated, especially engineering. Calling this a credibility problem under pressure is exactly right."
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "rating": "insightful",
+        "explanation": "Very useful. Jordan repeatedly declared closure where none existed. That is not just facilitation weakness; it creates downstream execution risk. Good coaching focus."
+      },
+      {
+        "pattern_id": "question_quality",
+        "rating": "adequate",
+        "explanation": "The observation about leading questions is valid, especially with Priya. But this is a secondary issue relative to decision hygiene and credibility. Useful, but not particularly deep."
+      },
+      {
+        "pattern_id": "communication_clarity",
+        "rating": "adequate",
+        "explanation": "True that Jordan rambled, especially on Vantage, but this reads a bit like a stylistic sub-point of larger issues already covered. It is not wrong; it is just less consequential than the report implies."
+      }
+    ],
+    "pattern_first_detected": true,
+    "overall_notes": "Overall the coaching is better than average and mostly grounded in the transcript. The strongest parts are around premature closure, unsupported commitments, and failure to surface dependencies before deciding. Where it starts to feel pattern-first is in splitting closely related problems into many categories, which creates some redundancy and dilutes the core message."
+  },
+  "evidence_quality": {
+    "items": [
+      {
+        "pattern_id": "purposeful_framing",
+        "evidence_excerpt_start": "Jordan: Hey everyone, thanks for, uh, squeezing this",
+        "rating": "strong_evidence",
+        "explanation": "This is the right opening quote. It clearly shows a lack of agenda, desired outcomes, or decision criteria.",
+        "better_evidence_exists": false,
+        "better_evidence_description": ""
+      },
+      {
+        "pattern_id": "focus_management",
+        "evidence_excerpt_start": "Jordan: So maybe we should talk about Vantage for",
+        "rating": "strong_evidence",
+        "explanation": "Excellent evidence. It demonstrates Jordan opening an unnecessary strategic tangent and getting pulled back by Casey.",
+        "better_evidence_exists": false,
+        "better_evidence_description": ""
+      },
+      {
+        "pattern_id": "participation_management",
+        "evidence_excerpt_start": "Jordan: Yeah, I think the data's clear. Tiered",
+        "rating": "strong_evidence",
+        "explanation": "Good evidence of a broad, undisciplined prompt that ignored critical stakeholders with non-obvious constraints.",
+        "better_evidence_exists": true,
+        "better_evidence_description": "The later 'What do you guys think? Is data export a launch blocker?' is an even stronger example because it invites a free-for-all on a cross-functional dependency rather than pulling in engineering, sales, and deployment in sequence."
+      },
+      {
+        "pattern_id": "disagreement_navigation",
+        "evidence_excerpt_start": "Dana: No. I've said this three times now",
+        "rating": "strong_evidence",
+        "explanation": "This is well chosen. It shows Jordan trying to leap to a workaround before the actual issue is understood or bounded.",
+        "better_evidence_exists": false,
+        "better_evidence_description": ""
+      },
+      {
+        "pattern_id": "trust_and_credibility",
+        "evidence_excerpt_start": "Jordan: We're shipping April 7th without data export.",
+        "rating": "strong_evidence",
+        "explanation": "This is the clearest credibility failure in the meeting: inventing a date and putting engineering on the hook in public.",
+        "better_evidence_exists": true,
+        "better_evidence_description": "The follow-on exchange with Lee and Priya at turns 101-107 compounds the issue and would strengthen the point by showing the pattern repeated, not just once."
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "evidence_excerpt_start": "Jordan: They're final.",
+        "rating": "strong_evidence",
+        "explanation": "Very strong. It is a clean example of Jordan asserting closure in direct contradiction to the room's actual state.",
+        "better_evidence_exists": false,
+        "better_evidence_description": ""
+      },
+      {
+        "pattern_id": "question_quality",
+        "evidence_excerpt_start": "Jordan: But probably not, right?",
+        "rating": "strong_evidence",
+        "explanation": "Good evidence of a question that pressures reassurance rather than invites accurate risk assessment.",
+        "better_evidence_exists": false,
+        "better_evidence_description": ""
+      },
+      {
+        "pattern_id": "communication_clarity",
+        "evidence_excerpt_start": "Jordan: So maybe we should talk about Vantage for",
+        "rating": "strong_evidence",
+        "explanation": "Fair evidence. The monologue is long, diffuse, and low-value relative to the immediate decision.",
+        "better_evidence_exists": false,
+        "better_evidence_description": ""
+      }
+    ],
+    "overall_notes": "Evidence quality is generally strong. The system usually anchors claims in the right moments. The main gap is that in a few places it could have selected evidence showing repeated patterns across the meeting, not just a single instance."
+  },
+  "success_evidence_quality": {
+    "items": [
+      {
+        "pattern_id": "purposeful_framing",
+        "evidence_span_id": "ES-T25",
+        "evidence_excerpt_start": "Jordan: So maybe we should talk about Vantage for",
+        "genuinely_demonstrates_pattern": false,
+        "explanation": "This does not show purposeful framing done well. It is actually evidence of drift and over-talking."
+      },
+      {
+        "pattern_id": "purposeful_framing",
+        "evidence_span_id": "ES-T70",
+        "evidence_excerpt_start": "Jordan: Okay, well, figure out a time that works.",
+        "genuinely_demonstrates_pattern": false,
+        "explanation": "This is a clumsy transition, not effective framing."
+      },
+      {
+        "pattern_id": "purposeful_framing",
+        "evidence_span_id": "ES-T110",
+        "evidence_excerpt_start": "Jordan: Oh. Okay. Uh, let's just quickly cover",
+        "genuinely_demonstrates_pattern": false,
+        "explanation": "This is the opposite of strong framing. He tries to cram an unresolved topic into five minutes."
+      },
+      {
+        "pattern_id": "focus_management",
+        "evidence_span_id": "ES-T42-43",
+        "evidence_excerpt_start": "Dana: Or we could have had this conversation two",
+        "genuinely_demonstrates_pattern": true,
+        "explanation": "This is a legitimate example of redirecting from blame/re-litigation back to present action."
+      },
+      {
+        "pattern_id": "disagreement_navigation",
+        "evidence_span_id": "ES-T78-86",
+        "evidence_excerpt_start": "Dana: It's a blocker for Meridian Health. /",
+        "genuinely_demonstrates_pattern": false,
+        "explanation": "He does acknowledge disagreement, but he still makes a call without resolving feasibility, customer impact, or timing. This is not a good example of navigating disagreement well; it is at best a mixed moment."
+      },
+      {
+        "pattern_id": "question_quality",
+        "evidence_span_id": "ES-T36",
+        "evidence_excerpt_start": "Jordan: Well, what do you need for Covington specifically?",
+        "genuinely_demonstrates_pattern": true,
+        "explanation": "This is a genuinely useful narrowing question that attempts to get concrete about the blocker."
+      },
+      {
+        "pattern_id": "question_quality",
+        "evidence_span_id": "ES-T72",
+        "evidence_excerpt_start": "Jordan: What kind of risk?",
+        "genuinely_demonstrates_pattern": true,
+        "explanation": "Not brilliant, but it is at least a direct question aimed at surfacing uncertainty."
+      },
+      {
+        "pattern_id": "communication_clarity",
+        "evidence_span_id": "ES-T114-116",
+        "evidence_excerpt_start": "Jordan: Okay, so we need another meeting on",
+        "genuinely_demonstrates_pattern": true,
+        "explanation": "This is one of the few moments where he does summarize status coherently, even if the substance is weak."
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "evidence_span_id": "ES-T10",
+        "evidence_excerpt_start": "Jordan: Yeah, I think the data's clear. Tiered",
+        "genuinely_demonstrates_pattern": false,
+        "explanation": "This is not success evidence. It is early premature closure."
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "evidence_span_id": "ES-T96",
+        "evidence_excerpt_start": "Jordan: So we're good on launch date. April",
+        "genuinely_demonstrates_pattern": false,
+        "explanation": "Again, this is failure evidence, not success."
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "evidence_span_id": "ES-T114-116",
+        "evidence_excerpt_start": "Jordan: Okay, so we need another meeting on",
+        "genuinely_demonstrates_pattern": false,
+        "explanation": "This summary is clearer than earlier moments, but it still does not demonstrate alignment. The room immediately pushes back that almost nothing was decided."
+      }
+    ],
+    "best_example_chosen_well": [
+      {
+        "pattern_id": "focus_management",
+        "rating": "best_available",
+        "explanation": "The marked best example is a legitimate redirect and probably his strongest clean facilitation moment.",
+        "better_span_description": ""
+      },
+      {
+        "pattern_id": "disagreement_navigation",
+        "rating": "better_exists",
+        "explanation": "The chosen best example is weak because Jordan still bulldozes to a decision. There may not be a truly strong example in the transcript, but the note should probably have admitted that rather than force a success case.",
+        "better_span_description": "If forced, turn 43 is a better disagreement move: he stops the blame loop. But overall there is little genuine success evidence for this pattern."
+      },
+      {
+        "pattern_id": "question_quality",
+        "rating": "best_available",
+        "explanation": "Turn 36 is probably the cleanest concrete question he asks.",
+        "better_span_description": ""
+      },
+      {
+        "pattern_id": "communication_clarity",
+        "rating": "acceptable",
+        "explanation": "The summary is indeed his clearest concise synthesis, though it still overstates resolution.",
+        "better_span_description": ""
+      }
+    ],
+    "overall_notes": "This is the weakest section of the output. The system appears to feel obligated to produce success evidence even when the leader did not actually demonstrate the pattern well. That creates obvious credibility problems in the coaching itself."
+  },
+  "rewrite_quality": {
+    "items": [
+      {
+        "pattern_id": "purposeful_framing",
+        "rating": "strong_model",
+        "matches_coaching_note": true,
+        "matches_conversational_moment": true,
+        "explanation": "Practical, concise, and directly addresses the opening failure."
+      },
+      {
+        "pattern_id": "focus_management",
+        "rating": "strong_model",
+        "matches_coaching_note": true,
+        "matches_conversational_moment": true,
+        "explanation": "This is a credible in-the-moment redirect a senior leader could actually use."
+      },
+      {
+        "pattern_id": "participation_management",
+        "rating": "strong_model",
+        "matches_coaching_note": true,
+        "matches_conversational_moment": true,
+        "explanation": "Good rewrite. It moves from vague group polling to targeted stakeholder input."
+      },
+      {
+        "pattern_id": "disagreement_navigation",
+        "rating": "strong_model",
+        "matches_coaching_note": true,
+        "matches_conversational_moment": true,
+        "explanation": "Strong because it names Dana's actual objection accurately and sequences legal input before decision."
+      },
+      {
+        "pattern_id": "trust_and_credibility",
+        "rating": "strong_model",
+        "matches_coaching_note": true,
+        "matches_conversational_moment": true,
+        "explanation": "Excellent. It replaces invented certainty with a process for getting to a credible commitment."
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "rating": "strong_model",
+        "matches_coaching_note": true,
+        "matches_conversational_moment": true,
+        "explanation": "Useful and realistic. It distinguishes current proposal from actual agreement."
+      },
+      {
+        "pattern_id": "question_quality",
+        "rating": "strong_model",
+        "matches_coaching_note": true,
+        "matches_conversational_moment": true,
+        "explanation": "Simple and better than the original; it invites risk assessment instead of reassurance."
+      },
+      {
+        "pattern_id": "communication_clarity",
+        "rating": "strong_model",
+        "matches_coaching_note": true,
+        "matches_conversational_moment": true,
+        "explanation": "A good tightening of a rambling thought into a crisp decision question."
+      }
+    ],
+    "overall_notes": "Rewrites are the strongest operational element of the coaching. They are generally specific, usable, and tied to the actual moment rather than generic leadership slogans."
+  },
+  "coaching_pattern_alignment": {
+    "items": [
+      {
+        "pattern_id": "purposeful_framing",
+        "fits_pattern": true,
+        "better_pattern": "",
+        "stretching_to_fill": false,
+        "explanation": "A natural fit."
+      },
+      {
+        "pattern_id": "focus_management",
+        "fits_pattern": true,
+        "better_pattern": "",
+        "stretching_to_fill": false,
+        "explanation": "Well matched."
+      },
+      {
+        "pattern_id": "participation_management",
+        "fits_pattern": true,
+        "better_pattern": "",
+        "stretching_to_fill": true,
+        "explanation": "Not wrong, but somewhat stretched. The deeper issue was decision orchestration and dependency management, not just participation."
+      },
+      {
+        "pattern_id": "disagreement_navigation",
+        "fits_pattern": true,
+        "better_pattern": "",
+        "stretching_to_fill": false,
+        "explanation": "Fits well."
+      },
+      {
+        "pattern_id": "trust_and_credibility",
+        "fits_pattern": true,
+        "better_pattern": "",
+        "stretching_to_fill": false,
+        "explanation": "Very strong fit."
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "fits_pattern": true,
+        "better_pattern": "",
+        "stretching_to_fill": false,
+        "explanation": "Very strong fit."
+      },
+      {
+        "pattern_id": "question_quality",
+        "fits_pattern": true,
+        "better_pattern": "",
+        "stretching_to_fill": true,
+        "explanation": "Valid but more minor than the rest; feels partly included because the taxonomy wants a note here."
+      },
+      {
+        "pattern_id": "communication_clarity",
+        "fits_pattern": true,
+        "better_pattern": "",
+        "stretching_to_fill": true,
+        "explanation": "Reasonable fit, but partly duplicative of focus management and purposeful framing."
+      }
+    ],
+    "overall_notes": "Most pattern assignments are defensible. The main issue is over-segmentation: several notes are really facets of the same executive problem—poor decision framing and premature closure under pressure."
+  },
+  "internal_consistency": {
+    "score_coaching_aligned": true,
+    "experiment_detection_coherent": false,
+    "executive_summary_reflects_findings": true,
+    "issues": [
+      "Success evidence is often inconsistent with the coaching notes; several so-called success examples are actually failure examples.",
+      "Strengths Identified says '(none)', yet multiple sections claim 'best' or 'strongest' moments. If there are no strengths, the report should say there were occasional partial positives, not imply meaningful strengths elsewhere.",
+      "Experiment Coaching is '(none)' despite the summary identifying a clear highest-leverage shift that could easily have been translated into a behavioral experiment."
+    ]
+  },
+  "executive_coach_gut_check": {
+    "balanced": true,
+    "right_growth_areas": true,
+    "leader_would_feel_respected": true,
+    "anything_important_ignored": "Yes: Jordan's failure to manage time and meeting design at a structural level is present indirectly but not called out explicitly enough. Also missing is his tendency to defer unresolved conflict to side conversations even when the whole point of the meeting was to resolve them.",
+    "anything_over_weighted": "Slightly over-weighted taxonomy slicing across question quality, participation management, and communication clarity. Those are real but secondary.",
+    "overall_coaching_value": "medium",
+    "would_approve_for_delivery": true,
+    "explanation": "I would approve this with reservations. The core diagnosis is good and would be useful to a senior leader: weak upfront framing, unsupported commitments, premature closure, and failure to resolve dependencies before calling decisions. Those are meaningful executive issues. The rewrites are practical. What keeps this from being high-value is the obvious pattern machinery in places and the weak 'success evidence,' which undermines trust in the output. A senior leader would likely find the main messages fair and actionable, but might roll their eyes at some of the forced categorization."
+  },
+  "scoring_arithmetic": {
+    "checked_patterns": [
+      {
+        "pattern_id": "purposeful_framing",
+        "reported_score": 0.65,
+        "computed_score": 0.65,
+        "match": true
+      },
+      {
+        "pattern_id": "focus_management",
+        "reported_score": 0.5,
+        "computed_score": 0.5,
+        "match": true
+      },
+      {
+        "pattern_id": "participation_management",
+        "reported_score": 0,
+        "computed_score": 0.0,
+        "match": true
+      },
+      {
+        "pattern_id": "disagreement_navigation",
+        "reported_score": 0.45,
+        "computed_score": 0.45,
+        "match": true
+      },
+      {
+        "pattern_id": "trust_and_credibility",
+        "reported_score": 0,
+        "computed_score": 0.0,
+        "match": true
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "reported_score": 0.55,
+        "computed_score": 0.55,
+        "match": true
+      },
+      {
+        "pattern_id": "assignment_clarity",
+        "reported_score": 0.4643,
+        "computed_score": 0.4643,
+        "match": true
+      },
+      {
+        "pattern_id": "question_quality",
+        "reported_score": 0.625,
+        "computed_score": 0.625,
+        "match": true
+      },
+      {
+        "pattern_id": "communication_clarity",
+        "reported_score": 0.5,
+        "computed_score": 0.5,
+        "match": true
+      }
+    ]
+  },
+  "_elapsed_sec": 66.9
+}

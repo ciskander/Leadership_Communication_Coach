@@ -1,0 +1,1134 @@
+{
+  "schema_version": "mvp.v0.4.0",
+  "meta": {
+    "analysis_id": "A-260330",
+    "taxonomy_version": "v3.0",
+    "output_mode": "coaching_first_2s1e",
+    "analysis_type": "single_meeting",
+    "generated_at": "2026-03-30T18:11:47.144734+00:00"
+  },
+  "context": {
+    "meeting_id": "M-000002",
+    "meeting_type": "project_review",
+    "target_role": "chair",
+    "meeting_date": "2026-01-01",
+    "target_speaker_name": "Jordan",
+    "target_speaker_label": "Jordan"
+  },
+  "opportunity_events": [
+    {
+      "event_id": "OE-001",
+      "pattern_id": "purposeful_framing",
+      "turn_start_id": 1,
+      "turn_end_id": 1,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "opening_topic_without_outcome"
+    },
+    {
+      "event_id": "OE-002",
+      "pattern_id": "purposeful_framing",
+      "turn_start_id": 25,
+      "turn_end_id": 25,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "topic_and_weak_outcome_attempted"
+    },
+    {
+      "event_id": "OE-003",
+      "pattern_id": "purposeful_framing",
+      "turn_start_id": 46,
+      "turn_end_id": 46,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "topic_present_outcome_absent"
+    },
+    {
+      "event_id": "OE-004",
+      "pattern_id": "purposeful_framing",
+      "turn_start_id": 70,
+      "turn_end_id": 70,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "topic_and_weak_outcome_attempted"
+    },
+    {
+      "event_id": "OE-005",
+      "pattern_id": "purposeful_framing",
+      "turn_start_id": 110,
+      "turn_end_id": 110,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "topic_and_weak_outcome_attempted"
+    },
+    {
+      "event_id": "OE-006",
+      "pattern_id": "focus_management",
+      "turn_start_id": 25,
+      "turn_end_id": 27,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0,
+      "reason_code": "target_initiated_tangent"
+    },
+    {
+      "event_id": "OE-007",
+      "pattern_id": "focus_management",
+      "turn_start_id": 42,
+      "turn_end_id": 43,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "explicit_redirect_from_past_to_present"
+    },
+    {
+      "event_id": "OE-008",
+      "pattern_id": "focus_management",
+      "turn_start_id": 48,
+      "turn_end_id": 51,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "redirect_without_substantive_boundary"
+    },
+    {
+      "event_id": "OE-009",
+      "pattern_id": "participation_management",
+      "turn_start_id": 10,
+      "turn_end_id": 10,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0,
+      "reason_code": "generic_open_floor_prompt"
+    },
+    {
+      "event_id": "OE-010",
+      "pattern_id": "participation_management",
+      "turn_start_id": 76,
+      "turn_end_id": 76,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0,
+      "reason_code": "generic_open_floor_prompt"
+    },
+    {
+      "event_id": "OE-011",
+      "pattern_id": "disagreement_navigation",
+      "turn_start_id": 11,
+      "turn_end_id": 18,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "partial_engagement_without_resolution"
+    },
+    {
+      "event_id": "OE-012",
+      "pattern_id": "disagreement_navigation",
+      "turn_start_id": 30,
+      "turn_end_id": 33,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.25,
+      "reason_code": "acknowledges_but_does_not_engage_substance"
+    },
+    {
+      "event_id": "OE-013",
+      "pattern_id": "disagreement_navigation",
+      "turn_start_id": 38,
+      "turn_end_id": 43,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "engages_tradeoff_but_forces_false_choice"
+    },
+    {
+      "event_id": "OE-014",
+      "pattern_id": "disagreement_navigation",
+      "turn_start_id": 54,
+      "turn_end_id": 63,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.25,
+      "reason_code": "defers_conflict_without_path_to_resolution"
+    },
+    {
+      "event_id": "OE-015",
+      "pattern_id": "disagreement_navigation",
+      "turn_start_id": 78,
+      "turn_end_id": 86,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "names_disagreement_and_closes_decision"
+    },
+    {
+      "event_id": "OE-016",
+      "pattern_id": "trust_and_credibility",
+      "turn_start_id": 86,
+      "turn_end_id": 91,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0,
+      "reason_code": "declares_unvalidated_date_then_exposed"
+    },
+    {
+      "event_id": "OE-017",
+      "pattern_id": "trust_and_credibility",
+      "turn_start_id": 104,
+      "turn_end_id": 107,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0,
+      "reason_code": "makes_commitment_on_behalf_of_other"
+    },
+    {
+      "event_id": "OE-018",
+      "pattern_id": "resolution_and_alignment",
+      "turn_start_id": 10,
+      "turn_end_id": 10,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "specific_resolution_with_weak_check"
+    },
+    {
+      "event_id": "OE-019",
+      "pattern_id": "resolution_and_alignment",
+      "turn_start_id": 53,
+      "turn_end_id": 53,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "specific_resolution_without_alignment_check"
+    },
+    {
+      "event_id": "OE-020",
+      "pattern_id": "resolution_and_alignment",
+      "turn_start_id": 63,
+      "turn_end_id": 66,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.25,
+      "reason_code": "deferral_without_named_interim_resolution"
+    },
+    {
+      "event_id": "OE-021",
+      "pattern_id": "resolution_and_alignment",
+      "turn_start_id": 86,
+      "turn_end_id": 90,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "resolution_named_without_real_alignment_check"
+    },
+    {
+      "event_id": "OE-023",
+      "pattern_id": "resolution_and_alignment",
+      "turn_start_id": 114,
+      "turn_end_id": 116,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "summary_with_explicit_alignment_check"
+    },
+    {
+      "event_id": "OE-024",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 16,
+      "turn_end_id": 16,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.25,
+      "reason_code": "simple_assignment_owner_only"
+    },
+    {
+      "event_id": "OE-025",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 34,
+      "turn_end_id": 34,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "simple_assignment_owner_and_deadline"
+    },
+    {
+      "event_id": "OE-026",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 63,
+      "turn_end_id": 66,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "simple_assignment_owner_and_deadline"
+    },
+    {
+      "event_id": "OE-027",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 92,
+      "turn_end_id": 94,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "simple_assignment_owner_and_deliverable"
+    },
+    {
+      "event_id": "OE-028",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 98,
+      "turn_end_id": 100,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "simple_assignment_owner_and_deliverable"
+    },
+    {
+      "event_id": "OE-029",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 123,
+      "turn_end_id": 123,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "simple_assignment_all_elements"
+    },
+    {
+      "event_id": "OE-030",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 127,
+      "turn_end_id": 127,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "simple_assignment_owner_and_timeframe"
+    },
+    {
+      "event_id": "OE-031",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 136,
+      "turn_end_id": 138,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "simple_assignment_all_elements"
+    },
+    {
+      "event_id": "OE-032",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 140,
+      "turn_end_id": 140,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "simple_assignment_all_elements"
+    },
+    {
+      "event_id": "OE-033",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 142,
+      "turn_end_id": 144,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "simple_assignment_owner_and_timeframe"
+    },
+    {
+      "event_id": "OE-034",
+      "pattern_id": "question_quality",
+      "turn_start_id": 36,
+      "turn_end_id": 36,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "decision_linked_question"
+    },
+    {
+      "event_id": "OE-035",
+      "pattern_id": "question_quality",
+      "turn_start_id": 72,
+      "turn_end_id": 72,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "constraint_testing_question"
+    },
+    {
+      "event_id": "OE-036",
+      "pattern_id": "question_quality",
+      "turn_start_id": 74,
+      "turn_end_id": 74,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0,
+      "reason_code": "leading_question"
+    },
+    {
+      "event_id": "OE-037",
+      "pattern_id": "question_quality",
+      "turn_start_id": 112,
+      "turn_end_id": 112,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "broad_but_discernible_intent"
+    },
+    {
+      "event_id": "OE-038",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 1,
+      "turn_end_id": 1,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "meandering_open_with_discernible_point"
+    },
+    {
+      "event_id": "OE-039",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 25,
+      "turn_end_id": 25,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.25,
+      "reason_code": "buried_point_and_disproportionate_length"
+    },
+    {
+      "event_id": "OE-040",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 84,
+      "turn_end_id": 84,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "discernible_point_but_unfinished_reasoning"
+    },
+    {
+      "event_id": "OE-041",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 116,
+      "turn_end_id": 116,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "clear_structured_summary"
+    },
+    {
+      "event_id": "OE-042",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 129,
+      "turn_end_id": 129,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "clear_sentiment_but_overstates_progress"
+    }
+  ],
+  "evidence_spans": [
+    {
+      "evidence_span_id": "ES-T1",
+      "turn_start_id": 1,
+      "turn_end_id": 1,
+      "excerpt": "Jordan: Hey everyone, thanks for, uh, squeezing this in. I know everyone's busy. So there's a bunch of stuff going on with the launch and I figured we should get together and just, you know, sync up. I don't have a formal agenda but there's pricing, and I think some engineering stuff, and probably some other things too. Let's just kind of see where we are. Who wants to kick us off?",
+      "event_ids": [
+        "OE-001",
+        "OE-038"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T25",
+      "turn_start_id": 25,
+      "turn_end_id": 25,
+      "excerpt": "Jordan: So maybe we should talk about Vantage for a minute because I think it's relevant to the pricing discussion. Like, what I've been thinking about is, and this connects to what Dana's saying but also to the broader positioning question, is that we need to figure out whether our response to Vantage is a pricing response or a messaging response. Because those are two different things. If it's a pricing response, then we're talking about adjusting our tier thresholds or maybe introducing a lower entry tier, which is what Sam was suggesting with the limited base tier idea. But if it's a messaging response, then the pricing stays where it is and we invest in better competitive differentiation in the sales materials, which is more about the ROI story and the case studies and the value narrative. And I think the answer is probably some combination of both, but I'm not sure what the right mix is. Because on the one hand you don't want to race to the bottom on pricing, but on the other hand you can't just ignore the market. And there's also the question of what signal we send to existing customers if we drop our prices, because that creates a whole different set of problems. So I guess what I'm trying to say is —",
+      "event_ids": [
+        "OE-002",
+        "OE-039"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T46",
+      "turn_start_id": 46,
+      "turn_end_id": 46,
+      "excerpt": "Jordan: Okay, yeah. Let's do that. So, tiered pricing — Sam, what are the proposed tier thresholds?",
+      "event_ids": [
+        "OE-003"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T70",
+      "turn_start_id": 70,
+      "turn_end_id": 70,
+      "excerpt": "Jordan: Okay, well, figure out a time that works. Let's just move on. Launch date — we're targeting April 7th. Priya, can we make it?",
+      "event_ids": [
+        "OE-004"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T110",
+      "turn_start_id": 110,
+      "turn_end_id": 110,
+      "excerpt": "Jordan: Oh. Okay. Uh, let's just quickly cover onboarding then. So the question is self-serve versus dedicated for launch customers.",
+      "event_ids": [
+        "OE-005"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T25-27",
+      "turn_start_id": 25,
+      "turn_end_id": 27,
+      "excerpt": "Jordan: So maybe we should talk about Vantage for a minute because I think it's relevant to the pricing discussion... So I guess what I'm trying to say is — / Casey: Jordan, sorry — can we stay on the pricing decision? I need tier thresholds for production config and I need them by Friday at the absolute latest. Every minute we spend on Vantage strategy is a minute we're not deciding the actual numbers. / Jordan: No, yeah, you're right. Let's get back to that. So where were we?",
+      "event_ids": [
+        "OE-006"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T42-43",
+      "turn_start_id": 42,
+      "turn_end_id": 43,
+      "excerpt": "Dana: Or we could have had this conversation two weeks ago when I first raised it. / Jordan: That's — okay. Let's not relitigate the past. Let's just figure out what we're doing now.",
+      "event_ids": [
+        "OE-007"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T48-51",
+      "turn_start_id": 48,
+      "turn_end_id": 51,
+      "excerpt": "Dana: $499 base? With Vantage at $299? / Sam: We already discussed this. Their feature set — / Dana: Sam, we didn't discuss it. We argued about it and then moved on. / Jordan: Let's not reopen the Vantage debate right now. Sam, you said $499 and $1,299. Casey, do those numbers work for the config?",
+      "event_ids": [
+        "OE-008"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T10",
+      "turn_start_id": 10,
+      "turn_end_id": 10,
+      "excerpt": "Jordan: Yeah, I think the data's clear. Tiered is the direction. So I guess the question is, are we all good with that?",
+      "event_ids": [
+        "OE-009",
+        "OE-018"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T76",
+      "turn_start_id": 76,
+      "turn_end_id": 76,
+      "excerpt": "Jordan: What do you guys think? Is data export a launch blocker?",
+      "event_ids": [
+        "OE-010"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T11-18",
+      "turn_start_id": 11,
+      "turn_end_id": 18,
+      "excerpt": "Dana: No. I've said this three times now — I've got two enterprise deals north of 200K that need flat annual commits. If the answer is 'everything is tiered now,' those deals are dead. / Jordan: Right, and I think we can handle that with custom contracts. Like, tiered is the standard and then for the big accounts we just — / Dana: 'Just' what? Every custom deal is a fire drill. Morgan, how long does a custom enterprise contract take right now? / Morgan: Depends on the deviation from standard terms... / Dana: See? A week minimum. My Covington deal is supposed to close in ten days. / Jordan: Okay so we need to move fast on the template. Morgan, can you start on that? / Morgan: I need to know what the parameters are... / Jordan: Right. I think the floor is probably... I mean, we haven't set one yet. We should think about that.",
+      "event_ids": [
+        "OE-011"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T30-33",
+      "turn_start_id": 30,
+      "turn_end_id": 33,
+      "excerpt": "Jordan: I thought we said tiered with custom deals for enterprise? / Dana: You said that. I said I need to know how custom deals work, what the parameters are, and how fast legal can turn them around. None of those questions have been answered. / Jordan: Morgan said a week for a standard deviation. / Morgan: I said a week if it's just pricing structure. And I said I need a template first, which I can't build without business parameters, which nobody has given me.",
+      "event_ids": [
+        "OE-012"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T38-43",
+      "turn_start_id": 38,
+      "turn_end_id": 43,
+      "excerpt": "Jordan: Okay let me, let me think about this for a second. What if we just handle Covington as a one-off? You and I work out the terms this afternoon and Morgan does a bespoke contract. / Morgan: I'd strongly advise against ad hoc contracts without a framework... / Dana: She's right. We need the framework first. / Jordan: Okay but you just said this week is too late. So either we do a one-off or we wait for the framework and risk losing Covington. / Dana: Or we could have had this conversation two weeks ago when I first raised it. / Jordan: That's — okay. Let's not relitigate the past. Let's just figure out what we're doing now.",
+      "event_ids": [
+        "OE-013"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T54-63",
+      "turn_start_id": 54,
+      "turn_end_id": 63,
+      "excerpt": "Dana: They're not final. I haven't agreed to them. / Jordan: I thought we said Sam leads and Dana weighs in. / Dana: Weighs in means I have input. I'm giving you my input right now — $499 is too high against Vantage. / Sam: And my input is that $499 is the right price for our feature set. / Jordan: Okay so you two disagree on the base tier price. Um... what if we went with $449? As a compromise? / Sam: $449 is a weird number... / Dana: $399. / Sam: That's a 20 percent cut... / Dana: Your margin model doesn't account for losing every competitive deal to Vantage. / Jordan: Okay, clearly we're not going to resolve the exact number in this meeting. Sam and Dana, can you two meet separately and figure it out?",
+      "event_ids": [
+        "OE-014",
+        "OE-026",
+        "OE-020"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T78-86",
+      "turn_start_id": 78,
+      "turn_end_id": 86,
+      "excerpt": "Dana: It's a blocker for Meridian Health. / Sam: One account can't hold up the entire launch. / Dana: Meridian is a $180K deal, Sam. / Sam: And delaying the launch costs us three deals that close before April 15th. / Dana: So we're just going to ship a half-built product? / Sam: It's not half-built. It's one feature. / Jordan: Okay, so, it sounds like there's disagreement on this. I think probably we should just ship without it and add it later? But I hear Dana's concern about Meridian. What if we — / Casey: Can I ask a logistical question? Is anyone going to decide this? Because I need to know what we're shipping so I can coordinate the deployment. And the go/no-go checklist needs to be finalized by Friday. / Jordan: We're shipping April 7th without data export. Data export comes as a fast-follow.",
+      "event_ids": [
+        "OE-015"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T86-91",
+      "turn_start_id": 86,
+      "turn_end_id": 91,
+      "excerpt": "Jordan: We're shipping April 7th without data export. Data export comes as a fast-follow. / Dana: When? A week? Two weeks? What do I tell Meridian? / Jordan: Soon. Like, as soon as Priya's team can get to it. / Priya: That's not a date, Jordan. / Jordan: Let's say two weeks after launch. April 21st. / Priya: You just pulled that date out of the air. I said mid next week for the bug fix alone. After that I need a sprint to stabilize and test. Two weeks might work but I haven't planned it.",
+      "event_ids": [
+        "OE-016",
+        "OE-021"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T104-107",
+      "turn_start_id": 104,
+      "turn_end_id": 107,
+      "excerpt": "Jordan: We'll have a date before launch. Priya's going to figure it out. / Lee: Priya literally just said she hasn't planned it yet. / Jordan: She will. Before launch. Right, Priya? / Priya: I'll try. But I need to know my sprint priorities first... I'm not going to promise a date I haven't validated.",
+      "event_ids": [
+        "OE-017"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T53",
+      "turn_start_id": 53,
+      "turn_end_id": 53,
+      "excerpt": "Jordan: They're final.",
+      "event_ids": [
+        "OE-019"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T96",
+      "turn_start_id": 96,
+      "turn_end_id": 96,
+      "excerpt": "Jordan: So we're good on launch date. April 7th. Okay, onboarding — we need to figure out whether —",
+      "event_ids": [
+        "OE-022"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T114-116",
+      "turn_start_id": 114,
+      "turn_end_id": 116,
+      "excerpt": "Jordan: Okay, so we need another meeting on onboarding. / Casey: We needed this meeting to cover onboarding... / Jordan: That's fair. Okay. So let me just, um, let me try to figure out where we are. Pricing is tiered but the specific numbers aren't locked. Sam and Dana are going to meet separately on that. Enterprise custom deals need a framework, which needs business parameters from me, which Morgan needs to draft the addendum. Launch date is April 7th. Data export is a fast-follow but we don't have a date yet. Onboarding is TBD. Is that — does that cover it?",
+      "event_ids": [
+        "OE-023",
+        "OE-041"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T16",
+      "turn_start_id": 16,
+      "turn_end_id": 16,
+      "excerpt": "Jordan: Okay so we need to move fast on the template. Morgan, can you start on that?",
+      "event_ids": [
+        "OE-024"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T34",
+      "turn_start_id": 34,
+      "turn_end_id": 34,
+      "excerpt": "Jordan: Okay, so the first step is getting Morgan the parameters. I'll work on that this week.",
+      "event_ids": [
+        "OE-025"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T92-94",
+      "turn_start_id": 92,
+      "turn_end_id": 94,
+      "excerpt": "Jordan: Okay so plan it and let me know. / Priya: Let you know what? Whether two weeks works? Or am I planning the sprint first and then telling you the date? / Jordan: Either. Both. Just figure out when it can ship and tell me.",
+      "event_ids": [
+        "OE-027"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T98-100",
+      "turn_start_id": 98,
+      "turn_end_id": 100,
+      "excerpt": "Jordan: Right, good point. Sam, can you make sure there's some kind of in-app messaging? / Sam: Sure. What should it say? / Jordan: Just that data export is coming soon.",
+      "event_ids": [
+        "OE-028"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T123",
+      "turn_start_id": 123,
+      "turn_end_id": 123,
+      "excerpt": "Jordan: This week. Definitely by Thursday.",
+      "event_ids": [
+        "OE-029"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T127",
+      "turn_start_id": 127,
+      "turn_end_id": 127,
+      "excerpt": "Jordan: After noon then. I'll send something.",
+      "event_ids": [
+        "OE-030"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T136-138",
+      "turn_start_id": 136,
+      "turn_end_id": 138,
+      "excerpt": "Jordan: The, you know, the stuff we talked about. Pricing thresholds, the Morgan parameters, the onboarding meeting. I'll send a recap email. / Casey: When? / Jordan: Today. Tonight. I'll send it tonight.",
+      "event_ids": [
+        "OE-031"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T140",
+      "turn_start_id": 140,
+      "turn_end_id": 140,
+      "excerpt": "Jordan: Right. I'll ping you after lunch.",
+      "event_ids": [
+        "OE-032"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T142-144",
+      "turn_start_id": 142,
+      "turn_end_id": 144,
+      "excerpt": "Jordan: We'll cover that at the Friday meeting. / Lee: The Friday meeting that's about onboarding? / Jordan: We can cover both.",
+      "event_ids": [
+        "OE-033"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T36",
+      "turn_start_id": 36,
+      "turn_end_id": 36,
+      "excerpt": "Jordan: Well, what do you need for Covington specifically?",
+      "event_ids": [
+        "OE-034"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T72",
+      "turn_start_id": 72,
+      "turn_end_id": 72,
+      "excerpt": "Jordan: What kind of risk?",
+      "event_ids": [
+        "OE-035"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T74",
+      "turn_start_id": 74,
+      "turn_end_id": 74,
+      "excerpt": "Jordan: But probably not, right?",
+      "event_ids": [
+        "OE-036"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T112",
+      "turn_start_id": 112,
+      "turn_end_id": 112,
+      "excerpt": "Jordan: Can we at least get directional alignment?",
+      "event_ids": [
+        "OE-037"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T84",
+      "turn_start_id": 84,
+      "turn_end_id": 84,
+      "excerpt": "Jordan: Okay, so, it sounds like there's disagreement on this. I think probably we should just ship without it and add it later? But I hear Dana's concern about Meridian. What if we —",
+      "event_ids": [
+        "OE-040"
+      ],
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T129",
+      "turn_start_id": 129,
+      "turn_end_id": 129,
+      "excerpt": "Jordan: We'll make it work. Look, I know this meeting didn't go perfectly but we made progress. We've got a direction on pricing, we've got the launch date, and we know what we need to figure out next. Let's just keep the momentum going and we'll get there.",
+      "event_ids": [
+        "OE-042"
+      ],
+      "speaker_role": "chair"
+    }
+  ],
+  "evaluation_summary": {
+    "patterns_evaluated": [
+      "purposeful_framing",
+      "focus_management",
+      "participation_management",
+      "disagreement_navigation",
+      "trust_and_credibility",
+      "resolution_and_alignment",
+      "assignment_clarity",
+      "question_quality",
+      "communication_clarity"
+    ],
+    "patterns_insufficient_signal": [
+      "feedback_quality"
+    ],
+    "patterns_not_evaluable": []
+  },
+  "pattern_snapshot": [
+    {
+      "pattern_id": "purposeful_framing",
+      "cluster_id": "meeting_structure",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "pf_opening_plus_owned_transitions",
+      "min_required_threshold": 2,
+      "evidence_span_ids": [
+        "ES-T1",
+        "ES-T25",
+        "ES-T46",
+        "ES-T70",
+        "ES-T110"
+      ],
+      "success_evidence_span_ids": [
+        "ES-T25",
+        "ES-T70",
+        "ES-T110"
+      ],
+      "score": 0.65,
+      "opportunity_count": 5
+    },
+    {
+      "pattern_id": "focus_management",
+      "cluster_id": "meeting_structure",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "fm_drift_episodes",
+      "min_required_threshold": 1,
+      "evidence_span_ids": [
+        "ES-T25-27",
+        "ES-T42-43",
+        "ES-T48-51"
+      ],
+      "success_evidence_span_ids": [
+        "ES-T42-43"
+      ],
+      "score": 0.5,
+      "opportunity_count": 3
+    },
+    {
+      "pattern_id": "participation_management",
+      "cluster_id": "participation_dynamics",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "pm_floor_direction_moments",
+      "min_required_threshold": 2,
+      "evidence_span_ids": [
+        "ES-T10",
+        "ES-T76"
+      ],
+      "success_evidence_span_ids": [],
+      "score": 0,
+      "opportunity_count": 2,
+      "balance_assessment": "over_indexed"
+    },
+    {
+      "pattern_id": "disagreement_navigation",
+      "cluster_id": "participation_dynamics",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "dn_disagreement_arcs",
+      "min_required_threshold": 1,
+      "evidence_span_ids": [
+        "ES-T11-18",
+        "ES-T30-33",
+        "ES-T38-43",
+        "ES-T54-63",
+        "ES-T78-86"
+      ],
+      "success_evidence_span_ids": [
+        "ES-T78-86"
+      ],
+      "score": 0.45,
+      "opportunity_count": 5
+    },
+    {
+      "pattern_id": "trust_and_credibility",
+      "cluster_id": "participation_dynamics",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "tc_high_stakes_trust_moments",
+      "min_required_threshold": 1,
+      "evidence_span_ids": [
+        "ES-T86-91",
+        "ES-T104-107"
+      ],
+      "success_evidence_span_ids": [],
+      "score": 0,
+      "opportunity_count": 2
+    },
+    {
+      "pattern_id": "resolution_and_alignment",
+      "cluster_id": "decisions_accountability",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "ra_topic_closure_moments",
+      "min_required_threshold": 2,
+      "evidence_span_ids": [
+        "ES-T10",
+        "ES-T53",
+        "ES-T54-63",
+        "ES-T86-91",
+        "ES-T96",
+        "ES-T114-116"
+      ],
+      "success_evidence_span_ids": [
+        "ES-T10",
+        "ES-T96",
+        "ES-T114-116"
+      ],
+      "score": 0.55,
+      "opportunity_count": 5
+    },
+    {
+      "pattern_id": "assignment_clarity",
+      "cluster_id": "decisions_accountability",
+      "scoring_type": "complexity_tiered",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "ac_assignments_initiated_or_accepted",
+      "min_required_threshold": 2,
+      "evidence_span_ids": [
+        "ES-T16",
+        "ES-T34",
+        "ES-T54-63",
+        "ES-T92-94",
+        "ES-T98-100",
+        "ES-T123",
+        "ES-T127",
+        "ES-T136-138",
+        "ES-T140",
+        "ES-T142-144"
+      ],
+      "success_evidence_span_ids": [
+        "ES-T123",
+        "ES-T136-138",
+        "ES-T140"
+      ],
+      "score": 0.625,
+      "opportunity_count": 10,
+      "simple_count": 10,
+      "complex_count": 0
+    },
+    {
+      "pattern_id": "question_quality",
+      "cluster_id": "communication_quality",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "qq_substantive_questions",
+      "min_required_threshold": 3,
+      "evidence_span_ids": [
+        "ES-T36",
+        "ES-T72",
+        "ES-T74",
+        "ES-T112"
+      ],
+      "success_evidence_span_ids": [
+        "ES-T36",
+        "ES-T72"
+      ],
+      "score": 0.625,
+      "opportunity_count": 4
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "cluster_id": "communication_quality",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "cc_substantive_turns_3plus_sentences",
+      "min_required_threshold": 3,
+      "evidence_span_ids": [
+        "ES-T1",
+        "ES-T25",
+        "ES-T84",
+        "ES-T114-116",
+        "ES-T129"
+      ],
+      "success_evidence_span_ids": [
+        "ES-T114-116"
+      ],
+      "score": 0.5,
+      "opportunity_count": 5
+    },
+    {
+      "pattern_id": "feedback_quality",
+      "cluster_id": "communication_quality",
+      "scoring_type": "multi_element",
+      "evaluable_status": "insufficient_signal",
+      "denominator_rule_id": "fq_feedback_instances",
+      "min_required_threshold": 2,
+      "evidence_span_ids": []
+    }
+  ],
+  "experiment_tracking": {
+    "active_experiment": {
+      "experiment_id": "EXP-000000",
+      "status": "none"
+    },
+    "detection_in_this_meeting": {
+      "experiment_id": "EXP-000000",
+      "attempt": "no",
+      "count_attempts": 0,
+      "evidence_span_ids": []
+    }
+  },
+  "coaching": {
+    "executive_summary": "You kept trying to create momentum in a meeting that lacked enough structure to support it. The main issue was not effort; it was repeatedly declaring progress before the underlying constraints, owners, or tradeoffs were actually resolved. That showed up most sharply when you made commitments engineering had not validated and when you closed decisions the room was still actively contesting. Your highest-leverage shift is to get more disciplined at high-stakes junctions: state the decision, test whether the dependencies are actually resolved, and only then close or assign.",
+    "coaching_themes": [
+      {
+        "theme": "You moved the meeting forward faster than the work was actually ready to move",
+        "explanation": "Several times you declared direction before the underlying inputs were settled: you called pricing tiered while enterprise exceptions were still undefined, declared the numbers final while sales was still contesting them, and announced a data export date that engineering had not validated. That created visible rework in the room because people had to reopen issues you had already tried to close.",
+        "related_patterns": [
+          "resolution_and_alignment",
+          "assignment_clarity",
+          "trust_and_credibility",
+          "disagreement_navigation"
+        ],
+        "priority": "primary"
+      },
+      {
+        "theme": "Your facilitation defaulted to broad prompts and self-generated tangents instead of sharper steering",
+        "explanation": "At the opening you named a loose list of topics without a decision path, then later opened the floor with broad prompts like 'What do you guys think?' while key owners still needed specific direction. The clearest example was when you launched into the Vantage strategy tangent and had to be pulled back by Casey because the room still needed actual pricing thresholds.",
+        "related_patterns": [
+          "purposeful_framing",
+          "focus_management",
+          "participation_management",
+          "communication_clarity"
+        ],
+        "priority": "secondary"
+      }
+    ],
+    "strengths": [],
+    "focus": [
+      {
+        "pattern_id": "trust_and_credibility",
+        "message": "Your highest-leverage gap is credibility under pressure. In this meeting, confidence dropped when you gave dates and commitments that Priya had not validated and when you spoke for her in front of the group. The fix is simple but high impact: in tense moments, stop short of certainty until the owner has confirmed what they can actually support."
+      }
+    ],
+    "micro_experiment": [
+      {
+        "experiment_id": "EXP-260330",
+        "title": "Validate before you declare",
+        "instruction": "For every high-stakes decision or commitment, pause and validate before you declare. Use one sentence such as: 'What can you actually commit to?' or 'I'm not going to put a date on this until the owner confirms it.' Do not state a date, promise, or owner acceptance on someone else's behalf until they have said it themselves in the room.",
+        "success_marker": "In your next meeting, you explicitly validate at least three commitments before naming them, and you avoid making any unvalidated promise on behalf of another person.",
+        "pattern_id": "trust_and_credibility",
+        "evidence_span_ids": [
+          "ES-T86-91",
+          "ES-T104-107"
+        ]
+      }
+    ],
+    "pattern_coaching": [
+      {
+        "pattern_id": "purposeful_framing",
+        "notes": "When you shifted to launch date and later to onboarding, you at least named the topic and gave the room a rough sense of what you were trying to do next. That basic signposting helped people know why you were moving on, even when the outcome was still loosely stated.",
+        "coaching_note": "Your framing was usually topic-first but rarely outcome-specific. At the opening, you listed pricing and engineering and then said 'let's just kind of see where we are,' which left the room without a clear definition of what needed to be decided. In a meeting this contested, that vagueness made it easier for debates to sprawl and for participants to disagree later about what the meeting was for.",
+        "suggested_rewrite": "We've got three things to leave with today: a pricing direction, a launch-date call, and a decision on whether onboarding is self-serve or dedicated. If we can't fully finish one, we'll at least name the unresolved point and the owner for next step before we move on.",
+        "rewrite_for_span_id": "ES-T1",
+        "best_success_span_id": "ES-T70"
+      },
+      {
+        "pattern_id": "focus_management",
+        "notes": "Your strongest redirect came when Dana pulled the discussion into blame about what should have happened two weeks earlier. You named that drift clearly and brought the group back to the present decision, which is exactly the kind of intervention a chair needs to make.",
+        "coaching_note": "The biggest miss was that one of the most expensive tangents in the meeting came from you. You opened a long Vantage strategy thread while Casey still needed actual pricing thresholds, and the room had to pull you back. As chair, when you introduce the tangent yourself, you don't just fail to manage drift; you create it.",
+        "suggested_rewrite": "Dana, the Vantage point matters, but I want to keep us on the immediate pricing decision first. Let's settle the tier thresholds Casey needs, and then if we still have time we'll decide whether Vantage changes pricing, messaging, or both.",
+        "rewrite_for_span_id": "ES-T25-27",
+        "best_success_span_id": "ES-T42-43"
+      },
+      {
+        "pattern_id": "participation_management",
+        "notes": null,
+        "coaching_note": "The issue here was not that you never invited input; it was that you relied on generic open-floor prompts at moments that needed directed facilitation. Questions like 'are we all good with that?' and 'what do you guys think?' let the strongest voices keep dominating while the specific functions you needed were not explicitly brought in. In this room, better participation management would have meant naming the people whose input was required before trying to close.",
+        "suggested_rewrite": "Before we close this, Dana, I need your read on the enterprise impact. Morgan, I need your view on whether legal can support the exception path. Then we'll decide.",
+        "rewrite_for_span_id": "ES-T10",
+        "best_success_span_id": null
+      },
+      {
+        "pattern_id": "disagreement_navigation",
+        "notes": "Your best disagreement moment came on the launch blocker debate, where you explicitly named that there was disagreement and at least acknowledged Dana's concern about Meridian before making the call. That was more constructive than several earlier moments where you tried to close the issue before the core objection was fully surfaced.",
+        "coaching_note": "Your recurring pattern was to answer pushback with a quick workaround or deferral before the underlying concern had been metabolized. When Dana challenged the enterprise pricing path, you moved to 'custom contracts' and then to a template request before resolving the real conflict about parameters, timing, and deal risk. That made the disagreement come back louder each time.",
+        "suggested_rewrite": "Dana, you're not objecting to tiered in the abstract; you're saying the enterprise exception path is undefined and that puts live deals at risk. Morgan, tell us what legal would need to support that path, and then let's decide whether we're truly ready to adopt tiered as the standard today.",
+        "rewrite_for_span_id": "ES-T11-18",
+        "best_success_span_id": "ES-T78-86"
+      },
+      {
+        "pattern_id": "trust_and_credibility",
+        "notes": null,
+        "coaching_note": "The clearest credibility hit came when you announced 'April 21st' for data export after Priya had just said the work was not yet planned. That turned a difficult uncertainty into an arbitrary promise, and the room immediately saw that engineering had not endorsed it. The same pattern repeated when you told Lee that Priya would have a date before launch and then asked her to confirm in public.",
+        "suggested_rewrite": "I'm not going to put a date on data export until Priya validates it. Priya, what's the earliest point by which you can give us a credible date, and what decisions do you need from me first?",
+        "rewrite_for_span_id": "ES-T86-91",
+        "best_success_span_id": null
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "notes": "Near the end, your recap was the clearest closure move of the meeting. You named what was partially settled, what was still open, and asked the room whether your summary covered it, which at least gave people a shared picture of the current state.",
+        "coaching_note": "You often closed topics as if agreement existed when it did not. The sharpest example was declaring the pricing numbers final while Dana was actively objecting; that was not alignment, it was premature closure. In this meeting, your closure language repeatedly got ahead of the room's actual commitment.",
+        "suggested_rewrite": "Casey, the numbers work for config, but I don't have agreement on them yet. What I can say is that $499 and $1,299 are the current proposal, and pricing is still open until Sam and Dana resolve the base-tier debate this afternoon.",
+        "rewrite_for_span_id": "ES-T53",
+        "best_success_span_id": "ES-T114-116"
+      },
+      {
+        "pattern_id": "assignment_clarity",
+        "notes": null,
+        "coaching_note": "Too many assignments were vague enough that people had to stop and clarify what you meant. The exchange with Priya after 'plan it and let me know' is the clearest example: she immediately had to ask what you wanted, in what order, and whether she was validating a date or planning the work first. In a launch meeting, that kind of ambiguity slows execution because the owner leaves without a usable next step.",
+        "suggested_rewrite": "Priya, don't commit to a ship date yet. First, plan the work and confirm whether data export can be a fast-follow. Send me your recommended date and any blockers by tomorrow afternoon, and then we'll decide what we communicate externally.",
+        "rewrite_for_span_id": "ES-T92-94",
+        "best_success_span_id": null
+      },
+      {
+        "pattern_id": "question_quality",
+        "notes": "Your best questions were the short, concrete ones that exposed a real dependency. Asking Dana what she specifically needed for Covington and asking Priya what kind of risk she saw both moved the conversation toward an actionable constraint instead of a generic opinion round.",
+        "coaching_note": "Where your questions weakened was when they stopped being inquiry and started signaling the answer you wanted. 'But probably not, right?' pushed Priya toward reassurance rather than helping you understand the actual launch risk, which is exactly the moment you most needed clean information.",
+        "suggested_rewrite": "How likely is it that this slips past mid next week, and what would make it slip?",
+        "rewrite_for_span_id": "ES-T74",
+        "best_success_span_id": "ES-T72"
+      },
+      {
+        "pattern_id": "communication_clarity",
+        "notes": "Your strongest clarity moment was the late summary where you laid out pricing, enterprise framework, launch date, data export, and onboarding in a single sequence. There, you gave the room a coherent status picture instead of another drifting thread.",
+        "coaching_note": "Your weakest clarity moments came when you thought out loud at length instead of landing the point quickly. The Vantage monologue is the clearest example: you wandered through pricing, messaging, ROI story, existing-customer signal, and the right mix before ever arriving at a crisp ask. In a time-pressed review, that kind of extended preamble burns meeting time and blurs the decision on the table.",
+        "suggested_rewrite": "I think Dana is raising a real competitive issue, but I want to keep today's decision tight. Do we need to change the tier numbers because of Vantage, or is this a sales-messaging issue we handle separately?",
+        "rewrite_for_span_id": "ES-T25",
+        "best_success_span_id": "ES-T114-116"
+      }
+    ],
+    "experiment_coaching": null
+  }
+}

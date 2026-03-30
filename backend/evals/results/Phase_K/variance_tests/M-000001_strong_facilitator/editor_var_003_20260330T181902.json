@@ -1,0 +1,14 @@
+{
+  "pattern_coaching_edits": {
+    "trust_and_credibility": {
+      "notes": "SUPPRESS"
+    }
+  },
+  "changes": [
+    {
+      "field": "pattern_coaching_edits.trust_and_credibility.notes",
+      "action": "suppressed",
+      "reason": "This observation is primarily about focus management: Jordan parked a late-breaking topic with a clear boundary and next step. The trust element adds little beyond the existing focus-management coaching and repackages the same moment."
+    }
+  ]
+}

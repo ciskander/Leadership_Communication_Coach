@@ -1,0 +1,128 @@
+{
+  "n_runs": 10,
+  "n_valid": 10,
+  "evaluable_patterns": [
+    "purposeful_framing",
+    "focus_management",
+    "participation_management",
+    "disagreement_navigation",
+    "trust_and_credibility",
+    "resolution_and_alignment",
+    "assignment_clarity",
+    "question_quality",
+    "communication_clarity"
+  ],
+  "per_pattern": {
+    "purposeful_framing": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "focus_management": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "participation_management": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "disagreement_navigation": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "trust_and_credibility": {
+      "notes": {
+        "suppress": 10
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "resolution_and_alignment": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "assignment_clarity": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "question_quality": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "communication_clarity": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    }
+  },
+  "unanimous_rate": 1.0,
+  "unanimous_combos": 18,
+  "total_combos": 18,
+  "flip_patterns": [],
+  "exec_summary_changed_rate": 0.0,
+  "coaching_themes_changed_rate": 0.0,
+  "focus_message_changed_rate": 0.0,
+  "oe_removals": {
+    "items": [
+      {
+        "pattern_id": "trust_and_credibility",
+        "oe_index": 0,
+        "flagged_in": 1
+      },
+      {
+        "pattern_id": "trust_and_credibility",
+        "oe_index": 13,
+        "flagged_in": 2
+      }
+    ],
+    "agreement_rate": 0.0
+  },
+  "changes_per_run": {
+    "values": [
+      1,
+      2,
+      1,
+      2,
+      1,
+      1,
+      1,
+      1,
+      2,
+      1
+    ],
+    "min": 1,
+    "max": 2,
+    "mean": 1.3
+  }
+}

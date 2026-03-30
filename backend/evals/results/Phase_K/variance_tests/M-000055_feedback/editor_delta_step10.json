@@ -1,0 +1,71 @@
+{
+  "pattern_coaching_edits": {
+    "communication_clarity": {
+      "notes": "SUPPRESS"
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 0,
+      "reason": "Opening with a three-part agenda is purposeful_framing behavior; this adds no distinct communication-clarity insight."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 5,
+      "reason": "This is primarily audience-tailored coaching about where to place the ask in an exec email, which is better captured by feedback_quality than communication_clarity."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 6,
+      "reason": "Providing a model rewrite for how to lead with the ask is feedback/coaching content, not a distinct communication-clarity signal."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 9,
+      "reason": "The 'cut and paste' instruction is assignment/coaching mechanics, not evidence of substantive communication clarity."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 10,
+      "reason": "Offering to review the next draft is an accountability/support move, not a communication-clarity behavior."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 14,
+      "reason": "This is primarily feedback synthesis about expectations and respect with Kevin, already captured more specifically under feedback_quality."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 16,
+      "reason": "This turn is mainly assignment framing ('here's my ask'), which belongs under assignment_clarity rather than communication_clarity."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 17,
+      "reason": "Giving a 24-hour rule with exact language is primarily assignment_clarity/coaching instruction, not a distinct communication-clarity signal."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 18,
+      "reason": "Committing to check in next one-on-one is resolution/accountability behavior, better captured under resolution_and_alignment."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 19,
+      "reason": "The end-of-meeting recap is primarily resolution_and_alignment behavior rather than communication_clarity."
+    }
+  ],
+  "changes": [
+    {
+      "field": "pattern_coaching_edits.communication_clarity.notes",
+      "action": "suppressed",
+      "reason": "The positive observation is largely a bundle of moments better classified under purposeful_framing, feedback_quality, assignment_clarity, and resolution_and_alignment, so it does not add a distinct communication-clarity insight."
+    },
+    {
+      "field": "oe_removals",
+      "action": "removed",
+      "reason": "Flagged misclassified communication_clarity opportunity events that are better explained by other patterns, to reduce score inflation and redundancy."
+    }
+  ]
+}

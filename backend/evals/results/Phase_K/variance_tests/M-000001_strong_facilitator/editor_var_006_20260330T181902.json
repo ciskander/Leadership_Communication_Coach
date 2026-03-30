@@ -1,0 +1,14 @@
+{
+  "pattern_coaching_edits": {
+    "trust_and_credibility": {
+      "notes": "SUPPRESS"
+    }
+  },
+  "changes": [
+    {
+      "field": "pattern_coaching_edits.trust_and_credibility.notes",
+      "action": "suppressed",
+      "reason": "This observation is better classified as focus_management. The core behavior is parking a late-breaking topic with a clear boundary and next step; the trust dimension is not distinct enough to justify separate coaching and would be redundant with the existing focus_management note."
+    }
+  ]
+}

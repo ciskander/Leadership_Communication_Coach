@@ -1,0 +1,95 @@
+{
+  "executive_summary": "You kept trying to create momentum, but in the highest-stakes moments you outran what the room actually knew. The pattern that did the most damage was credibility under pressure: you declared dates, decisions, and next steps before the owners had validated them, which forced people to correct you in real time. The next shift is straightforward but important: before you close a decision or make a commitment, name the dependency, get the owner to confirm what is real, and only then declare the outcome.",
+  "focus_message": "Your highest-leverage gap is credibility under pressure. In this meeting, confidence dropped when you named commitments that engineering had not validated and when you asked Priya to back promises you had already made for her. If you get more disciplined about validating before declaring, your calls will meet less resistance and people will trust your direction more.",
+  "micro_experiment_edits": {
+    "instruction": "For every high-stakes decision or commitment, pause and validate before you declare. Use language like: 'What can you actually commit to?' or 'I'm not going to name a date until the owner confirms it.' Do not state a date, promise, or owner acceptance on someone else's behalf until they have said it themselves in the room.",
+    "success_marker": "In your next meeting, you explicitly validate at least three commitments before closing them, and you avoid making any unvalidated promise on behalf of another person."
+  },
+  "pattern_coaching_edits": {
+    "participation_management": {
+      "notes": "SUPPRESS",
+      "coaching_note": "SUPPRESS"
+    },
+    "resolution_and_alignment": {
+      "notes": "Your clearest closure move came in the late recap, when you named what was decided, what was still open, and checked whether your summary matched the room. That was one of the few moments where everyone had a shared picture of the current state, even though several items were still unresolved."
+    },
+    "assignment_clarity": {
+      "notes": "SUPPRESS",
+      "coaching_note": "Most of your assignments sounded decisive in the moment but left too much unspecified for the owner to execute cleanly. Priya had to stop and ask whether you wanted a date, a plan, or both; Sam had to ask what the in-app message should actually say; and 'figure out a time that works' left a critical pricing discussion unresolved. The pattern is less about missing deadlines and more about handing people work before the deliverable and decision standard are clear."
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "resolution_and_alignment",
+      "oe_index": 0,
+      "reason": "This is not a genuine resolution moment. 'Tiered is the direction' is immediately challenged, so the event overstates successful closure and belongs more to premature closure than true resolution/alignment."
+    },
+    {
+      "pattern_id": "resolution_and_alignment",
+      "oe_index": 4,
+      "reason": "This should not count as successful closure. Jordan says 'we're good on launch date' and moves on, but the date and attached dependencies are immediately reopened, so there is no real alignment."
+    },
+    {
+      "pattern_id": "assignment_clarity",
+      "oe_index": 5,
+      "reason": "This is not a clear assignment. 'Definitely by Thursday' answers a timing challenge, but the deliverable itself remains underspecified in the moment and is better treated as part of a shaky follow-through pattern than a strong assignment-clarity success."
+    },
+    {
+      "pattern_id": "assignment_clarity",
+      "oe_index": 7,
+      "reason": "This is too thin to count as a strong assignment-clarity success. 'I'll send a recap email tonight' names an action and timing, but Casey's question reveals that ownership and open items are still not actually clarified."
+    }
+  ],
+  "changes": [
+    {
+      "field": "executive_summary",
+      "action": "rewritten",
+      "reason": "Sharpened the lead and centered the highest-leverage issue: credibility loss from declaring unvalidated commitments."
+    },
+    {
+      "field": "focus_message",
+      "action": "rewritten",
+      "reason": "Made the focus area more direct, specific to this meeting, and tied to observable trust consequences."
+    },
+    {
+      "field": "micro_experiment_edits.instruction",
+      "action": "rewritten",
+      "reason": "Tightened the experiment language so the behavioral move is easier to apply in real time."
+    },
+    {
+      "field": "micro_experiment_edits.success_marker",
+      "action": "rewritten",
+      "reason": "Made the success criteria more concrete and aligned to the trust-and-credibility gap."
+    },
+    {
+      "field": "pattern_coaching_edits.participation_management.notes",
+      "action": "suppressed",
+      "reason": "No meaningful positive participation-management behavior appears in the meeting; keeping this would stretch thin evidence."
+    },
+    {
+      "field": "pattern_coaching_edits.participation_management.coaching_note",
+      "action": "suppressed",
+      "reason": "The observation is technically plausible but thin and lower-value than the stronger patterns already covering the meeting's real issues."
+    },
+    {
+      "field": "pattern_coaching_edits.resolution_and_alignment.notes",
+      "action": "rewritten",
+      "reason": "Kept the aligned positive observation but made it more grounded and less charitable about the overall meeting outcome."
+    },
+    {
+      "field": "pattern_coaching_edits.assignment_clarity.notes",
+      "action": "suppressed",
+      "reason": "The positive note over-credits isolated promises that were later undermined by broader ambiguity and shaky follow-through."
+    },
+    {
+      "field": "pattern_coaching_edits.assignment_clarity.coaching_note",
+      "action": "rewritten",
+      "reason": "Sharpened the developmental point around unclear deliverables and execution standards rather than generic assignment incompleteness."
+    },
+    {
+      "field": "oe_removals",
+      "action": "removed",
+      "reason": "Flagged misclassified or overstated opportunity events that count premature closure or thin promises as stronger examples than the transcript supports."
+    }
+  ]
+}

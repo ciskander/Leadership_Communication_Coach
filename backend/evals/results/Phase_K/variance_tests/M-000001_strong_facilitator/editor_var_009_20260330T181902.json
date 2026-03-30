@@ -1,0 +1,26 @@
+{
+  "pattern_coaching_edits": {
+    "trust_and_credibility": {
+      "notes": "SUPPRESS"
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "trust_and_credibility",
+      "oe_index": 13,
+      "reason": "This moment is better captured as focus_management: Jordan parks a late-breaking topic with a clear next step. The coaching does not name a distinct trust consequence beyond the deferral mechanics already covered there."
+    }
+  ],
+  "changes": [
+    {
+      "field": "pattern_coaching.trust_and_credibility.notes",
+      "action": "suppressed",
+      "reason": "Misaligned to the pattern. The Vantage deferral is primarily focus management; the trust point adds little distinct insight beyond the boundary-setting and follow-up already captured elsewhere."
+    },
+    {
+      "field": "opportunity_events[13]",
+      "action": "removed",
+      "reason": "Trust-and-credibility OE repackages a focus-management moment without a distinct trust dimension."
+    }
+  ]
+}

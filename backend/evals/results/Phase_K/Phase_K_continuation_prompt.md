@@ -1,118 +1,110 @@
-# Phase L: Taxonomy Redesign — Continuation Prompt
+# Phase L: Architecture Redesign — Continuation Prompt
 
 ## What this is
 
-You are redesigning the pattern taxonomy from first principles. The full analysis motivating this is in `Phase_K_synthesis.md` (same directory). Read it first.
+You are redesigning the analysis pipeline architecture to cleanly separate behavioral detection/scoring (Stage 1) from coaching synthesis (Stage 2). Read `Phase_K_synthesis.md` (same directory) for the variance decomposition findings that motivated this.
+
+## The key insight
+
+The current architecture asks the 1st LLM pass to simultaneously: (1) detect behavioral moments, (2) score them against rubrics, and (3) generate coaching text. These three functions have conflicting requirements:
+
+- **Detection** needs MECE categories with bright lines
+- **Scoring** needs nuanced rubrics that inevitably bleed into adjacent patterns
+- **Coaching** needs holistic judgment that cuts across patterns
+
+The taxonomy tried to handle all three through cross-pattern disambiguation rules, coaching-note distinctiveness tests, and reclassification instructions. Phases G-I2 proved the LLM ignores most of these. The editor (Phase J) was bolted on to fix coaching quality after the fact, but it became a suppression gate rather than a coaching intelligence.
+
+94% of pedantic ratings come from misalignment (55%) and stretching-to-fill (39%) -- both caused by the detection layer trying to serve coaching needs it can't fulfill.
+
+## Proposed two-stage architecture
+
+**Stage 1: Detect + Score (tunnel vision, per-pattern)**
+- Identifies behavioral moments (opportunity events) per pattern
+- Scores each moment against that pattern's mechanical rubric
+- Does NOT attempt cross-pattern reasoning or coaching generation
+- Overlap is ALLOWED -- the same moment can appear under multiple patterns
+- The taxonomy is simplified: remove cross-pattern reclassification rules, coaching-note distinctiveness tests, and detection notes that try to disambiguate overlapping patterns
+- Keep: behavioral definitions, mechanical scoring rubrics, element-counting, evidence spans
+
+**Stage 2: Coaching Synthesis (holistic, cross-pattern)**
+- Receives the full Stage 1 output + transcript
+- Applies executive coaching judgment to determine what's really going on
+- Suppresses patterns that don't add value, elevates the ones that matter
+- Synthesizes across patterns: "your handling of Quinn's concerns across FM, DN, and TC moments suggests a pattern of defensive focus management"
+- Generates the actual coaching output (executive summary, strengths, focus area, micro-experiment)
+
+## Open architectural questions (to decide before implementing)
+
+### Q1: Does Stage 1 generate coaching text at all?
+
+**Option A -- Stage 1 detects + scores only.** Stage 2 generates ALL coaching text from scratch using Stage 1's scored OEs and evidence spans. Cleaner separation, but Stage 2 becomes the primary coaching author (bigger rewrite). The current editor is a lightweight delta-based editor; this would make it the main coaching engine.
+
+**Option B -- Stage 1 generates draft coaching, Stage 2 refines.** Keeps current architecture with simplified Stage 1 taxonomy (no cross-pattern rules). Stage 2 still synthesizes, suppresses, elevates, but works from draft coaching. Less disruptive but preserves the "edit bad coaching" pattern that produced the problems we measured.
+
+**Trade-offs:** Option A is architecturally cleaner but a bigger change. Option B is incremental but may not fully resolve the pedantic problem because Stage 1 still generates coaching through per-pattern tunnel vision. Consider: is the coaching text from Stage 1 a useful starting point for Stage 2, or does it constrain Stage 2's judgment?
+
+### Q2: What happens to scoring and progress tracking?
+
+The current system tracks scores per pattern. With a two-stage architecture:
+- Stage 1's mechanical scores (behavioral frequencies + quality rubric) are the progress metrics
+- Stage 2's coaching doesn't need to map 1:1 to Stage 1's patterns
+
+This means: scores track behavioral mechanics ("redirect quality went from 0.5 to 0.8"), coaching addresses holistic themes ("your defensive use of redirects is eroding trust"). Acting on the coaching should improve the behavioral scores because the coaching is grounded in the same rubric dimensions.
+
+Key validation question: if a coachee improves their scores, does that actually represent better leadership? If the rubrics measure the right quality dimensions (not just frequency), then yes. The current rubrics already do this well -- e.g., FM's distinction between 1.0 (genuine tangent redirect) and 0.0 (suppressing a risk signal) is a meaningful quality dimension.
+
+### Q3: How does the judge need to change?
+
+The current judge evaluates per-pattern coaching quality. With Stage 2 producing synthesized cross-pattern coaching, the judge needs to evaluate:
+- Is the coaching insight genuine and non-obvious? (keeps current `coaching_insight_quality`)
+- Does the coaching address the most important leadership moments? (new)
+- Is the synthesis accurate -- does the cross-pattern interpretation hold up against the transcript? (new)
+- Are the behavioral scores from Stage 1 accurate? (keeps current `scoring_arithmetic` + `evidence_quality`)
 
 ## Current state
 
-### Codebase
+### What exists and can be reused
+- **Stage 1 foundation**: The 1st-pass prompt + taxonomy (needs simplification, not replacement)
+- **Stage 2 foundation**: `backend/core/editor.py` -- `run_editor()`, `merge_editor_output()`, delta format, pipeline integration at `backend/core/workers.py`
+- **Eval infrastructure**: `backend/evals/replay_eval.py`, `backend/evals/judge_eval.py`, `backend/evals/variance_eval.py`
+- **Scoring rubrics**: The 0.0-1.0 tier definitions in the taxonomy are valuable and well-designed
+- **7 test transcripts** with extensive baseline data (Phases A-K)
+
+### Codebase references
 - **Branch**: `main`
-- **Current taxonomy**: `clearvoice_pattern_taxonomy_v3.0.txt` (project root)
+- **Taxonomy**: `clearvoice_pattern_taxonomy_v3.0.txt` (project root)
 - **System prompt**: `system_prompt_v0_4_0.txt` (project root)
-- **Editor prompt**: `system_prompt_editor_v1.0.txt` (project root)
-- **Editor pattern defs**: `editor_pattern_definitions_v1.0.txt` (project root)
-- **Pattern order constant**: `backend/core/config.py` line 63 (`PATTERN_ORDER`)
-- **Eval scripts**: `backend/evals/replay_eval.py`, `backend/evals/judge_eval.py`, `backend/evals/variance_eval.py`
-- **7 test transcripts**: `backend/evals/transcripts/`
+- **Editor**: `backend/core/editor.py`, `system_prompt_editor_v1.0.txt`, `editor_pattern_definitions_v1.0.txt`
+- **Pipeline**: `backend/core/workers.py` (editor integration at line ~622)
+- **Config**: `backend/core/config.py` (`PATTERN_ORDER`, model defaults)
+- **Eval results**: `backend/evals/results/Phase_I2/` (pre-editor baseline), `Phase_J2/` (post-editor), `Phase_K/` (variance decomposition)
 
-### Results directory
-- `backend/evals/results/Phase_K/` -- variance decomposition results + synthesis report
-- `backend/evals/results/Phase_I2/` -- pre-editor baseline (5 runs x 7 meetings)
-- `backend/evals/results/Phase_J2/` -- post-editor results (5 runs x 7 meetings)
-
-## The problem
-
-The current 10-pattern taxonomy is not MECE (mutually exclusive, collectively exhaustive). Several patterns measure the same observable behavior through different interpretive lenses:
-
-1. **FM/DN/TC cluster**: Same conflict-handling moments detected by all three, classified by inferred "primary" lens. LLM cannot reliably distinguish.
-2. **QQ/FM/PM cluster**: Same speech acts classified by inferred functional purpose. Inherently subjective.
-3. **AC/RA overlap**: Decisions and assignments blur when woven together.
-
-This produces:
-- 55% of pedantic ratings caused by misalignment (coaching assigned to wrong pattern)
-- 39% caused by stretching to fill (thin evidence forced into a category)
-- ~10% pedantic floor that 5 phases of taxonomy tweaking (G-I2) could not break
-
-## Design constraints for the new taxonomy
-
-1. **MECE at the behavioral level**: Each pattern should be triggered by a distinct observable behavior, not by inferring intent or purpose from the same behavior.
-2. **Stable detection**: The LLM should assign a given transcript moment to exactly one pattern with high consistency across runs.
-3. **Coaching value**: Each pattern should produce actionable, non-obvious coaching that a senior leader would find useful.
-4. **Reasonable count**: Aim for 6-8 patterns (fewer = cleaner boundaries, but must still be collectively exhaustive).
-5. **Backward compatibility consideration**: The existing eval transcripts and judge should still work. The judge prompt may need updates but the evaluation methodology should be preserved.
-
-## What the Phase G-I2 experiments taught us about LLM capabilities
-
-**Rules the LLM follows reliably:**
-- Rubric-level scoring disqualifiers (e.g., "this scores 0.0")
-- Materiality/distinctiveness tests for coaching_notes
-- Meeting-type-aware OE filtering
-
-**Rules the LLM ignores or misapplies:**
-- Cross-pattern reclassification ("exclude from X, reclassify to Y")
-- Coaching-note distinctiveness on overlapping patterns
-- Cross-pattern reasoning (evaluating one pattern based on another's results)
-- System prompt quality gates / suppression rules
-
-## Pattern stability data (SNR from Phase I2)
+### Pattern stability data (SNR from Phase I2)
 
 | Pattern | SNR | Notes |
 |---------|-----|-------|
-| participation_management | 56.0 | Excellent (5 meetings) |
-| communication_clarity | 22.4 | Good -- measures HOW you say it |
-| trust_and_credibility | 14.0 | Good SNR but 4/17 misalignment source |
-| purposeful_framing | 13.4 | Good -- proactive direction-setting |
-| disagreement_navigation | 9.7 | Moderate -- overlaps with FM and TC |
-| question_quality | 8.0 | Moderate -- overlaps with FM and PM |
-| assignment_clarity | 5.8 | Weak -- overlaps with RA |
-| resolution_and_alignment | 5.6 | Weak -- overlaps with AC |
-| feedback_quality | 5.0 | Weak but only 2 meetings evaluable |
-| focus_management | 3.0 | Weakest -- most overlap with DN and TC |
+| participation_management | 56.0 | Excellent |
+| communication_clarity | 22.4 | Good |
+| trust_and_credibility | 14.0 | Good SNR but #1 misalignment source |
+| purposeful_framing | 13.4 | Good |
+| disagreement_navigation | 9.7 | Moderate -- overlaps FM, TC |
+| question_quality | 8.0 | Moderate -- overlaps FM, PM |
+| assignment_clarity | 5.8 | Weak -- overlaps RA |
+| resolution_and_alignment | 5.6 | Weak -- overlaps AC |
+| feedback_quality | 5.0 | Weak (2 meetings evaluable) |
+| focus_management | 3.0 | Weakest -- most overlap |
 
-## Approach suggestions
+### What Phases G-I2 taught about LLM capabilities
 
-Consider organizing patterns around one of these axes:
+**Reliably follows:** Rubric-level scoring, materiality/distinctiveness tests, meeting-type-aware filtering.
 
-**Option A: Behavioral mechanics** -- What did the speaker observably do?
-- Structure/frame (opening, transitioning, closing)
-- Direct the floor (invite, redirect, yield)
-- Probe/question (diagnostic, clarifying, challenging)
-- Respond to friction (engage, deflect, escalate)
-- Specify action (who, what, when)
-- Deliver feedback (SBI-RC framework)
-- Communicate clearly (structure, conciseness, BLUF)
+**Ignores:** Cross-pattern reclassification, coaching-note distinctiveness on overlapping patterns, cross-pattern reasoning, system prompt suppression rules.
 
-**Option B: Meeting lifecycle phases** -- When in the meeting flow?
-- Opening/framing
-- Discussion management (floor, questions, friction)
-- Decision closure
-- Action specification
-- Feedback delivery (when applicable)
+## Suggested execution approach
 
-**Option C: Hybrid** -- Clean behavioral mechanics for communication patterns, lifecycle-based for meeting management.
-
-The key test for any new taxonomy: can you take a single transcript moment and assign it to exactly one pattern without knowing what other moments exist? If yes, the taxonomy is MECE at the behavioral level.
-
-## Files that need updating for a taxonomy change
-
-| File | What changes |
-|------|-------------|
-| `clearvoice_pattern_taxonomy_v3.0.txt` | Complete rewrite |
-| `system_prompt_v0_4_0.txt` | Pattern references in system prompt |
-| `editor_pattern_definitions_v1.0.txt` | Pattern definitions for editor |
-| `system_prompt_editor_v1.0.txt` | May need pattern reference updates |
-| `backend/core/config.py` | `PATTERN_ORDER` list |
-| `backend/core/gate1_validator.py` | Pattern validation |
-| `backend/schemas/mvp_v0_4_0.json` | JSON schema for output |
-| `backend/evals/judge_eval.py` | Judge prompt may need updating |
-| Frontend components | Pattern display, colors, labels |
-
-## Execution sequence
-
-1. Design the new taxonomy (pattern definitions, scoring rubrics, detection rules)
-2. Update the taxonomy file and system prompt
-3. Run replay_eval in repeat mode on all 7 transcripts (5 runs each)
-4. Run judge on all outputs
-5. Compare against Phase I2 baseline: insightful%, pedantic%, wrong%, SNR per pattern
-6. Iterate based on results
+1. **Decide Q1** (Stage 1 coaching text: yes or no)
+2. **Simplify the taxonomy** for Stage 1 (remove cross-pattern rules, keep scoring rubrics)
+3. **Redesign the Stage 2 prompt** (from delta-editor to coaching synthesizer)
+4. **Run eval** on all 7 transcripts, compare against Phase I2 baseline
+5. **Update the judge** if needed for synthesized coaching evaluation
+6. **Iterate** based on results

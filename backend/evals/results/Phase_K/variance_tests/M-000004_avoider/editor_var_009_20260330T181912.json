@@ -1,0 +1,56 @@
+{
+  "pattern_coaching_edits": {
+    "communication_clarity": {
+      "coaching_note": "SUPPRESS"
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "question_quality",
+      "oe_index": 1,
+      "reason": "This is a logistics scheduling question ('can that happen tomorrow?'), which the pattern definition explicitly excludes from question_quality."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 1,
+      "reason": "This moment is primarily a disagreement-navigation failure, not a communication-clarity issue. The issue is not that the statement is hard to follow, but that Alex dismisses substantive design pushback."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 2,
+      "reason": "This is mainly a focus-management redirection and disagreement-navigation moment, not evidence about substantive communication clarity."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 3,
+      "reason": "This is primarily a trust-and-credibility/high-stakes boundary-setting moment with product risk, not a distinct communication-clarity event."
+    }
+  ],
+  "changes": [
+    {
+      "field": "pattern_coaching.communication_clarity.coaching_note",
+      "action": "suppressed",
+      "reason": "The developmental feedback is misaligned to communication_clarity. It coaches shutdown of dissent and handling of risk signals, which belong under disagreement_navigation and trust_and_credibility."
+    },
+    {
+      "field": "opportunity_events.question_quality[1]",
+      "action": "removed",
+      "reason": "The second QQ event is a procedural/logistics question and should not count under question_quality."
+    },
+    {
+      "field": "opportunity_events.communication_clarity[1]",
+      "action": "removed",
+      "reason": "The statement about design assumptions is not a clarity issue; the meaningful behavior is how disagreement was handled."
+    },
+    {
+      "field": "opportunity_events.communication_clarity[2]",
+      "action": "removed",
+      "reason": "The QA offline redirection is better classified as focus management/disagreement handling than communication clarity."
+    },
+    {
+      "field": "opportunity_events.communication_clarity[3]",
+      "action": "removed",
+      "reason": "The product-risk cutoff is primarily a trust-and-credibility moment rather than a distinct clarity observation."
+    }
+  ]
+}

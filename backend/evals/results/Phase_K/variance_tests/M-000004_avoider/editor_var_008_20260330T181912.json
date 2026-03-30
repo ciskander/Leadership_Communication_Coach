@@ -1,0 +1,32 @@
+{
+  "pattern_coaching_edits": {
+    "communication_clarity": {
+      "coaching_note": "SUPPRESS",
+      "suggested_rewrite": "SUPPRESS"
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "question_quality",
+      "oe_index": 1,
+      "reason": "The question about whether bug triage can happen tomorrow is primarily a logistics/scheduling question, which the pattern definition explicitly excludes from question_quality."
+    }
+  ],
+  "changes": [
+    {
+      "field": "pattern_coaching_edits.communication_clarity.coaching_note",
+      "action": "suppressed",
+      "reason": "The developmental point is really about shutting down objections and risk signals, which belongs under disagreement_navigation and trust_and_credibility rather than communication_clarity."
+    },
+    {
+      "field": "pattern_coaching_edits.communication_clarity.suggested_rewrite",
+      "action": "suppressed",
+      "reason": "The rewrite coaches engagement with customer risk, which is a trust_and_credibility move, not a communication_clarity issue."
+    },
+    {
+      "field": "oe_removals[0]",
+      "action": "removed",
+      "reason": "This opportunity event is misclassified under question_quality because it is a procedural logistics question rather than a substantive question that advances thinking."
+    }
+  ]
+}

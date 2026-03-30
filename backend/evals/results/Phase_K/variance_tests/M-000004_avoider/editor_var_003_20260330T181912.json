@@ -1,0 +1,26 @@
+{
+  "pattern_coaching_edits": {
+    "communication_clarity": {
+      "coaching_note": "SUPPRESS"
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "question_quality",
+      "oe_index": 10,
+      "reason": "This is a logistics/scheduling question ('can that happen tomorrow?'), which the pattern definition explicitly excludes from question_quality."
+    }
+  ],
+  "changes": [
+    {
+      "field": "pattern_coaching.communication_clarity.coaching_note",
+      "action": "suppressed",
+      "reason": "The note is misaligned to communication_clarity. Its real point is about shutting down dissent and not engaging substance, which belongs under disagreement_navigation and trust_and_credibility, not clarity."
+    },
+    {
+      "field": "opportunity_events[10]",
+      "action": "removed",
+      "reason": "The question at issue is procedural/logistical rather than substantive, so it should not count as a question_quality opportunity."
+    }
+  ]
+}

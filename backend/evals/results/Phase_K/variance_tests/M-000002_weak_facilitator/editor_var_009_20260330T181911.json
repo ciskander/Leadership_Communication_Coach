@@ -1,0 +1,30 @@
+{
+  "pattern_coaching_edits": {
+    "purposeful_framing": {
+      "notes": "SUPPRESS"
+    },
+    "resolution_and_alignment": {
+      "notes": "SUPPRESS"
+    },
+    "assignment_clarity": {
+      "notes": "SUPPRESS"
+    }
+  },
+  "changes": [
+    {
+      "field": "pattern_coaching_edits.purposeful_framing.notes",
+      "action": "suppressed",
+      "reason": "Thin positive observation. Naming the next topic without clear outcome is exactly the weakness in this pattern, not a meaningful strength worth surfacing."
+    },
+    {
+      "field": "pattern_coaching_edits.resolution_and_alignment.notes",
+      "action": "suppressed",
+      "reason": "Misleading positive signal. The late recap was clear, but the room immediately challenged it as evidence that alignment had not actually been achieved, so it is not a strong success for this pattern."
+    },
+    {
+      "field": "pattern_coaching_edits.assignment_clarity.notes",
+      "action": "suppressed",
+      "reason": "The cited moments are mostly promises to follow up rather than strong examples of assigning work with clear owner, deliverable, and confirmation. This overstates a pattern that was inconsistent overall."
+    }
+  ]
+}

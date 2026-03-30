@@ -1,0 +1,14 @@
+{
+  "pattern_coaching_edits": {
+    "trust_and_credibility": {
+      "notes": "SUPPRESS"
+    }
+  },
+  "changes": [
+    {
+      "field": "pattern_coaching_edits.trust_and_credibility.notes",
+      "action": "suppressed",
+      "reason": "The observation is primarily about focus management: Jordan parked a late-breaking topic with a clear boundary and next step. While respectful, the coaching does not add a distinct trust consequence beyond what focus_management already captures, so it is redundant/misaligned for trust_and_credibility."
+    }
+  ]
+}

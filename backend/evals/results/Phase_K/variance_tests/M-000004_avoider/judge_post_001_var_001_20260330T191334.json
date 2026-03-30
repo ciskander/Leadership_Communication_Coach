@@ -1,0 +1,265 @@
+{
+  "coaching_insight_quality": {
+    "items": [
+      {
+        "pattern_id": "purposeful_framing",
+        "rating": "adequate",
+        "explanation": "This is fair but obvious. Yes, Alex opened with a clear purpose and desired outcome. That is useful to note, but it is surface-level and not especially developmental for a senior leader."
+      },
+      {
+        "pattern_id": "disagreement_navigation",
+        "rating": "insightful",
+        "explanation": "This is the strongest part of the coaching. It identifies the core leadership failure in the meeting: Alex treated informed dissent as obstruction and shut down design and QA concerns that were directly relevant to the decision. That is a real executive-level coaching point, not taxonomy for its own sake."
+      },
+      {
+        "pattern_id": "trust_and_credibility",
+        "rating": "insightful",
+        "explanation": "Also strong. The coaching correctly spots that Alex trained Quinn not to raise risk signals in real time. This gets at culture and information flow, which a senior leader should care about."
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "rating": "adequate",
+        "explanation": "Reasonable but somewhat generous. Alex did summarize decisions and assign next steps, but the alignment was compliance, not real alignment. The coaching notices the summary behavior but underplays that the room may not actually be committed."
+      },
+      {
+        "pattern_id": "assignment_clarity",
+        "rating": "adequate",
+        "explanation": "This is directionally correct, especially on separating discussion output from execution. But it is a secondary issue compared with the fact that Alex made a ship decision before resolving whether QA could certify. It is useful, but not high-leverage relative to the bigger decision-quality problem."
+      }
+    ],
+    "pattern_first_detected": true,
+    "overall_notes": "The output contains real coaching value, especially around how Alex shut down dissent and degraded decision quality. However, some sections feel taxonomy-driven: praising framing and alignment in a meeting where the central problem was false closure risks sounding like pattern recognition rather than senior coaching judgment."
+  },
+  "evidence_quality": {
+    "items": [
+      {
+        "pattern_id": "purposeful_framing",
+        "evidence_excerpt_start": "Alex: Let's get started. We're three weeks behind on",
+        "rating": "strong_evidence",
+        "explanation": "This is a direct example of clearly framing the meeting's purpose and desired outcome.",
+        "better_evidence_exists": false,
+        "better_evidence_description": ""
+      },
+      {
+        "pattern_id": "disagreement_navigation",
+        "evidence_excerpt_start": "Jamie: Wait — we can't just cut offline sync.",
+        "rating": "strong_evidence",
+        "explanation": "This is the right evidence set. It shows a substantive challenge being raised, clarified, and then overridden without engagement. It captures the pattern clearly.",
+        "better_evidence_exists": true,
+        "better_evidence_description": "The Taylor exchange is equally strong, and arguably even more consequential because QA certification directly affects release viability. Including Alex's shutdown of Taylor would have made the point even stronger."
+      },
+      {
+        "pattern_id": "trust_and_credibility",
+        "evidence_excerpt_start": "Alex: No. We can't keep adding things. I don't",
+        "rating": "strong_evidence",
+        "explanation": "Well chosen. It captures Alex reacting to a risk signal as if it were a scope request, then cutting off clarification.",
+        "better_evidence_exists": false,
+        "better_evidence_description": ""
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "evidence_excerpt_start": "Alex: So the plan is: we cut offline sync",
+        "rating": "strong_evidence",
+        "explanation": "This does show recap and decision closure behavior.",
+        "better_evidence_exists": true,
+        "better_evidence_description": "A fuller evidence set should note that this was closure without substantive resolution of objections. The current evidence is accurate but incomplete."
+      },
+      {
+        "pattern_id": "assignment_clarity",
+        "evidence_excerpt_start": "Alex: Good. That's the plan. We ship the core",
+        "rating": "strong_evidence",
+        "explanation": "This quote does support the point that the initial assignment blended decision-making and execution.",
+        "better_evidence_exists": false,
+        "better_evidence_description": ""
+      }
+    ],
+    "overall_notes": "Evidence is mostly well grounded in the transcript. The main weakness is not misquoting but selective emphasis: the system sees real behaviors, but sometimes isolates a competency example from the larger context that makes it less impressive."
+  },
+  "success_evidence_quality": {
+    "items": [
+      {
+        "pattern_id": "purposeful_framing",
+        "evidence_span_id": "ES-T1",
+        "evidence_excerpt_start": "Alex: Let's get started. We're three weeks behind on",
+        "genuinely_demonstrates_pattern": true,
+        "explanation": "Yes. This is a legitimate example of strong opening framing."
+      },
+      {
+        "pattern_id": "purposeful_framing",
+        "evidence_span_id": "ES-T9",
+        "evidence_excerpt_start": "Alex: I hear you. But we're not going to",
+        "genuinely_demonstrates_pattern": false,
+        "explanation": "This is not good framing; it is abrupt closure and topic switching. Calling it purposeful framing is a stretch."
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "evidence_span_id": "ES-T27",
+        "evidence_excerpt_start": "Alex: So the plan is: we cut offline sync",
+        "genuinely_demonstrates_pattern": true,
+        "explanation": "It demonstrates recap and decisiveness. Whether it demonstrates real alignment is more debatable, but the behavior itself fits the pattern."
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "evidence_span_id": "ES-T40",
+        "evidence_excerpt_start": "Alex: Release target is end of next week. Everyone",
+        "genuinely_demonstrates_pattern": true,
+        "explanation": "This does show an explicit check for understanding, though not necessarily psychological safety to disagree."
+      },
+      {
+        "pattern_id": "assignment_clarity",
+        "evidence_span_id": "ES-T29-31",
+        "evidence_excerpt_start": "Alex: Good. Jamie, for the v2 UX work",
+        "genuinely_demonstrates_pattern": true,
+        "explanation": "Yes. Alex clarifies scope of the deliverable after Jamie pushes back."
+      },
+      {
+        "pattern_id": "assignment_clarity",
+        "evidence_span_id": "ES-T35",
+        "evidence_excerpt_start": "Alex: And I want the ship-blocker list by end",
+        "genuinely_demonstrates_pattern": true,
+        "explanation": "This is a clear, time-bound assignment."
+      }
+    ],
+    "best_example_chosen_well": [
+      {
+        "pattern_id": "purposeful_framing",
+        "rating": "best_available",
+        "explanation": "The opening is the strongest example of framing in the transcript.",
+        "better_span_description": ""
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "rating": "acceptable",
+        "explanation": "ES-T27 is a fair best example of recap and closure. It is not true alignment, but it is the best available match for the labeled behavior.",
+        "better_span_description": ""
+      },
+      {
+        "pattern_id": "assignment_clarity",
+        "rating": "best_available",
+        "explanation": "ES-T35 is the clearest assignment moment in the meeting.",
+        "better_span_description": ""
+      }
+    ],
+    "overall_notes": "Success evidence is mixed. Some examples are legitimate, but at least one is plainly mislabeled as success when it is actually part of the problem. That creates the impression of a system eager to populate every category whether or not the transcript truly supports it."
+  },
+  "rewrite_quality": {
+    "items": [
+      {
+        "pattern_id": "disagreement_navigation",
+        "rating": "strong_model",
+        "matches_coaching_note": true,
+        "matches_conversational_moment": true,
+        "explanation": "This is a strong rewrite: it preserves Alex's authority and urgency while creating space for decision-relevant expertise. It is specific to the actual issue in the room."
+      },
+      {
+        "pattern_id": "trust_and_credibility",
+        "rating": "strong_model",
+        "matches_coaching_note": true,
+        "matches_conversational_moment": true,
+        "explanation": "This rewrite is practical and executive-sounding. It draws a boundary on scope while still allowing the risk to be heard."
+      },
+      {
+        "pattern_id": "assignment_clarity",
+        "rating": "strong_model",
+        "matches_coaching_note": true,
+        "matches_conversational_moment": true,
+        "explanation": "This is clearer than the original and would materially improve execution. It translates vague pressure into a concrete deliverable."
+      }
+    ],
+    "overall_notes": "The rewrites are the best part of the output after the disagreement insight. They are plausible, tactically useful, and preserve the leader's intent rather than replacing it with overly polished coaching language."
+  },
+  "coaching_pattern_alignment": {
+    "items": [
+      {
+        "pattern_id": "purposeful_framing",
+        "fits_pattern": true,
+        "better_pattern": "",
+        "stretching_to_fill": false,
+        "explanation": "The opening genuinely fits framing."
+      },
+      {
+        "pattern_id": "disagreement_navigation",
+        "fits_pattern": true,
+        "better_pattern": "",
+        "stretching_to_fill": false,
+        "explanation": "This is exactly the right bucket for the main failure in the meeting."
+      },
+      {
+        "pattern_id": "trust_and_credibility",
+        "fits_pattern": true,
+        "better_pattern": "",
+        "stretching_to_fill": false,
+        "explanation": "Reasonable fit. Quinn's interruption is as much about receptivity to risk signals as it is about disagreement."
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "fits_pattern": true,
+        "better_pattern": "",
+        "stretching_to_fill": true,
+        "explanation": "Technically it fits because Alex did summarize and confirm, but it overstates the quality of alignment achieved. This feels partially included because the system wants to register a strength."
+      },
+      {
+        "pattern_id": "assignment_clarity",
+        "fits_pattern": true,
+        "better_pattern": "",
+        "stretching_to_fill": false,
+        "explanation": "This is a legitimate pattern present in the transcript."
+      }
+    ],
+    "overall_notes": "Most pattern assignments are reasonable. The issue is less wrong categorization than inflated positivity in weaker categories, especially around alignment."
+  },
+  "internal_consistency": {
+    "score_coaching_aligned": true,
+    "experiment_detection_coherent": true,
+    "executive_summary_reflects_findings": true,
+    "issues": [
+      "The summary correctly emphasizes Alex closing down challenge, but some strength sections partially undermine that by praising alignment and framing without enough caveat.",
+      "Success evidence for purposeful_framing includes a quote that is not actually a successful example of framing."
+    ]
+  },
+  "executive_coach_gut_check": {
+    "balanced": true,
+    "right_growth_areas": true,
+    "leader_would_feel_respected": true,
+    "anything_important_ignored": "Yes: the coaching should have more explicitly named that Alex made a release commitment while QA was actively saying they could not certify, and that he may have committed to a plan based on engineering optimism rather than an integrated decision. It also underplays the relational damage with Jamie and Taylor.",
+    "anything_over_weighted": "Somewhat over-weighted: praise for resolution/alignment and framing. Those are present, but they are not the story of this meeting.",
+    "overall_coaching_value": "medium",
+    "would_approve_for_delivery": true,
+    "explanation": "I would approve this with reservations. The central coaching point is real and valuable: Alex's decisiveness became decision foreclosure, and he suppressed expert risk signals from design, QA, and product. That is exactly the kind of feedback a senior leader needs. The rewrites are also usable. What keeps this from being high-value coaching is that it still shows signs of competency-template filling: it praises alignment in a meeting that likely produced compliance rather than commitment, and it misses the deeper executive issue that Alex may have set a ship date without an actually valid release decision. Useful, but not yet sharp enough to feel like top-tier executive coaching."
+  },
+  "scoring_arithmetic": {
+    "checked_patterns": [
+      {
+        "pattern_id": "purposeful_framing",
+        "reported_score": 0.875,
+        "computed_score": 0.875,
+        "match": true
+      },
+      {
+        "pattern_id": "disagreement_navigation",
+        "reported_score": 0.0,
+        "computed_score": 0.0,
+        "match": true
+      },
+      {
+        "pattern_id": "trust_and_credibility",
+        "reported_score": 0.0,
+        "computed_score": 0.0,
+        "match": true
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "reported_score": 0.75,
+        "computed_score": 0.75,
+        "match": true
+      },
+      {
+        "pattern_id": "assignment_clarity",
+        "reported_score": 0.6875,
+        "computed_score": 0.6875,
+        "match": true
+      }
+    ]
+  },
+  "_elapsed_sec": 45.3
+}

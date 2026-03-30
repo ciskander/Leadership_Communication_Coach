@@ -1,0 +1,32 @@
+{
+  "pattern_coaching_edits": {
+    "communication_clarity": {
+      "coaching_note": "SUPPRESS",
+      "suggested_rewrite": "SUPPRESS"
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "question_quality",
+      "oe_index": 1,
+      "reason": "The 'can that happen tomorrow?' prompt is a logistics/scheduling question, which the pattern definition explicitly excludes from question_quality."
+    }
+  ],
+  "changes": [
+    {
+      "field": "pattern_coaching_edits.communication_clarity.coaching_note",
+      "action": "suppressed",
+      "reason": "The note is misaligned to communication_clarity. It is really coaching on disagreement_navigation/trust dynamics—using directness to shut down objections—rather than on whether Alex's substantive contributions were clear and structured."
+    },
+    {
+      "field": "pattern_coaching_edits.communication_clarity.suggested_rewrite",
+      "action": "suppressed",
+      "reason": "The rewrite targets engagement with customer risk, which belongs under trust_and_credibility or disagreement_navigation, not communication_clarity."
+    },
+    {
+      "field": "oe_removals",
+      "action": "removed",
+      "reason": "Removed a misclassified question_quality opportunity event because it is procedural/logistics rather than a substantive, conversation-advancing question."
+    }
+  ]
+}

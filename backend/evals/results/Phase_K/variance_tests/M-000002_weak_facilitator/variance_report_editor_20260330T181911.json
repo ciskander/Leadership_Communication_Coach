@@ -1,0 +1,213 @@
+{
+  "n_runs": 10,
+  "n_valid": 10,
+  "evaluable_patterns": [
+    "purposeful_framing",
+    "focus_management",
+    "participation_management",
+    "disagreement_navigation",
+    "trust_and_credibility",
+    "resolution_and_alignment",
+    "assignment_clarity",
+    "question_quality",
+    "communication_clarity"
+  ],
+  "per_pattern": {
+    "purposeful_framing": {
+      "notes": {
+        "suppress": 6,
+        "pass": 4
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "focus_management": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "participation_management": {
+      "notes": {
+        "suppress": 8,
+        "pass": 2
+      },
+      "coaching_note": {
+        "pass": 8,
+        "rewrite": 1,
+        "suppress": 1
+      }
+    },
+    "disagreement_navigation": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "trust_and_credibility": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "resolution_and_alignment": {
+      "notes": {
+        "suppress": 4,
+        "rewrite": 3,
+        "pass": 3
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "assignment_clarity": {
+      "notes": {
+        "suppress": 9,
+        "rewrite": 1
+      },
+      "coaching_note": {
+        "suppress": 2,
+        "pass": 4,
+        "rewrite": 4
+      }
+    },
+    "question_quality": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "communication_clarity": {
+      "notes": {
+        "pass": 9,
+        "suppress": 1
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    }
+  },
+  "unanimous_rate": 0.6111,
+  "unanimous_combos": 11,
+  "total_combos": 18,
+  "flip_patterns": [
+    {
+      "pattern_id": "purposeful_framing",
+      "field": "notes",
+      "distribution": {
+        "suppress": 6,
+        "pass": 4
+      }
+    },
+    {
+      "pattern_id": "participation_management",
+      "field": "notes",
+      "distribution": {
+        "suppress": 8,
+        "pass": 2
+      }
+    },
+    {
+      "pattern_id": "participation_management",
+      "field": "coaching_note",
+      "distribution": {
+        "pass": 8,
+        "rewrite": 1,
+        "suppress": 1
+      }
+    },
+    {
+      "pattern_id": "resolution_and_alignment",
+      "field": "notes",
+      "distribution": {
+        "suppress": 4,
+        "rewrite": 3,
+        "pass": 3
+      }
+    },
+    {
+      "pattern_id": "assignment_clarity",
+      "field": "notes",
+      "distribution": {
+        "suppress": 9,
+        "rewrite": 1
+      }
+    },
+    {
+      "pattern_id": "assignment_clarity",
+      "field": "coaching_note",
+      "distribution": {
+        "suppress": 2,
+        "pass": 4,
+        "rewrite": 4
+      }
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "field": "notes",
+      "distribution": {
+        "pass": 9,
+        "suppress": 1
+      }
+    }
+  ],
+  "exec_summary_changed_rate": 0.4,
+  "coaching_themes_changed_rate": 0.0,
+  "focus_message_changed_rate": 0.6,
+  "oe_removals": {
+    "items": [
+      {
+        "pattern_id": "assignment_clarity",
+        "oe_index": 5,
+        "flagged_in": 4
+      },
+      {
+        "pattern_id": "assignment_clarity",
+        "oe_index": 7,
+        "flagged_in": 3
+      },
+      {
+        "pattern_id": "assignment_clarity",
+        "oe_index": 8,
+        "flagged_in": 2
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "oe_index": 0,
+        "flagged_in": 2
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "oe_index": 4,
+        "flagged_in": 6
+      }
+    ],
+    "agreement_rate": 0.0
+  },
+  "changes_per_run": {
+    "values": [
+      6,
+      9,
+      9,
+      10,
+      11,
+      10,
+      7,
+      4,
+      3,
+      5
+    ],
+    "min": 3,
+    "max": 11,
+    "mean": 7.4
+  }
+}

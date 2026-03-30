@@ -1,0 +1,128 @@
+{
+  "n_runs": 10,
+  "n_valid": 10,
+  "coached_patterns": [
+    "purposeful_framing",
+    "disagreement_navigation",
+    "trust_and_credibility",
+    "resolution_and_alignment",
+    "assignment_clarity",
+    "communication_clarity"
+  ],
+  "per_pattern_ratings": {
+    "purposeful_framing": {
+      "adequate": 10
+    },
+    "disagreement_navigation": {
+      "insightful": 10
+    },
+    "trust_and_credibility": {
+      "insightful": 10
+    },
+    "resolution_and_alignment": {
+      "adequate": 10
+    },
+    "assignment_clarity": {
+      "adequate": 10
+    },
+    "communication_clarity": {
+      "pedantic": 10
+    }
+  },
+  "unanimous_rate": 1.0,
+  "unanimous_count": 6,
+  "total_patterns": 6,
+  "flip_patterns": [],
+  "aggregate_pcts": {
+    "insightful": {
+      "mean": 0.3333,
+      "stdev": 0.0
+    },
+    "adequate": {
+      "mean": 0.5,
+      "stdev": 0.0
+    },
+    "pedantic": {
+      "mean": 0.1667,
+      "stdev": 0.0
+    },
+    "wrong": {
+      "mean": 0.0,
+      "stdev": 0.0
+    }
+  },
+  "coaching_value": {
+    "medium": 10
+  },
+  "would_approve": {
+    "counts": {
+      "True": 10
+    },
+    "agreement_rate": 1.0
+  },
+  "pattern_alignment": {
+    "purposeful_framing": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 1.0,
+      "fits_pattern_values": {
+        "true": 10
+      },
+      "stretching_to_fill_values": {
+        "false": 10
+      }
+    },
+    "disagreement_navigation": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 1.0,
+      "fits_pattern_values": {
+        "true": 10
+      },
+      "stretching_to_fill_values": {
+        "false": 10
+      }
+    },
+    "trust_and_credibility": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 1.0,
+      "fits_pattern_values": {
+        "true": 10
+      },
+      "stretching_to_fill_values": {
+        "false": 10
+      }
+    },
+    "resolution_and_alignment": {
+      "fits_pattern_agree": 0.7,
+      "stretching_to_fill_agree": 0.5,
+      "fits_pattern_values": {
+        "true": 7,
+        "false": 3
+      },
+      "stretching_to_fill_values": {
+        "false": 5,
+        "true": 5
+      }
+    },
+    "assignment_clarity": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 1.0,
+      "fits_pattern_values": {
+        "true": 10
+      },
+      "stretching_to_fill_values": {
+        "false": 10
+      }
+    },
+    "communication_clarity": {
+      "fits_pattern_agree": 0.6,
+      "stretching_to_fill_agree": 1.0,
+      "fits_pattern_values": {
+        "true": 4,
+        "false": 6
+      },
+      "stretching_to_fill_values": {
+        "true": 10
+      }
+    }
+  }
+}

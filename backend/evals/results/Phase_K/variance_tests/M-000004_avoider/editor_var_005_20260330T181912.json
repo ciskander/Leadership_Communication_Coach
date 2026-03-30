@@ -1,0 +1,26 @@
+{
+  "pattern_coaching_edits": {
+    "communication_clarity": {
+      "coaching_note": "SUPPRESS"
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "question_quality",
+      "oe_index": 1,
+      "reason": "This is a logistics/scheduling question ('can that happen tomorrow?'), which the pattern definition explicitly excludes from question_quality."
+    }
+  ],
+  "changes": [
+    {
+      "field": "pattern_coaching.communication_clarity.coaching_note",
+      "action": "suppressed",
+      "reason": "The developmental point is really about shutting down objections and not engaging risk signals, which belongs under disagreement_navigation and trust_and_credibility rather than communication_clarity."
+    },
+    {
+      "field": "opportunity_events.question_quality[1]",
+      "action": "removed",
+      "reason": "The event is a procedural logistics question, not a substantive question that advances the conversation in a way that fits question_quality."
+    }
+  ]
+}

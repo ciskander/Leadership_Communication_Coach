@@ -1,0 +1,149 @@
+{
+  "n_runs": 10,
+  "n_valid": 10,
+  "coached_patterns": [
+    "purposeful_framing",
+    "focus_management",
+    "disagreement_navigation",
+    "trust_and_credibility",
+    "resolution_and_alignment",
+    "assignment_clarity",
+    "communication_clarity"
+  ],
+  "per_pattern_ratings": {
+    "purposeful_framing": {
+      "adequate": 10
+    },
+    "focus_management": {
+      "pedantic": 10
+    },
+    "disagreement_navigation": {
+      "insightful": 10
+    },
+    "trust_and_credibility": {
+      "insightful": 10
+    },
+    "resolution_and_alignment": {
+      "insightful": 8,
+      "adequate": 2
+    },
+    "assignment_clarity": {
+      "adequate": 10
+    },
+    "communication_clarity": {
+      "adequate": 10
+    }
+  },
+  "unanimous_rate": 0.8571,
+  "unanimous_count": 6,
+  "total_patterns": 7,
+  "flip_patterns": [
+    {
+      "pattern_id": "resolution_and_alignment",
+      "ratings": {
+        "insightful": 8,
+        "adequate": 2
+      }
+    }
+  ],
+  "aggregate_pcts": {
+    "insightful": {
+      "mean": 0.4,
+      "stdev": 0.0602
+    },
+    "adequate": {
+      "mean": 0.4571,
+      "stdev": 0.0602
+    },
+    "pedantic": {
+      "mean": 0.1429,
+      "stdev": 0.0
+    },
+    "wrong": {
+      "mean": 0.0,
+      "stdev": 0.0
+    }
+  },
+  "coaching_value": {
+    "medium": 10
+  },
+  "would_approve": {
+    "counts": {
+      "True": 10
+    },
+    "agreement_rate": 1.0
+  },
+  "pattern_alignment": {
+    "purposeful_framing": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 1.0,
+      "fits_pattern_values": {
+        "true": 10
+      },
+      "stretching_to_fill_values": {
+        "false": 10
+      }
+    },
+    "focus_management": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 1.0,
+      "fits_pattern_values": {
+        "false": 10
+      },
+      "stretching_to_fill_values": {
+        "true": 10
+      }
+    },
+    "disagreement_navigation": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 1.0,
+      "fits_pattern_values": {
+        "true": 10
+      },
+      "stretching_to_fill_values": {
+        "false": 10
+      }
+    },
+    "trust_and_credibility": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 1.0,
+      "fits_pattern_values": {
+        "true": 10
+      },
+      "stretching_to_fill_values": {
+        "false": 10
+      }
+    },
+    "resolution_and_alignment": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 1.0,
+      "fits_pattern_values": {
+        "true": 10
+      },
+      "stretching_to_fill_values": {
+        "false": 10
+      }
+    },
+    "assignment_clarity": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 1.0,
+      "fits_pattern_values": {
+        "true": 10
+      },
+      "stretching_to_fill_values": {
+        "false": 10
+      }
+    },
+    "communication_clarity": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 0.9,
+      "fits_pattern_values": {
+        "true": 10
+      },
+      "stretching_to_fill_values": {
+        "false": 9,
+        "true": 1
+      }
+    }
+  }
+}

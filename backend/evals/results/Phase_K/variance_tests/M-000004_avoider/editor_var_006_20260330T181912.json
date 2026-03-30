@@ -1,0 +1,52 @@
+{
+  "pattern_coaching_edits": {
+    "communication_clarity": {
+      "coaching_note": "SUPPRESS",
+      "suggested_rewrite": "SUPPRESS"
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "question_quality",
+      "oe_index": 1,
+      "reason": "This is a logistics scheduling question ('can that happen tomorrow?'), which the pattern definition explicitly excludes from question_quality."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 2,
+      "reason": "This moment is primarily a focus-management redirection ('take the QA discussion offline'), not an observation about substantive communication clarity."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 3,
+      "reason": "This is mainly a boundary-setting / dismissal moment already captured more meaningfully under trust_and_credibility; keeping it in communication_clarity is redundant and misclassified."
+    }
+  ],
+  "changes": [
+    {
+      "field": "pattern_coaching.communication_clarity.coaching_note",
+      "action": "suppressed",
+      "reason": "The note is misaligned to communication_clarity. It is really coaching on disagreement handling and trust impact, both of which are already covered more specifically elsewhere."
+    },
+    {
+      "field": "pattern_coaching.communication_clarity.suggested_rewrite",
+      "action": "suppressed",
+      "reason": "The rewrite coaches engagement with customer risk, which belongs under trust_and_credibility/disagreement_navigation rather than communication_clarity."
+    },
+    {
+      "field": "opportunity_events.question_quality[1]",
+      "action": "removed",
+      "reason": "Flagged for removal because the question is logistical, not substantive, so it should not count toward question_quality."
+    },
+    {
+      "field": "opportunity_events.communication_clarity[2]",
+      "action": "removed",
+      "reason": "Flagged for removal because the event is a meeting-control redirection, not a true communication_clarity moment."
+    },
+    {
+      "field": "opportunity_events.communication_clarity[3]",
+      "action": "removed",
+      "reason": "Flagged for removal because the event duplicates trust-and-credibility coaching and does not add distinct clarity insight."
+    }
+  ]
+}

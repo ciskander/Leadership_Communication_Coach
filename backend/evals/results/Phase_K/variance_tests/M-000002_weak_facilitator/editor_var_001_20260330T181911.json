@@ -1,0 +1,71 @@
+{
+  "pattern_coaching_edits": {
+    "purposeful_framing": {
+      "notes": "SUPPRESS"
+    },
+    "participation_management": {
+      "notes": "SUPPRESS"
+    },
+    "resolution_and_alignment": {
+      "notes": "SUPPRESS"
+    },
+    "assignment_clarity": {
+      "notes": "SUPPRESS",
+      "coaching_note": "SUPPRESS"
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "resolution_and_alignment",
+      "oe_index": 4,
+      "reason": "Moving on with 'So we're good on launch date' is not a genuine closure/alignment moment here; the underlying decision remained unresolved and was immediately reopened. This is premature transition language, not true resolution."
+    },
+    {
+      "pattern_id": "assignment_clarity",
+      "oe_index": 5,
+      "reason": "Saying 'Definitely by Thursday' names only a timeframe in response to prior pressure; by itself it is not a full assignment moment with owner, deliverable, and context. Counting it as a strong assignment overstates performance."
+    },
+    {
+      "pattern_id": "assignment_clarity",
+      "oe_index": 7,
+      "reason": "Promising to send a recap email tonight is a routine follow-up commitment, but the content remained vague ('the stuff we talked about'). This is too thin to count as a high-quality assignment example."
+    },
+    {
+      "pattern_id": "assignment_clarity",
+      "oe_index": 8,
+      "reason": "'I'll ping you after lunch' is a scheduling follow-up, not meaningful task assignment with defined deliverable clarity."
+    }
+  ],
+  "changes": [
+    {
+      "field": "pattern_coaching_edits.purposeful_framing.notes",
+      "action": "suppressed",
+      "reason": "Positive observation is thin and generic. Naming the next topic with a rough transition is not distinctive enough to merit delivery as coaching for a senior leader."
+    },
+    {
+      "field": "pattern_coaching_edits.participation_management.notes",
+      "action": "suppressed",
+      "reason": "Field was null/empty and there is no meaningful positive participation-management observation to preserve."
+    },
+    {
+      "field": "pattern_coaching_edits.resolution_and_alignment.notes",
+      "action": "suppressed",
+      "reason": "The recap was clear, but the claimed strength overstates actual closure. The room immediately challenged that little had been decided, so this is better captured under communication clarity than as a meaningful resolution strength."
+    },
+    {
+      "field": "pattern_coaching_edits.assignment_clarity.notes",
+      "action": "suppressed",
+      "reason": "The positive note relies on routine follow-up commitments as evidence of assignment strength, which stretches the pattern and overstates performance given the repeated ambiguity in Jordan's assignments."
+    },
+    {
+      "field": "pattern_coaching_edits.assignment_clarity.coaching_note",
+      "action": "suppressed",
+      "reason": "Although technically aligned, it adds limited value relative to the stronger trust, resolution, and disagreement coaching. The more consequential issue was not generic assignment wording but Jordan declaring decisions and commitments before dependencies were resolved."
+    },
+    {
+      "field": "oe_removals",
+      "action": "removed",
+      "reason": "Flagged overstated or misclassified opportunity events so recalculated scores better reflect actual performance, especially around false closure and thin assignment moments."
+    }
+  ]
+}

@@ -1,0 +1,1158 @@
+{
+  "schema_version": "mvp.v0.4.0",
+  "meta": {
+    "analysis_id": "A-260330",
+    "taxonomy_version": "v3.0",
+    "output_mode": "coaching_first_2s1e",
+    "analysis_type": "single_meeting",
+    "generated_at": "2026-03-30T18:06:55.239192+00:00"
+  },
+  "context": {
+    "meeting_id": "M-000001",
+    "meeting_type": "project_review",
+    "target_role": "chair",
+    "meeting_date": "2026-01-01",
+    "target_speaker_name": "Jordan",
+    "target_speaker_label": "Jordan"
+  },
+  "opportunity_events": [
+    {
+      "event_id": "OE-001",
+      "pattern_id": "purposeful_framing",
+      "turn_start_id": 1,
+      "turn_end_id": 1,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "meeting_open_with_topic_and_outcomes"
+    },
+    {
+      "event_id": "OE-002",
+      "pattern_id": "purposeful_framing",
+      "turn_start_id": 26,
+      "turn_end_id": 26,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "topic_transition_with_explicit_decision_goal"
+    },
+    {
+      "event_id": "OE-003",
+      "pattern_id": "purposeful_framing",
+      "turn_start_id": 51,
+      "turn_end_id": 51,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "topic_transition_with_explicit_decision_goal"
+    },
+    {
+      "event_id": "OE-004",
+      "pattern_id": "focus_management",
+      "turn_start_id": 80,
+      "turn_end_id": 82,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "explicitly_parked_tangent_with_boundary_and_next_step"
+    },
+    {
+      "event_id": "OE-005",
+      "pattern_id": "participation_management",
+      "turn_start_id": 1,
+      "turn_end_id": 1,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "targeted_named_invitation_to_unheard_expert"
+    },
+    {
+      "event_id": "OE-006",
+      "pattern_id": "participation_management",
+      "turn_start_id": 5,
+      "turn_end_id": 5,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "targeted_named_invitation_to_unheard_expert"
+    },
+    {
+      "event_id": "OE-007",
+      "pattern_id": "participation_management",
+      "turn_start_id": 9,
+      "turn_end_id": 9,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "targeted_named_invitation_to_unheard_expert"
+    },
+    {
+      "event_id": "OE-008",
+      "pattern_id": "participation_management",
+      "turn_start_id": 11,
+      "turn_end_id": 11,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "targeted_named_invitation_to_unheard_expert"
+    },
+    {
+      "event_id": "OE-009",
+      "pattern_id": "participation_management",
+      "turn_start_id": 15,
+      "turn_end_id": 15,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "targeted_named_invitation_to_unheard_expert"
+    },
+    {
+      "event_id": "OE-010",
+      "pattern_id": "participation_management",
+      "turn_start_id": 35,
+      "turn_end_id": 35,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "targeted_named_invitation_to_unheard_expert"
+    },
+    {
+      "event_id": "OE-011",
+      "pattern_id": "participation_management",
+      "turn_start_id": 53,
+      "turn_end_id": 53,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "named_invitation_connected_to_relevant_stakeholder"
+    },
+    {
+      "event_id": "OE-012",
+      "pattern_id": "participation_management",
+      "turn_start_id": 57,
+      "turn_end_id": 57,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "named_invitation_connected_to_relevant_stakeholder"
+    },
+    {
+      "event_id": "OE-013",
+      "pattern_id": "disagreement_navigation",
+      "turn_start_id": 55,
+      "turn_end_id": 56,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "constructive_probe_of_emerging_disagreement_without_full_resolution"
+    },
+    {
+      "event_id": "OE-014",
+      "pattern_id": "trust_and_credibility",
+      "turn_start_id": 80,
+      "turn_end_id": 84,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "transparent_deferral_with_specific_follow_through"
+    },
+    {
+      "event_id": "OE-015",
+      "pattern_id": "resolution_and_alignment",
+      "turn_start_id": 17,
+      "turn_end_id": 20,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "specific_resolution_with_explicit_alignment_check"
+    },
+    {
+      "event_id": "OE-016",
+      "pattern_id": "resolution_and_alignment",
+      "turn_start_id": 39,
+      "turn_end_id": 44,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "specific_resolution_with_explicit_alignment_check"
+    },
+    {
+      "event_id": "OE-017",
+      "pattern_id": "resolution_and_alignment",
+      "turn_start_id": 68,
+      "turn_end_id": 71,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "specific_resolution_with_partial_alignment_check"
+    },
+    {
+      "event_id": "OE-018",
+      "pattern_id": "resolution_and_alignment",
+      "turn_start_id": 75,
+      "turn_end_id": 75,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "specific_resolution_without_alignment_check"
+    },
+    {
+      "event_id": "OE-019",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 21,
+      "turn_end_id": 21,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "simple_assignment_owner_deadline_deliverable_present",
+      "notes": "simple"
+    },
+    {
+      "event_id": "OE-020",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 24,
+      "turn_end_id": 24,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "simple_assignment_missing_specific_deadline",
+      "notes": "simple"
+    },
+    {
+      "event_id": "OE-021",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 37,
+      "turn_end_id": 37,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.25,
+      "reason_code": "simple_assignment_missing_deadline_and_deliverable_specificity",
+      "notes": "simple"
+    },
+    {
+      "event_id": "OE-022",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 45,
+      "turn_end_id": 45,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "complex_assignment_all_core_elements_present",
+      "notes": "complex"
+    },
+    {
+      "event_id": "OE-023",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 49,
+      "turn_end_id": 49,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "simple_assignment_owner_implied_and_deliverable_present_with_specific_deadline",
+      "notes": "simple"
+    },
+    {
+      "event_id": "OE-024",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 66,
+      "turn_end_id": 66,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.25,
+      "reason_code": "simple_assignment_missing_deadline_and_deliverable_specificity",
+      "notes": "simple"
+    },
+    {
+      "event_id": "OE-025",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 75,
+      "turn_end_id": 75,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "simple_assignment_owner_deadline_deliverable_present",
+      "notes": "simple"
+    },
+    {
+      "event_id": "OE-026",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 77,
+      "turn_end_id": 77,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "simple_assignment_named_owners_and_deadline_without_clear_output",
+      "notes": "simple"
+    },
+    {
+      "event_id": "OE-027",
+      "pattern_id": "question_quality",
+      "turn_start_id": 3,
+      "turn_end_id": 3,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "decision_linked_constraint_testing_question"
+    },
+    {
+      "event_id": "OE-028",
+      "pattern_id": "question_quality",
+      "turn_start_id": 7,
+      "turn_end_id": 7,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "deepening_question_to_quantify_claim"
+    },
+    {
+      "event_id": "OE-029",
+      "pattern_id": "question_quality",
+      "turn_start_id": 13,
+      "turn_end_id": 13,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "decision_linked_timeline_question"
+    },
+    {
+      "event_id": "OE-030",
+      "pattern_id": "question_quality",
+      "turn_start_id": 28,
+      "turn_end_id": 28,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "scenario_testing_question_linked_to_launch_decision"
+    },
+    {
+      "event_id": "OE-031",
+      "pattern_id": "question_quality",
+      "turn_start_id": 33,
+      "turn_end_id": 33,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "constraint_testing_question_with_realism_check"
+    },
+    {
+      "event_id": "OE-032",
+      "pattern_id": "question_quality",
+      "turn_start_id": 63,
+      "turn_end_id": 63,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "implementation_constraint_question_linked_to_decision"
+    },
+    {
+      "event_id": "OE-033",
+      "pattern_id": "question_quality",
+      "turn_start_id": 73,
+      "turn_end_id": 73,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "risk_probe_question_linked_to_contractual_decision"
+    },
+    {
+      "event_id": "OE-034",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 1,
+      "turn_end_id": 1,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "clear_opening_with_bluf_structure_and_decision_focus"
+    },
+    {
+      "event_id": "OE-035",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 17,
+      "turn_end_id": 17,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "clear_synthesis_and_direction_with_slightly_soft_close"
+    },
+    {
+      "event_id": "OE-036",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 26,
+      "turn_end_id": 26,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "clear_transition_with_decision_context_and_targeted_probe"
+    },
+    {
+      "event_id": "OE-037",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 39,
+      "turn_end_id": 39,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "clear_decision_statement_with_specific_tradeoff"
+    },
+    {
+      "event_id": "OE-038",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 51,
+      "turn_end_id": 51,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "clear_transition_with_decision_options_and_relevant_setup"
+    },
+    {
+      "event_id": "OE-039",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 68,
+      "turn_end_id": 68,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "clear_synthesis_of_inputs_into_proposed_model"
+    },
+    {
+      "event_id": "OE-040",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 82,
+      "turn_end_id": 82,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "clear_boundary_setting_with_reason_and_next_step"
+    },
+    {
+      "event_id": "OE-041",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 87,
+      "turn_end_id": 87,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "structured_recap_with_specific_decision_and_actions"
+    },
+    {
+      "event_id": "OE-042",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 89,
+      "turn_end_id": 89,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "structured_recap_with_specific_decision_and_actions"
+    },
+    {
+      "event_id": "OE-043",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 92,
+      "turn_end_id": 92,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1,
+      "reason_code": "structured_recap_with_specific_decision_and_actions"
+    }
+  ],
+  "evidence_spans": [
+    {
+      "evidence_span_id": "ES-T1",
+      "turn_start_id": 1,
+      "turn_end_id": 1,
+      "excerpt": "Jordan: Alright, thanks everyone for making time. We've got thirty minutes and three decisions to lock today. We're two weeks out from the Relay Enterprise launch and I want to leave this room with a final call on pricing structure, launch date, and the customer onboarding model. Sound good? Let's start with pricing. The question on the table is whether we go tiered or flat-rate for enterprise. Priya, from an engineering standpoint, is the metering infrastructure ready to support tiered billing?",
+      "event_ids": [
+        "OE-001",
+        "OE-005",
+        "OE-034"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T26",
+      "turn_start_id": 26,
+      "turn_end_id": 26,
+      "excerpt": "Jordan: Good. Moving on — launch date. We're currently targeting April 7th. The question is whether we hold that date or push to the 14th. Priya, what's your confidence level on April 7th?",
+      "event_ids": [
+        "OE-002",
+        "OE-036"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T51",
+      "turn_start_id": 51,
+      "turn_end_id": 51,
+      "excerpt": "Jordan: Appreciate it. Last decision — onboarding model. For the first wave of enterprise customers, do we go self-serve with docs and tutorials, or dedicated onboarding with a CSM assigned? Casey, you've been modeling this from an ops capacity standpoint. What's feasible?",
+      "event_ids": [
+        "OE-003",
+        "OE-038"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T80-82",
+      "turn_start_id": 80,
+      "turn_end_id": 82,
+      "excerpt": "Jordan: Good. Dana, I know you wanted to raise something else — the Vantage announcement? / Dana: Yeah, I was going to say — Vantage dropped their enterprise pricing last week and it's aggressive. I think we need to seriously look at how we're positioned against them before we go live with our — / Jordan: I hear you, and that's important. But I want to give it the time it deserves rather than squeezing it into the last two minutes of this meeting. Can we schedule a focused 30 minutes this week — you, me, Sam — to dig into the Vantage positioning? I'll have my EA send the invite.",
+      "event_ids": [
+        "OE-004"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T5",
+      "turn_start_id": 5,
+      "turn_end_id": 5,
+      "excerpt": "Jordan: Good, thank you. Sam, from a positioning standpoint, what's your read on tiered versus flat?",
+      "event_ids": [
+        "OE-006"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T9",
+      "turn_start_id": 9,
+      "turn_end_id": 9,
+      "excerpt": "Jordan: That's helpful. Dana, does that match what you're hearing from the pipeline?",
+      "event_ids": [
+        "OE-007"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T11",
+      "turn_start_id": 11,
+      "turn_end_id": 11,
+      "excerpt": "Jordan: That's a fair point. Morgan, legal hasn't weighed in yet — is there exposure if we offer custom enterprise agreements alongside a standard tiered model?",
+      "event_ids": [
+        "OE-008"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T15",
+      "turn_start_id": 15,
+      "turn_end_id": 15,
+      "excerpt": "Jordan: That works with our timeline. Casey, any operational concern with running tiered? Billing, invoicing, anything on your end?",
+      "event_ids": [
+        "OE-009"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T35",
+      "turn_start_id": 35,
+      "turn_end_id": 35,
+      "excerpt": "Jordan: Lee, I want to bring you in here. If we launch on the 7th without data export, does that create a support burden? Are we going to get flooded with tickets about a missing feature?",
+      "event_ids": [
+        "OE-010"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T53",
+      "turn_start_id": 53,
+      "turn_end_id": 53,
+      "excerpt": "Jordan: That's useful context. Dana, what are your customers expecting?",
+      "event_ids": [
+        "OE-011"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T57",
+      "turn_start_id": 57,
+      "turn_end_id": 57,
+      "excerpt": "Jordan: Lee, what does support look like on your side if we go self-serve versus dedicated? What's the ticket volume difference?",
+      "event_ids": [
+        "OE-012"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T55-56",
+      "turn_start_id": 55,
+      "turn_end_id": 56,
+      "excerpt": "Sam: I think there's a middle ground though, right? We could do a hybrid — like a kickoff call and a shared Slack channel for the first 30 days, plus the self-serve docs. That scales way better than full dedicated and still feels premium. / Dana: That's fine for mid-market. For the enterprise deals I need actual onboarding. These are six-figure contracts, they expect a named human being.",
+      "event_ids": [
+        "OE-013"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T80-84",
+      "turn_start_id": 80,
+      "turn_end_id": 84,
+      "excerpt": "Jordan: Good. Dana, I know you wanted to raise something else — the Vantage announcement? / Dana: Yeah, I was going to say — Vantage dropped their enterprise pricing last week and it's aggressive. I think we need to seriously look at how we're positioned against them before we go live with our — / Jordan: I hear you, and that's important. But I want to give it the time it deserves rather than squeezing it into the last two minutes of this meeting. Can we schedule a focused 30 minutes this week — you, me, Sam — to dig into the Vantage positioning? I'll have my EA send the invite. / Dana: Yeah, fair enough. I just don't want us walking into launch day blind to what they're doing. / Jordan: We won't. Thursday work for you two? Afternoon?",
+      "event_ids": [
+        "OE-014"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T17-20",
+      "turn_start_id": 17,
+      "turn_end_id": 20,
+      "excerpt": "Jordan: Noted. Okay, here's where I'm landing. The data supports tiered for the standard offering, and Dana, we accommodate your enterprise deals through Morgan's custom addendum. Does that work for you? / Dana: As long as I can still close those two deals on flat commits, yeah. I'm good. / Jordan: You can. Morgan, you're comfortable with that path? / Morgan: Yes, that's clean.",
+      "event_ids": [
+        "OE-015",
+        "OE-035"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T39-44",
+      "turn_start_id": 39,
+      "turn_end_id": 44,
+      "excerpt": "Jordan: Okay. Here's the call. We hold April 7th. Data export ships as a fast-follow on April 14th. We communicate proactively in launch materials and in-product. Everyone aligned? / Priya: Works for me. / Dana: I can live with that. I'll manage Meridian with the committed date. / Lee: As long as the comms are clear, support's fine. / Casey: No objection. / Sam: Keeps our press timeline clean. Love it.",
+      "event_ids": [
+        "OE-016",
+        "OE-037"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T68-71",
+      "turn_start_id": 68,
+      "turn_end_id": 71,
+      "excerpt": "Jordan: Okay, here's what I'm hearing. For enterprise accounts — the six-figure deals — we do dedicated onboarding with a named CSM for the first 30 days. For mid-market, we do Sam's hybrid model: kickoff call, shared Slack channel, self-serve docs. Casey, does that two-tier approach fit within your team's capacity for the first 20 accounts? / Casey: If we assume five to eight of those are true enterprise and the rest are mid-market, then yeah. The enterprise ones are more time-intensive but there are fewer of them. Hybrid for mid-market is pretty lightweight on my team. / Jordan: Dana, that address your concern? / Dana: Yeah. As long as my big accounts get the real onboarding, I'm good.",
+      "event_ids": [
+        "OE-017",
+        "OE-039"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T75",
+      "turn_start_id": 75,
+      "turn_end_id": 75,
+      "excerpt": "Jordan: Perfect, bundle it in. The decision is two-tier onboarding: dedicated CSM for enterprise, hybrid self-serve plus kickoff for mid-market. Casey, can you have the onboarding playbook for both tiers documented by end of next week?",
+      "event_ids": [
+        "OE-018",
+        "OE-025"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T21",
+      "turn_start_id": 21,
+      "turn_end_id": 21,
+      "excerpt": "Jordan: Alright. The decision is tiered pricing as the standard model with a custom enterprise addendum for high-value accounts. Casey, you need tier thresholds by Friday — Sam, can you and Dana align on the final numbers and get them to Casey by Thursday end of day?",
+      "event_ids": [
+        "OE-019"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T24",
+      "turn_start_id": 24,
+      "turn_end_id": 24,
+      "excerpt": "Jordan: Great. Casey, production config over the weekend, confirmed?",
+      "event_ids": [
+        "OE-020"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T37",
+      "turn_start_id": 37,
+      "turn_end_id": 37,
+      "excerpt": "Jordan: Smart. Sam, can your team make sure the launch comms and the in-app experience clearly flag data export as a fast-follow?",
+      "event_ids": [
+        "OE-021"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T45",
+      "turn_start_id": 45,
+      "turn_end_id": 45,
+      "excerpt": "Jordan: Good. Priya, I need you to confirm by Friday that SSO is code-complete and that the data export sprint is scoped and staffed. Can you send me and this group a status email by Friday 5 PM?",
+      "event_ids": [
+        "OE-022"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T49",
+      "turn_start_id": 49,
+      "turn_end_id": 49,
+      "excerpt": "Jordan: Let's do Sunday night so we have Monday to review. Tight but doable?",
+      "event_ids": [
+        "OE-023"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T66",
+      "turn_start_id": 66,
+      "turn_end_id": 66,
+      "excerpt": "Jordan: Good catch. Morgan, can you add that to the addendum you're drafting?",
+      "event_ids": [
+        "OE-024"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T77",
+      "turn_start_id": 77,
+      "turn_end_id": 77,
+      "excerpt": "Jordan: And Lee, can you and Casey sync this week on the most common beta support tickets, so the playbook proactively addresses those?",
+      "event_ids": [
+        "OE-026"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T3",
+      "turn_start_id": 3,
+      "turn_end_id": 3,
+      "excerpt": "Jordan: Got it. And does that p95 create any risk against the SLA we're promising in the enterprise agreement? Because if I remember right, we're quoting 200-millisecond response times on the core API.",
+      "event_ids": [
+        "OE-027"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T7",
+      "turn_start_id": 7,
+      "turn_end_id": 7,
+      "excerpt": "Jordan: What was the delta on the panel test?",
+      "event_ids": [
+        "OE-028"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T13",
+      "turn_start_id": 13,
+      "turn_end_id": 13,
+      "excerpt": "Jordan: How long to draft that addendum?",
+      "event_ids": [
+        "OE-029"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T28",
+      "turn_start_id": 28,
+      "turn_end_id": 28,
+      "excerpt": "Jordan: If data export slipped to a fast-follow — say one week post-launch — what's the impact? Dana, would that blow up any deals?",
+      "event_ids": [
+        "OE-030"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T33",
+      "turn_start_id": 33,
+      "turn_end_id": 33,
+      "excerpt": "Jordan: Right. Priya, if we launch April 7th with data export as a committed fast-follow for April 14th, is that realistic? Not optimistic — realistic.",
+      "event_ids": [
+        "OE-031"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T63",
+      "turn_start_id": 63,
+      "turn_end_id": 63,
+      "excerpt": "Jordan: Priya, is there anything from an engineering perspective that makes dedicated onboarding easier or harder to deliver? Like, does the onboarding person need access to backend tooling?",
+      "event_ids": [
+        "OE-032"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T73",
+      "turn_start_id": 73,
+      "turn_end_id": 73,
+      "excerpt": "Jordan: Good point. Morgan, anything from a contractual standpoint? Do we need to define the onboarding commitment in the enterprise agreement?",
+      "event_ids": [
+        "OE-033"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T82",
+      "turn_start_id": 82,
+      "turn_end_id": 82,
+      "excerpt": "Jordan: I hear you, and that's important. But I want to give it the time it deserves rather than squeezing it into the last two minutes of this meeting. Can we schedule a focused 30 minutes this week — you, me, Sam — to dig into the Vantage positioning? I'll have my EA send the invite.",
+      "event_ids": [
+        "OE-040"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T87",
+      "turn_start_id": 87,
+      "turn_end_id": 87,
+      "excerpt": "Jordan: Done. Alright, let me run back the decisions and actions. Decision one: tiered pricing standard, custom enterprise addendum for high-value deals. Action items — Sam and Dana align on tier thresholds, deliver to Casey by Thursday EOD. Casey does production config over the weekend. Morgan drafts the enterprise addendum, reviewed by end of next week.",
+      "event_ids": [
+        "OE-041"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T89",
+      "turn_start_id": 89,
+      "turn_end_id": 89,
+      "excerpt": "Jordan: Decision two: hold April 7th launch date. Data export fast-follows on April 14th with proactive comms. Priya sends status email to this group by Friday 5 PM confirming SSO code-complete and export sprint scoped. Sam has updated launch copy and in-app banner drafts by Sunday night.",
+      "event_ids": [
+        "OE-042"
+      ]
+    },
+    {
+      "evidence_span_id": "ES-T92",
+      "turn_start_id": 92,
+      "turn_end_id": 92,
+      "excerpt": "Jordan: Decision three: two-tier onboarding — dedicated CSM for enterprise, hybrid for mid-market. Casey documents the onboarding playbook for both tiers by end of next week. Lee and Casey sync this week on beta ticket patterns. Morgan bundles onboarding terms into the enterprise addendum.",
+      "event_ids": [
+        "OE-043"
+      ]
+    }
+  ],
+  "evaluation_summary": {
+    "patterns_evaluated": [
+      "purposeful_framing",
+      "focus_management",
+      "participation_management",
+      "disagreement_navigation",
+      "trust_and_credibility",
+      "resolution_and_alignment",
+      "assignment_clarity",
+      "question_quality",
+      "communication_clarity"
+    ],
+    "patterns_insufficient_signal": [
+      "feedback_quality"
+    ],
+    "patterns_not_evaluable": []
+  },
+  "pattern_snapshot": [
+    {
+      "pattern_id": "purposeful_framing",
+      "cluster_id": "meeting_structure",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "meeting_open_plus_owned_topic_transitions",
+      "min_required_threshold": 2,
+      "score": 1,
+      "opportunity_count": 3,
+      "evidence_span_ids": [
+        "ES-T1",
+        "ES-T26",
+        "ES-T51"
+      ],
+      "success_evidence_span_ids": [
+        "ES-T1",
+        "ES-T26",
+        "ES-T51"
+      ]
+    },
+    {
+      "pattern_id": "focus_management",
+      "cluster_id": "meeting_structure",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "drift_episodes_with_target_agency",
+      "min_required_threshold": 1,
+      "score": 1,
+      "opportunity_count": 1,
+      "evidence_span_ids": [
+        "ES-T80-82"
+      ],
+      "success_evidence_span_ids": [
+        "ES-T80-82"
+      ]
+    },
+    {
+      "pattern_id": "participation_management",
+      "cluster_id": "participation_dynamics",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "floor_direction_moments_with_target_agency",
+      "min_required_threshold": 2,
+      "score": 0.9375,
+      "opportunity_count": 8,
+      "balance_assessment": "balanced",
+      "evidence_span_ids": [
+        "ES-T1",
+        "ES-T5",
+        "ES-T9",
+        "ES-T11",
+        "ES-T15",
+        "ES-T35",
+        "ES-T53",
+        "ES-T57"
+      ],
+      "success_evidence_span_ids": [
+        "ES-T1",
+        "ES-T5",
+        "ES-T9",
+        "ES-T11",
+        "ES-T15",
+        "ES-T35",
+        "ES-T53",
+        "ES-T57"
+      ]
+    },
+    {
+      "pattern_id": "disagreement_navigation",
+      "cluster_id": "participation_dynamics",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "disagreement_arcs_with_target_involvement_or_agency",
+      "min_required_threshold": 1,
+      "score": 0.75,
+      "opportunity_count": 1,
+      "evidence_span_ids": [
+        "ES-T55-56"
+      ],
+      "success_evidence_span_ids": [
+        "ES-T55-56"
+      ]
+    },
+    {
+      "pattern_id": "trust_and_credibility",
+      "cluster_id": "participation_dynamics",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "high_stakes_trust_relevant_moments",
+      "min_required_threshold": 1,
+      "score": 0.75,
+      "opportunity_count": 1,
+      "evidence_span_ids": [
+        "ES-T80-84"
+      ],
+      "success_evidence_span_ids": [
+        "ES-T80-84"
+      ]
+    },
+    {
+      "pattern_id": "resolution_and_alignment",
+      "cluster_id": "decisions_accountability",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "target_owned_topic_closures",
+      "min_required_threshold": 2,
+      "score": 0.8125,
+      "opportunity_count": 4,
+      "evidence_span_ids": [
+        "ES-T17-20",
+        "ES-T39-44",
+        "ES-T68-71",
+        "ES-T75"
+      ],
+      "success_evidence_span_ids": [
+        "ES-T17-20",
+        "ES-T39-44",
+        "ES-T68-71"
+      ]
+    },
+    {
+      "pattern_id": "assignment_clarity",
+      "cluster_id": "decisions_accountability",
+      "scoring_type": "complexity_tiered",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "target_initiated_or_negotiated_assignments",
+      "min_required_threshold": 2,
+      "score": 0.625,
+      "opportunity_count": 8,
+      "simple_count": 7,
+      "complex_count": 1,
+      "evidence_span_ids": [
+        "ES-T21",
+        "ES-T24",
+        "ES-T37",
+        "ES-T45",
+        "ES-T49",
+        "ES-T66",
+        "ES-T75",
+        "ES-T77"
+      ],
+      "success_evidence_span_ids": [
+        "ES-T21",
+        "ES-T45",
+        "ES-T75"
+      ]
+    },
+    {
+      "pattern_id": "question_quality",
+      "cluster_id": "communication_quality",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "substantive_questions_asked_by_target",
+      "min_required_threshold": 3,
+      "score": 1,
+      "opportunity_count": 7,
+      "evidence_span_ids": [
+        "ES-T3",
+        "ES-T7",
+        "ES-T13",
+        "ES-T28",
+        "ES-T33",
+        "ES-T63",
+        "ES-T73"
+      ],
+      "success_evidence_span_ids": [
+        "ES-T3",
+        "ES-T7",
+        "ES-T13",
+        "ES-T28",
+        "ES-T33",
+        "ES-T63",
+        "ES-T73"
+      ]
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "cluster_id": "communication_quality",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "substantive_turns_three_plus_sentences",
+      "min_required_threshold": 3,
+      "score": 0.975,
+      "opportunity_count": 9,
+      "evidence_span_ids": [
+        "ES-T1",
+        "ES-T17-20",
+        "ES-T26",
+        "ES-T39-44",
+        "ES-T51",
+        "ES-T68-71",
+        "ES-T82",
+        "ES-T87",
+        "ES-T89",
+        "ES-T92"
+      ],
+      "success_evidence_span_ids": [
+        "ES-T1",
+        "ES-T17-20",
+        "ES-T26",
+        "ES-T39-44",
+        "ES-T51",
+        "ES-T68-71",
+        "ES-T82",
+        "ES-T87",
+        "ES-T89",
+        "ES-T92"
+      ]
+    },
+    {
+      "pattern_id": "feedback_quality",
+      "cluster_id": "communication_quality",
+      "scoring_type": "multi_element",
+      "evaluable_status": "insufficient_signal",
+      "denominator_rule_id": "developmental_feedback_instances",
+      "min_required_threshold": 2,
+      "evidence_span_ids": []
+    }
+  ],
+  "experiment_tracking": {
+    "active_experiment": {
+      "experiment_id": "EXP-260330",
+      "status": "none"
+    },
+    "detection_in_this_meeting": null
+  },
+  "coaching": {
+    "executive_summary": "You came across as a highly disciplined facilitator who knew exactly what this meeting needed to produce and kept the group moving toward those outcomes. Your biggest strength was not just structure, but decision leadership: you pulled in the right expertise, translated input into calls, and closed with real alignment. The main growth edge is on action precision in a few follow-through moments — your meeting was strong enough that the only meaningful gap is making every assignment as crisp as your decisions.",
+    "coaching_themes": [
+      {
+        "theme": "Strong decision facilitation amplified by disciplined inclusion",
+        "explanation": "You repeatedly opened each decision with a clear objective, then pulled in the functions that mattered most in sequence: engineering on feasibility, sales on market impact, legal on exposure, operations on execution, and support on downstream load. That made the room feel both fast and well-considered, because people could see you were not making calls from instinct alone.",
+        "related_patterns": [
+          "purposeful_framing",
+          "participation_management",
+          "question_quality",
+          "resolution_and_alignment"
+        ],
+        "priority": "primary"
+      },
+      {
+        "theme": "Execution clarity is the remaining leverage point",
+        "explanation": "Once you had the room aligned, most action items were concrete and time-bound, especially the requests for tier thresholds, the Friday engineering status email, and the onboarding playbook. The places where the meeting got a little softer were a few follow-up asks like asking for launch comms to be flagged or asking legal to add language to the addendum without fully defining the output in that moment.",
+        "related_patterns": [
+          "resolution_and_alignment",
+          "assignment_clarity",
+          "communication_clarity"
+        ],
+        "priority": "secondary"
+      }
+    ],
+    "strengths": [
+      {
+        "pattern_id": "communication_clarity",
+        "message": "You were exceptionally clear when you set up each decision and when you recapped at the end. Your language stayed concrete and proportionate, and your final run-through of decisions and actions made it easy for everyone to leave with the same picture."
+      },
+      {
+        "pattern_id": "participation_management",
+        "message": "You did an excellent job bringing in the right voices at the right time instead of defaulting to open-floor discussion. When you said things like bringing Lee in on support burden or noting that legal had not weighed in yet, you showed deliberate inclusion rather than generic facilitation."
+      }
+    ],
+    "focus": [
+      {
+        "pattern_id": "assignment_clarity",
+        "message": "Your calls were crisp, but a few follow-up assignments were looser than the decisions they supported. Tightening those last-mile asks would reduce the chance that someone executes the right idea in a slightly different way than you intended."
+      }
+    ],
+    "micro_experiment": [
+      {
+        "experiment_id": "EXP-676241",
+        "title": "Close every action with owner, output, and when",
+        "instruction": "For each action item you assign, pause and make sure you say three things out loud: who owns it, what exact output you want, and when it is due. If the task depends on interpretation, add one short line on what good looks like before you move on.",
+        "success_marker": "In your next meeting, at least three assignments include a named owner, a verifiable deliverable, and a concrete deadline in the same breath.",
+        "pattern_id": "assignment_clarity",
+        "evidence_span_ids": [
+          "ES-T37",
+          "ES-T66",
+          "ES-T77"
+        ]
+      }
+    ],
+    "pattern_coaching": [
+      {
+        "pattern_id": "purposeful_framing",
+        "notes": "You consistently set up each major topic with both the subject and the decision the room needed to make. Your opening was especially strong because you named the three decisions up front, then immediately anchored the first one with a concrete question on pricing.",
+        "coaching_note": null,
+        "suggested_rewrite": null,
+        "rewrite_for_span_id": null,
+        "best_success_span_id": "ES-T1"
+      },
+      {
+        "pattern_id": "focus_management",
+        "notes": "When Dana surfaced the Vantage announcement at the end, you handled the tangent cleanly without dismissing its importance. You named that it mattered, explained why it should not be squeezed into the last two minutes, and immediately created a bounded follow-up discussion.",
+        "coaching_note": null,
+        "suggested_rewrite": null,
+        "rewrite_for_span_id": null,
+        "best_success_span_id": "ES-T80-82"
+      },
+      {
+        "pattern_id": "participation_management",
+        "notes": "You did more than keep the meeting moving; you deliberately routed questions to the people with the most relevant vantage point. Bringing in legal because they had not weighed in yet and inviting support on likely ticket volume were strong examples of using participation to improve decision quality.",
+        "coaching_note": null,
+        "suggested_rewrite": null,
+        "rewrite_for_span_id": null,
+        "best_success_span_id": "ES-T35"
+      },
+      {
+        "pattern_id": "disagreement_navigation",
+        "notes": "When onboarding options started to diverge between Sam's scalable hybrid view and Dana's insistence on white-glove enterprise onboarding, you did not let the tension become positional. You gathered more evidence from support and engineering, then translated the disagreement into a two-tier solution that preserved the substance of both concerns.",
+        "coaching_note": null,
+        "suggested_rewrite": null,
+        "rewrite_for_span_id": null,
+        "best_success_span_id": "ES-T55-56"
+      },
+      {
+        "pattern_id": "trust_and_credibility",
+        "notes": null,
+        "coaching_note": null,
+        "suggested_rewrite": null,
+        "rewrite_for_span_id": null,
+        "best_success_span_id": null
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "notes": "You were strong at turning discussion into explicit decisions and checking whether key stakeholders could support the call. The launch-date close was particularly effective because you stated the decision plainly, named the fast-follow plan, and then invited objections from the room.",
+        "coaching_note": "The only place this got softer was in the onboarding close, where you moved from the decision statement straight into an assignment for Casey without first checking that the broader group shared the same interpretation. In a cross-functional launch review, that quick alignment check helps flush out hidden assumptions before the work starts.",
+        "suggested_rewrite": "The decision is two-tier onboarding: dedicated CSM for enterprise, hybrid for mid-market. Before we move to actions, does anyone see a gap in that approach or hear it differently? If not, Casey, can you have the onboarding playbook for both tiers documented by end of next week?",
+        "rewrite_for_span_id": "ES-T75",
+        "best_success_span_id": "ES-T39-44"
+      },
+      {
+        "pattern_id": "assignment_clarity",
+        "notes": "Your strongest assignments were very usable. The request to Priya to confirm SSO code-complete, scope and staff the export sprint, and send a status email by Friday 5 PM gave clear owner, timing, output, and context about why the check mattered.",
+        "coaching_note": "A few of your action items stopped just short of full execution clarity. For example, when you asked Sam's team to make sure launch comms and the in-app experience clearly flagged data export as a fast-follow, you named the owner and the intent, but not when you wanted it or what exact artifact you expected first, which left the follow-up to be clarified later.",
+        "suggested_rewrite": "Sam, I need two things: updated launch copy and the in-app banner draft that clearly flags data export as coming April 14th. Can you circulate both to this group by Sunday night so we have Monday to review?",
+        "rewrite_for_span_id": "ES-T37",
+        "best_success_span_id": "ES-T45"
+      },
+      {
+        "pattern_id": "question_quality",
+        "notes": "Your questions were sharp, decision-linked, and consistently used to reduce uncertainty before making a call. You were especially effective when you pressure-tested assumptions with specifics, like asking whether the billing latency touched the SLA or what actually breaks if data export slips by a week.",
+        "coaching_note": null,
+        "suggested_rewrite": null,
+        "rewrite_for_span_id": null,
+        "best_success_span_id": "ES-T28"
+      },
+      {
+        "pattern_id": "communication_clarity",
+        "notes": "You communicated like a chair who knows how to lower cognitive load for the room. Your transitions, interim summaries, and final recap all put the conclusion up front and used specific language that made it obvious what had been decided and what happened next.",
+        "coaching_note": null,
+        "suggested_rewrite": null,
+        "rewrite_for_span_id": null,
+        "best_success_span_id": "ES-T87"
+      }
+    ],
+    "experiment_coaching": null
+  }
+}

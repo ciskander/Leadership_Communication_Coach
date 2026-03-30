@@ -1,0 +1,14 @@
+{
+  "pattern_coaching_edits": {
+    "trust_and_credibility": {
+      "notes": "SUPPRESS"
+    }
+  },
+  "changes": [
+    {
+      "field": "pattern_coaching_edits.trust_and_credibility.notes",
+      "action": "suppressed",
+      "reason": "The observation is primarily about deferring a late-breaking topic with a next step, which belongs to focus_management. It does not add a distinct trust consequence beyond what the focus-management coaching already captures."
+    }
+  ]
+}

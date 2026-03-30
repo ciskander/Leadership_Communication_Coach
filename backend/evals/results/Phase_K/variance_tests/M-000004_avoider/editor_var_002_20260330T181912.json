@@ -1,0 +1,99 @@
+{
+  "executive_summary": "You brought strong structure and decisiveness to a tense project review, but the biggest leadership cost in this meeting was how quickly you shut down expert pushback once you had a preferred path. Design, QA, and product each raised decision-relevant risks; instead of testing those risks, you overrode them to preserve pace. The result was a clear plan, but not a fully worked one—and the room likely left with compliance more than confidence.",
+  "coaching_themes": [
+    {
+      "theme": "You moved quickly to closure before pressure-testing the objections that mattered most",
+      "explanation": "The meeting had a clear objective and you drove toward it. The issue was not speed itself; it was that architectural risk from design and release risk from QA were treated as obstacles to momentum rather than inputs to the decision. That narrowed the discussion at exactly the moments where leader judgment needed more substance, not less.",
+      "related_patterns": [
+        "disagreement_navigation",
+        "resolution_and_alignment"
+      ],
+      "priority": "primary"
+    },
+    {
+      "theme": "Your structure was strong enough to create decisions, but not always strong enough to create confidence in those decisions",
+      "explanation": "You opened clearly, summarized the plan, and assigned follow-up work. But because important concerns were closed down upstream, the final alignment checks landed more like acknowledgment of direction than genuine buy-in. The next step is to keep your decisiveness while making more room for expert challenge before you close.",
+      "related_patterns": [
+        "purposeful_framing",
+        "resolution_and_alignment",
+        "assignment_clarity",
+        "disagreement_navigation"
+      ],
+      "priority": "secondary"
+    }
+  ],
+  "focus_message": "Your highest-leverage move is to stop treating pushback as drag when it is actually expert input on risk. In this meeting, once you had decided on the path, objections from design and QA were met with closure instead of examination. The improvement is not to become less decisive; it is to make your decisiveness come after one round of real engagement with the substance.",
+  "micro_experiment_edits": {
+    "title": "Test the objection before you close the topic",
+    "instruction": "In the next meeting, whenever someone pushes back on your decision, do two things before restating the call: first, summarize their concern in one sentence; second, ask one concrete question about impact, tradeoff, or mitigation. Then decide, defer, or assign follow-up.",
+    "success_marker": "You can point to at least two moments where you accurately reflected the objection and asked a substantive follow-up before closing the discussion."
+  },
+  "pattern_coaching_edits": {
+    "assignment_clarity": {
+      "coaching_note": "Your bug assignment at the decision moment sounded firm, but the immediate output was still unclear: were Riley and Taylor expected to align on a list, decide the ship-blockers, or fix them within five days? In a launch meeting, that distinction matters. If the team leaves unclear on the first deliverable, execution starts with interpretation instead of action."
+    },
+    "communication_clarity": {
+      "coaching_note": "SUPPRESS",
+      "suggested_rewrite": "SUPPRESS"
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "question_quality",
+      "oe_index": 1,
+      "reason": "This is a logistics scheduling question ('can that happen tomorrow?'), which the pattern definition explicitly excludes from question_quality."
+    }
+  ],
+  "changes": [
+    {
+      "field": "executive_summary",
+      "action": "rewritten",
+      "reason": "Sharpened the core coaching point: the main issue was premature closure over expert pushback, not generic efficiency vs. collaboration."
+    },
+    {
+      "field": "coaching_themes",
+      "action": "rewritten",
+      "reason": "Tightened themes to emphasize the highest-value leadership lesson and reduced overlap with trust framing."
+    },
+    {
+      "field": "focus_message",
+      "action": "rewritten",
+      "reason": "Made the focus area more actionable and specific to the observed disagreement pattern."
+    },
+    {
+      "field": "micro_experiment_edits.title",
+      "action": "rewritten",
+      "reason": "Made the experiment title shorter and more memorable."
+    },
+    {
+      "field": "micro_experiment_edits.instruction",
+      "action": "rewritten",
+      "reason": "Preserved the experiment structure while making the behavior easier to execute in real time."
+    },
+    {
+      "field": "micro_experiment_edits.success_marker",
+      "action": "rewritten",
+      "reason": "Clarified what successful execution would look like in observable terms."
+    },
+    {
+      "field": "pattern_coaching_edits.assignment_clarity.coaching_note",
+      "action": "rewritten",
+      "reason": "Kept the note in-pattern but made the execution risk more concrete and senior-leader relevant."
+    },
+    {
+      "field": "pattern_coaching_edits.communication_clarity.coaching_note",
+      "action": "suppressed",
+      "reason": "This developmental point is misaligned to communication_clarity; it is really about disagreement_navigation and duplicates stronger coaching already captured there."
+    },
+    {
+      "field": "pattern_coaching_edits.communication_clarity.suggested_rewrite",
+      "action": "suppressed",
+      "reason": "The rewrite is also about engaging a risk signal before shutting it down, which belongs under disagreement_navigation/trust_and_credibility rather than communication_clarity."
+    },
+    {
+      "field": "oe_removals[0]",
+      "action": "removed",
+      "reason": "Removed a misclassified question_quality opportunity event that is procedural/logistical rather than substantive."
+    }
+  ]
+}

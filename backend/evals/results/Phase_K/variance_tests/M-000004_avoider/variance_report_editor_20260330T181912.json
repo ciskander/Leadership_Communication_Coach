@@ -1,0 +1,135 @@
+{
+  "n_runs": 10,
+  "n_valid": 10,
+  "evaluable_patterns": [
+    "purposeful_framing",
+    "disagreement_navigation",
+    "trust_and_credibility",
+    "resolution_and_alignment",
+    "assignment_clarity",
+    "question_quality",
+    "communication_clarity"
+  ],
+  "per_pattern": {
+    "purposeful_framing": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "disagreement_navigation": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "trust_and_credibility": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "resolution_and_alignment": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "assignment_clarity": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "pass": 9,
+        "rewrite": 1
+      }
+    },
+    "question_quality": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "pass": 10
+      }
+    },
+    "communication_clarity": {
+      "notes": {
+        "pass": 10
+      },
+      "coaching_note": {
+        "suppress": 10
+      }
+    }
+  },
+  "unanimous_rate": 0.9286,
+  "unanimous_combos": 13,
+  "total_combos": 14,
+  "flip_patterns": [
+    {
+      "pattern_id": "assignment_clarity",
+      "field": "coaching_note",
+      "distribution": {
+        "pass": 9,
+        "rewrite": 1
+      }
+    }
+  ],
+  "exec_summary_changed_rate": 0.1,
+  "coaching_themes_changed_rate": 0.1,
+  "focus_message_changed_rate": 0.1,
+  "oe_removals": {
+    "items": [
+      {
+        "pattern_id": "communication_clarity",
+        "oe_index": 1,
+        "flagged_in": 2
+      },
+      {
+        "pattern_id": "communication_clarity",
+        "oe_index": 2,
+        "flagged_in": 4
+      },
+      {
+        "pattern_id": "communication_clarity",
+        "oe_index": 3,
+        "flagged_in": 4
+      },
+      {
+        "pattern_id": "question_quality",
+        "oe_index": 1,
+        "flagged_in": 9
+      },
+      {
+        "pattern_id": "question_quality",
+        "oe_index": 10,
+        "flagged_in": 1
+      }
+    ],
+    "agreement_rate": 0.0
+  },
+  "changes_per_run": {
+    "values": [
+      6,
+      10,
+      2,
+      3,
+      2,
+      5,
+      3,
+      3,
+      5,
+      4
+    ],
+    "min": 2,
+    "max": 10,
+    "mean": 4.3
+  }
+}

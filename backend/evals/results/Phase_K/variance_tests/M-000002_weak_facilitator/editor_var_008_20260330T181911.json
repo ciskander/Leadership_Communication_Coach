@@ -1,0 +1,42 @@
+{
+  "pattern_coaching_edits": {
+    "purposeful_framing": {
+      "notes": "SUPPRESS"
+    },
+    "resolution_and_alignment": {
+      "notes": "SUPPRESS"
+    },
+    "assignment_clarity": {
+      "notes": "SUPPRESS"
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "resolution_and_alignment",
+      "oe_index": 4,
+      "reason": "Saying 'So we're good on launch date. April 7th' was not a genuine closure moment; the room immediately surfaced unresolved dependencies and lack of agreement. This is premature closure, already better captured by the pattern's developmental coaching, not successful resolution/alignment."
+    }
+  ],
+  "changes": [
+    {
+      "field": "pattern_coaching_edits.purposeful_framing.notes",
+      "action": "suppressed",
+      "reason": "Positive note is too thin and generic. Merely naming the next topic is basic signposting, not a meaningful strength in purposeful framing given the weak outcomes and lack of clear decision framing throughout."
+    },
+    {
+      "field": "pattern_coaching_edits.resolution_and_alignment.notes",
+      "action": "suppressed",
+      "reason": "This praise overstates a partial recap as effective closure. The summary did name open items, but the room immediately challenged that little had actually been resolved, so this is not a strong positive observation."
+    },
+    {
+      "field": "pattern_coaching_edits.assignment_clarity.notes",
+      "action": "suppressed",
+      "reason": "The positive note cherry-picks a couple of cleaner commitments while the overall meeting showed repeated ambiguity and follow-up clarification. As delivered, it would distract from the real assignment-clarity issue rather than help the leader."
+    },
+    {
+      "field": "oe_removals",
+      "action": "removed",
+      "reason": "Flagged a misclassified resolution/alignment success event: the launch-date closure at 'April 7th' did not reflect real alignment and should not count as a successful closure moment."
+    }
+  ]
+}

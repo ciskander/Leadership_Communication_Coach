@@ -1,0 +1,48 @@
+{
+  "pattern_coaching_edits": {
+    "purposeful_framing": {
+      "notes": "SUPPRESS"
+    },
+    "participation_management": {
+      "notes": "SUPPRESS"
+    },
+    "assignment_clarity": {
+      "notes": "SUPPRESS",
+      "coaching_note": "SUPPRESS"
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "resolution_and_alignment",
+      "oe_index": 4,
+      "reason": "This is not a real closure moment. 'So we're good on launch date' is immediately undermined by unresolved dependencies and the speaker moves on before confirming shared understanding."
+    }
+  ],
+  "changes": [
+    {
+      "field": "pattern_coaching_edits.purposeful_framing.notes",
+      "action": "suppressed",
+      "reason": "Thin praise. Naming the next topic is routine signposting here and does not add meaningful coaching value."
+    },
+    {
+      "field": "pattern_coaching_edits.participation_management.notes",
+      "action": "suppressed",
+      "reason": "There was no substantive positive evidence for participation management; leaving this blank is more accurate than implying a strength."
+    },
+    {
+      "field": "pattern_coaching_edits.assignment_clarity.notes",
+      "action": "suppressed",
+      "reason": "Misaligned to the meeting reality. The cited moments are promises with time bounds, but the dominant pattern in the meeting is vague or incomplete tasking. This praise would overstate performance."
+    },
+    {
+      "field": "pattern_coaching_edits.assignment_clarity.coaching_note",
+      "action": "suppressed",
+      "reason": "Redundant with trust_and_credibility and resolution_and_alignment. The sharper developmental issue is not assignment mechanics alone but making commitments before prerequisites were settled."
+    },
+    {
+      "field": "oe_removals[0]",
+      "action": "removed",
+      "reason": "The onboarding transition was scored as resolution_and_alignment, but the speaker had not actually resolved or aligned the launch-date topic before moving on."
+    }
+  ]
+}

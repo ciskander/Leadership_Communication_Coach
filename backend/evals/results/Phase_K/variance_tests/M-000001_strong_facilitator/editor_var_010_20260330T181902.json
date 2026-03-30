@@ -1,0 +1,14 @@
+{
+  "pattern_coaching_edits": {
+    "trust_and_credibility": {
+      "notes": "SUPPRESS"
+    }
+  },
+  "changes": [
+    {
+      "field": "pattern_coaching_edits.trust_and_credibility.notes",
+      "action": "suppressed",
+      "reason": "Misaligned to the pattern. This moment is already well captured under focus_management: Jordan parks a late-breaking topic with a follow-up. The trust note adds little beyond the deferral mechanics and does not name a distinct trust consequence."
+    }
+  ]
+}

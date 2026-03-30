@@ -1,0 +1,1125 @@
+{
+  "schema_version": "mvp.v0.4.0",
+  "meta": {
+    "analysis_id": "A-260330",
+    "taxonomy_version": "v3.0",
+    "output_mode": "coaching_first_2s1e",
+    "analysis_type": "single_meeting",
+    "generated_at": "2026-03-30T19:37:44.019150+00:00"
+  },
+  "context": {
+    "meeting_id": "M-000055",
+    "meeting_type": "project_review",
+    "target_role": "manager_1to1",
+    "meeting_date": "2026-01-01",
+    "target_speaker_name": "Jordan",
+    "target_speaker_label": "Jordan"
+  },
+  "opportunity_events": [
+    {
+      "event_id": "OE-001",
+      "pattern_id": "purposeful_framing",
+      "turn_start_id": 3,
+      "turn_end_id": 3,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "opening_with_topic_and_outcome"
+    },
+    {
+      "event_id": "OE-002",
+      "pattern_id": "purposeful_framing",
+      "turn_start_id": 13,
+      "turn_end_id": 13,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "transition_with_specific_topic_and_outcome"
+    },
+    {
+      "event_id": "OE-003",
+      "pattern_id": "purposeful_framing",
+      "turn_start_id": 33,
+      "turn_end_id": 33,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "transition_with_topic_and_vague_outcome"
+    },
+    {
+      "event_id": "OE-004",
+      "pattern_id": "resolution_and_alignment",
+      "turn_start_id": 31,
+      "turn_end_id": 32,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "specific_resolution_with_direct_confirmation"
+    },
+    {
+      "event_id": "OE-005",
+      "pattern_id": "resolution_and_alignment",
+      "turn_start_id": 57,
+      "turn_end_id": 58,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "specific_next_step_with_direct_confirmation"
+    },
+    {
+      "event_id": "OE-006",
+      "pattern_id": "resolution_and_alignment",
+      "turn_start_id": 59,
+      "turn_end_id": 60,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "explicit_recap_with_alignment_check"
+    },
+    {
+      "event_id": "OE-007",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 29,
+      "turn_end_id": 29,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.0,
+      "reason_code": "simple_assignment_missing_owner_deadline_deliverable",
+      "notes": "Simple assignment"
+    },
+    {
+      "event_id": "OE-008",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 31,
+      "turn_end_id": 32,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "simple_assignment_with_owner_and_deliverable_no_deadline",
+      "notes": "Simple assignment"
+    },
+    {
+      "event_id": "OE-009",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 51,
+      "turn_end_id": 51,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "complex_assignment_missing_ownership_confirmation",
+      "notes": "Complex assignment"
+    },
+    {
+      "event_id": "OE-010",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 55,
+      "turn_end_id": 56,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "complex_assignment_all_core_elements_present",
+      "notes": "Complex assignment"
+    },
+    {
+      "event_id": "OE-011",
+      "pattern_id": "question_quality",
+      "turn_start_id": 9,
+      "turn_end_id": 9,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "deepening_reflection_question"
+    },
+    {
+      "event_id": "OE-012",
+      "pattern_id": "question_quality",
+      "turn_start_id": 15,
+      "turn_end_id": 15,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "broad_reaction_check_with_discernible_intent"
+    },
+    {
+      "event_id": "OE-013",
+      "pattern_id": "question_quality",
+      "turn_start_id": 35,
+      "turn_end_id": 35,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "perspective_surfacing_question"
+    },
+    {
+      "event_id": "OE-014",
+      "pattern_id": "question_quality",
+      "turn_start_id": 41,
+      "turn_end_id": 41,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "constraint_and_motivation_probe"
+    },
+    {
+      "event_id": "OE-015",
+      "pattern_id": "question_quality",
+      "turn_start_id": 45,
+      "turn_end_id": 45,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "application_question_to_rehearse_framework"
+    },
+    {
+      "event_id": "OE-016",
+      "pattern_id": "question_quality",
+      "turn_start_id": 47,
+      "turn_end_id": 47,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "comparison_question_to_surface_learning"
+    },
+    {
+      "event_id": "OE-018",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 5,
+      "turn_end_id": 5,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "specific_feedback_with_clear_impact"
+    },
+    {
+      "event_id": "OE-019",
+      "pattern_id": "feedback_quality",
+      "turn_start_id": 5,
+      "turn_end_id": 5,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.6,
+      "reason_code": "positive_feedback_missing_recommendation_and_checkin"
+    },
+    {
+      "event_id": "OE-020",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 7,
+      "turn_end_id": 7,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "clear_reinforcement_statement"
+    },
+    {
+      "event_id": "OE-021",
+      "pattern_id": "feedback_quality",
+      "turn_start_id": 7,
+      "turn_end_id": 7,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.6,
+      "reason_code": "impact_and_recommendation_without_specific_situation_behavior"
+    },
+    {
+      "event_id": "OE-022",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 17,
+      "turn_end_id": 17,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "bluf_feedback_with_specific_example"
+    },
+    {
+      "event_id": "OE-023",
+      "pattern_id": "feedback_quality",
+      "turn_start_id": 17,
+      "turn_end_id": 17,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.8,
+      "reason_code": "structured_feedback_missing_checkin"
+    },
+    {
+      "event_id": "OE-024",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 19,
+      "turn_end_id": 19,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "clear_explanation_with_specific_evidence"
+    },
+    {
+      "event_id": "OE-025",
+      "pattern_id": "trust_and_credibility",
+      "turn_start_id": 19,
+      "turn_end_id": 19,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "named_source_and_specific_evidence"
+    },
+    {
+      "event_id": "OE-028",
+      "pattern_id": "feedback_quality",
+      "turn_start_id": 23,
+      "turn_end_id": 23,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.8,
+      "reason_code": "structured_feedback_missing_checkin"
+    },
+    {
+      "event_id": "OE-029",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 25,
+      "turn_end_id": 25,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "clear_pattern_summary"
+    },
+    {
+      "event_id": "OE-030",
+      "pattern_id": "feedback_quality",
+      "turn_start_id": 25,
+      "turn_end_id": 25,
+      "target_control": "yes",
+      "count_decision": "excluded",
+      "success": 0,
+      "reason_code": "ambiguous_control"
+    },
+    {
+      "event_id": "OE-031",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 27,
+      "turn_end_id": 27,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "clear_tradeoff_explanation"
+    },
+    {
+      "event_id": "OE-034",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 37,
+      "turn_end_id": 37,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "bluf_with_specific_cost"
+    },
+    {
+      "event_id": "OE-035",
+      "pattern_id": "feedback_quality",
+      "turn_start_id": 37,
+      "turn_end_id": 37,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.6,
+      "reason_code": "situation_behavior_impact_without_recommendation_checkin"
+    },
+    {
+      "event_id": "OE-036",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 39,
+      "turn_end_id": 39,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "clear_distinction_and_alternative"
+    },
+    {
+      "event_id": "OE-037",
+      "pattern_id": "feedback_quality",
+      "turn_start_id": 39,
+      "turn_end_id": 39,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.8,
+      "reason_code": "structured_feedback_missing_checkin"
+    },
+    {
+      "event_id": "OE-038",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 43,
+      "turn_end_id": 43,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "clear_validation_and_framework_reminder"
+    },
+    {
+      "event_id": "OE-040",
+      "pattern_id": "feedback_quality",
+      "turn_start_id": 49,
+      "turn_end_id": 49,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.8,
+      "reason_code": "structured_feedback_missing_checkin"
+    },
+    {
+      "event_id": "OE-041",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 51,
+      "turn_end_id": 51,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "clear_assignment_with_rationale"
+    },
+    {
+      "event_id": "OE-046",
+      "pattern_id": "feedback_quality",
+      "turn_start_id": 59,
+      "turn_end_id": 59,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.6,
+      "reason_code": "multi_point_feedback_with_recommendations_no_checkin"
+    },
+    {
+      "event_id": "OE-047",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 61,
+      "turn_end_id": 61,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "clear_encouraging_close"
+    },
+    {
+      "event_id": "OE-048",
+      "pattern_id": "feedback_quality",
+      "turn_start_id": 61,
+      "turn_end_id": 61,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.4,
+      "reason_code": "developmental_praise_with_impact_only"
+    }
+  ],
+  "evidence_spans": [
+    {
+      "evidence_span_id": "ES-T3",
+      "turn_start_id": 3,
+      "turn_end_id": 3,
+      "excerpt": "Jordan: Good to hear. So I've got three things I want to cover today — the client call from Thursday, which was a win I want to talk about, then some thoughts on stakeholder communication, and then the scope thing from last week with the sales team. Sound okay?",
+      "event_ids": [
+        "OE-001",
+        "OE-017"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T13",
+      "turn_start_id": 13,
+      "turn_end_id": 13,
+      "excerpt": "Jordan: You should. It was well handled. Okay, shifting gears — I want to talk about the written communication side of things. Specifically the Q2 roadmap update you sent to the exec team last Monday.",
+      "event_ids": [
+        "OE-002"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T33",
+      "turn_start_id": 33,
+      "turn_end_id": 33,
+      "excerpt": "Jordan: Great. Okay, last thing — and this one's a little harder. The feature request from the sales team last Tuesday.",
+      "event_ids": [
+        "OE-003"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T31-32",
+      "turn_start_id": 31,
+      "turn_end_id": 32,
+      "excerpt": "Jordan: Good. And if you want, send me a draft of the next one before it goes out. Not because I need to approve it — just so I can give you a quick gut check on whether the ask is landing up front. / Avery: Yeah, that'd be helpful. I'll do that.",
+      "event_ids": [
+        "OE-004",
+        "OE-008",
+        "OE-033"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T57-58",
+      "turn_start_id": 57,
+      "turn_end_id": 58,
+      "excerpt": "Jordan: Good. Let's try it. And I want to check in on this in our next one-on-one — how the rule is working, whether you've had to use it, what came up. / Avery: Yeah, let's do that.",
+      "event_ids": [
+        "OE-005"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T59-60",
+      "turn_start_id": 59,
+      "turn_end_id": 60,
+      "excerpt": "Jordan: Alright, so to recap — three things. One, the reflective listening on the Graystone call was excellent. Keep doing that, especially with enterprise accounts. Two, on stakeholder emails, lead with the ask. Try the cut-and-paste method — write your draft, then move the bottom to the top. Send me the next one for a gut check. Three, scope requests from sales — use the 'not now, here's why' framework before committing resources, and give yourself a 24-hour hold before saying yes to anything that involves engineering time. We'll check in on all of this next time. / Avery: Sounds good. And thanks — I know the email and the Kevin thing aren't fun to hear about, but it's helpful. I'd rather know now than find out I've been doing it wrong for a year.",
+      "event_ids": [
+        "OE-006",
+        "OE-046"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T29",
+      "turn_start_id": 29,
+      "turn_end_id": 29,
+      "excerpt": "Jordan: It will feel uncomfortable. And here's what I'd suggest — next time you're writing a stakeholder email with an ask, draft it the way you normally would, then go back and move your last paragraph to the top. Just literally cut and paste. It's a mechanical edit, it's not about changing how you think, it's about changing the order of what's on the page.",
+      "event_ids": [
+        "OE-007",
+        "OE-032"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T51",
+      "turn_start_id": 51,
+      "turn_end_id": 51,
+      "excerpt": "Jordan: A hundred percent. So here's my ask — next time a request like this comes in from sales, I want you to use the 'not now, here's why' framework before committing any resources. If after that conversation you still think it warrants pulling in engineers, come talk to me first. Not because you need permission, but so we can make the tradeoff together.",
+      "event_ids": [
+        "OE-009",
+        "OE-041"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T55-56",
+      "turn_start_id": 55,
+      "turn_end_id": 56,
+      "excerpt": "Jordan: So let's make it concrete. Give yourself a 24-hour rule — any request that would require engineering time gets a hold before you commit. You can say 'let me sit with this overnight and I'll get back to you tomorrow.' That buys you the space to shift from reactive mode to strategic mode. / Avery: I like that. It's simple enough that I'll actually remember it when Kevin corners me by the coffee machine.",
+      "event_ids": [
+        "OE-010"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T9",
+      "turn_start_id": 9,
+      "turn_end_id": 9,
+      "excerpt": "Jordan: What do you think made you slow down this time?",
+      "event_ids": [
+        "OE-011"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T15",
+      "turn_start_id": 15,
+      "turn_end_id": 15,
+      "excerpt": "Jordan: Have you gotten any reactions to that email?",
+      "event_ids": [
+        "OE-012"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T35",
+      "turn_start_id": 35,
+      "turn_end_id": 35,
+      "excerpt": "Jordan: Tell me what happened from your side first.",
+      "event_ids": [
+        "OE-013"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T41",
+      "turn_start_id": 41,
+      "turn_end_id": 41,
+      "excerpt": "Jordan: What made it hard to push back in that moment?",
+      "event_ids": [
+        "OE-014"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T45",
+      "turn_start_id": 45,
+      "turn_end_id": 45,
+      "excerpt": "Jordan: Right. So what would that have sounded like with Kevin on Tuesday?",
+      "event_ids": [
+        "OE-015"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T47",
+      "turn_start_id": 47,
+      "turn_end_id": 47,
+      "excerpt": "Jordan: That's really good. What's different about that versus what you actually said?",
+      "event_ids": [
+        "OE-016"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T5",
+      "turn_start_id": 5,
+      "turn_end_id": 5,
+      "excerpt": "Jordan: Perfect. Let's start with Thursday. The call with Graystone — I sat in for the first twenty minutes and I want to call out something you did that I thought was really effective. When Linda started escalating about the migration timeline, you paused and summarized her concerns back to her before you responded. You said something like 'So what I'm hearing is the team feels blindsided by the new date and the worry is that it puts their compliance deadline at risk.' And after that, the temperature in the room completely changed. She went from adversarial to collaborative. It was a real turning point in that call.",
+      "event_ids": [
+        "OE-018",
+        "OE-019"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T7",
+      "turn_start_id": 7,
+      "turn_end_id": 7,
+      "excerpt": "Jordan: That's exactly right. And the impact was real — you turned what could have been a twenty-minute argument into a productive problem-solving conversation. I'd love to see you keep doing that, especially with the enterprise clients where the stakes are higher and emotions run hotter. That reflective listening thing is a superpower when the room is tense.",
+      "event_ids": [
+        "OE-020",
+        "OE-021"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T17",
+      "turn_start_id": 17,
+      "turn_end_id": 17,
+      "excerpt": "Jordan: So here's what I want to flag. The email was thorough — the content was good, the detail was right. But the key ask was buried. You needed sign-off on the timeline shift by Wednesday, and that ask didn't appear until paragraph three. The first two paragraphs were background and context.",
+      "event_ids": [
+        "OE-022",
+        "OE-023"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T19",
+      "turn_start_id": 19,
+      "turn_end_id": 19,
+      "excerpt": "Jordan: I get the logic. And in a doc or a presentation, that structure works. But with exec emails, here's what happened — Claire and Deepak both missed the Wednesday deadline. When I followed up with Claire, she said she skimmed the email and thought it was informational. She didn't realize there was an action item until I flagged it.",
+      "event_ids": [
+        "OE-024",
+        "OE-025"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T21",
+      "turn_start_id": 21,
+      "turn_end_id": 21,
+      "excerpt": "Jordan: Yeah. And it's not because the email was bad — it's because the structure didn't match how those two read email. They skim. They read the first two sentences and decide if it needs action. If the ask isn't up front, it gets treated as FYI.",
+      "event_ids": [
+        "OE-026"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T23",
+      "turn_start_id": 23,
+      "turn_end_id": 23,
+      "excerpt": "Jordan: That's a fair instinct. But you can do both. Lead with the ask, then provide the reasoning. Something like — 'I need sign-off on the Q2 timeline shift by Wednesday. Here's the context.' One sentence up top that tells them this is an action item, then your background paragraphs. The content stays the same, you just invert the order.",
+      "event_ids": [
+        "OE-027",
+        "OE-028"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T25",
+      "turn_start_id": 25,
+      "turn_end_id": 25,
+      "excerpt": "Jordan: Exactly. The inverted pyramid. And honestly, this is a pattern I've seen from you in other contexts too. In your sprint review updates, in Slack threads with the engineering leads — you tend to build up to the point instead of leading with it. The information is always solid, people just have to work to find the main takeaway.",
+      "event_ids": [
+        "OE-029"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T27",
+      "turn_start_id": 27,
+      "turn_end_id": 27,
+      "excerpt": "Jordan: That's really honest. And I think that instinct serves you well in some situations — like Thursday's call, where building context first was exactly right. But in async communication, especially with execs, it works against you because they don't read the whole thing. The context you're carefully building, they never see it.",
+      "event_ids": [
+        "OE-031"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T37",
+      "turn_start_id": 37,
+      "turn_end_id": 37,
+      "excerpt": "Jordan: Okay. So the outcome was the right one — we're not building it on Kevin's timeline. But the cost of getting there was a day and a half of engineering time that was supposed to be spent on launch prep. Priya flagged it to me because two of her engineers were pulled off the notification bug fixes to do Kevin's feasibility assessment.",
+      "event_ids": [
+        "OE-034",
+        "OE-035"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T39",
+      "turn_start_id": 39,
+      "turn_end_id": 39,
+      "excerpt": "Jordan: I get that. And your instinct to understand the request before responding is good — that's the same instinct that made Thursday's call work. But there's a difference between understanding a request and committing resources to evaluate it. You could have said 'let me understand what the account needs' and had a fifteen-minute conversation with Kevin without pulling in engineers. The 'I'll look into it' turned into a mini-project.",
+      "event_ids": [
+        "OE-036",
+        "OE-037"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T43",
+      "turn_start_id": 43,
+      "turn_end_id": 43,
+      "excerpt": "Jordan: That's actually a really perceptive concern. And you're right that the relationship with sales matters. But there's a middle ground between 'yes, let me pull engineers on this' and 'no, go away.' We talked about the 'not now, here's why' framework a few weeks ago. Do you remember that?",
+      "event_ids": [
+        "OE-038"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T49",
+      "turn_start_id": 49,
+      "turn_end_id": 49,
+      "excerpt": "Jordan: Exactly. Kevin gets to feel heard. The account request doesn't disappear. And you don't burn engineering time you can't afford. The thing I want you to notice is that 'not now, here's why' is actually more respectful to Kevin than 'I'll look into it,' because you're being straight with him instead of creating an expectation you can't meet.",
+      "event_ids": [
+        "OE-039",
+        "OE-040"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T53",
+      "turn_start_id": 53,
+      "turn_end_id": 53,
+      "excerpt": "Jordan: It is. And honestly, the people who are best at this role aren't the ones who always have an answer on the spot. They're the ones who know when to slow down. You already demonstrated that on Thursday with Linda. This is the same muscle.",
+      "event_ids": [
+        "OE-042"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T55",
+      "turn_start_id": 55,
+      "turn_end_id": 55,
+      "excerpt": "Jordan: So let's make it concrete. Give yourself a 24-hour rule — any request that would require engineering time gets a hold before you commit. You can say 'let me sit with this overnight and I'll get back to you tomorrow.' That buys you the space to shift from reactive mode to strategic mode.",
+      "event_ids": [
+        "OE-043"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T57",
+      "turn_start_id": 57,
+      "turn_end_id": 57,
+      "excerpt": "Jordan: Good. Let's try it. And I want to check in on this in our next one-on-one — how the rule is working, whether you've had to use it, what came up.",
+      "event_ids": [
+        "OE-044"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T59",
+      "turn_start_id": 59,
+      "turn_end_id": 59,
+      "excerpt": "Jordan: Alright, so to recap — three things. One, the reflective listening on the Graystone call was excellent. Keep doing that, especially with enterprise accounts. Two, on stakeholder emails, lead with the ask. Try the cut-and-paste method — write your draft, then move the bottom to the top. Send me the next one for a gut check. Three, scope requests from sales — use the 'not now, here's why' framework before committing resources, and give yourself a 24-hour hold before saying yes to anything that involves engineering time. We'll check in on all of this next time.",
+      "event_ids": [
+        "OE-045"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    },
+    {
+      "evidence_span_id": "ES-T61",
+      "turn_start_id": 61,
+      "turn_end_id": 61,
+      "excerpt": "Jordan: That's exactly the right attitude. And honestly, the fact that you're six months in and already handling client escalations the way you did Thursday — that's ahead of the curve. The other stuff is refinement, not remediation. You're doing well.",
+      "event_ids": [
+        "OE-047",
+        "OE-048"
+      ],
+      "meeting_id": "M-000055",
+      "speaker_role": "manager_1to1"
+    }
+  ],
+  "evaluation_summary": {
+    "patterns_evaluated": [
+      "purposeful_framing",
+      "resolution_and_alignment",
+      "assignment_clarity",
+      "trust_and_credibility",
+      "question_quality",
+      "communication_clarity",
+      "feedback_quality"
+    ],
+    "patterns_insufficient_signal": [
+      "focus_management",
+      "disagreement_navigation"
+    ],
+    "patterns_not_evaluable": [
+      "participation_management"
+    ]
+  },
+  "pattern_snapshot": [
+    {
+      "pattern_id": "purposeful_framing",
+      "cluster_id": "meeting_structure",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "pf_opening_plus_owned_transitions",
+      "min_required_threshold": 2,
+      "evidence_span_ids": [
+        "ES-T3",
+        "ES-T13",
+        "ES-T33"
+      ],
+      "score": 0.9167,
+      "opportunity_count": 3,
+      "success_evidence_span_ids": [
+        "ES-T3",
+        "ES-T13",
+        "ES-T33"
+      ]
+    },
+    {
+      "pattern_id": "focus_management",
+      "cluster_id": "meeting_structure",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "insufficient_signal",
+      "denominator_rule_id": "fm_drift_episodes",
+      "min_required_threshold": 1,
+      "evidence_span_ids": []
+    },
+    {
+      "pattern_id": "participation_management",
+      "cluster_id": "participation_dynamics",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "not_evaluable",
+      "denominator_rule_id": "pm_floor_direction_moments",
+      "min_required_threshold": 2,
+      "evidence_span_ids": []
+    },
+    {
+      "pattern_id": "disagreement_navigation",
+      "cluster_id": "participation_dynamics",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "insufficient_signal",
+      "denominator_rule_id": "dn_disagreement_arcs",
+      "min_required_threshold": 1,
+      "evidence_span_ids": []
+    },
+    {
+      "pattern_id": "trust_and_credibility",
+      "cluster_id": "participation_dynamics",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "tc_high_stakes_trust_moments",
+      "min_required_threshold": 1,
+      "evidence_span_ids": [
+        "ES-T19"
+      ],
+      "score": 1.0,
+      "opportunity_count": 1,
+      "success_evidence_span_ids": [
+        "ES-T19"
+      ]
+    },
+    {
+      "pattern_id": "resolution_and_alignment",
+      "cluster_id": "decisions_accountability",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "ra_owned_closure_moments",
+      "min_required_threshold": 2,
+      "evidence_span_ids": [
+        "ES-T31-32",
+        "ES-T57-58",
+        "ES-T59-60"
+      ],
+      "score": 0.8333,
+      "opportunity_count": 3,
+      "success_evidence_span_ids": [
+        "ES-T31-32",
+        "ES-T57-58",
+        "ES-T59-60"
+      ]
+    },
+    {
+      "pattern_id": "assignment_clarity",
+      "cluster_id": "decisions_accountability",
+      "scoring_type": "complexity_tiered",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "ac_assignments_initiated_or_accepted",
+      "min_required_threshold": 2,
+      "evidence_span_ids": [
+        "ES-T29",
+        "ES-T31-32",
+        "ES-T51",
+        "ES-T55-56"
+      ],
+      "score": 0.5625,
+      "opportunity_count": 4,
+      "simple_count": 2,
+      "complex_count": 2,
+      "success_evidence_span_ids": [
+        "ES-T51",
+        "ES-T55-56"
+      ]
+    },
+    {
+      "pattern_id": "question_quality",
+      "cluster_id": "communication_quality",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "qq_substantive_questions",
+      "min_required_threshold": 3,
+      "evidence_span_ids": [
+        "ES-T9",
+        "ES-T15",
+        "ES-T35",
+        "ES-T41",
+        "ES-T45",
+        "ES-T47"
+      ],
+      "score": 0.9167,
+      "opportunity_count": 6,
+      "success_evidence_span_ids": [
+        "ES-T9",
+        "ES-T35",
+        "ES-T41",
+        "ES-T45",
+        "ES-T47"
+      ]
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "cluster_id": "communication_quality",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "cc_substantive_turns_3plus_sentences",
+      "min_required_threshold": 3,
+      "evidence_span_ids": [
+        "ES-T3",
+        "ES-T5",
+        "ES-T7",
+        "ES-T17",
+        "ES-T19",
+        "ES-T21",
+        "ES-T23",
+        "ES-T25",
+        "ES-T27",
+        "ES-T29",
+        "ES-T31-32",
+        "ES-T37",
+        "ES-T39",
+        "ES-T43",
+        "ES-T49",
+        "ES-T51",
+        "ES-T53",
+        "ES-T55",
+        "ES-T57",
+        "ES-T59",
+        "ES-T61"
+      ],
+      "score": 0.8864,
+      "opportunity_count": 11,
+      "success_evidence_span_ids": [
+        "ES-T3",
+        "ES-T5",
+        "ES-T7",
+        "ES-T17",
+        "ES-T19",
+        "ES-T21",
+        "ES-T23",
+        "ES-T25",
+        "ES-T27",
+        "ES-T29",
+        "ES-T31-32",
+        "ES-T37",
+        "ES-T39",
+        "ES-T43",
+        "ES-T49",
+        "ES-T51",
+        "ES-T53",
+        "ES-T55",
+        "ES-T57",
+        "ES-T59",
+        "ES-T61"
+      ]
+    },
+    {
+      "pattern_id": "feedback_quality",
+      "cluster_id": "communication_quality",
+      "scoring_type": "multi_element",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "fq_feedback_instances",
+      "min_required_threshold": 2,
+      "evidence_span_ids": [
+        "ES-T5",
+        "ES-T7",
+        "ES-T17",
+        "ES-T23",
+        "ES-T37",
+        "ES-T39",
+        "ES-T49",
+        "ES-T59-60",
+        "ES-T61"
+      ],
+      "score": 0.6667,
+      "opportunity_count": 9,
+      "success_evidence_span_ids": [
+        "ES-T23",
+        "ES-T39",
+        "ES-T49"
+      ]
+    }
+  ],
+  "experiment_tracking": {
+    "active_experiment": {
+      "experiment_id": "EXP-260330",
+      "status": "none"
+    },
+    "detection_in_this_meeting": null
+  },
+  "coaching": {
+    "executive_summary": "You came across as a thoughtful, credible manager who prepares well, gives concrete examples, and helps Avery think rather than just defend. The biggest development opportunity is turning your coaching into tighter accountability: several of your suggestions were practical, but a few were left too open on owner, timing, or follow-through. If you pair your strong feedback style with crisper assignment framing, your one-on-ones will convert insight into behavior change even more reliably.",
+    "coaching_themes": [
+      {
+        "theme": "Strong developmental coaching, with occasional softness at the point of accountability",
+        "explanation": "You consistently grounded feedback in specific moments, like the Graystone call and the roadmap email, and you helped Avery extract the lesson rather than just hear the verdict. Where the conversation softened was when you moved from insight to action: your advice about rewriting stakeholder emails was practical, but the first version did not clearly assign a next output or deadline, so the coaching relied on Avery's initiative to turn it into action.",
+        "related_patterns": [
+          "feedback_quality",
+          "assignment_clarity",
+          "resolution_and_alignment"
+        ],
+        "priority": "primary"
+      },
+      {
+        "theme": "Your credibility comes from specificity and fair-mindedness",
+        "explanation": "When you challenged Avery, you stayed balanced and evidence-based. You named what was working before naming what needed to change, and when you referenced exec reactions to the roadmap email, you cited specific people and a concrete consequence instead of vague hearsay, which made the feedback land as trustworthy rather than political.",
+        "related_patterns": [
+          "trust_and_credibility",
+          "communication_clarity",
+          "feedback_quality"
+        ],
+        "priority": "secondary"
+      }
+    ],
+    "strengths": [
+      {
+        "pattern_id": "communication_clarity",
+        "message": "You were consistently clear and structured throughout the conversation. In the roadmap-email discussion and the sales-request discussion, you led with the core point, named the concrete consequence, and then gave Avery a usable alternative, which kept the conversation developmental instead of fuzzy or punitive."
+      },
+      {
+        "pattern_id": "feedback_quality",
+        "message": "Your feedback was grounded in real situations Avery could recognize immediately. On the Graystone call, the exec email, and the Kevin request, you described specific behavior and real impact, which made your coaching feel fair, actionable, and easy to trust."
+      }
+    ],
+    "focus": [
+      {
+        "pattern_id": "assignment_clarity",
+        "message": "Your coaching is strong; the main leverage now is making the action step as crisp as the insight. When you told Avery to rewrite future stakeholder emails by moving the last paragraph to the top, the tactic was useful but the next deliverable and timing were still loose, which leaves execution dependent on memory rather than commitment."
+      }
+    ],
+    "micro_experiment": [
+      {
+        "experiment_id": "EXP-260331",
+        "title": "Close each coaching point with a concrete next rep",
+        "instruction": "At the end of each development theme, give one explicit practice assignment using this formula: 'For the next X, you will do Y by Z time, and we'll review it in our next one-on-one.' Use it even for small behavior changes like email structure or stakeholder responses.",
+        "success_marker": "In your next one-on-one, at least two coaching moments end with a named output, a timeframe, and an explicit review point.",
+        "pattern_id": "assignment_clarity",
+        "evidence_span_ids": [
+          "ES-T29",
+          "ES-T31-32"
+        ]
+      }
+    ],
+    "pattern_coaching": [
+      {
+        "pattern_id": "purposeful_framing",
+        "notes": "You opened the conversation with a clear map of the three topics and signaled the intended use of each one, which immediately gave Avery a sense of where the conversation was headed. Later, when you shifted into the roadmap-email topic and then the sales-request topic, you made the transition explicit instead of making Avery guess why you were pivoting.",
+        "coaching_note": null,
+        "suggested_rewrite": null,
+        "rewrite_for_span_id": null,
+        "best_success_span_id": "ES-T3"
+      },
+      {
+        "pattern_id": "trust_and_credibility",
+        "notes": "When you challenged the roadmap email, you strengthened trust by citing a specific follow-up with Claire and naming the concrete miss on the Wednesday deadline. That made the feedback feel evidence-based and fair, rather than like vague executive gossip.",
+        "coaching_note": null,
+        "suggested_rewrite": null,
+        "rewrite_for_span_id": null,
+        "best_success_span_id": "ES-T19"
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "notes": "You did a good job bringing the conversation to clear closes. At the end, your three-part recap translated a wide-ranging discussion into concrete takeaways and Avery's immediate response showed the understanding was shared.",
+        "coaching_note": null,
+        "suggested_rewrite": null,
+        "rewrite_for_span_id": null,
+        "best_success_span_id": "ES-T59-60"
+      },
+      {
+        "pattern_id": "assignment_clarity",
+        "notes": "When you coached on the sales-request habit, you got much stronger on actionability. The 24-hour rule gave Avery a clear behavior, a trigger condition, exact language to use, and an explicit follow-up point, which is why it immediately sounded memorable and usable.",
+        "coaching_note": "The place to tighten is when you first move from diagnosis to practice. In the email-structure section, you gave a smart tactic about moving the last paragraph to the top, but you did not initially specify what Avery should produce next or by when, so the coaching depended on later repair rather than landing as a clean commitment in the moment.",
+        "suggested_rewrite": "Next time you send an exec-facing email with an ask, use this structure and send me that draft before it goes out. Let's make the very next stakeholder email the practice rep so we can see whether the ask is clear in the first sentence.",
+        "rewrite_for_span_id": "ES-T29",
+        "best_success_span_id": "ES-T55-56"
+      },
+      {
+        "pattern_id": "question_quality",
+        "notes": "Your best questions consistently deepened reflection instead of just collecting surface facts. Asking what made Avery slow down on the Graystone call, what made pushback hard with Kevin, and what would have sounded different with Kevin all pushed Avery into insight and rehearsal, not defensiveness.",
+        "coaching_note": "One question was functional but a little broad: when you asked whether Avery had gotten any reactions to the roadmap email, it opened the topic but did not yet target the decision-relevant issue you were really exploring, which was whether the ask had landed. A sharper question there would have gotten to the communication failure faster.",
+        "suggested_rewrite": "Before I give you my read, did anyone respond in a way that showed they understood you needed sign-off by Wednesday, or did it land more like an FYI?",
+        "rewrite_for_span_id": "ES-T15",
+        "best_success_span_id": "ES-T41"
+      },
+      {
+        "pattern_id": "communication_clarity",
+        "notes": null,
+        "coaching_note": null,
+        "suggested_rewrite": null,
+        "rewrite_for_span_id": null,
+        "best_success_span_id": null
+      },
+      {
+        "pattern_id": "feedback_quality",
+        "notes": "You made feedback easier to hear by anchoring it in real situations and observable behavior. The strongest example was the roadmap-email feedback, where you named the exact communication flaw, the missed deadline consequence, and a concrete alternative structure Avery could try next time.",
+        "coaching_note": "Your recurring miss was the check-in after delivering feedback. Several times you gave strong situation-behavior-impact-recommendation feedback and then moved forward without explicitly asking Avery how it landed or what felt hardest, which meant Avery often had to volunteer reflection rather than being invited into it.",
+        "suggested_rewrite": "The key ask was buried in paragraph three, and that led Claire to read it as informational instead of actionable. Next time, put the sign-off request in the first sentence and then give the background. How does that land for you, and what feels hardest about writing it that way?",
+        "rewrite_for_span_id": "ES-T17",
+        "best_success_span_id": "ES-T23"
+      }
+    ],
+    "experiment_coaching": null
+  }
+}

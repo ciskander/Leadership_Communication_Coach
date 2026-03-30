@@ -1,0 +1,656 @@
+{
+  "schema_version": "mvp.v0.4.0",
+  "meta": {
+    "analysis_id": "A-260330",
+    "taxonomy_version": "v3.0",
+    "output_mode": "coaching_first_2s1e",
+    "analysis_type": "single_meeting",
+    "generated_at": "2026-03-30T18:11:50.135937+00:00"
+  },
+  "context": {
+    "meeting_id": "M-000004",
+    "meeting_type": "project_review",
+    "target_role": "chair",
+    "meeting_date": "2026-01-01",
+    "target_speaker_name": "Alex",
+    "target_speaker_label": "Alex"
+  },
+  "opportunity_events": [
+    {
+      "event_id": "OE-001",
+      "pattern_id": "purposeful_framing",
+      "turn_start_id": 1,
+      "turn_end_id": 1,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "opening_with_topic_and_outcome"
+    },
+    {
+      "event_id": "OE-002",
+      "pattern_id": "purposeful_framing",
+      "turn_start_id": 9,
+      "turn_end_id": 9,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "transition_with_topic_and_weak_outcome"
+    },
+    {
+      "event_id": "OE-003",
+      "pattern_id": "resolution_and_alignment",
+      "turn_start_id": 19,
+      "turn_end_id": 19,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "specific_resolution_without_alignment_check"
+    },
+    {
+      "event_id": "OE-004",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 19,
+      "turn_end_id": 19,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "simple_assignment_missing_deliverable"
+    },
+    {
+      "event_id": "OE-005",
+      "pattern_id": "question_quality",
+      "turn_start_id": 21,
+      "turn_end_id": 21,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "perspective_broadening_question"
+    },
+    {
+      "event_id": "OE-006",
+      "pattern_id": "disagreement_navigation",
+      "turn_start_id": 4,
+      "turn_end_id": 9,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.0,
+      "reason_code": "bulldozed_design_pushback"
+    },
+    {
+      "event_id": "OE-007",
+      "pattern_id": "disagreement_navigation",
+      "turn_start_id": 10,
+      "turn_end_id": 17,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.0,
+      "reason_code": "suppressed_quality_risk_pushback"
+    },
+    {
+      "event_id": "OE-008",
+      "pattern_id": "trust_and_credibility",
+      "turn_start_id": 23,
+      "turn_end_id": 25,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.0,
+      "reason_code": "dismissed_customer_risk_without_engagement"
+    },
+    {
+      "event_id": "OE-009",
+      "pattern_id": "resolution_and_alignment",
+      "turn_start_id": 27,
+      "turn_end_id": 27,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "specific_resolution_with_explicit_check"
+    },
+    {
+      "event_id": "OE-010",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 29,
+      "turn_end_id": 31,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "complex_assignment_missing_confirmation"
+    },
+    {
+      "event_id": "OE-012",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 35,
+      "turn_end_id": 35,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 1.0,
+      "reason_code": "simple_assignment_with_owner_deadline_deliverable"
+    },
+    {
+      "event_id": "OE-013",
+      "pattern_id": "assignment_clarity",
+      "turn_start_id": 38,
+      "turn_end_id": 38,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "simple_assignment_missing_deadline"
+    },
+    {
+      "event_id": "OE-014",
+      "pattern_id": "resolution_and_alignment",
+      "turn_start_id": 40,
+      "turn_end_id": 40,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "vague_resolution_with_explicit_alignment_check"
+    },
+    {
+      "event_id": "OE-015",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 3,
+      "turn_end_id": 3,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "clear_structured_decision_statement"
+    },
+    {
+      "event_id": "OE-016",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 5,
+      "turn_end_id": 5,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.5,
+      "reason_code": "clear_point_but_overrides_relevant_concern"
+    },
+    {
+      "event_id": "OE-017",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 13,
+      "turn_end_id": 13,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "clear_redirection_statement"
+    },
+    {
+      "event_id": "OE-018",
+      "pattern_id": "communication_clarity",
+      "turn_start_id": 23,
+      "turn_end_id": 23,
+      "target_control": "yes",
+      "count_decision": "counted",
+      "success": 0.75,
+      "reason_code": "clear_boundary_statement"
+    }
+  ],
+  "evidence_spans": [
+    {
+      "evidence_span_id": "ES-T1",
+      "turn_start_id": 1,
+      "turn_end_id": 1,
+      "excerpt": "Alex: Let's get started. We're three weeks behind on the mobile rewrite and I want a clear path forward by the end of this meeting. Riley, status update.",
+      "event_ids": [
+        "OE-001"
+      ],
+      "meeting_id": "M-000004",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T9",
+      "turn_start_id": 9,
+      "turn_end_id": 9,
+      "excerpt": "Alex: I hear you. But we're not going to ship two months late because of information architecture. We're cutting scope. Let's move on. Taylor, where does QA stand on the core app?",
+      "event_ids": [
+        "OE-002"
+      ],
+      "meeting_id": "M-000004",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T19",
+      "turn_start_id": 19,
+      "turn_end_id": 19,
+      "excerpt": "Alex: Good. That's the plan. We ship the core app by end of next week. Riley, I need you and Taylor to align on which bugs are ship-blockers and get those fixed in the next five days.",
+      "event_ids": [
+        "OE-003",
+        "OE-004"
+      ],
+      "meeting_id": "M-000004",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T21",
+      "turn_start_id": 21,
+      "turn_end_id": 21,
+      "excerpt": "Alex: Quinn, anything from product side we need to factor in?",
+      "event_ids": [
+        "OE-005"
+      ],
+      "meeting_id": "M-000004",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T4-9",
+      "turn_start_id": 4,
+      "turn_end_id": 9,
+      "excerpt": "Jamie: Wait — we can't just cut offline sync. The entire information architecture was designed around offline-first. If you pull that out, the navigation doesn't make sense. Users are going to hit screens that reference cached data that doesn't exist. It's not a feature you can just remove, it's load-bearing. / Alex: I understand the design was built around it. But the design was also built on the assumption that engineering would deliver on time, which didn't happen. We have to adjust to reality. We're cutting both features and shipping what's stable. / Jamie: But there's a difference between cutting the report builder, which is a standalone feature, and cutting offline sync, which is structural. Can we at least keep offline sync and just cut reports? / Alex: Jamie, I've made the call. We're cutting both. We'll revisit the UX for v2 and you can rework the navigation then. I need us to move forward. / Jamie: Rework the navigation — do you understand what you're asking? That's weeks of design work thrown out. And the v2 UX won't just be 'add offline back in,' it'll be a full redesign of flows that we already redesigned. We're going backwards. / Alex: I hear you. But we're not going to ship two months late because of information architecture. We're cutting scope. Let's move on. Taylor, where does QA stand on the core app?",
+      "event_ids": [
+        "OE-006"
+      ],
+      "meeting_id": "M-000004",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T10-17",
+      "turn_start_id": 10,
+      "turn_end_id": 17,
+      "excerpt": "Taylor: We certified the happy paths but I've got concerns. We have 34 open defects, eleven P2s. Three of the P2s are in the notification system and they cause stale data to display under certain conditions. For field workers relying on notifications for scheduling, that's a real risk. I'm not comfortable certifying in the current state. / Riley: The notification issues only trigger under a pretty narrow set of conditions. You need 50-plus queued notifications and the app backgrounded for four hours. Most users aren't going to hit that. / Taylor: Field workers will. They check the app twice a day. That's exactly the usage pattern that triggers it. We designed this app for field workers, Riley. / Alex: Look, let's take the QA discussion offline. Taylor, you and Riley can work through the defect list and figure out what's critical versus what can wait. I don't want to get into bug-by-bug triage in this meeting. / Taylor: Alex, this can't be an offline conversation. If we're talking about a ship date today, the quality bar needs to be part of that decision. I can't certify this app and I need the room to understand why. / Alex: And I'm saying you and Riley can sort that out between yourselves. We've got bigger issues to address. Let's keep moving. / Taylor: But — / Alex: Let's keep moving. Riley, if we cut both features and ship the core app only, what's the timeline?",
+      "event_ids": [
+        "OE-007"
+      ],
+      "meeting_id": "M-000004",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T23-25",
+      "turn_start_id": 23,
+      "turn_end_id": 25,
+      "excerpt": "Alex: No. We can't keep adding things. I don't want to hear about new features right now. We are trying to ship what we have. New requirements are exactly how we ended up three weeks behind in the first place. / Quinn: I'm not saying it needs to be in this release. I'm just trying to flag that — / Alex: Flag it in an email. This meeting is about getting the current build out the door.",
+      "event_ids": [
+        "OE-008",
+        "OE-018"
+      ],
+      "meeting_id": "M-000004",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T27",
+      "turn_start_id": 27,
+      "turn_end_id": 27,
+      "excerpt": "Alex: So the plan is: we cut offline sync and report builder. We ship the core app by end of next week. Riley and Taylor align on critical bugs. That's it. Riley, anything else your team needs to hit that date?",
+      "event_ids": [
+        "OE-009"
+      ],
+      "meeting_id": "M-000004",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T29-31",
+      "turn_start_id": 29,
+      "turn_end_id": 31,
+      "excerpt": "Alex: Good. Jamie, for the v2 UX work — can you start thinking about what the navigation looks like without offline sync? I want a revised design direction within two weeks. / Jamie: You want me to redesign the navigation in two weeks. / Alex: A direction, not final screens. Wireframes and a flow diagram.",
+      "event_ids": [
+        "OE-010"
+      ],
+      "meeting_id": "M-000004",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T33",
+      "turn_start_id": 33,
+      "turn_end_id": 33,
+      "excerpt": "Alex: Taylor, the bug triage with Riley — can that happen tomorrow?",
+      "event_ids": [
+        "OE-011"
+      ],
+      "meeting_id": "M-000004",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T35",
+      "turn_start_id": 35,
+      "turn_end_id": 35,
+      "excerpt": "Alex: And I want the ship-blocker list by end of day tomorrow so I can communicate the timeline to stakeholders.",
+      "event_ids": [
+        "OE-012"
+      ],
+      "meeting_id": "M-000004",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T38",
+      "turn_start_id": 38,
+      "turn_end_id": 38,
+      "excerpt": "Alex: Good. Quinn, the deep link request — send me the details from the Weston call and I'll figure out where it fits in the roadmap.",
+      "event_ids": [
+        "OE-013"
+      ],
+      "meeting_id": "M-000004",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T40",
+      "turn_start_id": 40,
+      "turn_end_id": 40,
+      "excerpt": "Alex: Release target is end of next week. Everyone clear?",
+      "event_ids": [
+        "OE-014"
+      ],
+      "meeting_id": "M-000004",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T3",
+      "turn_start_id": 3,
+      "turn_end_id": 3,
+      "excerpt": "Alex: I agree. We need to cut scope. We're already three weeks late and we can't keep dragging this out. We cut offline sync and report builder, ship the core app, and revisit both in v2. Jamie, I know that's not what design wanted but we can polish the UX in the next version.",
+      "event_ids": [
+        "OE-015"
+      ],
+      "meeting_id": "M-000004",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T5",
+      "turn_start_id": 5,
+      "turn_end_id": 5,
+      "excerpt": "Alex: I understand the design was built around it. But the design was also built on the assumption that engineering would deliver on time, which didn't happen. We have to adjust to reality. We're cutting both features and shipping what's stable.",
+      "event_ids": [
+        "OE-016"
+      ],
+      "meeting_id": "M-000004",
+      "speaker_role": "chair"
+    },
+    {
+      "evidence_span_id": "ES-T13",
+      "turn_start_id": 13,
+      "turn_end_id": 13,
+      "excerpt": "Alex: Look, let's take the QA discussion offline. Taylor, you and Riley can work through the defect list and figure out what's critical versus what can wait. I don't want to get into bug-by-bug triage in this meeting.",
+      "event_ids": [
+        "OE-017"
+      ],
+      "meeting_id": "M-000004",
+      "speaker_role": "chair"
+    }
+  ],
+  "evaluation_summary": {
+    "patterns_evaluated": [
+      "purposeful_framing",
+      "disagreement_navigation",
+      "trust_and_credibility",
+      "resolution_and_alignment",
+      "assignment_clarity",
+      "question_quality",
+      "communication_clarity"
+    ],
+    "patterns_insufficient_signal": [
+      "focus_management",
+      "participation_management"
+    ],
+    "patterns_not_evaluable": [
+      "feedback_quality"
+    ]
+  },
+  "pattern_snapshot": [
+    {
+      "pattern_id": "purposeful_framing",
+      "cluster_id": "meeting_structure",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "pf_open_plus_owned_transitions",
+      "min_required_threshold": 2,
+      "evidence_span_ids": [
+        "ES-T1",
+        "ES-T9"
+      ],
+      "score": 0.875,
+      "opportunity_count": 2,
+      "success_evidence_span_ids": [
+        "ES-T1",
+        "ES-T9"
+      ]
+    },
+    {
+      "pattern_id": "focus_management",
+      "cluster_id": "meeting_structure",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "insufficient_signal",
+      "denominator_rule_id": "fm_drift_episodes_against_stated_objective",
+      "min_required_threshold": 1,
+      "evidence_span_ids": []
+    },
+    {
+      "pattern_id": "participation_management",
+      "cluster_id": "participation_dynamics",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "insufficient_signal",
+      "denominator_rule_id": "pm_floor_direction_moments",
+      "min_required_threshold": 2,
+      "evidence_span_ids": []
+    },
+    {
+      "pattern_id": "disagreement_navigation",
+      "cluster_id": "participation_dynamics",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "dn_disagreement_arcs_with_agency",
+      "min_required_threshold": 1,
+      "evidence_span_ids": [
+        "ES-T4-9",
+        "ES-T10-17"
+      ],
+      "score": 0.0,
+      "opportunity_count": 2,
+      "success_evidence_span_ids": []
+    },
+    {
+      "pattern_id": "trust_and_credibility",
+      "cluster_id": "participation_dynamics",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "tc_high_stakes_credibility_moments",
+      "min_required_threshold": 1,
+      "evidence_span_ids": [
+        "ES-T23-25"
+      ],
+      "score": 0.0,
+      "opportunity_count": 1,
+      "success_evidence_span_ids": []
+    },
+    {
+      "pattern_id": "resolution_and_alignment",
+      "cluster_id": "decisions_accountability",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "ra_target_owned_closure_moments",
+      "min_required_threshold": 2,
+      "evidence_span_ids": [
+        "ES-T19",
+        "ES-T27",
+        "ES-T40"
+      ],
+      "score": 0.75,
+      "opportunity_count": 3,
+      "success_evidence_span_ids": [
+        "ES-T27",
+        "ES-T40"
+      ]
+    },
+    {
+      "pattern_id": "assignment_clarity",
+      "cluster_id": "decisions_accountability",
+      "scoring_type": "complexity_tiered",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "ac_target_initiated_or_accepted_assignments",
+      "min_required_threshold": 2,
+      "evidence_span_ids": [
+        "ES-T19",
+        "ES-T29-31",
+        "ES-T35",
+        "ES-T38"
+      ],
+      "score": 0.6875,
+      "opportunity_count": 4,
+      "simple_count": 3,
+      "complex_count": 1,
+      "success_evidence_span_ids": [
+        "ES-T29-31",
+        "ES-T35"
+      ]
+    },
+    {
+      "pattern_id": "question_quality",
+      "cluster_id": "communication_quality",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "insufficient_signal",
+      "denominator_rule_id": "qq_substantive_questions_only",
+      "min_required_threshold": 3,
+      "evidence_span_ids": [
+        "ES-T21",
+        "ES-T33"
+      ],
+      "opportunity_count": 1,
+      "score": null
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "cluster_id": "communication_quality",
+      "scoring_type": "tiered_rubric",
+      "evaluable_status": "evaluable",
+      "denominator_rule_id": "cc_substantive_turns_3plus_sentences",
+      "min_required_threshold": 3,
+      "evidence_span_ids": [
+        "ES-T3",
+        "ES-T5",
+        "ES-T13",
+        "ES-T23-25"
+      ],
+      "score": 0.6875,
+      "opportunity_count": 4,
+      "success_evidence_span_ids": [
+        "ES-T3",
+        "ES-T13"
+      ]
+    },
+    {
+      "pattern_id": "feedback_quality",
+      "cluster_id": "communication_quality",
+      "scoring_type": "multi_element",
+      "evaluable_status": "not_evaluable",
+      "denominator_rule_id": "fq_explicit_feedback_instances",
+      "min_required_threshold": 2,
+      "evidence_span_ids": []
+    }
+  ],
+  "experiment_tracking": {
+    "active_experiment": {
+      "experiment_id": "EXP-260330",
+      "status": "none"
+    },
+    "detection_in_this_meeting": {
+      "experiment_id": "EXP-000000",
+      "attempt": "no",
+      "count_attempts": 0,
+      "evidence_span_ids": []
+    }
+  },
+  "coaching": {
+    "executive_summary": "You were decisive and structurally clear in this meeting, but that strength tipped into avoidance of substantive challenge. The biggest issue was not lack of direction; it was that you repeatedly closed down design, QA, and product risk signals in order to preserve momentum. That may have made the meeting feel efficient, but it likely reduced decision quality and signaled to the room that critical concerns would not be heard once you had made up your mind.",
+    "coaching_themes": [
+      {
+        "theme": "Decisiveness became a substitute for engaging the hard information in the room",
+        "explanation": "You opened with a clear goal and moved the meeting toward a shipping plan quickly. But when Jamie challenged the architectural impact of cutting offline sync and when Taylor said QA could not certify the app, you responded by restating the decision and moving on rather than working the substance of the objections. The result was speed without genuine integration of design and quality risk.",
+        "related_patterns": [
+          "disagreement_navigation",
+          "trust_and_credibility",
+          "resolution_and_alignment"
+        ],
+        "priority": "primary"
+      },
+      {
+        "theme": "Your meeting structure was strong, but your closure quality depended on who got included before the close",
+        "explanation": "You framed the meeting well at the start and later summarized the plan in concrete terms. The weakness was upstream: because key objections were suppressed before the wrap-up, the final alignment check sounded like compliance rather than shared conviction.",
+        "related_patterns": [
+          "purposeful_framing",
+          "resolution_and_alignment",
+          "disagreement_navigation"
+        ],
+        "priority": "secondary"
+      }
+    ],
+    "strengths": [
+      {
+        "pattern_id": "purposeful_framing",
+        "message": "You set the meeting up well from the first sentence by naming both the problem and the outcome you wanted: being three weeks behind and needing a clear path forward by the end. Later, when you shifted to QA, you made the topic change explicit, which helped keep the room oriented."
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "message": "Near the end, you pulled the plan together in concrete terms: cut offline sync and report builder, ship by end of next week, and have Riley and Taylor align on critical bugs. Your final check of 'Everyone clear?' created an explicit moment for confirmation rather than assuming everyone had the same read."
+      }
+    ],
+    "focus": [
+      {
+        "pattern_id": "disagreement_navigation",
+        "message": "Your highest-leverage move is to stay in the substance when people push back, especially when the pushback is about architecture, quality, or customer risk. In this meeting, once you decided, you treated objection as delay instead of decision input, and that cost you access to the very expertise you needed to make a better call."
+      }
+    ],
+    "micro_experiment": [
+      {
+        "experiment_id": "EXP-259331",
+        "title": "Use a two-step response before closing over objection",
+        "instruction": "In the next meeting, every time someone pushes back on your decision, force yourself to do two things before you restate the call: first summarize their concern in one sentence, then ask one concrete question that tests impact, tradeoff, or mitigation. Only after that do you decide, defer, or assign follow-up.",
+        "success_marker": "You can point to at least two moments where you said the other person's concern back to them accurately and asked a substantive follow-up before closing the topic.",
+        "pattern_id": "disagreement_navigation",
+        "evidence_span_ids": [
+          "ES-T4-9",
+          "ES-T10-17"
+        ]
+      }
+    ],
+    "pattern_coaching": [
+      {
+        "pattern_id": "purposeful_framing",
+        "notes": "You gave the meeting a strong container right away by naming the delay and the outcome you wanted from the discussion. That mattered here because the room immediately understood this was a decision meeting, not a general status review.",
+        "coaching_note": null,
+        "suggested_rewrite": null,
+        "rewrite_for_span_id": null,
+        "best_success_span_id": "ES-T1"
+      },
+      {
+        "pattern_id": "disagreement_navigation",
+        "notes": null,
+        "coaching_note": "When Jamie explained that offline sync was structurally tied to the navigation, you acknowledged the frustration but never engaged the actual design argument. The same thing happened when Taylor said QA could not certify the app. In both cases, you treated pushback as resistance to momentum rather than as decision-relevant information, which made your authority louder but your decision process weaker.",
+        "suggested_rewrite": "I hear the concern. Before we lock this, I want to understand the impact clearly: Jamie, if we cut offline sync, what specifically breaks in the current flows, and is there a narrower version we could preserve? Then we'll make the ship call with that on the table.",
+        "rewrite_for_span_id": "ES-T4-9",
+        "best_success_span_id": null
+      },
+      {
+        "pattern_id": "trust_and_credibility",
+        "notes": null,
+        "coaching_note": "When Quinn raised a top-five account risk, you cut it off before hearing the actual scope of the issue, even after Quinn clarified it was a flag rather than a request to add work now. That kind of response can make product and customer-facing partners stop surfacing risks in the room, because they learn that unwelcome information will be treated as scope creep instead of intelligence.",
+        "suggested_rewrite": "We're not adding anything to this release, but I do want the risk on the table. Give me the two-sentence version now so the room understands it, then send the details after and we'll place it in roadmap review.",
+        "rewrite_for_span_id": "ES-T23-25",
+        "best_success_span_id": null
+      },
+      {
+        "pattern_id": "resolution_and_alignment",
+        "notes": "Your strongest closure came when you summarized the exact plan and then asked whether Riley's team needed anything else to hit the date. That combination of concrete recap and check-in made the meeting feel decided rather than merely ended.",
+        "coaching_note": null,
+        "suggested_rewrite": null,
+        "rewrite_for_span_id": null,
+        "best_success_span_id": "ES-T27"
+      },
+      {
+        "pattern_id": "assignment_clarity",
+        "notes": "Your assignments were usually concrete enough to move work. You were especially clear when you asked for the ship-blocker list by end of day tomorrow, and when Jamie pushed back on the redesign ask, you tightened the deliverable from a broad redesign to wireframes and a flow diagram.",
+        "coaching_note": "Your bug assignment to Riley and Taylor sounded decisive, but it left the output fuzzy at the moment you made it: 'align on which bugs are ship-blockers and get those fixed' mixes a discussion with execution. In a high-pressure launch meeting, that ambiguity matters because the team needs to know whether the immediate ask is a list, a decision, or completed fixes.",
+        "suggested_rewrite": "Riley and Taylor, by tomorrow end of day I need a joint ship-blocker list with severity, owner, and recommended disposition. Once we have that list, we'll lock which fixes have to land before release.",
+        "rewrite_for_span_id": "ES-T19",
+        "best_success_span_id": "ES-T35"
+      },
+      {
+        "pattern_id": "communication_clarity",
+        "notes": "You were consistently easy to follow. Your decision statements were direct, concrete, and short enough that nobody had to guess what you wanted, especially when you set the scope-cut decision and when you told the room the meeting was about getting the current build out the door.",
+        "coaching_note": null,
+        "suggested_rewrite": null,
+        "rewrite_for_span_id": null,
+        "best_success_span_id": "ES-T3"
+      }
+    ],
+    "experiment_coaching": null
+  }
+}

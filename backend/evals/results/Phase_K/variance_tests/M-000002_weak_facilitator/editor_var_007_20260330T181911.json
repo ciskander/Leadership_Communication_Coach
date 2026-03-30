@@ -1,0 +1,56 @@
+{
+  "focus_message": "Your highest-leverage gap is credibility under pressure. In this meeting, confidence dropped when you stated dates and commitments before the actual owners had validated them, especially with Priya on the data export timeline. Tightening that one habit will make your decisions feel more reliable and reduce the amount of public rework in the room.",
+  "micro_experiment_edits": {
+    "title": "Validate before you commit",
+    "instruction": "Before you state any high-stakes date, promise, or owner commitment, pause and ask the owner to validate it in the room: 'What can you credibly commit to?' or 'I don't want to put a date on this until you've confirmed it.' Do not supply a date or acceptance on someone else's behalf.",
+    "success_marker": "In your next meeting, you explicitly validate at least three commitments before naming them and avoid making any unvalidated promise for another person."
+  },
+  "pattern_coaching_edits": {
+    "purposeful_framing": {
+      "notes": "SUPPRESS"
+    },
+    "participation_management": {
+      "notes": "SUPPRESS"
+    },
+    "assignment_clarity": {
+      "notes": "SUPPRESS"
+    }
+  },
+  "changes": [
+    {
+      "field": "focus_message",
+      "action": "rewritten",
+      "reason": "Sharpened the focus on the core trust issue visible in the meeting: making commitments before owners validated them, with clearer grounding in the Priya/data export moments."
+    },
+    {
+      "field": "micro_experiment_edits.title",
+      "action": "rewritten",
+      "reason": "Made the experiment title more direct and leader-usable."
+    },
+    {
+      "field": "micro_experiment_edits.instruction",
+      "action": "rewritten",
+      "reason": "Clarified the behavior change in plain language and tied it more tightly to the trust-and-credibility pattern."
+    },
+    {
+      "field": "micro_experiment_edits.success_marker",
+      "action": "rewritten",
+      "reason": "Tightened the success condition so it is easier to observe and measure."
+    },
+    {
+      "field": "pattern_coaching_edits.purposeful_framing.notes",
+      "action": "suppressed",
+      "reason": "The positive observation is thin and generic; merely naming the next topic with a rough transition is not meaningful strength-level coaching for purposeful framing in a meeting this poorly framed overall."
+    },
+    {
+      "field": "pattern_coaching_edits.participation_management.notes",
+      "action": "suppressed",
+      "reason": "There was no meaningful positive observation here; leaving it absent is appropriate, and explicit suppression keeps delivery focused given the meeting showed weak participation management overall."
+    },
+    {
+      "field": "pattern_coaching_edits.assignment_clarity.notes",
+      "action": "suppressed",
+      "reason": "The positive note overstates isolated moments of specificity. In context, most assignments created follow-up clarification and weak accountability, so this praise would dilute the real coaching edge."
+    }
+  ]
+}

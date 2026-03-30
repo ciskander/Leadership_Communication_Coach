@@ -1,0 +1,46 @@
+{
+  "pattern_coaching_edits": {
+    "communication_clarity": {
+      "coaching_note": "SUPPRESS"
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "question_quality",
+      "oe_index": 1,
+      "reason": "This is a logistics/scheduling question ('can that happen tomorrow?'), which the pattern definition explicitly excludes from question_quality."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 2,
+      "reason": "This moment is primarily focus management/redirection under tension, not communication_clarity. The issue is not whether the statement was understandable, but that Alex moved a substantive QA risk offline."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 3,
+      "reason": "This moment is better captured as trust_and_credibility and focus/boundary management in a high-stakes customer-risk exchange. Counting it under communication_clarity repackages another pattern rather than adding distinct insight."
+    }
+  ],
+  "changes": [
+    {
+      "field": "pattern_coaching_edits.communication_clarity.coaching_note",
+      "action": "suppressed",
+      "reason": "The developmental point is really about disagreement navigation and trust consequences, not communication clarity. It repackages stronger coaching already covered elsewhere."
+    },
+    {
+      "field": "oe_removals[0]",
+      "action": "removed",
+      "reason": "Removed misclassified logistics question from question_quality opportunities."
+    },
+    {
+      "field": "oe_removals[1]",
+      "action": "removed",
+      "reason": "Removed communication_clarity event that is actually about redirecting substantive QA risk rather than clarity of expression."
+    },
+    {
+      "field": "oe_removals[2]",
+      "action": "removed",
+      "reason": "Removed communication_clarity event that duplicates trust/boundary dynamics in the customer-risk exchange instead of measuring distinct clarity behavior."
+    }
+  ]
+}

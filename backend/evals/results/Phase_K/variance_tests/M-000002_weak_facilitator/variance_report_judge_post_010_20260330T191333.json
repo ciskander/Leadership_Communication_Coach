@@ -1,0 +1,154 @@
+{
+  "n_runs": 10,
+  "n_valid": 10,
+  "coached_patterns": [
+    "purposeful_framing",
+    "focus_management",
+    "participation_management",
+    "disagreement_navigation",
+    "trust_and_credibility",
+    "resolution_and_alignment",
+    "question_quality",
+    "communication_clarity"
+  ],
+  "per_pattern_ratings": {
+    "purposeful_framing": {
+      "insightful": 10
+    },
+    "focus_management": {
+      "insightful": 10
+    },
+    "participation_management": {
+      "adequate": 10
+    },
+    "disagreement_navigation": {
+      "insightful": 10
+    },
+    "trust_and_credibility": {
+      "insightful": 10
+    },
+    "resolution_and_alignment": {
+      "insightful": 10
+    },
+    "question_quality": {
+      "adequate": 10
+    },
+    "communication_clarity": {
+      "adequate": 10
+    }
+  },
+  "unanimous_rate": 1.0,
+  "unanimous_count": 8,
+  "total_patterns": 8,
+  "flip_patterns": [],
+  "aggregate_pcts": {
+    "insightful": {
+      "mean": 0.625,
+      "stdev": 0.0
+    },
+    "adequate": {
+      "mean": 0.375,
+      "stdev": 0.0
+    },
+    "pedantic": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "wrong": {
+      "mean": 0.0,
+      "stdev": 0.0
+    }
+  },
+  "coaching_value": {
+    "medium": 10
+  },
+  "would_approve": {
+    "counts": {
+      "True": 10
+    },
+    "agreement_rate": 1.0
+  },
+  "pattern_alignment": {
+    "purposeful_framing": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 1.0,
+      "fits_pattern_values": {
+        "true": 10
+      },
+      "stretching_to_fill_values": {
+        "false": 10
+      }
+    },
+    "focus_management": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 1.0,
+      "fits_pattern_values": {
+        "true": 10
+      },
+      "stretching_to_fill_values": {
+        "false": 10
+      }
+    },
+    "participation_management": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 0.8,
+      "fits_pattern_values": {
+        "true": 10
+      },
+      "stretching_to_fill_values": {
+        "true": 8,
+        "false": 2
+      }
+    },
+    "disagreement_navigation": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 1.0,
+      "fits_pattern_values": {
+        "true": 10
+      },
+      "stretching_to_fill_values": {
+        "false": 10
+      }
+    },
+    "trust_and_credibility": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 1.0,
+      "fits_pattern_values": {
+        "true": 10
+      },
+      "stretching_to_fill_values": {
+        "false": 10
+      }
+    },
+    "resolution_and_alignment": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 1.0,
+      "fits_pattern_values": {
+        "true": 10
+      },
+      "stretching_to_fill_values": {
+        "false": 10
+      }
+    },
+    "question_quality": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 1.0,
+      "fits_pattern_values": {
+        "true": 10
+      },
+      "stretching_to_fill_values": {
+        "true": 10
+      }
+    },
+    "communication_clarity": {
+      "fits_pattern_agree": 1.0,
+      "stretching_to_fill_agree": 1.0,
+      "fits_pattern_values": {
+        "true": 10
+      },
+      "stretching_to_fill_values": {
+        "true": 10
+      }
+    }
+  }
+}

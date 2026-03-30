@@ -1,0 +1,62 @@
+{
+  "pattern_coaching_edits": {
+    "communication_clarity": {
+      "coaching_note": "SUPPRESS",
+      "suggested_rewrite": "SUPPRESS"
+    }
+  },
+  "oe_removals": [
+    {
+      "pattern_id": "question_quality",
+      "oe_index": 1,
+      "reason": "This is a logistics/scheduling question about whether bug triage can happen tomorrow. Per the pattern definition, procedural or logistics questions do not belong in question_quality."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 1,
+      "reason": "This moment is primarily about dismissing relevant pushback, which belongs under disagreement_navigation rather than communication_clarity. The clarity observation adds no distinct communication-clarity insight."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 2,
+      "reason": "This is a redirection move about taking QA discussion offline and managing scope of discussion, which is better captured as focus/disagreement handling than substantive communication clarity."
+    },
+    {
+      "pattern_id": "communication_clarity",
+      "oe_index": 3,
+      "reason": "This is a boundary-setting response to a customer-risk flag and is already more specifically captured under trust_and_credibility. Keeping it in communication_clarity is redundant."
+    }
+  ],
+  "changes": [
+    {
+      "field": "pattern_coaching_edits.communication_clarity.coaching_note",
+      "action": "suppressed",
+      "reason": "The developmental feedback is misaligned to communication_clarity. It is really about disagreement handling and trust consequences, both of which are already covered more specifically elsewhere."
+    },
+    {
+      "field": "pattern_coaching_edits.communication_clarity.suggested_rewrite",
+      "action": "suppressed",
+      "reason": "The rewrite coaches Alex to engage customer-risk pushback, which belongs under trust_and_credibility/disagreement_navigation rather than communication_clarity."
+    },
+    {
+      "field": "oe_removals[0]",
+      "action": "removed",
+      "reason": "Removed a logistics question that does not meet the question_quality definition."
+    },
+    {
+      "field": "oe_removals[1]",
+      "action": "removed",
+      "reason": "Removed a communication_clarity event that is actually disagreement navigation."
+    },
+    {
+      "field": "oe_removals[2]",
+      "action": "removed",
+      "reason": "Removed a communication_clarity event that is really redirection/focus management in a conflict context."
+    },
+    {
+      "field": "oe_removals[3]",
+      "action": "removed",
+      "reason": "Removed a redundant communication_clarity event already better captured under trust_and_credibility."
+    }
+  ]
+}
