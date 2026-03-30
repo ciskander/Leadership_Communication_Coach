@@ -379,10 +379,13 @@ def _cleanup_fully_suppressed(
     merged: dict,
     demoted_patterns: set[str],
 ) -> None:
-    """Null out best_success_span_id for patterns where both notes and coaching_note are null.
+    """Null out best_success_span_id when notes is null.
 
-    When both coaching text fields are suppressed, showing just a success evidence
-    quote with no coaching context makes the pattern look like taxonomy-filling.
+    The best_success_span_id points to the success evidence that illustrates
+    the positive observation (notes). If notes is null (suppressed or absent),
+    there's no positive observation to illustrate, so the success span
+    reference should also be removed.
+
     Patterns already handled by demotion are skipped.
     """
     coaching = merged.get("coaching", {})
@@ -390,13 +393,12 @@ def _cleanup_fully_suppressed(
         pid = pc.get("pattern_id")
         if pid in demoted_patterns:
             continue  # already fully nulled by demotion
-        if not pc.get("notes") and not pc.get("coaching_note"):
-            if pc.get("best_success_span_id"):
-                logger.info(
-                    "Editor: nulling best_success_span_id for fully-suppressed pattern %s",
-                    pid,
-                )
-                pc["best_success_span_id"] = None
+        if not pc.get("notes") and pc.get("best_success_span_id"):
+            logger.info(
+                "Editor: nulling best_success_span_id for pattern %s (notes is null)",
+                pid,
+            )
+            pc["best_success_span_id"] = None
 
 
 # -- Pattern coaching edits ----------------------------------------------------
