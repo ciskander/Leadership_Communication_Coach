@@ -505,6 +505,7 @@ def process_single_meeting_analysis(
 
     # Config
     config_name = None
+    cfg_fields: dict = {}
     config_links = _get_link_ids(rr_fields, "Config")
     if config_links:
         cfg_record = client.get_record("config", config_links[0])
@@ -619,7 +620,7 @@ def process_single_meeting_analysis(
     # 6e. Editor pass (optional 2nd LLM call for coaching quality)
     editor_changelog = None
     editor_tokens = None
-    if _EDITOR_ENABLED:
+    if _EDITOR_ENABLED or cfg_fields.get("Editor Enabled"):
         from .editor import build_experiment_context, run_editor, merge_editor_output
 
         try:
