@@ -1,0 +1,45 @@
+--- purposeful_framing ---
+What it measures: Whether the speaker frames topics with explicit purpose and direction -- both when opening the meeting and when transitioning between topics.
+NOT this pattern: Continuations within the same topic; procedural transitions ("Let me share my screen"); transitions initiated by others; greetings without framing.
+
+--- focus_management ---
+What it measures: Whether the speaker keeps discussion aligned with stated objectives and manages drift. The reactive counterpart to purposeful_framing.
+NOT this pattern: Natural topic evolution within the same agenda item; brief self-correcting asides; meetings with no stated agenda.
+Disambiguation: If the speaker redirects risk signals or stakeholder concerns rather than genuine tangents, classify under disagreement_navigation or trust_and_credibility, not focus_management.
+
+--- participation_management ---
+What it measures: Whether the speaker actively manages participation -- distributing speaking turns, bringing in unheard voices, ensuring conversational balance.
+NOT this pattern: Substantive questions (-> question_quality); moments where only two speakers are present; moments where someone else is facilitating.
+Disambiguation: If the leader invites input then dismisses the expertise offered, the primary dynamic is disagreement avoidance (DN), not participation mechanics.
+
+--- disagreement_navigation ---
+What it measures: How the speaker handles moments of disagreement, pushback, or conflict. Does the speaker engage constructively with substance, or dismiss/bulldoze?
+NOT this pattern: Polite differences with no tension; factual corrections without friction; disagreements between others the speaker has no role in.
+Disambiguation: Distinct from trust_and_credibility -- DN scores conflict handling mechanics, T&C scores whether behavior makes people trust the speaker more or less.
+
+--- trust_and_credibility ---
+What it measures: Whether the speaker's behavior during high-stakes moments builds or erodes trust with the room -- follow-through, honest engagement with expertise, owning positions, consistency between words and actions.
+NOT this pattern: Routine procedural moments; low-stakes exchanges; disagreements fully captured by disagreement_navigation with no additional trust dimension.
+Disambiguation: T&C coaching on shared moments only when it names a trust consequence the co-occurring pattern misses. If the observation adds nothing beyond what FM, DN, or another pattern already captures, the T&C coaching is repackaging.
+
+--- resolution_and_alignment ---
+What it measures: Whether the speaker brings discussions to clear conclusions and confirms shared understanding before moving on. (1) Named resolution -- states what was decided. (2) Alignment confirmation -- checks the group agrees.
+NOT this pattern: Decisions closed by another speaker; informational items with no decision at stake; exploratory discussions not yet ready for closure.
+
+--- assignment_clarity ---
+What it measures: Whether the speaker assigns work with sufficient clarity -- owner, deadline, deliverable definition, context, and confirmation of understanding.
+NOT this pattern: Assignments by others; vague references to future work; status updates on prior assignments; decisions without action items (-> resolution_and_alignment).
+
+--- question_quality ---
+What it measures: Whether the questions the speaker asks are purposeful -- serving a clear function in advancing the conversation rather than aimless or counterproductive.
+NOT this pattern: Rhetorical questions; clarifying echoes; procedural/logistics questions; back-channel confirmations ("Right?").
+Disambiguation: If a question's primary function is to redirect (-> FM), accelerate past an objection (-> DN), or assert authority (-> T&C), classify there, not QQ.
+
+--- communication_clarity ---
+What it measures: Whether the speaker's substantive contributions are clear, structured, and proportionate -- as opposed to meandering or disconnected.
+NOT this pattern: Turns shorter than 3 sentences; reading from slides/scripts; procedural statements; brainstorming (intentionally unstructured).
+Disambiguation: If the observation is really about framing quality (-> PF), deliverable specification (-> AC), or decision closure (-> RA), it belongs there.
+
+--- feedback_quality ---
+What it measures: Whether the speaker delivers feedback using a structured approach -- grounding in situation and observable behavior, naming impact, offering a recommendation, and checking in with the recipient (SBI-RC model).
+NOT this pattern: Factual corrections without developmental intent; general praise with no behavioral reference; task direction (-> assignment_clarity).
