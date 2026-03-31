@@ -606,9 +606,11 @@ def run_compare_offline(outputs_dir: Path, detail: bool = False) -> dict[str, An
     Multiple files with the same meeting_id are treated as multiple runs.
     No LLM calls are made.
     """
-    json_files = sorted(outputs_dir.rglob("*.json"))
+    # Only load run_*.json files to avoid contamination from editor, judge,
+    # post_editor, and report files in the same directory tree.
+    json_files = sorted(outputs_dir.rglob("run_*.json"))
     if not json_files:
-        logger.error("No JSON files found in %s", outputs_dir)
+        logger.error("No run_*.json files found in %s", outputs_dir)
         sys.exit(1)
 
     # Load and group by meeting_id
