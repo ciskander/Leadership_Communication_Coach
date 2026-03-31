@@ -158,9 +158,41 @@ The editor is eliminated — Stage 2 IS the editorial judgment layer, but it gen
 
 1. **Incoherent states** — Stage 2 only generates coaching for patterns it decides are worth coaching. No hollow shells.
 2. **Coach the person** — Stage 2 can synthesize across patterns, identify the real leadership issue, and generate coaching that addresses it holistically.
-3. **decision_quality gap** — Can be added as a Stage 1 pattern (detection + scoring) without worrying about whether the coaching is valuable — Stage 2 makes that call.
+3. **decision_quality gap** — Belongs in Stage 2 as a meeting-level scored pattern (see "Two kinds of pattern" below).
 4. **PF/CC limitations** — Stage 1 scores them (good for tracking). Stage 2 decides whether to generate coaching (often won't for PF; might for CC in specific meetings).
 5. **Editor obsolescence** — The fundamental limitation of the editor (can suppress but can't create) is resolved by having Stage 2 generate coaching from scratch.
+
+### Two kinds of pattern
+
+A key architectural insight: not all leadership skills are moment-based. The current taxonomy treats everything as OE-based (detect discrete moments, score each, aggregate). But some skills are inherently **process-level** — they describe how a leader governs an arc across many turns, not what they did at a specific moment.
+
+**Stage 1 patterns (moment-based):** Detect discrete behavioral events (OEs), score each against a rubric, aggregate. Score = sum(OE_scores) / count(OEs). Works well for: closing a decision (RA), handling a specific disagreement (DN), asking a question (QQ), framing a topic (PF).
+
+**Stage 2 patterns (meeting-level):** Evaluate a dimension of leadership across the entire meeting (or decision arc), producing a single holistic score. No OE detection. The rubric describes quality levels at the meeting level. Works well for: decision governance, executive presence, stakeholder orchestration.
+
+| | Stage 1 patterns | Stage 2 patterns |
+|--|--|--|
+| Unit of analysis | Discrete moment (OE) | Whole meeting or arc |
+| Score construction | Aggregate of per-OE scores | Single holistic judgment |
+| Detection challenge | Finding bounded moments | Reading the full context |
+| Stability risk | OE count variance | Holistic judgment variance |
+| Tracking | Per-meeting score on sparkline | Same — per-meeting score on sparkline |
+| Example | RA: "Did the leader check alignment at this closure point?" | DQ: "Did the leader run a sound decision process across this meeting?" |
+
+**decision_quality belongs here.** Trying to force it into the Stage 1 OE framework creates the same instability problems PM had — the construct requires evaluating a multi-turn process, not scoring individual moments. As a Stage 2 pattern with a meeting-level rubric, it avoids OE detection variance entirely.
+
+**Other potential Stage 2 patterns** (not yet designed, listed for future consideration):
+- executive_presence / structured_summarization (8 judge occurrences)
+- stakeholder orchestration (residual signal after PM removal)
+
+Start with decision_quality as the sole Stage 2 pattern. Prove the concept before expanding.
+
+**Draft decision_quality rubric (meeting-level):**
+- 1.0 — Sound process: leader synthesized competing inputs, named tradeoffs, integrated risk/dissent into decision rationale, committed with clear reasoning
+- 0.75 — Mostly sound but shortcut one significant dimension (e.g., acknowledged risk without integrating it)
+- 0.50 — Procedural: reached decisions but through assertion or default, not synthesis. Acknowledged inputs without genuinely weighing them
+- 0.25 — Rushed or avoidant: closed decisions prematurely (cut off input), deferred when deciding was needed, or optimized for pace/comfort over judgment
+- 0.0 — No decision governance: topics that needed decisions trailed off, or decisions were bulldozed without engaging available input
 
 ### Open design questions
 
@@ -170,7 +202,7 @@ The editor is eliminated — Stage 2 IS the editorial judgment layer, but it gen
 
 3. **Experiment continuity:** The current system tracks active experiments and maintains continuity. Stage 2 needs the same experiment context. The memory/experiment payload that currently goes to the 1st pass should also go to Stage 2.
 
-4. **decision_quality pattern design:** What's the denominator? What's the rubric? How does it avoid overlapping with RA (closure mechanics) and DN (conflict handling)? The judges suggest it's about "synthesizing inputs into defensible decisions under uncertainty/pressure" — but that needs to be operationalized into a scoreable rubric.
+4. **Stage 2 pattern design:** decision_quality is the first Stage 2 pattern. How does Stage 2 distinguish between its own scored patterns and its coaching synthesis role? Does Stage 2 produce both pattern scores AND coaching text in one pass, or are these separate steps?
 
 5. **Eval strategy:** Can we test Stage 2 on existing Stage 1 outputs? The current run_*.json files contain all the scoring data Stage 2 would need. We could prototype Stage 2 by feeding it existing Phase M outputs and comparing the coaching quality.
 
@@ -210,22 +242,27 @@ The editor is eliminated — Stage 2 IS the editorial judgment layer, but it gen
 
 ## Recommended next steps (Phase N)
 
-### 1. Design and prototype Stage 2 coaching synthesis
+### 1. Prototype Stage 2 on existing outputs
 
-Start by writing the Stage 2 prompt — it takes Stage 1 output + transcript and generates coaching. Test it on existing Phase M run_*.json files (which already contain the scoring data Stage 2 needs). Compare the coaching quality against the current system's coaching + editor.
+Write the Stage 2 prompt — it takes existing run_*.json files (Stage 1 output) + transcript and generates coaching + decision_quality score. Test on Phase M outputs (which already contain the scoring data Stage 2 needs). This lets us evaluate Stage 2's coaching quality without changing Stage 1 at all.
 
-### 2. Design decision_quality pattern for Stage 1
+Key question to answer: does Stage 2 produce better coaching than the current 1st-pass + editor? Specifically:
+- Does it avoid the incoherent state (low score + praise + no guidance)?
+- Does it produce the cross-pattern "decision quality" insight judges are asking for?
+- Does it appropriately skip PF/CC coaching when those patterns aren't worth coaching?
 
-Draft the pattern definition: denominator, rubric, detection notes, experiment guidance. Test on M-000004 (avoider), M-000006 (stress test), M-000002 (weak facilitator) — the meetings where judges most strongly flagged the gap.
+### 2. Design decision_quality as a Stage 2 scored pattern
+
+Include in the Stage 2 prompt as a meeting-level rubric (see "Two kinds of pattern" above). Test on M-000004 (avoider), M-000006 (stress test), M-000002 (weak facilitator) — the meetings where judges most strongly flagged the gap.
 
 ### 3. Strip Stage 1 of coaching fields
 
-Once Stage 2 is prototyped, modify the 1st pass to produce scoring-only output. This simplifies the Stage 1 prompt, reduces output tokens, and may improve scoring consistency (the LLM isn't distracted by coaching generation).
+Once Stage 2 is proven, modify the 1st pass to produce scoring-only output. This simplifies the Stage 1 prompt, reduces output tokens, and may improve scoring consistency (the LLM isn't distracted by coaching generation).
 
 ### 4. Run a comparative eval
 
 Stage 1 + Stage 2 vs current system (1st pass + editor). Compare:
 - Insightful/pedantic/wrong rates
 - Coaching coherence (no more incoherent states?)
-- Decision_quality coaching value
+- decision_quality scores across meetings (does it discriminate? is it stable?)
 - Whether PF/CC coaching improves or is appropriately suppressed
