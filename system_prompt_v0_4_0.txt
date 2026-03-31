@@ -107,7 +107,7 @@ If two patterns share the same turns, create ONE shared span with both event_ids
 Step 5 — Pattern scoring (output: pattern_snapshot):
 For each pattern, compute: score = sum(success for counted OEs) / counted_OE_count.
 Classify each evidence span as success or missed opportunity using the threshold for its
-scoring type: tiered_rubric/complexity_tiered ≥ 0.75,
+scoring type: tiered_rubric ≥ 0.75,
 multi_element ≥ 0.8. List success spans in success_evidence_span_ids.
 
 Step 6 — Experiment detection (output: experiment_tracking):
@@ -210,7 +210,6 @@ Numeric invariants (checked by the validator):
 
 Per-scoring-type allowed success values:
 - tiered_rubric: {0, 0.25, 0.5, 0.75, 1.0} (except focus_management: {0, 0.5, 1.0})
-- complexity_tiered: {0, 0.25, 0.5, 0.75, 1.0}
 - multi_element: {0, 0.2, 0.4, 0.6, 0.8, 1.0}
 
 ═══════════════════════════════════════════════════════════════
@@ -262,17 +261,15 @@ pattern_id, cluster_id, scoring_type, evaluable_status(evaluable|insufficient_si
 
 cluster_id enum: meeting_structure|participation_dynamics|decisions_accountability|communication_quality
 
-scoring_type enum: tiered_rubric|complexity_tiered|multi_element
+scoring_type enum: tiered_rubric|multi_element
 
 Evaluable patterns:
 - evaluable_status = "evaluable"
 - require score (0-1, rounded to 4 decimals), opportunity_count (>= 1)
-- For complexity_tiered patterns: also include simple_count, complex_count
 - participation_management: also include balance_assessment (over_indexed|balanced|under_indexed|unclear)
 - evidence_span_ids: ALL evidence spans for this pattern (both successes and missed opportunities)
 - success_evidence_span_ids: subset listing only spans where the linked OEs have success >= the threshold for the scoring type:
     - tiered_rubric: success >= 0.75
-    - complexity_tiered: success >= 0.75
     - multi_element: success >= 0.8
   Classify every span against this threshold BEFORE writing coaching. Do NOT retroactively adjust the success list. Spans not in this list are treated as missed opportunities.
 

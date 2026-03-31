@@ -1,6 +1,6 @@
 CLEARVOICE PATTERN TAXONOMY v3.0
 Role-conditioned, target-speaker-only, conservative counting.
-10 patterns in 4 clusters. Three scoring types: tiered rubric, complexity-tiered, multi-element.
+10 patterns in 4 clusters. Two scoring types: tiered rubric, multi-element.
 
 ────────────────────────────────────────────────────────────────
 
@@ -18,19 +18,14 @@ CORE RULES (apply to all patterns)
 
 SCORING TYPES
 
-This taxonomy uses three scoring approaches matched to pattern structure:
+This taxonomy uses two scoring approaches matched to pattern structure:
 
-1. Tiered rubric scoring (Purposeful Framing, Focus Management, Participation Management, Disagreement Navigation, Trust & Credibility, Resolution & Alignment, Question Quality, Communication Clarity):
+1. Tiered rubric scoring (Purposeful Framing, Focus Management, Participation Management, Disagreement Navigation, Trust & Credibility, Resolution & Alignment, Assignment Clarity, Question Quality, Communication Clarity):
    - Each opportunity scored 0.0, 0.25, 0.5, 0.75, or 1.0 based on rubric level defined per pattern.
    - Score = sum of opportunity scores / opportunity_count, rounded to 4 decimals.
-   - Note: Question Quality uses a 3-level subset of this scale ({0, 0.5, 1.0}). See its pattern definition for rubric details.
+   - Note: Focus Management uses a 3-level subset ({0, 0.5, 1.0}). Question Quality uses a 3-level subset ({0, 0.5, 1.0}). See pattern definitions for rubric details.
 
-2. Complexity-tiered scoring (Assignment Clarity):
-   - LLM classifies each assignment as simple or complex based on observable signals.
-   - Simple assignments scored on 3 core elements. Complex assignments scored on 5 core elements.
-   - See pattern definition for rubric details.
-
-3. Multi-element scoped scoring (Feedback Quality):
+2. Multi-element scoped scoring (Feedback Quality):
    - Five sequential elements. Score = elements_present_count / 5 per opportunity.
 
 PATTERN LIST (fixed output order)
@@ -62,7 +57,7 @@ For every potential moment, the fundamental classification is:
 - Scored opportunity (counts in denominator): The moment is a genuine opportunity for the target speaker to demonstrate the pattern behavior. It is scored per the pattern's scoring rubric — which may yield 1.0, 0.5, 0.25, or 0.0 depending on the pattern's scoring type. A score of 0.0 on a scored opportunity means a missed chance, which lowers the overall score.
 - Not an opportunity (excluded from denominator): The moment falls outside the pattern's scope entirely. It is invisible to the pattern and does not affect the score in either direction. Each pattern defines specific exclusion criteria under "Excluded from both numerator AND denominator."
 
-How each scored opportunity is evaluated — what earns full credit, partial credit, or zero — is defined by each pattern's scoring rubric (tiered rubric, complexity-tiered, or multi-element). Refer to the pattern definition for scoring details.
+How each scored opportunity is evaluated — what earns full credit, partial credit, or zero — is defined by each pattern's scoring rubric (tiered rubric or multi-element). Refer to the pattern definition for scoring details.
 
 When in doubt about whether a moment is a scored opportunity or not an opportunity, prefer excluding it. Undercounting is safer than miscounting.
 
@@ -546,58 +541,43 @@ Experiment guidance:
 
 PATTERN 7: assignment_clarity
 Cluster: C — Decisions & Accountability
-Scoring type: Complexity-tiered
+Scoring type: Tiered rubric
 
 What it measures:
-- Whether the target speaker assigns work with sufficient clarity for the assignee to succeed — including owner, deadline, deliverable definition, context, and confirmation of shared understanding. The scoring standard scales with the complexity of the assignment.
+- Whether the target speaker assigns work with sufficient clarity for the assignee to succeed. The scoring standard scales proportionately with the complexity of the assignment — a simple task needs less specification than a complex delegation.
 
-Complexity classification:
-- The LLM classifies each assignment as SIMPLE or COMPLEX based on observable signals.
-- SIMPLE: Single-step, short-timeframe tasks (send an email, schedule a meeting, deliver a document, pull a data set). Typically completable within days. No significant judgment calls required.
-- COMPLEX: Multi-step work, longer timeframe (more than ~1 week), requires the assignee to make judgment calls, involves coordination with others, or represents a meaningful delegation of responsibility.
-- When the LLM cannot determine complexity, default to SIMPLE. Undercounting complexity is safer than overcounting.
+Scoring per opportunity (rubric):
+- 1.0 — The assignee could execute this without follow-up questions. The specification is proportionate to the task's complexity:
+  - For straightforward tasks: owner and deliverable are clear. A deadline is stated if timing matters.
+  - For complex work: the above, plus the leader provides enough context (rationale, constraints, or what good looks like) that the assignee can make good judgment calls, AND confirms the assignee understands the ask.
+  - If the initial statement was underspecified but there was subsequent discussion (clarifications, Q&A, etc.) that resolved the gaps within the same conversation, score the complete exchange, not just the opening statement.
 
-SIMPLE ASSIGNMENT ELEMENTS (3 core elements):
-- S1: Named owner. A specific person, not "someone" or "the team."
-- S2: Specific deadline. A date, day, or concrete timeframe, not "soon" or "when you get a chance."
-- S3: Clear deliverable. What the output is — specific enough to evaluate completion.
+- 0.75 — The assignee could start but has a gap that may require a follow-up. The core task is clear (who, what) but one of the following is missing or vague:
+  - Timeline is implied but not stated ("when you get a chance" rather than a date).
+  - For complex work: what "done" looks like is left to the assignee's interpretation — the leader specified the task but not the quality bar or acceptance criteria.
+  - For complex work: the leader didn't confirm understanding, but the task was specified clearly enough that misalignment is unlikely.
 
-SIMPLE SCORING:
-- 3 of 3 elements = 1.0
-- 2 of 3 elements = 0.5
-- 1 of 3 elements = 0.25
-- 0 of 3 elements = 0.0
+- 0.5 — The assignee knows the general area but would need to clarify before executing well. The assignment has a discernible task but is underspecified in a way that could lead to wasted effort or misalignment:
+  - Deliverable is vague ("look into the pricing situation" — what output is expected?).
+  - Owner is named but scope is ambiguous (unclear where this task starts and stops, or what the definition of done is).
+  - For complex work: missing both rationale and acceptance criteria — the assignee is left to guess what "good" looks like and why it matters.
 
-COMPLEX ASSIGNMENT ELEMENTS (5 core elements):
-- C1: Named owner. Same as S1.
-- C2: Specific deadline or milestones. Same as S2, but may include intermediate checkpoints.
-- C3: Clear deliverable / acceptance criteria. What the output is AND what good looks like — the definition of "done" or the quality bar. More detailed than S3.
-- C4: Purpose or rationale. Why this assignment matters, the context that helps the assignee make good judgment calls. Example: "The board wants to see retention trends — so focus the deck on cohort analysis, not aggregate numbers."
-- C5: Ownership confirmation. The speaker confirms the assignee understands and accepts — either by asking ("Does that make sense? Are you good to own this?") or by getting explicit verbal acceptance.
+- 0.25 — Vague delegation. The assignee would need to come back and ask what's actually being asked of them:
+  - Owner is named but the task itself is unclear ("can you handle the Acme thing?").
+  - Or the task is clear but no specific owner is named ("the team should figure out the onboarding flow").
 
-COMPLEX SCORING:
-- 5 of 5 elements = 1.0
-- 4 of 5 elements = 0.75
-- 3 of 5 elements = 0.5
-- 2 of 5 elements = 0.25
-- 1 or 0 of 5 elements = 0.0
-
-BONUS ELEMENTS (for complex assignments — noted in coaching feedback when present, but do not affect score):
-- Autonomy specification: The speaker explicitly states the level of decision authority or ownership the assignee has. ("You have full call on the vendor selection" or "Check with me before committing budget.")
-- Communication expectations: The speaker defines how and when to check in, report progress, or escalate. ("Send me a draft by Wednesday, and let's sync Thursday before the client sees it.")
-
-These bonus elements are noted as strengths in coaching feedback when present but are not penalized when absent, because their relevance depends on assignment context that the LLM cannot always assess.
+- 0.0 — No real assignment was made. Work is implied, assumed, or mentioned in passing with no specification at all:
+  - "We should probably think about that at some point."
+  - A topic is discussed but no one is asked to do anything.
+  - Note: these should be excluded from the denominator if they don't meet the threshold of an assignment attempt. Score 0.0 only when the speaker appeared to intend an assignment but failed to specify it.
 
 Denominator (opportunity_count):
 - Assignments the target speaker initiates, negotiates, or explicitly accepts responsibility for.
 
-Score = sum of opportunity scores / opportunity_count (using the appropriate rubric per assignment).
+Score = sum of opportunity scores / opportunity_count.
 
 Output fields:
-- simple_count (number of simple assignments)
-- complex_count (number of complex assignments)
 - opportunity_count (total)
-- Per opportunity: complexity classification + elements present
 - score
 
 Excluded from both numerator AND denominator (not an opportunity):
@@ -611,7 +591,7 @@ Role notes:
 - Chair: all assignments in the meeting.
 - Presenter: assignments within their initiative or topic area.
 - Participant: assignments they initiate, negotiate, or accept.
-- 1:1 Manager: all task assignments and delegations discussed. Expect higher proportion of complex assignments in 1:1s.
+- 1:1 Manager: all task assignments and delegations discussed. Expect more substantive delegations in 1:1s that warrant fuller specification (rationale, acceptance criteria, confirmation).
 - 1:1 Report: assignments they accept or clarify. Score on whether they confirm understanding, ask clarifying questions, or accept vague assignments without pushback.
 
 Minimum threshold:
@@ -620,20 +600,18 @@ Minimum threshold:
 Detection notes:
 - The distinction between Resolution & Alignment and Assignment Clarity is: Resolution & Alignment asks "what did we decide?" and Assignment Clarity asks "who is doing what, by when, and how?" A single conversational moment often contains both — score each under the appropriate pattern.
 - For the 1:1 Report role, "accepting a vague assignment without pushback" is a coaching-relevant signal but should not be scored as a failed opportunity for the report — it should be noted in the coaching feedback as a growth area (the report could have asked clarifying questions).
-- The LLM should not score complexity classification retroactively based on the number of elements present. Classify first based on the nature of the work, then score based on elements present for that classification.
-
 Element specificity thresholds:
 - Deadline: Present if the listener can determine when work is due from the speaker's words alone. "By Thursday," "end of sprint," "this week," "over the weekend," "by end of day tomorrow" all count. "When you get a chance," "soon," "at some point," or no time reference = absent.
 - Deliverable: Present if the listener could verify completion. "Draft the addendum," "code freeze on QA branch," "regression pass certified," "email sent" all count. Process verbs without implied output ("sync," "think about," "look into," "touch base") = absent UNLESS the purpose clause makes the output self-evident (e.g., "sync on the defect list and flag ship-blockers" — the flagged list is the implicit deliverable).
 - Owner: Present if a specific named person or "I" is assigned. Joint assignment to two or more named individuals counts as owner-present (e.g., "Sam and Dana, align on the numbers" — both are named owners). "Someone should," "we need to," or group assignments without a named point person = absent.
 - Deliverable context tolerance: Domain-specific shorthand clear to participants counts as a verifiable deliverable (e.g., "production config," "launch comms," "draft the addendum"). Do not require formal output descriptions when the work product is well-understood in context.
-- Coaching materiality filter: The element-counting rubric determines the score; the coaching_note should address only elements whose absence creates genuine risk of confusion, rework, or accountability failure. Before generating a coaching_note about a missing element, apply this test: "If this assignment were executed as stated, would the missing element plausibly cause the assignee to deliver the wrong thing, deliver late without warning, or be unable to determine when they are done?" If no — because the context, relationship, or task nature makes the missing element implicit or low-stakes — set coaching_note to null. Common low-value critiques to avoid: (a) missing exact deadline when timeframe is contextually obvious (daily standup task, "before the next meeting"); (b) missing intermediate deliverable on a straightforward task where the end deliverable is clear; (c) missing purpose/rationale on a simple task where purpose is self-evident from discussion context. Score the assignment accurately per the rubric, but only coach on gaps that would materially improve the assignment's clarity if addressed.
+- Coaching materiality filter: The coaching_note should address only gaps whose absence creates genuine risk of confusion, rework, or accountability failure. Before generating a coaching_note about a missing element, apply this test: "If this assignment were executed as stated, would the gap plausibly cause the assignee to deliver the wrong thing, deliver late without warning, or be unable to determine when they are done?" If no — because the context, relationship, or task nature makes the gap implicit or low-stakes — set coaching_note to null. Common low-value critiques to avoid: (a) missing exact deadline when timeframe is contextually obvious (daily standup task, "before the next meeting"); (b) missing acceptance criteria on a straightforward task where the deliverable is self-evident; (c) missing purpose/rationale on a simple task where purpose is self-evident from discussion context. Score the assignment accurately per the rubric, but only coach on gaps that would materially improve the assignment's clarity if addressed.
 - Feedback and coaching meeting filter: In meetings where the primary purpose is developmental feedback, coaching, or performance discussion, apply a higher bar for what constitutes an AC opportunity. Exclude minor operational follow-ups (e.g., "follow up with them directly," "loop in Marcus") that are incidental to the coaching conversation rather than its substance. AC opportunities in feedback meetings should be limited to assignments that are the actionable output of the coaching — behavioral commitments, development plans, accountability structures. If the only AC opportunities are incidental operational moments, mark insufficient_signal rather than scoring trivial assignments. The test: would a coach reviewing this conversation consider the assignment a meaningful coaching outcome, or is it just a logistical next step?
 
 Experiment guidance:
-- What good looks like: Simple — "James, send the client the revised proposal by Thursday end of day." (owner, deadline, deliverable). Complex — "Priya, I'd like you to own the Q3 retention analysis. The board wants to see cohort-level trends, not just aggregate numbers — so focus there. Aim for a draft by March 15, and let's sync the week before to review. Does that make sense? Are you good to lead this?" (owner, deadline, deliverable, context, confirmation).
-- Common failure mode: "Can someone handle the retention analysis?" (no owner, no deadline, no deliverable definition).
-- Experiment focus: Help the coachee pair every assignment with the essential elements it needs. For simple tasks, focus on whichever of owner/deadline/deliverable is most frequently missing. For complex delegations, focus on adding context and acceptance criteria — leaders who already specify owner and deadline often skip the "why" and the "what does done look like."
+- What good looks like: Simple — "James, send the client the revised proposal by Thursday end of day." (owner, deadline, deliverable — proportionate to the task). Complex — "Priya, I'd like you to own the Q3 retention analysis. The board wants to see cohort-level trends, not just aggregate numbers — so focus there. Aim for a draft by March 15, and let's sync the week before to review. Does that make sense? Are you good to lead this?" (owner, deadline, deliverable, rationale, acceptance criteria, confirmation — proportionate to the complexity).
+- Common failure mode: "Can someone handle the retention analysis?" (no owner, no deadline, no deliverable definition, no sense of what "done" looks like).
+- Experiment focus: Help the coachee specify assignments proportionate to their complexity. For simple tasks, focus on whichever of owner/deadline/deliverable is most frequently missing. For complex delegations, focus on adding acceptance criteria and rationale — leaders who already specify owner and deadline often skip "what does done look like" and "why this matters."
 
 ### END:PATTERN:assignment_clarity ###
 
