@@ -42,6 +42,7 @@ import logging
 import math
 import os
 import shutil
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
@@ -499,6 +500,17 @@ def main():
         step_replay(args.transcripts_dir, phase_dir, args.runs, args.model, args.tpm_limit)
     else:
         logger.info("Skipping replay (--skip-replay)")
+
+    # Gate: check that replay produced output before continuing
+    total_runs = sum(
+        len(list(d.glob("run_*.json")))
+        for d in phase_dir.iterdir()
+        if d.is_dir() and not d.name.startswith(("Phase_", ".", "_"))
+    )
+    if total_runs == 0 and not args.skip_replay:
+        logger.error("ABORTING: No run files produced. Check API quota/connectivity.")
+        sys.exit(1)
+    logger.info("Gate check: %d run files available", total_runs)
 
     # Step 2: Compare report
     if not args.skip_compare:
