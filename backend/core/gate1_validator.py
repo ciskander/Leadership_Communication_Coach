@@ -292,7 +292,6 @@ def _sanitise_output(data: dict) -> int:
             snap.pop("success_evidence_span_ids", None)
             snap.pop("simple_count", None)
             snap.pop("complex_count", None)
-            snap.pop("balance_assessment", None)
             snap["evidence_span_ids"] = []
             # Sync evaluation_summary arrays
             if pid in evaluated_list:
@@ -561,15 +560,6 @@ def _business_rules(data: dict) -> list[ValidationIssue]:
                     f"{path}.score",
                     f"score ({score}) must be in [0, 1].",
                 ))
-
-            # participation_management must have balance_assessment
-            if pid == "participation_management":
-                if not item.get("balance_assessment"):
-                    issues.append(_warn(
-                        "PARTICIPATION_MISSING_BALANCE",
-                        f"{path}.balance_assessment",
-                        "participation_management evaluable item should have balance_assessment.",
-                    ))
 
         elif status in ("insufficient_signal", "not_evaluable"):
             if item.get("score") is not None:

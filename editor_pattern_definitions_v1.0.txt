@@ -7,11 +7,6 @@ What it measures: Whether the speaker keeps discussion aligned with stated objec
 NOT this pattern: Natural topic evolution within the same agenda item; brief self-correcting asides; meetings with no stated agenda.
 Disambiguation: If the speaker redirects risk signals or stakeholder concerns rather than genuine tangents, classify under disagreement_navigation or trust_and_credibility, not focus_management.
 
---- participation_management ---
-What it measures: Whether the speaker actively manages participation -- distributing speaking turns, bringing in unheard voices, ensuring conversational balance.
-NOT this pattern: Substantive questions (-> question_quality); moments where only two speakers are present; moments where someone else is facilitating.
-Disambiguation: If the leader invites input then dismisses the expertise offered, the primary dynamic is disagreement avoidance (DN), not participation mechanics.
-
 --- disagreement_navigation ---
 What it measures: How the speaker handles moments of disagreement, pushback, or conflict. Does the speaker engage constructively with substance, or dismiss/bulldoze?
 NOT this pattern: Polite differences with no tension; factual corrections without friction; disagreements between others the speaker has no role in.

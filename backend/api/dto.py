@@ -89,7 +89,6 @@ class PatternSnapshotItem(BaseModel):
     evaluable_status: str
     score: Optional[float] = None
     opportunity_count: Optional[int] = None
-    balance_assessment: Optional[str] = None
     quotes: list[QuoteObject] = Field(default_factory=list)
     success_span_ids: list[str] = Field(default_factory=list)
 

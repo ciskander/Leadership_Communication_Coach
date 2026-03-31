@@ -136,16 +136,6 @@ const PATTERN_ICONS: Record<string, JSX.Element> = {
       <path d="M8 2V1M8 15v-1M2 8H1M15 8h-1" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
     </svg>
   ),
-  participation_management: (
-    <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
-      <circle cx="8" cy="4.5" r="2" stroke="currentColor" strokeWidth={1.4} />
-      <path d="M4 13c0-2.21 1.79-4 4-4s4 1.79 4 4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
-      <circle cx="2.5" cy="6" r="1.5" stroke="currentColor" strokeWidth={1.2} />
-      <path d="M0 13c0-1.66 1.12-3 2.5-3" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" />
-      <circle cx="13.5" cy="6" r="1.5" stroke="currentColor" strokeWidth={1.2} />
-      <path d="M16 13c0-1.66-1.12-3-2.5-3" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" />
-    </svg>
-  ),
   resolution_and_alignment: (
     <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
       <rect x="3" y="7" width="10" height="7.5" rx="1.5" stroke="currentColor" strokeWidth={1.4} />
@@ -317,26 +307,6 @@ function SuggestedRewrite({ text }: { text: string }) {
   );
 }
 
-// ─── Balance badge ────────────────────────────────────────────────────────────
-
-const BALANCE_COLORS: Record<string, { bg: string; dot: string; text: string; border: string }> = {
-  balanced:      { bg: 'bg-cv-teal-50',   dot: 'bg-cv-teal-500',   text: 'text-cv-stone-700', border: 'border-cv-teal-700'  },
-  over_indexed:  { bg: 'bg-cv-red-50',    dot: 'bg-cv-red-400',    text: 'text-cv-stone-700', border: 'border-cv-red-700'   },
-  under_indexed: { bg: 'bg-cv-amber-50',  dot: 'bg-cv-amber-400',  text: 'text-cv-stone-700', border: 'border-cv-amber-700' },
-  unclear:       { bg: 'bg-cv-warm-100',  dot: 'bg-cv-stone-300',  text: 'text-cv-stone-500', border: 'border-cv-stone-700' },
-};
-
-function BalanceBadge({ assessment }: { assessment: string }) {
-  const colors = BALANCE_COLORS[assessment] ?? BALANCE_COLORS.unclear;
-  const label  = STRINGS.balanceLabels[assessment] ?? assessment;
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border ${colors.bg} ${colors.text} ${colors.border}`}>
-      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${colors.dot}`} />
-      {label}
-    </span>
-  );
-}
-
 // ─── Trend indicator (delta arrow + label) ───────────────────────────────────
 
 function TrendDelta({ delta }: { delta: number }) {
@@ -471,8 +441,6 @@ export function PatternCard({
   const hasQuotes    = quotes.length > 0;
   const hasCoaching  = !!coaching?.coaching_note;
   const hasNotes     = !!coaching?.notes;
-  const isBalanced   = pattern.balance_assessment === 'balanced';
-
   const isExpandable = hasQuotes || hasCoaching || hasNotes;
 
   const score = pattern.score;
@@ -582,11 +550,6 @@ export function PatternCard({
           ) : (
             <>
               <RatioBar ratio={pattern.score} />
-              {pattern.balance_assessment && (
-                <div className="mt-1">
-                  <BalanceBadge assessment={pattern.balance_assessment} />
-                </div>
-              )}
             </>
           )
         ) : (

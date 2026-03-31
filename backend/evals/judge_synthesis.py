@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
 PATTERN_ORDER = [
-    "purposeful_framing", "focus_management", "participation_management",
+    "purposeful_framing", "focus_management",
     "disagreement_navigation", "trust_and_credibility", "resolution_and_alignment",
     "assignment_clarity", "question_quality", "communication_clarity", "feedback_quality",
 ]

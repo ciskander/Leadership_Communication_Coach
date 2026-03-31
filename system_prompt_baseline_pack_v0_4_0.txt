@@ -39,10 +39,6 @@ Evaluable status:
 - If a pattern is not_evaluable in ALL meetings, treat it as not_evaluable.
 - If a pattern is insufficient_signal in >=2 of 3 meetings and not evaluable in the remainder, treat it as insufficient_signal.
 
-Participation management balance:
-- Compute the baseline balance_assessment as the most common assessment across meetings. If tied, prefer "balanced" if it appears; otherwise use the first meeting's assessment.
-- The balance_assessment is an annotation on the participation_management pattern, not a separate pattern entry.
-
 ═══════════════════════════════════════════════════════════════
 EVIDENCE RULES — CRITICAL
 ═══════════════════════════════════════════════════════════════
@@ -108,7 +104,7 @@ PATTERN SNAPSHOT
 ═══════════════════════════════════════════════════════════════
 
 PATTERN_ID ENUM (always output all 9 in this exact order):
-purposeful_framing, focus_management, participation_management, disagreement_navigation, resolution_and_alignment, assignment_clarity, question_quality, communication_clarity, feedback_quality
+purposeful_framing, focus_management, disagreement_navigation, resolution_and_alignment, assignment_clarity, question_quality, communication_clarity, feedback_quality
 
 Each item requires:
 pattern_id, cluster_id, scoring_type, evaluable_status(evaluable|insufficient_signal|not_evaluable), denominator_rule_id, min_required_threshold, evidence_span_ids
@@ -122,7 +118,6 @@ Evaluable patterns:
 - require score (0-1, rounded to 4 decimals), opportunity_count
 - These are AGGREGATE values: score = WEIGHTED AVERAGE of meeting-level scores, opportunity_count = sum across meetings.
 - For complexity_tiered patterns: also include simple_count, complex_count (summed).
-- participation_management: also include balance_assessment.
 
 insufficient_signal or not_evaluable:
 - NEVER include score
@@ -152,7 +147,6 @@ strengths (0-2 items): {pattern_id, message}
 - Only select patterns with score >= 0.5.
 - If no pattern meets this threshold, return empty array.
 - When multiple qualify, rank by score * opportunity_count and choose top 2.
-- participation_management exception: if fewer than 2 patterns qualify and participation_management has score >= 0.5 with balance_assessment=balanced, it may fill a remaining slot.
 
 message field: 2-3 sentences written directly to the coachee. Name the specific cross-meeting behavior you observed and explain why it is effective.
 
@@ -192,10 +186,6 @@ When score < 1.0 (at least one missed opportunity across meetings):
 When score == 1.0 (perfect across all meetings):
 - suggested_rewrite, rewrite_for_span_id, and coaching_note should be omitted (or null).
 - best_success_span_id: pick the single most compelling success span from success_evidence_span_ids. Required when success_evidence_span_ids is non-empty.
-
-For participation_management balance_assessment:
-- When balanced: notes (1-2 sentence positive observation about balance). Omit coaching_note, suggested_rewrite, rewrite_for_span_id for the balance aspect.
-- When over_indexed or under_indexed: coaching_note (1-3 sentence coaching observation). Omit suggested_rewrite and rewrite_for_span_id.
 
 For insufficient_signal or not_evaluable patterns: do not include an entry in pattern_coaching.
 
@@ -274,8 +264,7 @@ Aggregation checks:
 Structural checks:
 13) JSON parses. Required top-level keys present (schema_version, meta, context, opportunity_events, evidence_spans, evaluation_summary, pattern_snapshot, experiment_tracking, coaching). No extra keys. coaching includes executive_summary.
 14) pattern_snapshot has exactly 9 items in required order. All pattern_id values are valid enum.
-15) participation_management includes balance_assessment annotation when evaluable.
-16) focus length = 1, micro_experiment length = 1.
+15) focus length = 1, micro_experiment length = 1.
 17) turn_start_id / turn_end_id are integers.
 18) detection_in_this_meeting is null.
 19) opportunity_events is an empty array [].

@@ -211,7 +211,7 @@ def test_forbidden_key_confidence_sanitised(valid_single_meeting_output):
 # ---------------------------------------------------------------------------
 
 def _make_output_with_oe(valid_single_meeting_output):
-    """Build a test output with mixed success scores on participation_management.
+    """Build a test output with mixed success scores on disagreement_navigation.
 
     Modifies OE-006 (turns 15-15) from success=1.0 to success=0.25.
     ES-T005 (event_ids=["OE-005"], success=1.0) → success span.
@@ -226,7 +226,7 @@ def _make_output_with_oe(valid_single_meeting_output):
             oe["reason_code"] = "generic_open_floor"
             break
 
-    # Update pattern_snapshot[2] (participation_management) — scoring only
+    # Update pattern_snapshot[2] (disagreement_navigation) — scoring only
     pm = out["pattern_snapshot"][2]
     pm["score"] = 0.625  # (1.0 + 0.25) / 2
     pm["success_evidence_span_ids"] = ["ES-T005"]  # Only OE-005 (1.0) >= 0.75 threshold
@@ -272,8 +272,8 @@ def test_rewrite_targets_success_warns(valid_single_meeting_output):
     # Add pattern_coaching with rewrite targeting ES-T005 (success span, score 1.0)
     out["coaching"]["pattern_coaching"] = [
         {
-            "pattern_id": "participation_management",
-            "notes": "Good participation management overall.",
+            "pattern_id": "disagreement_navigation",
+            "notes": "Good disagreement navigation overall.",
             "coaching_note": "Test coaching note.",
             "suggested_rewrite": "Bob, what's your take on the Q2 projections?",
             "rewrite_for_span_id": "ES-T005",
@@ -290,8 +290,8 @@ def test_rewrite_content_mismatch_warns(valid_single_meeting_output):
     # Rewrite targets ES-T015 (Carol's risk analysis) but text about pricing/budget
     out["coaching"]["pattern_coaching"] = [
         {
-            "pattern_id": "participation_management",
-            "notes": "Good participation management overall.",
+            "pattern_id": "disagreement_navigation",
+            "notes": "Good disagreement navigation overall.",
             "coaching_note": "Test coaching note.",
             "suggested_rewrite": (
                 "We should finalize the pricing tiers and overage threshold "
@@ -311,8 +311,8 @@ def test_rewrite_content_match_no_warning(valid_single_meeting_output):
     # ES-T015 excerpt is "Carol, can you walk us through the risk analysis?"
     out["coaching"]["pattern_coaching"] = [
         {
-            "pattern_id": "participation_management",
-            "notes": "Good participation management overall.",
+            "pattern_id": "disagreement_navigation",
+            "notes": "Good disagreement navigation overall.",
             "coaching_note": "Test coaching note.",
             "suggested_rewrite": (
                 "Carol, before we move on I'd like your risk analysis "

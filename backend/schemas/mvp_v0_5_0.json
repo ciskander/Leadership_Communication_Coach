@@ -209,7 +209,7 @@
     "PatternId": {
       "type": "string",
       "enum": [
-        "purposeful_framing", "focus_management", "participation_management",
+        "purposeful_framing", "focus_management",
         "disagreement_navigation", "trust_and_credibility", "resolution_and_alignment",
         "assignment_clarity", "question_quality", "communication_clarity", "feedback_quality"
       ]
@@ -355,10 +355,6 @@
         },
         "simple_count": { "type": ["integer", "null"], "minimum": 0 },
         "complex_count": { "type": ["integer", "null"], "minimum": 0 },
-        "balance_assessment": {
-          "type": "string",
-          "enum": ["over_indexed", "balanced", "under_indexed", "unclear"]
-        },
         "evidence_span_ids": {
           "type": "array",
           "minItems": 0,

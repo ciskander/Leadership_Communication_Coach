@@ -92,7 +92,6 @@ export const STRINGS = {
   patternLabels: {
     purposeful_framing: 'Purposeful Framing',
     focus_management: 'Focus Management',
-    participation_management: 'Participation Management',
     disagreement_navigation: 'Disagreement Navigation',
     trust_and_credibility: 'Trust & Credibility',
     resolution_and_alignment: 'Resolution & Alignment',
@@ -108,8 +107,6 @@ export const STRINGS = {
       'Whether you frame topics with both a named subject and a desired outcome — when opening the meeting and at each transition. Scored on two elements: topic identification and stated outcome.',
     focus_management:
       'Whether you keep discussion aligned with stated objectives when conversation drifts. Scored on how explicitly you name the departure and redirect or sanction it.',
-    participation_management:
-      'Whether you actively manage speaking turns — distributing the floor, bringing in unheard voices, and ensuring appropriate balance. Scored from generic prompts (0) to targeted inclusion (1).',
     disagreement_navigation:
       'How you handle moments of disagreement or pushback. Scored on whether you engage with the substance, acknowledge the opposing view, maintain solution focus, and drive toward resolution.',
     trust_and_credibility:
@@ -130,7 +127,6 @@ export const STRINGS = {
   patternIcons: {
     purposeful_framing: '🎯',
     focus_management: '🧭',
-    participation_management: '👥',
     disagreement_navigation: '🤝',
     trust_and_credibility: '🛡️',
     resolution_and_alignment: '✅',
@@ -160,14 +156,6 @@ export const STRINGS = {
     strength: 'Strength',
     focus: 'Focus area',
   },
-
-  // ── Balance assessment labels ───────────────────────────────────────────────
-  balanceLabels: {
-    balanced: 'Balanced',
-    over_indexed: 'Over-indexed',
-    under_indexed: 'Under-indexed',
-    unclear: 'Unclear',
-  } as Record<string, string>,
 
   // ── Trend sparkline labels ──────────────────────────────────────────────────
   trendSparkline: {

@@ -46,8 +46,6 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
         {"event_id": "OE-002", "pattern_id": "purposeful_framing", "turn_start_id": 10, "turn_end_id": 11, "target_control": "yes", "count_decision": "counted", "success": 1.0, "reason_code": "transition_framing"},
         {"event_id": "OE-003", "pattern_id": "focus_management", "turn_start_id": 1, "turn_end_id": 2, "target_control": "yes", "count_decision": "counted", "success": 1.0, "reason_code": "outcome_stated"},
         {"event_id": "OE-004", "pattern_id": "focus_management", "turn_start_id": 3, "turn_end_id": 3, "target_control": "yes", "count_decision": "counted", "success": 1.0, "reason_code": "intent_stated"},
-        {"event_id": "OE-005", "pattern_id": "participation_management", "turn_start_id": 5, "turn_end_id": 5, "target_control": "yes", "count_decision": "counted", "success": 1.0, "reason_code": "direct_invite"},
-        {"event_id": "OE-006", "pattern_id": "participation_management", "turn_start_id": 15, "turn_end_id": 15, "target_control": "yes", "count_decision": "counted", "success": 1.0, "reason_code": "named_invite"},
         {"event_id": "OE-007", "pattern_id": "disagreement_navigation", "turn_start_id": 31, "turn_end_id": 32, "target_control": "yes", "count_decision": "counted", "success": 1.0, "reason_code": "acknowledged_reframed"},
         {"event_id": "OE-008", "pattern_id": "resolution_and_alignment", "turn_start_id": 20, "turn_end_id": 21, "target_control": "yes", "count_decision": "counted", "success": 1.0, "reason_code": "explicit_closure"},
         {"event_id": "OE-009", "pattern_id": "assignment_clarity", "turn_start_id": 22, "turn_end_id": 22, "target_control": "yes", "count_decision": "counted", "success": 1.0, "reason_code": "owner_deadline_stated"},
@@ -129,7 +127,7 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
     ],
     "evaluation_summary": {
         "patterns_evaluated": [
-            "purposeful_framing", "focus_management", "participation_management",
+            "purposeful_framing", "focus_management",
             "disagreement_navigation", "resolution_and_alignment", "assignment_clarity",
             "question_quality", "communication_clarity", "feedback_quality",
         ],
@@ -160,19 +158,6 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
             "score": 1.0,
             "evidence_span_ids": ["ES-T001-002", "ES-T003"],
             "success_evidence_span_ids": ["ES-T001-002", "ES-T003"],
-        },
-        {
-            "pattern_id": "participation_management",
-            "cluster_id": "participation_dynamics",
-            "scoring_type": "tiered_rubric",
-            "evaluable_status": "evaluable",
-            "denominator_rule_id": "direct_question_or_named_invite",
-            "min_required_threshold": 1,
-            "opportunity_count": 2,
-            "score": 1.0,
-            "balance_assessment": "balanced",
-            "evidence_span_ids": ["ES-T005", "ES-T015"],
-            "success_evidence_span_ids": ["ES-T005", "ES-T015"],
         },
         {
             "pattern_id": "disagreement_navigation",

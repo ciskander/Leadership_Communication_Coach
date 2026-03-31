@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # Taxonomy loading — single source of truth
 # ---------------------------------------------------------------------------
 
-_TAXONOMY_FILE = Path(__file__).resolve().parent.parent.parent / "clearvoice_pattern_taxonomy_v3.0.txt"
+_TAXONOMY_FILE = Path(__file__).resolve().parent.parent.parent / "clearvoice_pattern_taxonomy_v3.1.txt"
 
 _SECTION_BEGIN_RE = re.compile(r"^### BEGIN:(.+?) ###$", re.MULTILINE)
 _SECTION_END_RE_TEMPLATE = "### END:{name} ###"
@@ -191,7 +191,6 @@ Hard reminders:
 - evaluation_summary: Every one of the 9 pattern_ids must appear in EXACTLY ONE of patterns_evaluated, patterns_insufficient_signal, or patterns_not_evaluable. No pattern may be omitted.
 - CRITICAL: evaluation_summary MUST be consistent with pattern_snapshot. A pattern is in patterns_evaluated if and only if its evaluable_status is "evaluable" in pattern_snapshot. A pattern is in patterns_insufficient_signal if and only if its evaluable_status is "insufficient_signal". A pattern is in patterns_not_evaluable if and only if its evaluable_status is "not_evaluable". Any mismatch between these two sections is a hard error.
 - pattern_snapshot must include all 9 pattern IDs in required order, each with cluster_id and scoring_type. pattern_snapshot contains SCORING ONLY — no notes, coaching_note, suggested_rewrite, or rewrite_for_span_id.
-- participation_management includes balance_assessment annotation when evaluable.
 - evidence_spans: turn_start_id/turn_end_id must be integers. evidence_span_id must be turn-anchored: ES-T{start} or ES-T{start}-{end}. Each span must include event_ids linking to its source opportunity_events.
 - opportunity_events: top-level array. Each OE must include pattern_id. OE event_ids must be referenced by evidence_spans.
 - coaching.focus length=1, coaching.micro_experiment length=1. Focus and strengths items only need {pattern_id, message}.
@@ -299,7 +298,6 @@ Hard reminders (baseline_pack):
 - evaluation_summary: Every one of the 9 pattern_ids must appear in EXACTLY ONE of patterns_evaluated, patterns_insufficient_signal, or patterns_not_evaluable. Must be consistent with pattern_snapshot evaluable_status.
 - pattern_snapshot must include all 9 pattern IDs in required order, each with cluster_id and scoring_type. pattern_snapshot contains SCORING ONLY — no coaching fields.
 - Score = WEIGHTED AVERAGE of meeting-level scores (weighted by opportunity_count). Opportunity_count = SUM of meeting opportunity_counts.
-- participation_management includes balance_assessment annotation when evaluable.
 - coaching.focus length=1, coaching.micro_experiment length=1. Focus and strengths items only need {pattern_id, message}.
 - coaching.pattern_coaching: array of per-pattern coaching items (pattern_id, notes, coaching_note, suggested_rewrite, rewrite_for_span_id).
 - coaching.experiment_coaching MUST be null for baseline_pack.

@@ -440,8 +440,8 @@ def test_build_memory_block_with_active_experiment():
 EXPECTED_PATTERN_IDS = [
     "purposeful_framing",
     "focus_management",
-    "participation_management",
     "disagreement_navigation",
+    "trust_and_credibility",
     "resolution_and_alignment",
     "assignment_clarity",
     "question_quality",

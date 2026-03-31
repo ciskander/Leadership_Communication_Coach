@@ -3,7 +3,6 @@
 export type PatternId =
   | 'purposeful_framing'
   | 'focus_management'
-  | 'participation_management'
   | 'disagreement_navigation'
   | 'resolution_and_alignment'
   | 'assignment_clarity'
@@ -80,7 +79,6 @@ export interface PatternSnapshotItem {
   element_b_count?: number;
   simple_count?: number;
   complex_count?: number;
-  balance_assessment?: string;
   quotes: QuoteObject[];
   success_span_ids?: string[];
 }

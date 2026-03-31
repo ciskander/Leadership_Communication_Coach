@@ -264,7 +264,6 @@ async def get_baseline_pack(
                     "evaluable_status": ps.get("evaluable_status", "not_evaluable"),
                     "score": ps.get("score"),
                     "opportunity_count": ps.get("opportunity_count"),
-                    "balance_assessment": ps.get("balance_assessment"),
                     "quotes": [],
                     "success_span_ids": [],
                 }

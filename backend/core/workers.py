@@ -259,7 +259,6 @@ def _build_slim_meeting_summary(run_fields: dict, parsed_json: dict) -> dict:
             "evaluable_status": p.get("evaluable_status"),
             "score": p.get("score"),
             "opportunity_count": p.get("opportunity_count"),
-            "balance_assessment": p.get("balance_assessment"),
         }
         # Include scoring detail when present
         for key in ("evidence_span_ids", "success_evidence_span_ids",
@@ -1360,8 +1359,9 @@ def _get_valid_patterns() -> set[str]:
     except Exception:
         logger.warning("Failed to load pattern IDs from taxonomy file; using hardcoded fallback.")
         return {
-            'purposeful_framing', 'focus_management', 'participation_management',
-            'disagreement_navigation', 'resolution_and_alignment', 'assignment_clarity',
+            'purposeful_framing', 'focus_management',
+            'disagreement_navigation', 'trust_and_credibility',
+            'resolution_and_alignment', 'assignment_clarity',
             'question_quality', 'communication_clarity', 'feedback_quality',
         }
 

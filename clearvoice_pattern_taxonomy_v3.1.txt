@@ -1,6 +1,6 @@
-CLEARVOICE PATTERN TAXONOMY v3.0
+CLEARVOICE PATTERN TAXONOMY v3.1
 Role-conditioned, target-speaker-only, conservative counting.
-10 patterns in 4 clusters. Two scoring types: tiered rubric, multi-element.
+9 patterns in 4 clusters. Two scoring types: tiered rubric, multi-element.
 
 ────────────────────────────────────────────────────────────────
 
@@ -20,7 +20,7 @@ SCORING TYPES
 
 This taxonomy uses two scoring approaches matched to pattern structure:
 
-1. Tiered rubric scoring (Purposeful Framing, Focus Management, Participation Management, Disagreement Navigation, Trust & Credibility, Resolution & Alignment, Assignment Clarity, Question Quality, Communication Clarity):
+1. Tiered rubric scoring (Purposeful Framing, Focus Management, Disagreement Navigation, Trust & Credibility, Resolution & Alignment, Assignment Clarity, Question Quality, Communication Clarity):
    - Each opportunity scored 0.0, 0.25, 0.5, 0.75, or 1.0 based on rubric level defined per pattern.
    - Score = sum of opportunity scores / opportunity_count, rounded to 4 decimals.
    - Note: Focus Management uses a 3-level subset ({0, 0.5, 1.0}). Question Quality uses a 3-level subset ({0, 0.5, 1.0}). See pattern definitions for rubric details.
@@ -34,21 +34,20 @@ Cluster A — Meeting Structure & Direction:
   1. purposeful_framing
   2. focus_management
 
-Cluster B — Participation & Interpersonal Dynamics:
-  3. participation_management
-  4. disagreement_navigation
-  5. trust_and_credibility
+Cluster B — Conflict & Trust:
+  3. disagreement_navigation
+  4. trust_and_credibility
 
 Cluster C — Decisions & Accountability:
-  6. resolution_and_alignment
-  7. assignment_clarity
+  5. resolution_and_alignment
+  6. assignment_clarity
 
 Cluster D — Communication Quality:
-  8. question_quality
-  9. communication_clarity
-  10. feedback_quality
+  7. question_quality
+  8. communication_clarity
+  9. feedback_quality
 
-Always output all 10 patterns in this fixed order.
+Always output all 9 patterns in this fixed order.
 
 OPPORTUNITY vs. NON-OPPORTUNITY (applies to all patterns)
 
@@ -218,92 +217,19 @@ Experiment guidance:
 
 ### BEGIN:CLUSTER_B ###
 
-CLUSTER B — PARTICIPATION & INTERPERSONAL DYNAMICS
-These patterns measure how the leader manages who speaks (Participation Management),
-how they handle disagreement (Disagreement Navigation), and whether their behavior
-builds or erodes trust and credibility with the room (Trust & Credibility).
+CLUSTER B — CONFLICT & TRUST
+These patterns measure how the leader handles disagreement (Disagreement Navigation)
+and whether their behavior builds or erodes trust and credibility with the room
+(Trust & Credibility).
 
 ### END:CLUSTER_B ###
 
 ────────────────────────────────────────────────────────────────
 
-### BEGIN:PATTERN:participation_management ###
-
-PATTERN 3: participation_management
-Cluster: B — Participation & Interpersonal Dynamics
-Scoring type: Tiered rubric
-
-What it measures:
-- Whether the target speaker actively manages participation — distributing speaking turns, bringing in unheard voices, and ensuring appropriate conversational balance. This pattern captures a gradient from basic turn distribution to targeted inclusion of underrepresented perspectives.
-
-Denominator (opportunity_count):
-- Moments where the target speaker holds the floor and has agency to direct the next turn. Specifically:
-  - After the target speaker completes a substantive statement and the floor is open.
-  - After another participant finishes speaking and the target speaker takes a facilitating role (rather than responding substantively themselves).
-  - At structured transition points the target speaker controls.
-
-Scoring per opportunity (tiered):
-- 1.0 — Targeted inclusion: The speaker directs the floor to a specific person who has not yet been heard on the current topic, or explicitly amplifies a quieter participant's earlier point. Example: "Priya, you've worked closest with these customers — what's your read on this?" (Priya has not spoken on this topic.)
-- 0.75 — Contextual named invitation: The speaker directs the floor to a specific named person who hasn't spoken on this particular sub-point but has already contributed to the broader topic. The invitation shows awareness of the discussion but doesn't target an unheard voice. Example: "Marcus, you raised the timeline concern earlier — how does this option affect your estimate?" (Marcus has spoken on the topic, but the speaker is connecting his expertise to a new dimension.)
-- 0.5 — Named turn distribution: The speaker directs the floor to a specific named person or role, but that person has already contributed to this topic. Example: "Marcus, thoughts?" (Marcus has already spoken, but the speaker is actively managing turns.)
-- 0.25 — Directed but generic: The speaker turns to a specific subgroup or side of the table without naming an individual. Shows intent to manage participation but lacks the precision of a named invitation. Example: "Engineering team, any concerns?" or "Those of you on the client side — reactions?" (Directed to a group, not a person.)
-- 0.0 — Generic open-floor prompt or missed opportunity: "Any thoughts?" / "Questions?" / A long monologue followed by "any questions?" / Holding the floor without inviting others.
-
-Score = sum of opportunity scores / opportunity_count.
-
-Excluded from both numerator AND denominator (not an opportunity):
-- Moments where the turn naturally passes without the target speaker having agency (e.g., a direct question to another participant from a third party).
-- Moments where the target speaker responds substantively to a question or point (they are contributing, not facilitating).
-- Moments where only two speakers are present (binary conversation — no participation to manage).
-- Non-verbal acknowledgment (nodding, gestures) — not observable in transcript.
-- Moments where someone else is actively facilitating and the target speaker appropriately defers.
-- Questions the target speaker asks a substantive question (these belong to question_quality). A question that also yields the floor is scored under question_quality, not participation_management, unless the floor-direction function is clearly primary.
-
-Contextual balance annotation:
-- In addition to the scored opportunities, provide a qualitative balance_assessment: over_indexed | balanced | under_indexed | unclear.
-- This annotation reflects whether the target speaker's overall share of speaking time is appropriate given their role.
-  - Chair/Facilitator: moderate-to-high share is appropriate. Flag over_indexed only if the chair is clearly dominating to the point where others cannot contribute.
-  - Presenter: high share acceptable within their segment. Evaluate the full meeting.
-  - Participant: flag over_indexed if dominating, under_indexed if not contributing given their stake.
-  - 1:1 Manager: roughly 40–60% balance expected. Flag if one party holds >75% consistently.
-  - 1:1 Report: same as above, mirror assessment.
-- Exclude procedural stretches (tech troubleshooting, waiting for latecomers) and reading aloud from shared materials when assessing balance.
-- If speaker attribution is insufficient, mark unclear.
-
-Role notes:
-- Chair/Facilitator: high denominator — turn management is a core responsibility. Score on the full meeting.
-- Presenter: within their segment only.
-- Participant: only when they choose to yield and redirect rather than hold the floor. Smaller denominator by design.
-- 1:1: mark not_evaluable for the scored portion (no participation to manage). Still provide the balance_assessment annotation.
-
-Minimum threshold:
-- 2 opportunities required for the scored portion. Fewer → insufficient_signal.
-- balance_assessment can always be provided regardless of opportunity count (except when attribution is unclear).
-
-Detection notes:
-- Distinguishing 1.0 (targeted inclusion) from 0.75/0.5 (named distribution) requires tracking who has spoken on the current topic. If the transcript doesn't provide enough information to determine who has been heard, default to 0.5 for any named invitation.
-- When in doubt about whether a moment constitutes an opportunity, exclude from both numerator and denominator.
-- "Any thoughts?" or "Does anyone have questions?" is always 0.0 — even if someone responds. The scoring is about the target speaker's behavior, not the outcome.
-- Role-based detection guidance: When the target speaker's role is chair or facilitator in a multi-person meeting, participation_management opportunities should almost always exist. The chair holds the floor at topic transitions, after summarizing, and when calling on speakers. If fewer than 2 opportunities are detected for a chair/facilitator, re-examine the transcript — it is unlikely that a facilitator never had agency to direct the floor. Common floor-direction moments for a chair/facilitator include: opening a new topic and choosing who speaks first, completing a summary and deciding who responds next, receiving a question from one participant and choosing whether to answer or redirect to another, and transitioning between agenda items.
-- Scope guidance: Focus on moments where the facilitator made a deliberate choice about who speaks next or actively managed turn distribution. Do not count every transitional utterance where the facilitator holds the floor. A brief acknowledgment before continuing is not a floor-direction moment. The test for each candidate OE: did the speaker have a meaningful alternative? If the only natural next speaker was obvious (the person whose function is being discussed, the person who just raised a question), and the speaker simply let that default happen, it is not a participation_management opportunity. Genuine PM opportunities involve the speaker choosing to override the default — inviting someone who wouldn't naturally speak, redirecting the floor away from the expected next person, or creating space for an unheard voice. Coaching-note threshold: Even when scored PM opportunities exist, a PM coaching_note that praises routine named turn-giving ("you brought in the right voices at the right time") without identifying a specific inclusion choice the leader made — or a specific voice they failed to include — is too generic to be coaching-worthy. Set coaching_note to null unless the PM observation identifies either (a) a deliberate inclusion move that went beyond the default functional sequence, or (b) a specific person or perspective that was missing from the conversation and should have been invited.
-- Decision-meeting filter: In time-pressed decision meetings where the chair is sequencing functional inputs to reach a decision, routine turn-giving to the obvious next speaker is NOT a participation_management opportunity. Following the natural functional sequence (engineering then design then QA) is meeting management, not participation management. After applying this filter, if fewer than 2 genuine opportunities remain, insufficient_signal is the correct outcome — even for a chair. Not every meeting has meaningful participation management dynamics.
-- Reconciliation with role-based guidance: The re-examination guidance for chairs (above) applies after filtering. If a chair has fewer than 2 opportunities after excluding routine sequencing, re-examine to confirm nothing was missed — but if the meeting genuinely lacked deliberate floor-direction choices, insufficient_signal is acceptable.
-- Use the full rubric range. When the speaker addresses a subgroup rather than a named individual (e.g., "Engineering team, any concerns?"), score 0.25 — unless context makes clear that only one person represents that group, in which case this functions as a named invitation and should score higher. The distinction is about precision of invitation, not literal word choice.
-- Behavioral context: A named invitation has coaching value only if the speaker genuinely engages with the input that follows. If the target speaker invites someone to speak and then dismisses, overrides, or ignores their contribution, evaluate the full invitation-response-acknowledgment sequence. The invitation alone does not earn a high score if the response was suppressed. Score the OE based on the complete sequence: invitation + genuine engagement with the response = high score; invitation + dismissal of the response = 0.25 at most.
-
-Experiment guidance:
-- What good looks like: "Priya, you've been closest to the customer data — what's your read?" Names a specific person, invites them on a specific basis, targets someone not yet heard.
-- Common failure mode: "Any thoughts?" to the group, or extended monologues without check-ins.
-- Experiment focus: Help the coachee move from generic open-floor prompts to named invitations, and from named invitations to targeted inclusion of unheard voices. Focus on whichever tier represents the coachee's current growth edge based on observed behavior.
-
-### END:PATTERN:participation_management ###
-
-────────────────────────────────────────────────────────────────
-
 ### BEGIN:PATTERN:disagreement_navigation ###
 
-PATTERN 4: disagreement_navigation
-Cluster: B — Participation & Interpersonal Dynamics
+PATTERN 3: disagreement_navigation
+Cluster: B — Conflict & Trust
 Scoring type: Tiered rubric
 
 What it measures:
@@ -385,8 +311,8 @@ Experiment guidance:
 
 ### BEGIN:PATTERN:trust_and_credibility ###
 
-PATTERN 5: trust_and_credibility
-Cluster: B — Participation & Interpersonal Dynamics
+PATTERN 4: trust_and_credibility
+Cluster: B — Conflict & Trust
 Scoring type: Tiered rubric
 
 What it measures:
@@ -471,7 +397,7 @@ These patterns measure how the leader closes decisions and confirms shared under
 
 ### BEGIN:PATTERN:resolution_and_alignment ###
 
-PATTERN 6: resolution_and_alignment
+PATTERN 5: resolution_and_alignment
 Cluster: C — Decisions & Accountability
 Scoring type: Tiered rubric
 
@@ -527,6 +453,7 @@ Detection notes:
 - In 1:1 meetings, or in any two-person conversational exchange, a direct affirmative response from the other party immediately following a named resolution satisfies the alignment confirmation element.
 - Use the full rubric range. A closure where the speaker does something but does it poorly (vague recap, perfunctory "everyone good?" without context) should score 0.25, not 0.5. Reserve 0.5 for moments where one element is clearly and specifically present.
 - A deferral is not a resolution. Statements like "let's take that offline," "we'll figure it out," or "let's keep working on it" do not name what was decided — they name what was NOT decided. If the speaker defers without stating what has been resolved so far or what the interim decision is, score 0.25 at most (weak/vague attempt, no alignment check) or 0.0 if the topic simply gets pushed with no framing at all. A deferral only qualifies as 0.5 if the speaker explicitly names the interim state (e.g., "We're going with tiered as the default for now; the enterprise exception is unresolved and Sam and Dana will bring a recommendation by Friday").
+- Coaching materiality gate: When scoring alignment confirmation, consider whether an alignment check would have genuinely added value in context. When the transcript shows agreement was clearly established (verbal affirmatives, immediate task pickup, no signs of confusion), the absence of an explicit "does everyone agree?" is not a meaningful coaching point. Score the alignment element based on whether shared understanding was ACHIEVED, not solely on whether the speaker performed a specific verbal ritual. Use low alignment scores (0.25) for moments where it was unclear that alignment was achieved, or (0.0) where alignment was clearly not achieved but the speaker moved on without naming the misalignment.
 
 Experiment guidance:
 - What good looks like: "Here's where we landed: we're going with the phased approach, starting with enterprise in Q3. Does that match what everyone heard?"
@@ -539,7 +466,7 @@ Experiment guidance:
 
 ### BEGIN:PATTERN:assignment_clarity ###
 
-PATTERN 7: assignment_clarity
+PATTERN 6: assignment_clarity
 Cluster: C — Decisions & Accountability
 Scoring type: Tiered rubric
 
@@ -630,7 +557,7 @@ how they ask questions (Question Quality), how clearly they communicate
 
 ### BEGIN:PATTERN:question_quality ###
 
-PATTERN 8: question_quality
+PATTERN 7: question_quality
 Cluster: D — Communication Quality
 Scoring type: Tiered rubric
 
@@ -706,7 +633,7 @@ Experiment guidance:
 
 ### BEGIN:PATTERN:communication_clarity ###
 
-PATTERN 9: communication_clarity
+PATTERN 8: communication_clarity
 Cluster: D — Communication Quality
 Scoring type: Tiered rubric
 
@@ -801,7 +728,7 @@ Experiment guidance:
 
 ### BEGIN:PATTERN:feedback_quality ###
 
-PATTERN 10: feedback_quality
+PATTERN 9: feedback_quality
 Cluster: D — Communication Quality
 Scoring type: Multi-element (SBI-RC framework)
 
@@ -900,7 +827,7 @@ Role-conditioned floor effects:
 
 Insufficient signal vs. not_evaluable:
 - insufficient_signal: The pattern is applicable to this role/meeting type, but there were too few target-controlled opportunities to score it (below minimum threshold).
-- not_evaluable: The pattern fundamentally does not apply (e.g., participation_management scored portion in a 1:1, feedback_quality in a standard team meeting, or any pattern requiring speaker attribution when labels are absent).
+- not_evaluable: The pattern fundamentally does not apply (e.g., feedback_quality in a standard team meeting, or any pattern requiring speaker attribution when labels are absent).
 
 Cluster-level coaching:
 - When generating coaching feedback, consider patterns within the same cluster together. Cluster A patterns reinforce each other (proactive + reactive meeting steering). Cluster B patterns reinforce each other (participation, disagreement handling, and trust/credibility together shape interpersonal effectiveness — a leader who manages participation well but erodes trust through dismissiveness has a coherent cluster-level issue). Cluster C patterns reinforce each other (closing decisions + specifying assignments). If multiple patterns in a cluster are weak, the cluster-level insight is often more actionable than the individual pattern scores.
@@ -908,7 +835,7 @@ Cluster-level coaching:
 Meeting type expectations:
 - Team meetings with a chair: Expect all Cluster A, B, C patterns to be evaluable. Cluster D varies.
 - Presentations: Cluster A (within segment), C, and D are primary. Cluster B is limited to the Q&A/discussion portion.
-- 1:1 meetings: Cluster A and C apply. Cluster B: participation_management scored portion is not_evaluable (provide balance annotation only); disagreement_navigation evaluable if disagreement occurs; trust_and_credibility evaluable if trust-relevant moments occur (e.g., citing unnamed sources, owning vs. deflecting feedback). Feedback Quality is primary in Cluster D.
+- 1:1 meetings: Cluster A and C apply. Cluster B: disagreement_navigation evaluable if disagreement occurs; trust_and_credibility evaluable if trust-relevant moments occur (e.g., citing unnamed sources, owning vs. deflecting feedback). Feedback Quality is primary in Cluster D.
 - Retrospectives/debriefs: All clusters apply. Feedback Quality and Disagreement Navigation are particularly relevant.
 
 PATTERN PRIORITY RULES
@@ -917,41 +844,6 @@ Where a single utterance could be classified under more than one pattern,
 apply the following rules:
 
 EXCLUSIVE (count under only one):
-- question_quality vs. participation_management: Determine the PRIMARY
-  function of the turn. If the turn's main purpose is directing the floor
-  to a specific person, count it under participation_management, even if
-  the invitation is phrased as a question. If the turn's main purpose is
-  probing, testing, or surfacing information and the floor yield is
-  incidental, count it under question_quality.
-  Signals that participation_management is primary:
-    - The speaker explicitly names a person and directs the floor to
-      them ("Thomas, we haven't heard your view…").
-    - The speaker references the person's function or stake as the
-      reason for the invitation ("Rina, support hasn't weighed in yet").
-    - The invitation precedes or accompanies a decision close.
-  Signals that question_quality is primary:
-    - The question targets a specific piece of information, constraint,
-      or risk regardless of who answers.
-    - The speaker is probing deeper into a point the named person
-      already raised.
-    - The question would be equally valuable if directed to anyone
-      with similar expertise.
-  Note: once classified under participation_management, the PM scoring
-  rubric (1.0/0.75/0.5/0.25/0.0) determines the score based on whether
-  the invitee had already contributed, the specificity of the invitation,
-  etc. The priority rule only determines WHICH pattern owns the moment.
-  Exception: generic open-floor prompts ("Any thoughts?", "Questions?")
-  remain excluded from participation_management regardless of form.
-
-- participation_management vs. disagreement_navigation: If the evidence
-  shows the leader inviting input and then dismissing or suppressing the
-  expertise offered, the moment's primary dynamic is disagreement avoidance,
-  not participation mechanics. Reclassify: the OE belongs to DN (scored on
-  how the speaker handled the substantive pushback), not PM (which only
-  evaluates floor-direction choices).
-  Quick test: remove the named invitation — does the coaching point still
-  hold? If yes, the issue is DN, not PM.
-
 - disagreement_navigation vs. trust_and_credibility: If a moment involves
   both conflict handling AND trust impact, determine the PRIMARY dynamic.
   disagreement_navigation = the primary issue is interpersonal tension,

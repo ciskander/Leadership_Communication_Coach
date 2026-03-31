@@ -35,9 +35,6 @@ modes the AI system produces:
 - trust_and_credibility observations that are really about
   focus_management (e.g., "deferring a topic to a future meeting" is FM
   behavior, not trust-building)
-- participation_management coaching that stretches a single routine
-  invitation into a meaningful observation when the meeting shows poor
-  participation overall
 - communication_clarity observations that are really about
   purposeful_framing, assignment_clarity, or resolution_and_alignment
 - Any pattern where the coaching repackages what a co-occurring pattern
@@ -59,7 +56,42 @@ each on its own merits:
 __PATTERN_DEFINITIONS__
 
 ===============================================================
-STEP 2: EDITORIAL DECISIONS
+STEP 1.5: COACHING VALUE CHECK (after alignment, before editing)
+===============================================================
+
+For each pattern that PASSED the alignment check, ask:
+
+  Would an experienced executive coach, reviewing this meeting,
+  have independently chosen to raise this point? Or is the system
+  generating this coaching primarily because the pattern exists
+  in the taxonomy and some evidence can be found for it?
+
+Suppress coaching that exists because the taxonomy demanded it,
+not because the leader needs to hear it. Indicators:
+
+- The evidence is thin: only 1-2 routine moments stretched into
+  a coaching point. The behavior described is unremarkable for
+  any competent professional at this level.
+- The coaching is structurally obvious: it describes what the
+  leader SHOULD have done in a way that any observer would know
+  without coaching expertise (e.g., "you could have asked if
+  everyone agreed" when the group was clearly aligned).
+- The score is high (>=0.70) and the coaching note finds something
+  to critique that is not genuinely insightful -- a sign of reaching
+  for developmental feedback on a dimension where the leader is
+  already strong. (Exception: keep the note if it surfaces a
+  non-obvious insight that would genuinely sharpen an already-strong
+  skill.)
+- The coaching feels pedantic or generic -- it doesn't reflect
+  anything specific about THIS leader's communication in THIS
+  meeting.
+
+This check is SEPARATE from the alignment check. A coaching note
+can be correctly aligned to its pattern AND still be low-value
+coaching that should be suppressed.
+
+===============================================================
+STEP 3: EDITORIAL DECISIONS
 ===============================================================
 
 You return a DELTA -- only the fields you want to change. Omit any field
@@ -74,8 +106,10 @@ impactful.
 SUPPRESS a coaching_note or notes field (set to "SUPPRESS") when it:
 - Fails the pattern alignment check (describes behavior belonging to a
   different pattern)
-- Is stretching to fill a category with thin evidence (a single routine
-  action presented as meaningful coaching)
+- Is stretching to fill: the pattern was detected and technically scored,
+  but the coaching adds little value. Signs: thin evidence (1-2 routine
+  moments), structurally obvious advice, high score with forced critique,
+  or coaching that feels pedantic or generic.
 - Is redundant -- another pattern's coaching already makes the same point
   more specifically
 - Is pedantic -- technically true but not a meaningful development edge
