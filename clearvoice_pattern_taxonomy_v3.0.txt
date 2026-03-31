@@ -202,7 +202,7 @@ Role notes:
 - 1:1 Report: mark not_evaluable unless they are leading the conversation.
 
 Minimum threshold:
-- 1 drift episode required. If the meeting has 0 drift episodes, mark insufficient_signal. A meeting with no drift is a well-run meeting, not a scoreable one.
+- 2 drift episodes required. If the meeting has fewer than 2 drift episodes, mark insufficient_signal. A meeting with no or minimal drift is a well-run meeting, not a scoreable one. Single-event scores are too volatile for meaningful progress tracking.
 
 Detection notes:
 - Identifying drift requires comparing the current discussion content against the most recently stated topic or objective. If no objective was stated (Purposeful Framing scored 0), drift detection becomes unreliable — mark insufficient_signal.
@@ -736,7 +736,7 @@ What it measures:
 - Whether the target speaker's own substantive contributions are clear, structured, and proportionate — as opposed to meandering, unfocused, or disconnected from the conversation.
 
 Denominator (opportunity_count):
-- Substantive speaking turns by the target speaker that are 3+ sentences long. Shorter turns do not provide enough signal to assess clarity.
+- Substantive speaking turns by the target speaker that contain 40 or more words of the target speaker's own speech. When a span includes interjections by others, count only the target speaker's words toward this threshold. If more than 8 qualifying turns exist, score the 8 longest (by target-speaker word count). Turns below the 40-word threshold do not provide enough signal to assess clarity.
 
 Scoring per opportunity (rubric):
 - 1.0 — Clear, structured, AND advances the conversation. The speaker's contribution (which may span multiple turns if others interject) demonstrates ALL of:
@@ -786,7 +786,7 @@ Scoring per opportunity (rubric):
 Score = sum of opportunity scores / opportunity_count.
 
 Excluded from both numerator AND denominator (not an opportunity):
-- Turns shorter than 3 sentences (insufficient signal for clarity assessment).
+- Turns where the target speaker's own speech contains fewer than 40 words (insufficient signal for clarity assessment).
 - Reading aloud from slides, documents, or prepared scripts (this reflects the source material's clarity, not the speaker's).
 - Procedural or logistical statements (scheduling, tech troubleshooting).
 - Social pleasantries, greetings, sign-offs.
@@ -796,7 +796,7 @@ Role notes:
 - Apply consistently across all roles. Role affects the volume and expected complexity of substantive turns, not the clarity standard.
 
 Minimum threshold:
-- 3 substantive turns of 3+ sentences required.
+- 3 qualifying turns of 40+ words required.
 
 Detection notes:
 - BLUF (bottom line up front) is the strongest individual signal. If the speaker states their conclusion, recommendation, or position in the first sentence of their turn, that is a strong indicator of clarity.
@@ -806,7 +806,7 @@ Detection notes:
 - When in doubt between adjacent tiers, use your best judgment based on the rubric criteria. Do not systematically default to any single tier — score each opportunity based on the strongest matching description.
 - Use the full rubric range. A turn where the speaker talks at length without arriving at a clear point, or responds to a different question than the one asked, should score 0.0. A turn with a deeply buried point obscured by extensive preamble should score 0.25. Do not default to 0.5 merely because the speaker made an attempt.
 - In 1:1 meetings, coaching conversations, and any turn where the speaker's primary communicative goal is acknowledgment, empathy, or feedback delivery: do not penalize for not leading with the task point. Leading with acknowledgment is appropriate structure in these contexts. Evaluate proportionality and relevance, but not BLUF. Apply the full BLUF standard only to task-oriented turns in task-oriented meetings.
-- Scope guidance: Each candidate turn must clearly meet the 3-sentence substantive threshold. If a turn is borderline (2-3 short sentences, or 3 sentences but mostly procedural/social), exclude it. When you have a high OE count, re-examine each turn against this threshold — borderline inclusions are the primary source of instability in this pattern. The test: would you confidently classify this turn as "substantive content of 3+ full sentences" if you saw it in isolation? If you hesitate, exclude it.
+- Scope guidance: Each candidate turn must contain at least 40 words of the target speaker's own speech. Count only the target speaker's words — exclude interjections or brief responses from other participants within the span. If you identify more than 8 qualifying turns, score only the 8 longest by target-speaker word count. This cap prevents over-counting and ensures you focus on the turns with the most signal.
 - Turn boundary consistency: When the transcript shows rapid back-and-forth interjections between the target speaker's sentences, treat the speaker's complete thought as a single turn rather than splitting at each interjection. This prevents double-counting the same contribution.
 - Behavioral context: Communication clarity evaluates whether the speaker's message was clear, structured, and proportionate. However, clarity deployed in service of an ulterior or counterproductive purpose (e.g., crisply shutting down a valid concern, clearly overriding an objection without engagement, using directness to rush past complexity) should not be praised as a CC strength. If the turn's primary dynamic is the speaker using clarity to bulldoze rather than to communicate, the coaching note should acknowledge the clarity but flag that it was undermined by the interpersonal dynamic. Do not generate a positive-only CC coaching note for turns where the speaker's clarity primarily served an ulterior or counterproductive purpose.
 - Coaching-note redundancy: A CC coaching_note is redundant if it essentially restates the positive observation already in the notes field without adding a specific constructive point that other patterns haven't already covered. Positive reinforcement belongs in the notes field; the coaching_note should only be generated when it identifies a specific clarity problem (jargon, burying the point, disproportionate length) that is distinct from what PF, AC, or RA already coach. If the coaching_note just says "you were clear and structured" — that belongs in notes, not coaching_note.
