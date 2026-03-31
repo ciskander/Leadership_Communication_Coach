@@ -240,29 +240,111 @@ Start with decision_quality as the sole Stage 2 pattern. Prove the concept befor
 
 ---
 
+## Experiment model redesign: decouple from single pattern
+
+### The current coupling
+
+Experiments are currently tied to a single `pattern_id`. The coupling runs through:
+- **Selection:** The focus pattern determines the experiment topic
+- **Detection:** The system looks for experiment behavior within that pattern's OEs
+- **Progress tracking:** The linked pattern's score trend serves as the experiment's progress metric
+- **Continuity:** If the same pattern remains focus, the experiment continues; otherwise it gets parked
+
+### Why decouple
+
+The best coaching insights from Phase M are cross-pattern: "the core failure is one integrated leadership problem." An experiment like "before closing a decision, ask for the strongest counterargument" touches DN (inviting disagreement), RA (delaying premature closure), and decision_quality (improving the process). Tying it to one pattern is artificial and constrains both the coaching and the detection.
+
+With Stage 2 coaching holistically, pattern-linked experiments become a constraint. Stage 2 synthesizes "your core growth edge is decision governance" but then has to express it as a single-pattern experiment — the architecture fights itself.
+
+### Proposed model: 0..N pattern links + experiment's own score
+
+```
+experiment:
+  experiment_id: string
+  title: string
+  instruction: string
+  success_marker: string
+  status: active | completed | parked
+  linked_patterns: string[]          # 0..N pattern_ids (Stage 1 or Stage 2)
+  experiment_score: number | null     # 0.0-1.0, universal rubric (see below)
+  experiment_coaching:
+    coaching_note: string | null      # preserved from current system
+    suggested_rewrite: string | null  # preserved
+    rewrite_for_span_id: string | null # preserved
+```
+
+**0 patterns:** Purely behavioral experiment. Stage 2 evaluates progress holistically.
+**1 pattern:** Current model. Works when experiment genuinely targets one skill.
+**N patterns:** Cross-cutting experiment. Progress tracked via linked pattern scores AND experiment's own score.
+
+### Universal experiment progress rubric (Option C)
+
+Rather than having the LLM generate a custom rubric per experiment (which creates a self-scoring problem — the system defines success criteria for its own recommendations), use a fixed universal rubric:
+
+| Score | Level | Description |
+|:-----:|-------|-------------|
+| 1.0 | Consistent and natural | Target behavior appeared multiple times and was well-integrated |
+| 0.75 | Emerging | Behavior appeared clearly at least once and was effective |
+| 0.50 | Attempted | Behavior was visible but inconsistent or awkward |
+| 0.25 | Partial | Some evidence of awareness but incomplete execution |
+| 0.0 | Not detected | No evidence of the target behavior |
+
+This replaces the current categorical `detection_in_this_meeting.attempt` (yes/partial/no) with a more granular numeric score. The rubric is the same for every experiment, so it's calibratable and consistent. Stage 2 applies it based on the experiment description and success_marker.
+
+### Evidence span mechanism is already partially decoupled
+
+Current detection flow (from `system_prompt_v0_4_0.txt`):
+1. `detection_in_this_meeting` includes `evidence_span_ids` — spans where experiment behavior was detected
+2. `experiment_coaching.rewrite_for_span_id` must point to one of those detection spans
+
+**Key finding:** Detection evidence spans are NOT anchored to a specific pattern's OEs. The system already searches the whole transcript for experiment-related behavior. The `pattern_id` link constrains which pattern the experiment targets for coaching/selection purposes, but detection is transcript-wide.
+
+This means the 0..N model works with existing evidence machinery. The `rewrite_for_span_id` just needs a valid span from the detection — it doesn't care which pattern the span relates to.
+
+### Product implications
+
+- **Experiment card:** The `experiment_score` is the headline metric (one sparkline). Linked pattern scores are supporting detail (expandable).
+- **Coaching narrative:** Stage 2 references specific moments using linked pattern OEs as anchors. "You did the experiment behavior at the budget decision (RA OE) but not at the timeline decision."
+- **Experiment selection:** Stage 2 identifies the highest-leverage behavioral change (which may span patterns) rather than being constrained to the focus pattern's domain.
+- **Continuity:** The experiment persists based on whether the behavioral change is still the right priority, not whether a specific pattern is still the focus.
+
+---
+
 ## Recommended next steps (Phase N)
 
 ### 1. Prototype Stage 2 on existing outputs
 
-Write the Stage 2 prompt — it takes existing run_*.json files (Stage 1 output) + transcript and generates coaching + decision_quality score. Test on Phase M outputs (which already contain the scoring data Stage 2 needs). This lets us evaluate Stage 2's coaching quality without changing Stage 1 at all.
+Write the Stage 2 prompt — it takes existing run_*.json files (Stage 1 output) + transcript and generates:
+- Coaching output (executive_summary, coaching_themes, strengths, focus, pattern_coaching, experiment_coaching)
+- decision_quality score (meeting-level rubric)
+- experiment_score (universal progress rubric, if active experiment)
 
-Key question to answer: does Stage 2 produce better coaching than the current 1st-pass + editor? Specifically:
+Test on Phase M outputs (which already contain the scoring data Stage 2 needs). This lets us evaluate Stage 2 without changing Stage 1 at all.
+
+Key questions to answer:
+- Does Stage 2 produce better coaching than the current 1st-pass + editor?
 - Does it avoid the incoherent state (low score + praise + no guidance)?
 - Does it produce the cross-pattern "decision quality" insight judges are asking for?
 - Does it appropriately skip PF/CC coaching when those patterns aren't worth coaching?
+- Does the experiment model work with 0..N pattern links?
 
 ### 2. Design decision_quality as a Stage 2 scored pattern
 
 Include in the Stage 2 prompt as a meeting-level rubric (see "Two kinds of pattern" above). Test on M-000004 (avoider), M-000006 (stress test), M-000002 (weak facilitator) — the meetings where judges most strongly flagged the gap.
 
-### 3. Strip Stage 1 of coaching fields
+### 3. Implement experiment model redesign in Stage 2
+
+Replace single `pattern_id` with `linked_patterns[]`. Implement the universal experiment progress rubric. Preserve experiment_coaching fields (coaching_note, suggested_rewrite, rewrite_for_span_id). Test experiment detection and scoring across pattern-linked and pattern-independent experiments.
+
+### 4. Strip Stage 1 of coaching fields
 
 Once Stage 2 is proven, modify the 1st pass to produce scoring-only output. This simplifies the Stage 1 prompt, reduces output tokens, and may improve scoring consistency (the LLM isn't distracted by coaching generation).
 
-### 4. Run a comparative eval
+### 5. Run a comparative eval
 
 Stage 1 + Stage 2 vs current system (1st pass + editor). Compare:
 - Insightful/pedantic/wrong rates
 - Coaching coherence (no more incoherent states?)
 - decision_quality scores across meetings (does it discriminate? is it stable?)
 - Whether PF/CC coaching improves or is appropriately suppressed
+- Experiment detection quality with decoupled model
