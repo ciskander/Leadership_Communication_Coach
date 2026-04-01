@@ -141,30 +141,7 @@ def patch_analysis_output(
         coaching.setdefault("pattern_coaching", [])
         coaching.setdefault("experiment_coaching", None)
 
-        # 5. Focus override safety gate: when an active experiment exists, force
-        # the focus pattern_id to match the experiment's pattern_id.
-        if has_active_experiment and active_experiment:
-            expected_pattern = active_experiment.get("pattern_id")
-            focus_items = coaching.get("focus", [])
-            if expected_pattern and focus_items:
-                actual_pattern = focus_items[0].get("pattern_id")
-                if actual_pattern != expected_pattern:
-                    logger.warning(
-                        "Focus override: LLM returned '%s' but active experiment requires '%s'",
-                        actual_pattern, expected_pattern,
-                    )
-                    focus_items[0]["pattern_id"] = expected_pattern
-                    # Replace the message with the coaching_note from the matching
-                    # pattern_coaching entry so the text is relevant to the
-                    # overridden pattern.
-                    pattern_coaching = coaching.get("pattern_coaching", [])
-                    match = next(
-                        (pc for pc in pattern_coaching
-                         if pc.get("pattern_id") == expected_pattern),
-                        None,
-                    )
-                    if match and match.get("coaching_note"):
-                        focus_items[0]["message"] = match["coaching_note"]
+        # 5. (Removed — focus override safety gate deprecated in P2.4)
 
         # 6. Ensure rewrite_for_span_id references in coaching.pattern_coaching are
         # included in the corresponding pattern's evidence_span_ids and NOT in

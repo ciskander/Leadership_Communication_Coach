@@ -36,6 +36,8 @@ from .airtable_client import (
     F_EXP_EXPERIMENT_ID,
     F_EXP_INSTRUCTIONS,
     F_EXP_PATTERN_ID,
+    F_EXP_RELATED_PATTERNS,
+    F_EXP_JOURNEY_SUMMARY,
     F_EXP_PROPOSED_BY_RUN,
     F_EXP_STATUS,
     F_EXP_SUCCESS_CRITERIA,
@@ -142,12 +144,11 @@ def _get_link_ids(fields: dict, key: str) -> list[str]:
 def _extract_coaching_from_run(parsed_json: dict) -> dict:
     """Extract key coaching fields from a run's parsed JSON output."""
     coaching = parsed_json.get("coaching", {})
-    focus = coaching.get("focus", [{}])[0] if coaching.get("focus") else {}
     micro = coaching.get("micro_experiment", [{}])[0] if coaching.get("micro_experiment") else {}
     strengths = coaching.get("strengths", [])
     return {
-        "focus_pattern": focus.get("pattern_id"),
-        "micro_experiment_pattern": micro.get("pattern_id"),
+        "focus_pattern": None,  # Deprecated in P2.4 — focus decoupled from experiments
+        "micro_experiment_pattern": None,  # Deprecated in P2.4 — micro_experiment no longer has pattern_id
         "strengths_patterns": json.dumps([s.get("pattern_id") for s in strengths]),
         "experiment_id": micro.get("experiment_id"),
         "micro_experiment_title": micro.get("title"),
@@ -436,8 +437,8 @@ def _persist_run_fields(
         fields[F_RUN_SCHEMA_VERSION_OUT] = parsed_json.get("schema_version")
 
         coaching = _extract_coaching_from_run(parsed_json)
-        fields[F_RUN_FOCUS_PATTERN] = coaching["focus_pattern"]
-        fields[F_RUN_MICRO_EXP_PATTERN] = coaching["micro_experiment_pattern"]
+        fields[F_RUN_FOCUS_PATTERN] = ""  # Deprecated in P2.4
+        fields[F_RUN_MICRO_EXP_PATTERN] = ""  # Deprecated in P2.4
         fields[F_RUN_STRENGTHS_PATTERNS] = coaching["strengths_patterns"]
         fields[F_RUN_EXPERIMENT_ID_OUT] = coaching["experiment_id"]
 
@@ -780,7 +781,7 @@ def process_single_meeting_analysis(
         client.bulk_create_validation_issues(run_record_id, gate2_result.issues)
 
     # 8. Post-pass actions
-    if gate1_result.passed:
+    if gate2_result.passed:
         # Create experiment_event if active experiment was tracked
         exp_event_id = create_attempt_event_from_run(
             run_record_id,
@@ -812,10 +813,10 @@ def process_single_meeting_analysis(
                     )
 
     # 10. Update run_request status
-    new_status = "completed" if gate1_result.passed else "gate1_failed"
+    new_status = "completed" if gate2_result.passed else "gate1_failed"
     client.update_run_request_status(run_request_id, new_status, run_record_id=run_record_id)
 
-    logger.info("Completed run_request %s → run %s (gate1_pass=%s)", run_request_id, run_record_id, gate1_result.passed)
+    logger.info("Completed run_request %s → run %s (gate1_pass=%s)", run_request_id, run_record_id, gate2_result.passed)
     return run_record_id
 
 
@@ -1271,21 +1272,16 @@ def instantiate_experiment_from_run(
         logger.warning("Run %s has no micro_experiment in coaching", run_id)
         return None
 
-    # Pick the micro_experiment matching the focus pattern; fall back to first.
-    focus_list = coaching.get("focus", [])
-    focus_pid = focus_list[0].get("pattern_id") if focus_list else None
-    micro = next(
-        (m for m in micro_list if m.get("pattern_id") == focus_pid),
-        micro_list[0],
-    ) if focus_pid else micro_list[0]
+    # Always take the first micro_experiment (focus matching removed in P2.4)
+    micro = micro_list[0]
     exp_id = micro.get("experiment_id")
     title = micro.get("title", "")
     instruction = micro.get("instruction", "")
     success_marker = micro.get("success_marker", "")
-    pattern_id = micro.get("pattern_id", "")
+    related_patterns = micro.get("related_patterns", [])
 
-    if not exp_id or not pattern_id:
-        logger.warning("Run %s micro_experiment missing experiment_id or pattern_id", run_id)
+    if not exp_id:
+        logger.warning("Run %s micro_experiment missing experiment_id", run_id)
         return None
 
     fields: dict = {
@@ -1293,7 +1289,8 @@ def instantiate_experiment_from_run(
         F_EXP_INSTRUCTIONS: instruction,
         F_EXP_SUCCESS_CRITERIA: success_marker,
         F_EXP_SUCCESS_MARKER: success_marker,
-        F_EXP_PATTERN_ID: pattern_id,
+        F_EXP_PATTERN_ID: "",  # Deprecated in P2.4; kept empty for backward compat
+        F_EXP_RELATED_PATTERNS: json.dumps(related_patterns),
         F_EXP_STATUS: "proposed",
         F_EXP_PROPOSED_BY_RUN: [run_id],
         F_EXP_CREATED_FROM_RUN_ID: run_id,
@@ -1429,22 +1426,6 @@ def create_attempt_event_from_run(
 
 # ── Worker 5: process_next_experiment_suggestion ──────────────────────────────
 
-def _get_valid_patterns() -> set[str]:
-    """Derive valid pattern IDs from the canonical taxonomy file."""
-    try:
-        from .prompt_builder import extract_pattern_ids
-        return set(extract_pattern_ids())
-    except Exception:
-        logger.warning("Failed to load pattern IDs from taxonomy file; using hardcoded fallback.")
-        return {
-            'purposeful_framing', 'focus_management',
-            'disagreement_navigation', 'trust_and_credibility',
-            'resolution_and_alignment', 'assignment_clarity',
-            'question_quality', 'communication_clarity', 'feedback_quality',
-        }
-
-_VALID_PATTERNS = _get_valid_patterns()
-
 MAX_PARKED = 3
 
 
@@ -1465,8 +1446,8 @@ def process_next_experiment_suggestion(
     - If user has 3 parked experiments (cap), skip generation entirely.
     - Otherwise, generate enough proposals so that
       (new proposals + parked count) = 3 total options.
-    - Avoids repeating pattern_ids of parked experiments or the most recent
-      completed/abandoned experiment.
+    - Uses coaching themes and executive summaries (not pattern scores) to
+      ground experiment proposals.
     - Avoids reusing any past experiment title.
     - Creates proposed experiment records linked to the user.
 
@@ -1535,125 +1516,182 @@ def process_next_experiment_suggestion(
         reverse=True,
     )
 
-    recent_pattern_id: Optional[str] = None
     past_titles: list[str] = []
     if past_exp_records:
-        recent_pattern_id = _extract_fields(past_exp_records[0]).get(F_EXP_PATTERN_ID)
         past_titles = [
             _extract_fields(r).get(F_EXP_TITLE, "")
             for r in past_exp_records
             if _extract_fields(r).get(F_EXP_TITLE)
         ]
 
-    # Collect pattern_ids of currently parked + proposed experiments — don't propose duplicates
-    parked_pattern_ids: set[str] = set()
-    for pr in parked_records:
-        pid = _extract_fields(pr).get(F_EXP_PATTERN_ID)
-        if pid:
-            parked_pattern_ids.add(pid)
-    for pr in existing_proposed:
-        pid = _extract_fields(pr).get(F_EXP_PATTERN_ID)
-        if pid:
-            parked_pattern_ids.add(pid)
+    # Fetch active experiment (if any) for progress section
+    active_exp_formula = (
+        f"AND("
+        f"FIND('{user_primary_id}', ARRAYJOIN({{User}})), "
+        f"{{Status}} = 'active'"
+        f")"
+    )
+    active_exp_records = client.search_records("experiments", active_exp_formula, max_records=1)
+    active_experiment = active_exp_records[0] if active_exp_records else None
 
-    # 3. Aggregate pattern scores and coaching notes across eligible runs
-    pattern_scores: dict[str, list[float]] = {}
-    # Collect coaching notes per pattern from recent analyses (most recent first)
-    pattern_coaching_notes: dict[str, list[str]] = {}
+    # 3. Extract coaching themes, executive summaries, and experiment progress from eligible runs
+    coaching_themes_by_run: list[tuple[str, list]] = []  # (meeting_date, themes_list)
+    executive_summaries_by_run: list[tuple[str, str]] = []  # (meeting_date, summary_str)
+    experiment_progress: list[tuple[str, str, int, Optional[str]]] = []  # (meeting_date, attempt, count, coaching_note)
 
     for r in eligible_runs:
         rf = _extract_fields(r)
         parsed_json_str = rf.get(F_RUN_PARSED_JSON) or "{}"
+        meeting_date = rf.get("Meeting Date") or rf.get("Created At") or "unknown"
         try:
             parsed = json.loads(parsed_json_str)
-            for p in parsed.get("pattern_snapshot", []):
-                pid = p.get("pattern_id")
-                if not pid:
-                    continue
-                if p.get("evaluable_status") == "evaluable":
-                    score = p.get("score")
-                    if score is not None:
-                        pattern_scores.setdefault(pid, []).append(float(score))
-            # Collect coaching notes from coaching.pattern_coaching
-            for pc in (parsed.get("coaching", {}) or {}).get("pattern_coaching", []):
-                pc_pid = pc.get("pattern_id")
-                pc_note = pc.get("coaching_note")
-                if pc_pid and pc_note:
-                    pattern_coaching_notes.setdefault(pc_pid, []).append(pc_note)
-            # Also collect focus message from coaching
-            coaching_section = parsed.get("coaching", {})
-            for focus_item in (coaching_section.get("focus") or []):
-                fpid = focus_item.get("pattern_id")
-                fmsg = focus_item.get("message")
-                if fpid and fmsg:
-                    pattern_coaching_notes.setdefault(fpid, []).append(fmsg)
+            # Coaching themes
+            themes = (parsed.get("coaching", {}) or {}).get("coaching_themes", [])
+            if themes:
+                coaching_themes_by_run.append((meeting_date, themes))
+            # Executive summary
+            exec_summary = (parsed.get("coaching", {}) or {}).get("executive_summary")
+            if exec_summary:
+                executive_summaries_by_run.append((meeting_date, exec_summary))
+            # Experiment progress (if run had active experiment)
+            exp_tracking = parsed.get("experiment_tracking", {})
+            detection = exp_tracking.get("detection_in_this_meeting") if exp_tracking else None
+            if detection:
+                exp_coaching = (parsed.get("coaching", {}) or {}).get("experiment_coaching")
+                coaching_note = exp_coaching.get("coaching_note") if exp_coaching else None
+                experiment_progress.append((
+                    meeting_date,
+                    detection.get("attempt", "unknown"),
+                    detection.get("count_attempts", 0),
+                    coaching_note,
+                ))
         except Exception:
             pass
 
-    avg_scores = {
-        pid: sum(vals) / len(vals)
-        for pid, vals in pattern_scores.items()
-    }
-    sorted_patterns = sorted(avg_scores.items(), key=lambda x: x[1])
-
     logger.info(
         "process_next_experiment_suggestion: %d total runs fetched, %d eligible, "
-        "%d patterns with scores: %s",
-        len(run_records), len(eligible_runs), len(avg_scores),
-        {pid: f"{score:.2f}" for pid, score in sorted_patterns},
+        "%d runs with coaching themes, %d with executive summaries",
+        len(run_records), len(eligible_runs),
+        len(coaching_themes_by_run), len(executive_summaries_by_run),
     )
 
-    # 4. Build user message with pattern scores, coaching notes, and exclusions
-    # Show ALL 9 patterns so the LLM knows it can propose experiments for any of them.
-    # Patterns without scores are still valid targets.
-    pattern_lines_parts: list[str] = []
-    scored_pids = set(avg_scores.keys())
-    for pid, score in sorted_patterns:
-        pattern_lines_parts.append(f"  {pid}: {score:.2f}")
-    for pid in _VALID_PATTERNS:
-        if pid not in scored_pids:
-            pattern_lines_parts.append(f"  {pid}: (no data yet — still a valid experiment target)")
-    pattern_lines = "\n".join(pattern_lines_parts) or "  (no evaluable patterns available)"
+    # 4. Build user message with coaching themes, executive summaries, and experiment context
 
-    # Build coaching notes section — include up to 2 most recent notes per pattern
-    coaching_notes_lines: list[str] = []
-    for pid, _score in sorted_patterns:
-        notes = pattern_coaching_notes.get(pid, [])
-        if notes:
-            # Deduplicate while preserving order (most recent first)
-            seen: set[str] = set()
-            unique_notes: list[str] = []
-            for n in notes:
-                if n not in seen:
-                    seen.add(n)
-                    unique_notes.append(n)
-                if len(unique_notes) >= 2:
-                    break
-            coaching_notes_lines.append(f"  {pid}:")
-            for n in unique_notes:
-                coaching_notes_lines.append(f"    - {n}")
+    # ── COACHING THEME HISTORY ──
+    theme_lines: list[str] = []
+    for meeting_date, themes in coaching_themes_by_run:
+        theme_lines.append(f"Meeting: {meeting_date}")
+        for theme in themes:
+            if isinstance(theme, dict):
+                label = theme.get("label") or theme.get("theme") or "unknown"
+                explanation = theme.get("explanation") or theme.get("detail") or ""
+                priority = theme.get("priority", "")
+                prefix = f"  {priority.capitalize()}: " if priority else "  Theme: "
+                theme_lines.append(f'{prefix}"{label}" — {explanation}')
+            elif isinstance(theme, str):
+                theme_lines.append(f"  Theme: {theme}")
+        theme_lines.append("")
 
-    coaching_notes_section = ""
-    if coaching_notes_lines:
-        coaching_notes_section = (
-            "\n── COACHING HISTORY ──\n"
-            "Observations from this coachee's recent meeting analyses. Use these to understand their specific failure modes and tailor experiments accordingly.\n\n"
-            + "\n".join(coaching_notes_lines)
+    coaching_themes_section = ""
+    if theme_lines:
+        coaching_themes_section = (
+            "── COACHING THEME HISTORY ──\n"
+            "Recent coaching themes from this coachee's meeting analyses (most recent first):\n\n"
+            + "\n".join(theme_lines)
         )
 
-    # Build exclusion notes
-    exclude_pattern_ids = set(parked_pattern_ids)
-    if recent_pattern_id:
-        exclude_pattern_ids.add(recent_pattern_id)
+    # ── EXECUTIVE SUMMARIES ──
+    exec_summary_lines: list[str] = []
+    for meeting_date, summary in executive_summaries_by_run:
+        exec_summary_lines.append(f'Meeting: {meeting_date}\n  "{summary}"\n')
 
-    avoid_patterns_note = ""
-    if exclude_pattern_ids:
-        avoid_patterns_note = (
-            "\n── EXCLUDED PATTERNS ──\n"
-            "Do NOT propose experiments for these pattern_ids (already in use or recently worked on):\n"
-            + "\n".join(f"  - {pid}" for pid in sorted(exclude_pattern_ids))
+    exec_summaries_section = ""
+    if exec_summary_lines:
+        exec_summaries_section = (
+            "\n── EXECUTIVE SUMMARIES ──\n"
+            "Recent executive summaries (most recent first, for progress context):\n\n"
+            + "\n".join(exec_summary_lines)
         )
 
+    # ── PAST EXPERIMENTS ──
+    # Identify the most recently completed/parked experiment that needs a journey summary
+    needs_summary_exp_record_id: Optional[str] = None
+    needs_summary_exp_title: Optional[str] = None
+
+    past_experiments_lines: list[str] = []
+    for exp_rec in past_exp_records:
+        ef = _extract_fields(exp_rec)
+        exp_title = ef.get(F_EXP_TITLE, "unknown")
+        exp_status = ef.get(F_EXP_STATUS, "")
+        journey_summary = ef.get(F_EXP_JOURNEY_SUMMARY, "")
+        related_patterns_raw = ef.get(F_EXP_RELATED_PATTERNS, "")
+        pattern_id = ef.get(F_EXP_PATTERN_ID, "")
+
+        # Parse related patterns
+        related_patterns_list: list[str] = []
+        if related_patterns_raw:
+            try:
+                related_patterns_list = json.loads(related_patterns_raw) if isinstance(related_patterns_raw, str) else related_patterns_raw
+            except Exception:
+                related_patterns_list = []
+
+        # Get meeting count via experiment events
+        try:
+            _attempt_count, meeting_count = client.count_experiment_attempts_and_meetings(exp_rec["id"])
+        except Exception:
+            meeting_count = 0
+
+        if journey_summary:
+            past_experiments_lines.append(
+                f'  Completed: "{exp_title}" ({meeting_count} meetings) — "{journey_summary}"'
+            )
+        else:
+            # Legacy or needs summary
+            patterns_display = ", ".join(related_patterns_list) if related_patterns_list else pattern_id or "none"
+            past_experiments_lines.append(
+                f'  Completed: "{exp_title}" ({meeting_count} meetings, related: [{patterns_display}])'
+            )
+            # Mark the most recent completed/parked experiment without a summary
+            if needs_summary_exp_record_id is None and exp_status in ("completed", "parked"):
+                needs_summary_exp_record_id = exp_rec["id"]
+                needs_summary_exp_title = exp_title
+
+    past_experiments_section = ""
+    if past_experiments_lines:
+        past_experiments_section = (
+            "\n── PAST EXPERIMENTS ──\n"
+            + "\n".join(past_experiments_lines)
+        )
+
+    # ── EXPERIMENT JOURNEY ──
+    # Only if the most recently completed/parked experiment needs a journey summary
+    experiment_journey_section = ""
+    if needs_summary_exp_record_id and experiment_progress:
+        journey_lines = [f'Just completed: "{needs_summary_exp_title}"']
+        for meeting_date, attempt, count, coaching_note in experiment_progress:
+            note_part = f' — "{coaching_note}"' if coaching_note else ""
+            journey_lines.append(f"  Meeting {meeting_date}: {attempt} ({count} instances){note_part}")
+        experiment_journey_section = (
+            "\n── EXPERIMENT JOURNEY ──\n"
+            + "\n".join(journey_lines)
+        )
+
+    # ── ACTIVE EXPERIMENT PROGRESS ──
+    active_experiment_section = ""
+    if active_experiment and experiment_progress:
+        ae_fields = _extract_fields(active_experiment)
+        ae_title = ae_fields.get(F_EXP_TITLE, "unknown")
+        ae_instruction = ae_fields.get(F_EXP_INSTRUCTIONS, "") or ae_fields.get("Instruction", "")
+        active_lines = [f'Active: "{ae_title}" — {ae_instruction}']
+        for meeting_date, attempt, count, coaching_note in experiment_progress:
+            note_part = f' — "{coaching_note}"' if coaching_note else ""
+            active_lines.append(f"  Meeting {meeting_date}: {attempt} ({count} instances){note_part}")
+        active_experiment_section = (
+            "\n── ACTIVE EXPERIMENT PROGRESS ──\n"
+            + "\n".join(active_lines)
+        )
+
+    # ── EXCLUDED TITLES ──
     avoid_titles_note = ""
     if past_titles:
         avoid_titles_note = (
@@ -1663,40 +1701,33 @@ def process_next_experiment_suggestion(
         )
 
     # Request extra experiments as buffer in case some fail validation
-    llm_request_count = min(num_to_generate + 2, len(_VALID_PATTERNS) - len(exclude_pattern_ids))
-    llm_request_count = max(llm_request_count, num_to_generate)
+    llm_request_count = max(num_to_generate + 2, num_to_generate)
 
     exp_word = "micro-experiment" if llm_request_count == 1 else "micro-experiments"
     user_message = (
-        f"── COACHEE PATTERN SCORES ──\n"
-        f"Ratio 0-1, lower = more room to grow, based on recent meetings:\n"
-        f"{pattern_lines}\n"
-        f"{coaching_notes_section}"
-        f"{avoid_patterns_note}"
+        f"{coaching_themes_section}"
+        f"{exec_summaries_section}"
+        f"{past_experiments_section}"
+        f"{experiment_journey_section}"
+        f"{active_experiment_section}"
         f"{avoid_titles_note}\n\n"
         f"── REQUEST ──\n"
-        f"Propose exactly {llm_request_count} {exp_word} for this coachee.\n\n"
-        f"Pick {llm_request_count} patterns with the highest developmental impact that are not excluded above. "
-        f"You may target ANY of the 9 patterns listed in the taxonomy, including those with no score data yet. "
-        f"Each experiment MUST target a DIFFERENT pattern_id.\n"
-        f"Ground each experiment in the coaching history above where available — reference the coachee's specific behaviours, not generic advice.\n\n"
-        f"IMPORTANT: Return a JSON array with exactly {llm_request_count} experiment objects — no fewer."
+        f"Propose exactly {llm_request_count} {exp_word} based on recurring coaching themes and behavioral gaps.\n"
+        f"Ground each experiment in the coaching theme history above where available.\n\n"
+        f"IMPORTANT: Return a JSON object with \"journey_summary\" (string or null) and \"experiments\" array "
+        f"containing exactly {llm_request_count} experiment objects — no fewer."
     )
 
     # 5. Load system prompt from file and model name from active config
     experiment_system_prompt = load_next_experiment_system_prompt()
 
-    _exp_pattern_ids = [m.group(1) for m in re.finditer(r'── (\w+) ──', experiment_system_prompt)]
     logger.info(
-        "TAXONOMY DEBUG [next_experiment] user=%s | sys_prompt=%d chars | "
-        "placeholder_substituted=%s | %d patterns: %s | "
-        "has EXPERIMENT_DESIGN_GUIDE=%s | user_message=%d chars",
+        "process_next_experiment_suggestion: user=%s | sys_prompt=%d chars | "
+        "user_message=%d chars | needs_journey_summary=%s",
         user_record_id,
         len(experiment_system_prompt),
-        "{{EXPERIMENT_TAXONOMY}}" not in experiment_system_prompt,
-        len(_exp_pattern_ids), _exp_pattern_ids,
-        "PATTERN TAXONOMY" in experiment_system_prompt,
         len(user_message),
+        needs_summary_exp_record_id is not None,
     )
 
     model_name: Optional[str] = None
@@ -1708,10 +1739,10 @@ def process_next_experiment_suggestion(
         pass
 
     # 6-8. Call LLM, parse, and create experiments — retry if we get fewer than needed
-    required_keys = {"experiment_id", "title", "instruction", "success_marker", "pattern_id"}
+    required_keys = {"experiment_id", "title", "instruction", "success_marker"}
     first_record_id: Optional[str] = None
     created_count = 0
-    seen_patterns: set[str] = set(exclude_pattern_ids)
+    created_titles: set[str] = set()
     max_attempts = 2  # initial call + 1 retry
 
     for attempt in range(max_attempts):
@@ -1719,39 +1750,36 @@ def process_next_experiment_suggestion(
         if remaining <= 0:
             break
 
-        # On retry, request only the shortfall and exclude already-created patterns
+        # On retry, request only the shortfall and add already-created titles to exclusions
         if attempt > 0:
-            retry_request_count = min(remaining + 1, len(_VALID_PATTERNS) - len(seen_patterns))
-            retry_request_count = max(retry_request_count, remaining)
+            retry_request_count = max(remaining + 1, remaining)
             if retry_request_count <= 0:
                 break
-            extra_exclude = "\n── EXCLUDED PATTERNS ──\n" \
-                "Do NOT propose experiments for these pattern_ids (already created or in use):\n" + \
-                "\n".join(f"  - {pid}" for pid in sorted(seen_patterns))
+            extra_titles = "\n── EXCLUDED TITLES ──\n" \
+                "Do NOT reuse any of these past experiment titles:\n" + \
+                "\n".join(f"  - {t}" for t in list(past_titles[:10]) + list(created_titles))
             retry_exp_word = "micro-experiment" if retry_request_count == 1 else "micro-experiments"
             current_user_message = (
-                f"── COACHEE PATTERN SCORES ──\n"
-                f"Ratio 0-1, lower = more room to grow, based on recent meetings:\n"
-                f"{pattern_lines}\n"
-                f"{coaching_notes_section}"
-                f"{extra_exclude}"
-                f"{avoid_titles_note}\n\n"
+                f"{coaching_themes_section}"
+                f"{exec_summaries_section}"
+                f"{past_experiments_section}"
+                f"{experiment_journey_section}"
+                f"{active_experiment_section}"
+                f"{extra_titles}\n\n"
                 f"── REQUEST ──\n"
-                f"Propose exactly {retry_request_count} {retry_exp_word} for this coachee.\n\n"
-                f"Pick {retry_request_count} patterns with the highest developmental impact that are not excluded above. "
-                f"You may target ANY of the 9 patterns listed in the taxonomy, including those with no score data yet. "
-                f"Each experiment MUST target a DIFFERENT pattern_id.\n"
-                f"Ground each experiment in the coaching history above where available — reference the coachee's specific behaviours, not generic advice.\n\n"
-                f"IMPORTANT: Return a JSON array with exactly {retry_request_count} experiment objects — no fewer."
+                f"Propose exactly {retry_request_count} {retry_exp_word} based on recurring coaching themes and behavioral gaps.\n"
+                f"Ground each experiment in the coaching theme history above where available.\n\n"
+                f"IMPORTANT: Return a JSON object with \"journey_summary\" (string or null) and \"experiments\" array "
+                f"containing exactly {retry_request_count} experiment objects — no fewer."
             )
-            current_max_tokens = 600 * retry_request_count
+            current_max_tokens = 600 * retry_request_count + 300  # extra for journey_summary
             logger.info(
                 "process_next_experiment_suggestion: retry attempt %d — requesting %d more experiments for user %s",
                 attempt, retry_request_count, user_record_id,
             )
         else:
             current_user_message = user_message
-            current_max_tokens = 600 * llm_request_count
+            current_max_tokens = 600 * llm_request_count + 300  # extra for journey_summary
 
         # 6. Call LLM
         try:
@@ -1781,77 +1809,51 @@ def process_next_experiment_suggestion(
                 raw = raw[4:]
             raw = raw.strip()
 
-        # Detect flat object with duplicate keys (model returns {exp1fields, exp2fields, ...}
-        # instead of [{exp1}, {exp2}, ...]). Split into individual objects.
-        eid_count = raw.count('"experiment_id"')
-        if eid_count > 1 and raw.lstrip().startswith("{") and not raw.lstrip().startswith("["):
-            logger.info(
-                "process_next_experiment_suggestion: detected %d experiment_id keys in flat object — splitting",
-                eid_count,
+        try:
+            parsed_response = json.loads(raw)
+        except Exception as exc:
+            logger.error(
+                "process_next_experiment_suggestion: JSON parse failed (attempt %d): %s | raw: %.500s",
+                attempt, exc, raw,
             )
-            # Split on the boundary between experiments: ,"experiment_id" (with optional whitespace)
-            inner = raw.strip().strip("{}")
-            chunks = re.split(r',\s*"experiment_id"', inner)
-            repaired = []
-            for i, chunk in enumerate(chunks):
-                obj_str = chunk.strip().strip(",").strip()
-                if i > 0:
-                    obj_str = '"experiment_id"' + obj_str
-                obj_str = "{" + obj_str + "}"
-                try:
-                    repaired.append(json.loads(obj_str))
-                except json.JSONDecodeError:
-                    logger.warning(
-                        "process_next_experiment_suggestion: failed to parse split chunk %d: %.200s",
-                        i, obj_str,
-                    )
-            if repaired:
-                parsed_response = repaired
-                logger.info(
-                    "process_next_experiment_suggestion: recovered %d experiments from flat object",
-                    len(repaired),
-                )
-            else:
-                # Fall back to normal parse
-                try:
-                    parsed_response = json.loads(raw)
-                except Exception as exc:
-                    logger.error(
-                        "process_next_experiment_suggestion: JSON parse failed (attempt %d): %s | raw: %.500s",
-                        attempt, exc, raw,
-                    )
-                    if attempt == 0:
-                        return None
-                    break
-        else:
-            try:
-                parsed_response = json.loads(raw)
-            except Exception as exc:
-                logger.error(
-                    "process_next_experiment_suggestion: JSON parse failed (attempt %d): %s | raw: %.500s",
-                    attempt, exc, raw,
-                )
-                if attempt == 0:
-                    return None
-                break
+            if attempt == 0:
+                return None
+            break
 
-        # Normalise: if a single object was returned, wrap in a list
+        # Extract journey_summary and experiments list from response
+        journey_summary: Optional[str] = None
         if isinstance(parsed_response, dict):
-            parsed_response = [parsed_response]
+            journey_summary = parsed_response.get("journey_summary")
+            experiments_list = parsed_response.get("experiments", [])
+        else:
+            # Fallback: if LLM returns an array, treat as experiments with no summary
+            experiments_list = parsed_response if isinstance(parsed_response, list) else []
+            journey_summary = None
 
-        if not isinstance(parsed_response, list):
-            logger.error("process_next_experiment_suggestion: unexpected response type: %s", type(parsed_response))
+        if not isinstance(experiments_list, list):
+            logger.error("process_next_experiment_suggestion: unexpected experiments type: %s", type(experiments_list))
             if attempt == 0:
                 return None
             break
 
         logger.info(
-            "process_next_experiment_suggestion: LLM returned %d experiments (attempt %d) for user %s",
-            len(parsed_response), attempt, user_record_id,
+            "process_next_experiment_suggestion: LLM returned %d experiments (attempt %d) for user %s, journey_summary=%s",
+            len(experiments_list), attempt, user_record_id,
+            "present" if journey_summary else "absent",
         )
 
+        # Store journey summary on the experiment that needs it (first successful attempt only)
+        if journey_summary and needs_summary_exp_record_id and attempt == 0:
+            try:
+                client.update_record("experiments", needs_summary_exp_record_id, {
+                    F_EXP_JOURNEY_SUMMARY: journey_summary
+                })
+                logger.info("Stored journey summary for experiment %s", needs_summary_exp_record_id)
+            except Exception as exc:
+                logger.warning("Failed to store journey summary: %s", exc)
+
         # 8. Validate and create experiment records
-        for micro in parsed_response:
+        for micro in experiments_list:
             if created_count >= num_to_generate:
                 break
             # Normalise common LLM key-name variations
@@ -1869,17 +1871,28 @@ def process_next_experiment_suggestion(
                     len(instr_text), micro.get("success_marker", "")[:30],
                 )
                 continue
-            if micro.get("pattern_id") not in _VALID_PATTERNS:
+            # Deduplicate against past titles
+            proposed_title = micro.get("title", "")
+            title_lower = proposed_title.strip().lower()
+            if title_lower in {t.strip().lower() for t in past_titles}:
                 logger.warning(
-                    "process_next_experiment_suggestion: skipping invalid pattern_id '%s'",
-                    micro.get("pattern_id"),
+                    "process_next_experiment_suggestion: skipping duplicate title '%s'",
+                    proposed_title[:80],
                 )
                 continue
-            # Enforce distinct patterns
-            if micro["pattern_id"] in seen_patterns:
-                logger.warning("process_next_experiment_suggestion: skipping duplicate pattern_id '%s'", micro["pattern_id"])
+            if title_lower in {t.strip().lower() for t in created_titles}:
+                logger.warning(
+                    "process_next_experiment_suggestion: skipping already-created title '%s'",
+                    proposed_title[:80],
+                )
                 continue
-            seen_patterns.add(micro["pattern_id"])
+
+            # related_patterns is optional — default to empty list
+            related_patterns = micro.get("related_patterns", [])
+            if not isinstance(related_patterns, list):
+                related_patterns = []
+
+            created_titles.add(proposed_title)
 
             # 9. Create proposed experiment record
             exp_fields: dict = {
@@ -1887,7 +1900,8 @@ def process_next_experiment_suggestion(
                 F_EXP_INSTRUCTIONS: micro["instruction"][:600],
                 F_EXP_SUCCESS_CRITERIA: micro["success_marker"][:300],
                 F_EXP_SUCCESS_MARKER: micro["success_marker"][:300],
-                F_EXP_PATTERN_ID: micro["pattern_id"],
+                F_EXP_RELATED_PATTERNS: json.dumps(related_patterns),
+                F_EXP_PATTERN_ID: "",  # Deprecated — leave empty for new experiments
                 F_EXP_STATUS: "proposed",
                 F_EXP_USER: [user_record_id],
             }
@@ -1900,8 +1914,8 @@ def process_next_experiment_suggestion(
                 first_record_id = exp_record_id
 
             logger.info(
-                "process_next_experiment_suggestion: proposed experiment %s for user %s (pattern: %s)",
-                exp_record_id, user_record_id, micro["pattern_id"],
+                "process_next_experiment_suggestion: proposed experiment %s for user %s (related_patterns: %s)",
+                exp_record_id, user_record_id, related_patterns,
             )
 
     if created_count < num_to_generate:
@@ -1931,14 +1945,13 @@ def _build_memory_for_user(
     bp_links = _get_link_ids(user_fields, "Active Baseline Pack")
     baseline_pack_id_str = None
     strengths: list[str] = []
-    focus_pattern: Optional[str] = None
 
     if bp_links:
         bp_rec = client.get_baseline_pack(bp_links[0])
         bp_fields = _extract_fields(bp_rec)
         baseline_pack_id_str = bp_fields.get("Baseline Pack ID")
 
-        # Try to get strengths/focus from the last baseline run
+        # Try to get strengths from the last baseline run
         last_run_links = _get_link_ids(bp_fields, "Last Run")
         if last_run_links:
             lr_rec = client.get_run(last_run_links[0])
@@ -1948,26 +1961,38 @@ def _build_memory_for_user(
                 strengths = json.loads(strengths_json)
             except (json.JSONDecodeError, TypeError):
                 strengths = []
-            focus_pattern = lr_fields.get("Focus Pattern")
 
     # Active experiment
     active_exp_data: Optional[dict] = None
     if active_exp_record_id:
         exp_rec = client.get_experiment(active_exp_record_id)
         exp_fields = _extract_fields(exp_rec)
+        # Parse related_patterns from Airtable (JSON string); fall back to
+        # wrapping legacy Pattern ID if Related Patterns is empty.
+        related_patterns_raw = exp_fields.get("Related Patterns") or ""
+        related_patterns: list[str] = []
+        if related_patterns_raw:
+            try:
+                related_patterns = json.loads(related_patterns_raw)
+            except (json.JSONDecodeError, TypeError):
+                related_patterns = []
+        if not related_patterns:
+            legacy_pid = exp_fields.get("Pattern ID")
+            if legacy_pid:
+                related_patterns = [legacy_pid]
         active_exp_data = {
             "experiment_id": exp_fields.get("Experiment ID"),
             "title": exp_fields.get("Title"),
             "instruction": exp_fields.get("Instruction") or exp_fields.get("Instructions"),
             "success_marker": exp_fields.get("Success Marker") or exp_fields.get("Success Criteria"),
-            "pattern_id": exp_fields.get("Pattern ID"),
+            "related_patterns": related_patterns,
+            "pattern_id": exp_fields.get("Pattern ID"),  # Backward compat
             "status": exp_fields.get("Status"),
         }
 
     return build_memory_block(
         baseline_pack_id=baseline_pack_id_str,
         strengths=strengths,
-        focus_pattern=focus_pattern,
         active_experiment=active_exp_data,
         recent_snapshots=[],  # Populated via future enhancement
     )

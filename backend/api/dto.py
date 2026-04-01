@@ -67,7 +67,7 @@ class MicroExperimentWithQuotes(BaseModel):
     title: str
     instruction: str
     success_marker: str
-    pattern_id: str
+    related_patterns: list[str] = Field(default_factory=list)
     quotes: list[QuoteObject] = Field(default_factory=list)
 
 
@@ -187,7 +187,8 @@ class ExperimentResponse(BaseModel):
     title: str
     instruction: str
     success_marker: str
-    pattern_id: str
+    pattern_id: Optional[str] = None
+    related_patterns: list[str] = Field(default_factory=list)
     status: str
     created_at: Optional[str]
     attempt_count: Optional[int] = None
@@ -297,7 +298,8 @@ class PastExperiment(BaseModel):
     experiment_record_id: str
     experiment_id: str
     title: str
-    pattern_id: str
+    pattern_id: Optional[str] = None
+    related_patterns: list[str] = Field(default_factory=list)
     status: str
     started_at: Optional[str]
     ended_at: Optional[str]

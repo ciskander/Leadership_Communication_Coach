@@ -177,7 +177,7 @@ def load_next_experiment_system_prompt(path: Optional[str] = None) -> str:
     extracted from the canonical taxonomy file.
     """
     from pathlib import Path as P
-    default_path = P(__file__).parent.parent.parent / "system_prompt_next_experiment_v0_4_0.txt"
+    default_path = P(__file__).parent.parent.parent / "system_prompt_next_experiment_v1.0.txt"
     p = P(path) if path else default_path
     if not p.exists():
         raise FileNotFoundError(f"Next-experiment system prompt not found at {p}")

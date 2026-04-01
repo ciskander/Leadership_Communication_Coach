@@ -41,10 +41,12 @@ function fmtDate(dateStr: string | null | undefined): string {
   }
 }
 
-function PatternLabel({ id }: { id: string }) {
+function RelatedPatternsLabel({ relatedPatterns, patternId }: { relatedPatterns?: string[]; patternId?: string }) {
+  const pids = relatedPatterns?.length ? relatedPatterns : patternId ? [patternId] : [];
+  if (pids.length === 0) return null;
   return (
     <span className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-teal-600">
-      {STRINGS.patternLabels[id] ?? id.replace(/_/g, ' ')}
+      {pids.map(pid => STRINGS.patternLabels[pid] ?? pid.replace(/_/g, ' ')).join(', ')}
     </span>
   );
 }
@@ -118,10 +120,10 @@ function SectionHeading({ text }: { text: string }) {
 
 function PatternTrendsCompact({
   history,
-  experimentPatternId,
+  experimentPatternIds,
 }: {
   history: RunHistoryPoint[];
-  experimentPatternId?: string | null;
+  experimentPatternIds?: string[];
 }) {
   const hasBaseline       = history.some((r) => r.is_baseline);
   const postBaselineCount = history.filter((r) => !r.is_baseline).length;
@@ -138,12 +140,11 @@ function PatternTrendsCompact({
     return { allPatterns: all, topPatterns: all.slice(0, 5) };
   }, [history]);
 
+  const expIds = experimentPatternIds ?? [];
   const visiblePatterns = useMemo(() => {
-    if (experimentPatternId && !topPatterns.includes(experimentPatternId)) {
-      return [...topPatterns, experimentPatternId];
-    }
-    return topPatterns;
-  }, [experimentPatternId, topPatterns]);
+    const extra = expIds.filter(pid => allPatterns.includes(pid) && !topPatterns.includes(pid));
+    return extra.length > 0 ? [...topPatterns, ...extra] : topPatterns;
+  }, [expIds, allPatterns, topPatterns]);
 
   const patternColor = useCallback(
     (pid: string) => LINE_COLORS[allPatterns.indexOf(pid) % LINE_COLORS.length],
@@ -191,7 +192,7 @@ function PatternTrendsCompact({
             />
             {visiblePatterns.map((pid) => {
               const color = patternColor(pid);
-              const isExp = pid === experimentPatternId;
+              const isExp = expIds.includes(pid);
               return [
                 <Line key={`${pid}_raw`} type="monotone" dataKey={rawKey(pid)} stroke="none"
                   dot={{ r: isExp ? 3 : 2, fill: color, opacity: isExp ? 0.5 : 0.3 }}
@@ -290,7 +291,7 @@ function PatternTrendsCompact({
       {showLineChart && (
         <div className="flex flex-wrap gap-2.5 mt-3">
           {visiblePatterns.map((pid) => {
-            const isExp = pid === experimentPatternId;
+            const isExp = expIds.includes(pid);
             return (
               <span key={pid} className={`flex items-center text-xs ${isExp ? 'font-semibold text-cv-stone-900' : 'text-cv-stone-600'}`}>
                 <span className="inline-block w-2.5 h-2.5 rounded-full mr-1 shrink-0" style={{ background: patternColor(pid) }} />
@@ -316,7 +317,7 @@ function ProposedExperimentRow({ experiment }: { experiment: Experiment }) {
     <div className="bg-cv-warm-50 border border-cv-warm-300 rounded p-4 space-y-2">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1 min-w-0">
-          <PatternLabel id={experiment.pattern_id} />
+          <RelatedPatternsLabel relatedPatterns={experiment.related_patterns} patternId={experiment.pattern_id} />
           <p className="text-sm font-semibold text-cv-stone-800 leading-snug font-serif">
             {experiment.title}
           </p>
@@ -383,7 +384,12 @@ function PastExperimentRow({ exp }: { exp: Record<string, unknown> }) {
         <div className="min-w-0">
           <p className="text-sm font-medium text-cv-stone-800 truncate">{exp.title as string}</p>
           <p className="text-xs text-cv-stone-400">
-            {STRINGS.patternLabels[exp.pattern_id as string] ?? exp.pattern_id}
+            {(() => {
+              const rp = exp.related_patterns as string[] | undefined;
+              const pid = exp.pattern_id as string | undefined;
+              const pids = rp?.length ? rp : pid ? [pid] : [];
+              return pids.map(p => STRINGS.patternLabels[p] ?? p).join(', ');
+            })()}
             {exp.attempt_count != null && ` · ${STRINGS.progressPage.attemptsAcross(exp.attempt_count as number, (exp.meeting_count as number) ?? 0)}`}
           </p>
         </div>
@@ -580,7 +586,8 @@ export default function CoacheeDetailPage() {
   if (!data) return <p className="text-sm text-cv-stone-500">{STRINGS.coacheeDetail.coacheeNotFound}</p>;
 
   const proposedExperiments  = data.proposed_experiments ?? [];
-  const experimentPatternId  = data.active_experiment?.pattern_id ?? null;
+  const experimentPatternIds = data.active_experiment?.related_patterns
+    ?? (data.active_experiment?.pattern_id ? [data.active_experiment.pattern_id] : []);
 
   // Shared card shell
   const cardCls = 'bg-white rounded border border-cv-warm-300 p-5';
@@ -648,7 +655,7 @@ export default function CoacheeDetailPage() {
         ) : progress && progress.pattern_history.length > 0 ? (
           <PatternTrendsCompact
             history={progress.pattern_history}
-            experimentPatternId={experimentPatternId}
+            experimentPatternIds={experimentPatternIds}
           />
         ) : (
           <p className="text-sm text-cv-stone-400 py-4 text-center">{STRINGS.coacheeDetail.noProgressYet}</p>

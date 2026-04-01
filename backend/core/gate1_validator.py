@@ -218,9 +218,7 @@ def _sanitise_output(data: dict) -> int:
         for i, s in enumerate(co.get("strengths", [])):
             if isinstance(s, dict):
                 fixes += _fix_extra_keys(s, ci_keys, f"$.coaching.strengths[{i}]")
-        for i, f in enumerate(co.get("focus", [])):
-            if isinstance(f, dict):
-                fixes += _fix_extra_keys(f, ci_keys, f"$.coaching.focus[{i}]")
+        # focus sanitisation removed in P2.4 — focus no longer in schema
         me_keys = _ALLOWED_KEYS.get("MicroExperiment", set())
         for i, m in enumerate(co.get("micro_experiment", [])):
             if isinstance(m, dict):
@@ -875,7 +873,6 @@ def _business_rules(data: dict, *, scoring_only: bool = False) -> list[Validatio
 
         # ── 3e. coaching cardinality ─────────────────────────────────────────
         strengths = coaching.get("strengths", [])
-        focus = coaching.get("focus", [])
         micro_experiment = coaching.get("micro_experiment", [])
 
         if not (0 <= len(strengths) <= 2):
@@ -896,12 +893,7 @@ def _business_rules(data: dict, *, scoring_only: bool = False) -> list[Validatio
                         f"Pattern '{s_pid}' listed as strength but scores {s_score} "
                         f"(threshold 0.70).",
                     ))
-        if len(focus) != 1:
-            issues.append(_err(
-                "COACHING_FOCUS_COUNT",
-                "coaching.focus",
-                f"focus must have exactly 1 item, got {len(focus)}.",
-            ))
+        # focus validation removed in P2.4 — focus is no longer produced by Stage 2
         if len(micro_experiment) != 1:
             issues.append(_err(
                 "COACHING_MICRO_EXP_COUNT",

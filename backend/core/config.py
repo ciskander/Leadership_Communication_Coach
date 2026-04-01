@@ -15,7 +15,7 @@ ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")  # optional — only
 REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 # ── Versioning ────────────────────────────────────────────────────────────────
-SCHEMA_VERSION: str = "mvp.v0.5.0"
+SCHEMA_VERSION: str = "mvp.v0.6.0"
 TAXONOMY_VERSION: str = "v3.1"
 CONFIG_VERSION: str = "1"          # bump when prompt/model defaults change
 OUTPUT_MODE: str = "coaching_first_2s1e"
@@ -61,7 +61,7 @@ AT_TABLE_CONFIG = "config"
 
 # ── Schema file ───────────────────────────────────────────────────────────────
 SCHEMAS_DIR = Path(__file__).parent.parent / "schemas"
-MVP_SCHEMA_PATH = SCHEMAS_DIR / "mvp_v0_5_0.json"
+MVP_SCHEMA_PATH = SCHEMAS_DIR / "mvp_v0_6_0.json"
 
 # ── Pattern ordering (must be stable) ────────────────────────────────────────
 PATTERN_ORDER = [

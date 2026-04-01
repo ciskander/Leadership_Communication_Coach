@@ -122,13 +122,15 @@ class TestExtractCoachingFromRun:
             }
         }
 
-    def test_extracts_focus_pattern(self):
+    def test_focus_pattern_is_none(self):
+        """focus_pattern is deprecated in P2.4 and always returns None."""
         result = _extract_coaching_from_run(self._make_parsed_json())
-        assert result["focus_pattern"] == "resolution_and_alignment"
+        assert result["focus_pattern"] is None
 
-    def test_extracts_micro_experiment_pattern(self):
+    def test_micro_experiment_pattern_is_none(self):
+        """micro_experiment_pattern is deprecated in P2.4 and always returns None."""
         result = _extract_coaching_from_run(self._make_parsed_json())
-        assert result["micro_experiment_pattern"] == "resolution_and_alignment"
+        assert result["micro_experiment_pattern"] is None
 
     def test_extracts_experiment_id(self):
         result = _extract_coaching_from_run(self._make_parsed_json(micro_exp_id="EXP-000042"))
@@ -141,7 +143,8 @@ class TestExtractCoachingFromRun:
         strengths = json.loads(result["strengths_patterns"])
         assert strengths == ["purposeful_framing", "question_quality"]
 
-    def test_empty_focus_returns_none(self):
+    def test_empty_coaching_focus_pattern_still_none(self):
+        """Even with empty coaching, focus_pattern is always None (deprecated)."""
         parsed = {"coaching": {"strengths": [], "focus": [], "micro_experiment": []}}
         result = _extract_coaching_from_run(parsed)
         assert result["focus_pattern"] is None

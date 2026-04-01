@@ -25,12 +25,12 @@ import pytest
 # ---------------------------------------------------------------------------
 
 VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
-    "schema_version": "mvp.v0.4.0",
+    "schema_version": "mvp.v0.6.0",
     "meta": {
         "analysis_id": "A-260227",
         "analysis_type": "single_meeting",
         "generated_at": "2026-02-27T15:32:50.638-05:00",
-        "taxonomy_version": "v3.0",
+        "taxonomy_version": "v3.1",
         "output_mode": "coaching_first_2s1e",
     },
     "context": {
@@ -46,7 +46,10 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
         {"event_id": "OE-002", "pattern_id": "purposeful_framing", "turn_start_id": 10, "turn_end_id": 11, "target_control": "yes", "count_decision": "counted", "success": 1.0, "reason_code": "transition_framing"},
         {"event_id": "OE-003", "pattern_id": "focus_management", "turn_start_id": 1, "turn_end_id": 2, "target_control": "yes", "count_decision": "counted", "success": 1.0, "reason_code": "outcome_stated"},
         {"event_id": "OE-004", "pattern_id": "focus_management", "turn_start_id": 3, "turn_end_id": 3, "target_control": "yes", "count_decision": "counted", "success": 1.0, "reason_code": "intent_stated"},
+        {"event_id": "OE-005", "pattern_id": "disagreement_navigation", "turn_start_id": 5, "turn_end_id": 5, "target_control": "yes", "count_decision": "counted", "success": 1.0, "reason_code": "perspective_sought"},
+        {"event_id": "OE-006", "pattern_id": "disagreement_navigation", "turn_start_id": 15, "turn_end_id": 15, "target_control": "yes", "count_decision": "counted", "success": 1.0, "reason_code": "risk_solicited"},
         {"event_id": "OE-007", "pattern_id": "disagreement_navigation", "turn_start_id": 31, "turn_end_id": 32, "target_control": "yes", "count_decision": "counted", "success": 1.0, "reason_code": "acknowledged_reframed"},
+        {"event_id": "OE-100", "pattern_id": "trust_and_credibility", "turn_start_id": 5, "turn_end_id": 5, "target_control": "yes", "count_decision": "counted", "success": 1.0, "reason_code": "evidence_cited"},
         {"event_id": "OE-008", "pattern_id": "resolution_and_alignment", "turn_start_id": 20, "turn_end_id": 21, "target_control": "yes", "count_decision": "counted", "success": 1.0, "reason_code": "explicit_closure"},
         {"event_id": "OE-009", "pattern_id": "assignment_clarity", "turn_start_id": 22, "turn_end_id": 22, "target_control": "yes", "count_decision": "counted", "success": 1.0, "reason_code": "owner_deadline_stated"},
         {"event_id": "OE-010", "pattern_id": "question_quality", "turn_start_id": 25, "turn_end_id": 25, "target_control": "yes", "count_decision": "counted", "success": 1.0, "reason_code": "substantive_question"},
@@ -80,7 +83,7 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
             "turn_start_id": 5,
             "turn_end_id": 5,
             "excerpt": "Bob, what's your take on the Q2 projections?",
-            "event_ids": ["OE-005"],
+            "event_ids": ["OE-005", "OE-100"],
         },
         {
             "evidence_span_id": "ES-T015",
@@ -128,7 +131,8 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
     "evaluation_summary": {
         "patterns_evaluated": [
             "purposeful_framing", "focus_management",
-            "disagreement_navigation", "resolution_and_alignment", "assignment_clarity",
+            "disagreement_navigation", "trust_and_credibility",
+            "resolution_and_alignment", "assignment_clarity",
             "question_quality", "communication_clarity", "feedback_quality",
         ],
         "patterns_insufficient_signal": [],
@@ -166,10 +170,22 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
             "evaluable_status": "evaluable",
             "denominator_rule_id": "disagreement_moment",
             "min_required_threshold": 1,
+            "opportunity_count": 3,
+            "score": 1.0,
+            "evidence_span_ids": ["ES-T005", "ES-T015", "ES-T031-032"],
+            "success_evidence_span_ids": ["ES-T005", "ES-T015", "ES-T031-032"],
+        },
+        {
+            "pattern_id": "trust_and_credibility",
+            "cluster_id": "participation_dynamics",
+            "scoring_type": "tiered_rubric",
+            "evaluable_status": "evaluable",
+            "denominator_rule_id": "credibility_moment",
+            "min_required_threshold": 1,
             "opportunity_count": 1,
             "score": 1.0,
-            "evidence_span_ids": ["ES-T031-032"],
-            "success_evidence_span_ids": ["ES-T031-032"],
+            "evidence_span_ids": ["ES-T005"],
+            "success_evidence_span_ids": ["ES-T005"],
         },
         {
             "pattern_id": "resolution_and_alignment",
@@ -240,16 +256,18 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
     },
     "coaching": {
         "executive_summary": "You showed strong purposeful framing throughout the meeting. Focus on closing decisions with explicit verbal alignment to strengthen resolution patterns.",
+        "coaching_themes": [
+            {
+                "theme": "Decision closure",
+                "explanation": "Strengthen how you close out decisions explicitly.",
+                "related_patterns": ["resolution_and_alignment"],
+                "priority": "primary",
+            }
+        ],
         "strengths": [
             {
                 "pattern_id": "purposeful_framing",
                 "message": "You consistently framed each topic with clear objectives.",
-            }
-        ],
-        "focus": [
-            {
-                "pattern_id": "resolution_and_alignment",
-                "message": "Try ending each decision moment with an explicit verbal closure.",
             }
         ],
         "micro_experiment": [
@@ -258,7 +276,7 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
                 "title": "Close every decision out loud",
                 "instruction": "At the end of each agenda item, say aloud who owns the decision and what was decided.",
                 "success_marker": "At least 2 out of 3 decision moments have explicit verbal closure in the next meeting.",
-                "pattern_id": "resolution_and_alignment",
+                "related_patterns": ["resolution_and_alignment"],
                 "evidence_span_ids": ["ES-T020-021"],
             }
         ],

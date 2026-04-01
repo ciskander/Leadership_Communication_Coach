@@ -317,6 +317,12 @@ def _build_experiment_context_for_stage2(memory: MemoryBlock) -> str:
     success_marker = exp.get("success_marker", "")
     pattern_id = exp.get("pattern_id", "")
 
+    related_patterns = exp.get("related_patterns", [])
+    # Backward compat: if experiment has legacy pattern_id but no related_patterns,
+    # convert to related_patterns list.
+    if not related_patterns and pattern_id:
+        related_patterns = [pattern_id]
+
     lines = [
         "",
         "===============================================================",
@@ -329,18 +335,14 @@ def _build_experiment_context_for_stage2(memory: MemoryBlock) -> str:
         f"- Instruction: {instruction}",
         f"- Success marker: {success_marker}",
     ]
-    if pattern_id:
-        lines.append(f"- Primary pattern: {pattern_id}")
+    if related_patterns:
+        lines.append(f"- Related patterns: {', '.join(related_patterns)}")
 
     lines.extend([
         "",
         "You MUST evaluate whether the target speaker attempted this experiment in this meeting.",
         "Search the transcript for moments matching the experiment's instruction and success marker.",
         "Report your findings in experiment_tracking.detection_in_this_meeting.",
-        "",
-        "ACTIVE EXPERIMENT CONTINUITY: focus[0].pattern_id MUST equal the active experiment's",
-        f"pattern_id ({pattern_id}) unless the Stage 1 score for that pattern is >= 0.80,",
-        "in which case acknowledge the improvement and suggest it may be time for a new experiment.",
         "",
         "micro_experiment: Refine or evolve the current experiment (reuse experiment_id:",
         f"{exp_id}). Do not propose an unrelated experiment while this one is active.",
@@ -632,7 +634,6 @@ def build_memory_block(
     *,
     baseline_pack_id: Optional[str] = None,
     strengths: Optional[list[str]] = None,
-    focus_pattern: Optional[str] = None,
     active_experiment: Optional[dict] = None,
     recent_snapshots: Optional[list[dict]] = None,
 ) -> MemoryBlock:
@@ -652,18 +653,21 @@ def build_memory_block(
     if baseline_pack_id:
         baseline_profile = {
             "strengths": strengths or [],
-            "focus": focus_pattern,
             "baseline_pack_id": baseline_pack_id,
         }
 
     active_exp_block: Optional[dict] = None
     if active_experiment:
+        # Backward compat: convert legacy pattern_id to related_patterns
+        related_patterns = active_experiment.get("related_patterns", [])
+        if not related_patterns and active_experiment.get("pattern_id"):
+            related_patterns = [active_experiment["pattern_id"]]
         active_exp_block = {
             "experiment_id": active_experiment.get("experiment_id"),
             "title": active_experiment.get("title"),
             "instruction": active_experiment.get("instruction"),
             "success_marker": active_experiment.get("success_marker"),
-            "pattern_id": active_experiment.get("pattern_id"),
+            "related_patterns": related_patterns,
             "status": active_experiment.get("status"),
         }
 

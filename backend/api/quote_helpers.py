@@ -229,7 +229,7 @@ def resolve_coaching_output(
             title=m.get("title", ""),
             instruction=m.get("instruction", ""),
             success_marker=m.get("success_marker", ""),
-            pattern_id=m.get("pattern_id", ""),
+            related_patterns=m.get("related_patterns", []),
             quotes=quotes,
         )
 

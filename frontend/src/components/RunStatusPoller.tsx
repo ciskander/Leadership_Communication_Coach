@@ -207,9 +207,13 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
     return (
       <section className="bg-white rounded border border-cv-warm-300 p-5 space-y-4">
         <div className="space-y-1">
-          <span className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest">
-            {exp.pattern_id.replace(/_/g, ' ')}
-          </span>
+          {(exp.related_patterns?.length ? exp.related_patterns : exp.pattern_id ? [exp.pattern_id] : []).length > 0 && (
+            <span className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest">
+              {(exp.related_patterns?.length ? exp.related_patterns : [exp.pattern_id!])
+                .map(pid => STRINGS.patternLabels[pid] ?? pid.replace(/_/g, ' '))
+                .join(', ')}
+            </span>
+          )}
           <p className="text-sm font-medium text-cv-stone-900 leading-snug">{exp.title}</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -687,22 +691,23 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         </section>
       )}
 
-      {/* Coaching themes */}
+      {/* Coaching themes — rose styling, rendered before CoachingCard */}
       {run.coaching_themes && run.coaching_themes.length > 0 && (
-        <section className="bg-white rounded border border-emerald-300 overflow-hidden">
-          <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-emerald-200 bg-emerald-50">
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-emerald-700 shrink-0" aria-hidden="true">
-              <path d="M10 1a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 1zM5.05 3.05a.75.75 0 011.06 0l1.062 1.06A.75.75 0 016.11 5.173L5.05 4.11a.75.75 0 010-1.06zm9.9 0a.75.75 0 010 1.06l-1.06 1.062a.75.75 0 01-1.062-1.061l1.061-1.06a.75.75 0 011.06 0zM10 7a3 3 0 100 6 3 3 0 000-6zm-6.25 3a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5H4.5a.75.75 0 01-.75-.75zm12 0a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75zM7.172 13.828a.75.75 0 010 1.061l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm5.656 0a.75.75 0 011.06 0l1.06 1.06a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15z" />
+        <section className="bg-white rounded border border-cv-rose-700 overflow-hidden">
+          <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-rose-700">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-rose-50 shrink-0" aria-hidden="true">
+              <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+              <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
             </svg>
-            <h3 className="text-sm font-semibold text-emerald-800">{STRINGS.runStatusPoller.coachingThemesHeading}</h3>
+            <h3 className="text-sm font-semibold text-cv-rose-50">{STRINGS.coachingCard.coachingThemesHeading}</h3>
           </div>
-          <div className="divide-y divide-emerald-100">
+          <div className="divide-y divide-cv-warm-300">
             {run.coaching_themes.map((theme, idx) => (
               <div key={idx} className="px-5 py-4">
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                     theme.priority === 'primary'
-                      ? 'bg-emerald-100 text-emerald-800'
+                      ? 'bg-cv-rose-100 text-cv-rose-800'
                       : 'bg-stone-100 text-stone-600'
                   }`}>
                     {theme.priority === 'primary'

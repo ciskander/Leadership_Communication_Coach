@@ -262,6 +262,16 @@ async def _build_run_response(run_record: dict, at_client: Optional[AirtableClie
     if exp_detail_result and exp_detail_result[0]:
         exp_rec, event_records = exp_detail_result
         ef = exp_rec.get("fields", {})
+        # Parse related_patterns; fall back to legacy Pattern ID
+        _rp_raw = ef.get("Related Patterns") or ""
+        _rp: list[str] = []
+        if _rp_raw:
+            try:
+                _rp = json.loads(_rp_raw)
+            except (json.JSONDecodeError, TypeError):
+                _rp = []
+        if not _rp and ef.get("Pattern ID"):
+            _rp = [ef["Pattern ID"]]
         resp.active_experiment_detail = ExperimentResponse(
             experiment_record_id=exp_rec["id"],
             experiment_id=ef.get("Experiment ID", ""),
@@ -269,6 +279,7 @@ async def _build_run_response(run_record: dict, at_client: Optional[AirtableClie
             instruction=ef.get("Instructions") or ef.get("Instruction", ""),
             success_marker=ef.get("Success Marker") or ef.get("Success Criteria", ""),
             pattern_id=ef.get("Pattern ID", ""),
+            related_patterns=_rp,
             status=ef.get("Status", ""),
             created_at=exp_rec.get("createdTime"),
             attempt_count=exp_rec.get("_attempt_count"),

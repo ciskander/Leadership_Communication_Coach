@@ -43,10 +43,12 @@ function JourneyConnector({ done }: { done: boolean }) {
   return <div className={`flex-1 h-0.5 mx-1 rounded-full ${done ? 'bg-cv-teal-500' : 'bg-cv-warm-200'}`} />;
 }
 
-function PatternLabel({ id }: { id: string }) {
+function RelatedPatternsLabel({ relatedPatterns, patternId }: { relatedPatterns?: string[]; patternId?: string }) {
+  const pids = relatedPatterns?.length ? relatedPatterns : patternId ? [patternId] : [];
+  if (pids.length === 0) return null;
   return (
     <span className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-teal-600">
-      {id.replace(/_/g, ' ')}
+      {pids.map(pid => STRINGS.patternLabels[pid] ?? pid.replace(/_/g, ' ')).join(', ')}
     </span>
   );
 }
@@ -89,7 +91,7 @@ function ProposedExperimentCard({
   return (
     <div className="bg-white rounded border border-cv-warm-300 p-5 space-y-3">
       <div className="space-y-1">
-        <PatternLabel id={experiment.pattern_id} />
+        <RelatedPatternsLabel relatedPatterns={experiment.related_patterns} patternId={experiment.pattern_id} />
         <p className="text-sm font-semibold text-cv-stone-900 leading-snug font-serif">{experiment.title}</p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -451,7 +453,7 @@ export default function ClientDashboard() {
           {experiment ? (
             <>
               <div className="bg-cv-teal-50 border border-cv-teal-100 rounded p-3 space-y-1">
-                <PatternLabel id={experiment.pattern_id} />
+                <RelatedPatternsLabel relatedPatterns={experiment.related_patterns} patternId={experiment.pattern_id} />
                 <p className="text-sm font-semibold text-cv-stone-800 leading-snug font-serif">{experiment.title}</p>
                 {experiment.attempt_count != null && experiment.attempt_count > 0 && (
                   <p className="text-xs text-cv-teal-700 font-medium">

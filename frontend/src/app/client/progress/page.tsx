@@ -178,11 +178,11 @@ type ViewMode = 'focus' | 'top5' | 'all';
 
 function PatternTrendsChart({
   history,
-  experimentPatternId,
+  experimentPatternIds,
   viewMode,
 }: {
   history: RunHistoryPoint[];
-  experimentPatternId?: string | null;
+  experimentPatternIds?: string[];
   viewMode: ViewMode;
 }) {
   const hasBaseline       = history.some((r) => r.is_baseline);
@@ -200,13 +200,17 @@ function PatternTrendsChart({
     return { allPatterns: all, topPatterns: all.slice(0, 5) };
   }, [history]);
 
-  const hasExpPattern     = experimentPatternId && allPatterns.includes(experimentPatternId);
+  const expIds = experimentPatternIds ?? [];
+  const hasExpPattern     = expIds.length > 0 && expIds.some(pid => allPatterns.includes(pid));
   const visiblePatterns   = useMemo(() => {
-    if (viewMode === 'focus' && hasExpPattern) return [experimentPatternId!];
+    if (viewMode === 'focus' && hasExpPattern) return expIds.filter(pid => allPatterns.includes(pid));
     if (viewMode === 'all') return allPatterns;
-    if (hasExpPattern && !topPatterns.includes(experimentPatternId!)) return [...topPatterns, experimentPatternId!];
+    if (hasExpPattern) {
+      const extra = expIds.filter(pid => allPatterns.includes(pid) && !topPatterns.includes(pid));
+      return [...topPatterns, ...extra];
+    }
     return topPatterns;
-  }, [viewMode, hasExpPattern, experimentPatternId, allPatterns, topPatterns]);
+  }, [viewMode, hasExpPattern, expIds, allPatterns, topPatterns]);
 
   const patternColor = useCallback(
     (pid: string) => LINE_COLORS[allPatterns.indexOf(pid) % LINE_COLORS.length],
@@ -270,7 +274,7 @@ function PatternTrendsChart({
             <Tooltip content={renderCustomTooltip} />
             {visiblePatterns.map((pid) => {
               const color = patternColor(pid);
-              const isExp = pid === experimentPatternId;
+              const isExp = expIds.includes(pid);
               return [
                 <Line key={`${pid}_raw`} type="monotone" dataKey={rawKey(pid)} stroke="none"
                   dot={{ r: isExp ? 3.5 : 2.5, fill: color, opacity: isExp ? 0.5 : 0.3 }}
@@ -374,7 +378,7 @@ function PatternTrendsChart({
       {showLineChart && (
         <div className="flex flex-wrap gap-3 mt-4">
           {visiblePatterns.map((pid) => {
-            const isExp = pid === experimentPatternId;
+            const isExp = expIds.includes(pid);
             return (
               <span key={pid} className={`flex items-center text-sm ${isExp ? 'font-semibold text-cv-stone-900' : 'text-cv-stone-700'}`}>
                 <span
@@ -423,16 +427,18 @@ function PastExperimentCard({
       ? `${fmtDate(exp.started_at)} – ${fmtDate(exp.ended_at)}`
       : null;
 
+  const pids = exp.related_patterns?.length ? exp.related_patterns : (exp.pattern_id ? [exp.pattern_id] : []);
+  const primaryPid = pids[0] ?? '';
+
   const expHistory = patternHistory.filter((run) => {
     if (!run.meeting_date) return false;
     if (exp.started_at && run.meeting_date < exp.started_at) return false;
     if (exp.ended_at && run.meeting_date > exp.ended_at)     return false;
-    return run.patterns.some((p) => p.pattern_id === exp.pattern_id);
+    return run.patterns.some((p) => pids.includes(p.pattern_id));
   });
 
-  const pid       = exp.pattern_id;
   const color     = LINE_COLORS[0]; // teal-600 for past-exp mini-charts
-  const chartData = expHistory.length > 0 ? buildChartData(expHistory, [pid], 1) : [];
+  const chartData = expHistory.length > 0 && primaryPid ? buildChartData(expHistory, [primaryPid], 1) : [];
 
   const axisStyle = { fontSize: 10, fill: S.chartAxisFill };
 
@@ -466,8 +472,8 @@ function PastExperimentCard({
             <div>
               <span className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400">{STRINGS.progressPage.pattern}</span>
               <p className="font-medium text-cv-stone-800 mt-0.5 flex items-center">
-                {STRINGS.patternLabels[pid] ?? pid}
-                <InfoPopover patternId={pid} hoverColor={color} />
+                {pids.map(p => STRINGS.patternLabels[p] ?? p).join(', ')}
+                {primaryPid && <InfoPopover patternId={primaryPid} hoverColor={color} />}
               </p>
             </div>
             {dateRange && (
@@ -491,34 +497,34 @@ function PastExperimentCard({
           </div>
 
           {/* Mini trend chart */}
-          {chartData.length >= 2 ? (
+          {chartData.length >= 2 && primaryPid ? (
             <div>
               <p className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400 mb-2">
-                {STRINGS.progressPage.duringExperiment(STRINGS.patternLabels[pid] ?? pid)}
+                {STRINGS.progressPage.duringExperiment(STRINGS.patternLabels[primaryPid] ?? primaryPid)}
               </p>
               <ResponsiveContainer width="100%" height={160}>
                 <LineChart data={chartData} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={S.chartGrid} />
                   <XAxis dataKey="label" tick={axisStyle} tickLine={false} />
                   <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={axisStyle} tickLine={false} axisLine={false} />
-                  <Tooltip formatter={(v: any) => [v != null ? `${v}%` : '—', STRINGS.patternLabels[pid] ?? pid]} labelStyle={{ fontSize: 11 }} />
-                  <Line type="monotone" dataKey={rawKey(pid)} stroke="none"
+                  <Tooltip formatter={(v: any) => [v != null ? `${v}%` : '—', STRINGS.patternLabels[primaryPid] ?? primaryPid]} labelStyle={{ fontSize: 11 }} />
+                  <Line type="monotone" dataKey={rawKey(primaryPid)} stroke="none"
                     dot={{ r: 2, fill: color, opacity: 0.3 }} activeDot={false}
                     connectNulls={false} legendType="none" isAnimationActive={false}
                   />
-                  <Line type="monotone" dataKey={pid} stroke={color} strokeWidth={2}
+                  <Line type="monotone" dataKey={primaryPid} stroke={color} strokeWidth={2}
                     dot={false} activeDot={{ r: 4, fill: color }} connectNulls
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
-          ) : chartData.length === 1 ? (
+          ) : chartData.length === 1 && primaryPid ? (
             <div>
               <p className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400 mb-1">
-                {STRINGS.progressPage.duringExperiment(STRINGS.patternLabels[pid] ?? pid)}
+                {STRINGS.progressPage.duringExperiment(STRINGS.patternLabels[primaryPid] ?? primaryPid)}
               </p>
               <p className="text-sm font-medium text-cv-stone-800">
-                {chartData[0][pid] != null ? `${chartData[0][pid]}%` : '—'}
+                {chartData[0][primaryPid] != null ? `${chartData[0][primaryPid]}%` : '—'}
                 <span className="text-cv-stone-400 font-normal ml-1">{STRINGS.progressPage.oneMeeting}</span>
               </p>
             </div>
@@ -538,8 +544,9 @@ export default function ProgressPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('top5');
   const { data: activeExp } = useActiveExperiment();
 
-  const experimentPatternId = activeExp?.experiment?.pattern_id ?? null;
-  const hasExpPattern       = !!experimentPatternId;
+  const experimentPatternIds = activeExp?.experiment?.related_patterns
+    ?? (activeExp?.experiment?.pattern_id ? [activeExp.experiment.pattern_id] : []);
+  const hasExpPattern       = experimentPatternIds.length > 0;
 
   useEffect(() => {
     api.getClientProgress()
@@ -551,7 +558,7 @@ export default function ProgressPage() {
   const effectiveViewMode = viewMode === 'focus' && !hasExpPattern ? 'top5' : viewMode;
 
   const viewOptions: { key: ViewMode; label: string; disabled?: boolean }[] = [
-    { key: 'focus', label: STRINGS.progressPage.focusPatternOnly, disabled: !hasExpPattern },
+    ...(hasExpPattern ? [{ key: 'focus' as ViewMode, label: STRINGS.progressPage.experimentPatterns }] : []),
     { key: 'top5',  label: STRINGS.progressPage.top5Patterns },
     { key: 'all',   label: STRINGS.progressPage.allPatterns },
   ];
@@ -617,7 +624,7 @@ export default function ProgressPage() {
 
             <PatternTrendsChart
               history={data.pattern_history}
-              experimentPatternId={experimentPatternId}
+              experimentPatternIds={experimentPatternIds}
               viewMode={effectiveViewMode}
             />
           </section>

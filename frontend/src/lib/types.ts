@@ -55,7 +55,7 @@ export interface MicroExperiment {
   title: string;
   instruction: string;
   success_marker: string;
-  pattern_id: string;
+  related_patterns: string[];
   quotes: QuoteObject[];
 }
 
@@ -143,7 +143,8 @@ export interface Experiment {
   title: string;
   instruction: string;
   success_marker: string;
-  pattern_id: string;
+  pattern_id?: string;
+  related_patterns?: string[];
   status: 'proposed' | 'active' | 'completed' | 'abandoned' | 'parked';
   created_at: string | null;
   attempt_count: number | null;
@@ -313,7 +314,8 @@ export interface PastExperiment {
   experiment_record_id: string;
   experiment_id: string;
   title: string;
-  pattern_id: string;
+  pattern_id?: string;
+  related_patterns?: string[];
   status: string;
   started_at: string | null;
   ended_at: string | null;

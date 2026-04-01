@@ -175,6 +175,16 @@ async def coachee_summary(
                     attempt_count, meeting_count = at_client.count_experiment_attempts_and_meetings(exp_rec["id"])
                 except Exception:
                     pass
+                # Parse related_patterns; fall back to legacy Pattern ID
+                _rp_raw = ef.get("Related Patterns") or ""
+                _rp: list[str] = []
+                if _rp_raw:
+                    try:
+                        _rp = json.loads(_rp_raw)
+                    except (json.JSONDecodeError, TypeError):
+                        _rp = []
+                if not _rp and ef.get("Pattern ID"):
+                    _rp = [ef["Pattern ID"]]
                 active_exp_resp = ExperimentResponse(
                     experiment_record_id=exp_rec["id"],
                     experiment_id=ef.get("Experiment ID", ""),
@@ -182,6 +192,7 @@ async def coachee_summary(
                     instruction=ef.get("Instructions") or ef.get("Instruction", ""),
                     success_marker=ef.get("Success Marker") or ef.get("Success Criteria", ""),
                     pattern_id=ef.get("Pattern ID", ""),
+                    related_patterns=_rp,
                     status=ef.get("Status", ""),
                     created_at=exp_rec.get("createdTime"),
                     attempt_count=attempt_count,
@@ -209,6 +220,15 @@ async def coachee_summary(
                     ))
                     for pe in prop_records:
                         pef = pe.get("fields", {})
+                        _prp_raw = pef.get("Related Patterns") or ""
+                        _prp: list[str] = []
+                        if _prp_raw:
+                            try:
+                                _prp = json.loads(_prp_raw)
+                            except (json.JSONDecodeError, TypeError):
+                                _prp = []
+                        if not _prp and pef.get("Pattern ID"):
+                            _prp = [pef["Pattern ID"]]
                         proposed_experiments.append(ExperimentResponse(
                             experiment_record_id=pe["id"],
                             experiment_id=pef.get("Experiment ID", ""),
@@ -216,6 +236,7 @@ async def coachee_summary(
                             instruction=pef.get("Instructions") or pef.get("Instruction", ""),
                             success_marker=pef.get("Success Marker") or pef.get("Success Criteria", ""),
                             pattern_id=pef.get("Pattern ID", ""),
+                            related_patterns=_prp,
                             status=pef.get("Status", ""),
                             created_at=pe.get("createdTime"),
                         ))

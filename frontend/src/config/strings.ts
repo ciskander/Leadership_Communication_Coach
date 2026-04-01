@@ -206,6 +206,7 @@ export const STRINGS = {
     strengthsHeading: 'What you do well',
     focusHeading: 'Area to focus on',
     experimentHeading: 'Your experiment',
+    coachingThemesHeading: 'Key coaching themes',
   },
 
   // ── Transcript upload ───────────────────────────────────────────────────────
@@ -475,7 +476,7 @@ export const STRINGS = {
     loading: 'Loading your progress…',
     errorFallback: 'Failed to load progress data.',
     patternTrends: 'Pattern Trends',
-    focusPatternOnly: 'Focus Pattern Only',
+    experimentPatterns: 'Experiment Patterns',
     top5Patterns: 'Top 5 Patterns',
     allPatterns: 'All Patterns',
     noRunData: 'No run data yet. Analyze a meeting to see your trends.',

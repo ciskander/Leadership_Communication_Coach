@@ -35,10 +35,12 @@ function fmtDate(dateStr: string | null | undefined): string {
   }
 }
 
-function PatternLabel({ id }: { id: string }) {
+function RelatedPatternsLabel({ relatedPatterns, patternId }: { relatedPatterns?: string[]; patternId?: string }) {
+  const pids = relatedPatterns?.length ? relatedPatterns : patternId ? [patternId] : [];
+  if (pids.length === 0) return null;
   return (
     <span className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400">
-      {id.replace(/_/g, ' ')}
+      {pids.map(pid => STRINGS.patternLabels[pid] ?? pid.replace(/_/g, ' ')).join(', ')}
     </span>
   );
 }
@@ -73,7 +75,7 @@ function ProposedExperimentCard({
   return (
     <div className="bg-white rounded border border-cv-warm-300 p-5 space-y-4">
       <div className="space-y-1">
-        <PatternLabel id={experiment.pattern_id} />
+        <RelatedPatternsLabel relatedPatterns={experiment.related_patterns} patternId={experiment.pattern_id} />
         <p className="text-sm font-medium text-cv-stone-900 leading-snug mt-1">
           {experiment.title}
         </p>

@@ -126,7 +126,7 @@ Re-read the executive_summary and coaching_themes you drafted in Step 2 and refi
 
 (a) Coaching themes -- revisit your Step 2 draft. If the pattern-level analysis in Steps 3-6 surfaced a genuinely valuable insight you missed, incorporate it. Otherwise, trust your Step 2 coaching judgment. The themes are your primary coaching vehicle -- they should name the real leadership issues, which may or may not align with pattern boundaries.
 
-(b) Executive summary, strengths, focus, micro-experiment -- these are synthesis outputs that should be consistent with the themes and per-pattern coaching.
+(b) Executive summary, strengths, micro-experiment -- these are synthesis outputs that should be consistent with the themes and per-pattern coaching.
 
 Step 9 -- Self-audit:
 Before outputting, verify in this order:
@@ -143,16 +143,16 @@ Quality checks (most important):
 
 (e) Check for incoherent states:
   - If a pattern's Stage 1 score is < 0.70 and you generated notes (positive observation) but no coaching_note: is the positive observation alone an accurate representation? If the low score reflects real gaps, the coaching should acknowledge them -- either generate a coaching_note or set notes to null.
-  - If a pattern scores >= 0.80 and is not the focus area: verify any coaching_note addresses a genuinely behavioral gap, not a cosmetic or stylistic one. High-scoring non-focus patterns rarely need developmental coaching.
-  - If a pattern is the focus area or has an active experiment: coaching_note should be present, not null. The focus pattern always deserves developmental feedback.
+  - If a pattern scores >= 0.80: verify any coaching_note addresses a genuinely behavioral gap, not a cosmetic or stylistic one. High-scoring patterns rarely need developmental coaching.
+  - If a pattern has an active experiment: coaching_note should be present, not null. The experiment pattern always deserves developmental feedback.
   - If notes describes behavior that actually belongs to a different pattern: set notes to null rather than generating a misaligned positive observation.
 
-(f) Does the focus area represent the right coaching choice for this speaker? Is this the highest-leverage behavior change -- not merely the pattern with the lowest score? Does the overall coaching form a coherent story about this communicator?
+(f) Does the overall coaching form a coherent story about this communicator? Are the coaching themes, pattern coaching, and micro-experiment all pointing in a consistent direction?
 
 Structural checks:
 
 (g) JSON parses. All required top-level keys present. No extra keys.
-(h) coaching_themes has 1-3 items. strengths has 0-2 items. focus has exactly 1 item. micro_experiment has exactly 1 item.
+(h) coaching_themes has 1-3 items. strengths has 0-2 items. micro_experiment has exactly 1 item.
 (h2) Every pattern in strengths has a Stage 1 score >= 0.70 (use post-removal adjusted score from Step 3 where applicable). If a strength's pattern scores below 0.70, remove it from strengths.
 (i) Every rewrite_for_span_id references a valid evidence span ID from the pattern's evidence_span_ids in Stage 1, and is NOT in that pattern's success_evidence_span_ids. suggested_rewrite and rewrite_for_span_id are non-null only when coaching_note is non-null.
 (j) Every best_success_span_id references a valid span from the pattern's success_evidence_span_ids in Stage 1. best_success_span_id is non-null only when notes is non-null.
@@ -186,20 +186,13 @@ Never include literal double quotes " inside any string value; use single quotes
     }
   ],
 
-  "focus": [
-    {
-      "pattern_id": "<pattern>",
-      "message": "<2-3 sentences naming the gap, explaining what it cost them in this meeting, and pointing toward the improvement opportunity>"
-    }
-  ],
-
   "micro_experiment": [
     {
       "experiment_id": "<EXP-NNNNNN>",
       "title": "<concise title, max 140 chars>",
       "instruction": "<what to do differently, max 600 chars>",
       "success_marker": "<how to know it worked, max 300 chars>",
-      "pattern_id": "<primary pattern for tracking>",
+      "related_patterns": ["<pattern_id>", ...],
       "evidence_span_ids": ["<at least one span ID>"]
     }
   ],
@@ -277,21 +270,14 @@ strengths: 0-2 items. {pattern_id, message}
 - When multiple qualify, rank by score * opportunity_count and choose top 2. This prevents always picking the same patterns and ensures strengths reflect both quality and consistency.
 - The message should name the specific behavior you observed and explain why it was effective in this meeting's context -- not just "didn't make mistakes." A strength message that any observer could write without deep analysis is too generic.
 
---- FOCUS ---
-
-focus: exactly 1 item. {pattern_id, message}
-- Target the pattern where improvement would have the most impact on leadership communication, not merely the pattern with the lowest score. A pattern scoring 0.4 with 2 opportunities may matter less than a pattern scoring 0.6 with 8 opportunities.
-- ACTIVE EXPERIMENT CONTINUITY: If the experiment context indicates an active experiment, focus[0].pattern_id MUST equal the active experiment's pattern_id. The coachee stays focused on one behavior change until the experiment completes. Exception: if the pattern's Stage 1 score >= 0.80, acknowledge the improvement and suggest it may be time for a new experiment.
-- The focus pattern always receives a coaching_note, regardless of prioritization decisions in Step 5. If no pattern clearly stands out as a coaching priority after Steps 3-5, select the pattern with the largest gap between current score and potential impact, even if its coaching alone wouldn't pass the value check as a standalone coaching_note.
-- The focus message must name the gap, explain what it cost them in this meeting, and point toward the improvement opportunity. It should make the leader feel that change is worth the effort.
-
 --- MICRO EXPERIMENT ---
 
 micro_experiment: exactly 1 item.
-- When no experiment is active: propose a new experiment targeting the focus pattern. Generate a new experiment_id.
+- When no experiment is active: propose a new experiment grounded in the primary coaching theme from this meeting. Generate a new experiment_id. The experiment should target a concrete, observable behavioral change -- not a vague aspiration.
 - When an experiment is active: refine or evolve the current experiment, informed by the behavior observed in this meeting. Reuse the active experiment_id. Do not propose an unrelated experiment while one is active.
+- related_patterns: list 0-N pattern IDs that this experiment primarily relates to. This is informational -- experiments are defined by their behavioral instruction, not by patterns. An experiment that transcends pattern boundaries may have an empty array.
 - evidence_span_ids must contain at least one span ID that grounds the experiment in a specific moment from this meeting.
-- The experiment should target a concrete, observable behavioral change -- not a vague aspiration. The success_marker should describe something the leader (or an observer) could verify.
+- The success_marker should describe something the leader (or an observer) could verify.
 
 --- PATTERN COACHING ---
 
@@ -311,7 +297,7 @@ coaching_note (developmental feedback):
   (a) Generic advice not anchored to a specific moment (e.g., "consider adding deadlines to assignments" without citing the particular assignment that needed one)
   (b) Redundant with another pattern's coaching_note or a coaching theme that makes the same point more specifically
   (c) Lower-priority and not meeting the Step 5 inclusion criteria (specific to a moment, offers fresh insight, addresses something not already covered)
-  (d) Cosmetic or stylistic rather than behavioral, for a pattern scoring >= 0.75 that is not the focus area
+  (d) Cosmetic or stylistic rather than behavioral, for a pattern scoring >= 0.75
 - When coaching_note is null, also set suggested_rewrite and rewrite_for_span_id to null.
 
 suggested_rewrite:

@@ -89,6 +89,18 @@ def _build_experiment_response(exp_rec: dict, at_client: Optional[AirtableClient
             attempt_count, meeting_count = at_client.count_experiment_attempts_and_meetings(exp_rec["id"])
         except Exception:
             logger.warning("Could not count attempts/meetings for experiment %s", exp_rec["id"])
+    # Parse related_patterns from Airtable JSON; fall back to legacy Pattern ID
+    related_patterns_raw = ef.get("Related Patterns") or ""
+    related_patterns: list[str] = []
+    if related_patterns_raw:
+        try:
+            related_patterns = json.loads(related_patterns_raw)
+        except (json.JSONDecodeError, TypeError):
+            related_patterns = []
+    if not related_patterns:
+        legacy_pid = ef.get("Pattern ID")
+        if legacy_pid:
+            related_patterns = [legacy_pid]
     return ExperimentResponse(
         experiment_record_id=exp_rec["id"],
         experiment_id=ef.get("Experiment ID", ""),
@@ -96,6 +108,7 @@ def _build_experiment_response(exp_rec: dict, at_client: Optional[AirtableClient
         instruction=ef.get("Instructions") or ef.get("Instruction", ""),
         success_marker=ef.get("Success Marker") or ef.get("Success Criteria", ""),
         pattern_id=ef.get("Pattern ID", ""),
+        related_patterns=related_patterns,
         status=ef.get("Status", ""),
         created_at=exp_rec.get("createdTime"),
         attempt_count=attempt_count,
@@ -240,19 +253,13 @@ async def get_baseline_pack(
                 }
             micro_list = coaching.get("micro_experiment", [])
             if micro_list:
-                # Pick the micro_experiment matching the focus pattern;
-                # fall back to the first if no match is found.
-                focus_pid = focus["pattern_id"] if focus else None
-                m = next(
-                    (me for me in micro_list if me.get("pattern_id") == focus_pid),
-                    micro_list[0],
-                )
+                m = micro_list[0]
                 micro_experiment = {
                     "experiment_id": m.get("experiment_id", ""),
                     "title": m.get("title", ""),
                     "instruction": m.get("instruction", ""),
                     "success_marker": m.get("success_marker", ""),
-                    "pattern_id": m.get("pattern_id", ""),
+                    "related_patterns": m.get("related_patterns", []),
                     "quotes": [],
                 }
             raw_snapshot = parsed.get("pattern_snapshot") or []

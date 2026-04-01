@@ -118,19 +118,12 @@ def test_score_exceeds_one_fails(valid_single_meeting_output):
 # Coaching cardinality failures (v0.4.0: coaching section, not coaching_output)
 # ---------------------------------------------------------------------------
 
-def test_focus_must_be_exactly_one(valid_single_meeting_output):
+def test_focus_deprecated_no_longer_required(valid_single_meeting_output):
+    """P2.4: focus has been removed from the schema — its absence should not cause failure."""
     bad = copy.deepcopy(valid_single_meeting_output)
-    bad["coaching"]["focus"] = []  # zero items
+    bad["coaching"].pop("focus", None)
     result = validate(json.dumps(bad))
-    assert result.passed is False
-
-
-def test_focus_two_items_fails(valid_single_meeting_output):
-    bad = copy.deepcopy(valid_single_meeting_output)
-    focus_item = bad["coaching"]["focus"][0]
-    bad["coaching"]["focus"] = [focus_item, focus_item]  # two items
-    result = validate(json.dumps(bad))
-    assert result.passed is False
+    assert result.passed is True
 
 
 def test_micro_experiment_must_be_exactly_one(valid_single_meeting_output):
@@ -214,8 +207,9 @@ def _make_output_with_oe(valid_single_meeting_output):
     """Build a test output with mixed success scores on disagreement_navigation.
 
     Modifies OE-006 (turns 15-15) from success=1.0 to success=0.25.
-    ES-T005 (event_ids=["OE-005"], success=1.0) → success span.
+    ES-T005 (event_ids=["OE-005", "OE-100"], OE-005 success=1.0) → success span.
     ES-T015 (event_ids=["OE-006"], success=0.25) → missed opportunity.
+    ES-T031-032 (event_ids=["OE-007", "OE-012"], OE-007 success=1.0) → success span.
     """
     out = copy.deepcopy(valid_single_meeting_output)
 
@@ -227,9 +221,10 @@ def _make_output_with_oe(valid_single_meeting_output):
             break
 
     # Update pattern_snapshot[2] (disagreement_navigation) — scoring only
+    # 3 OEs: OE-005 (1.0) + OE-006 (0.25) + OE-007 (1.0) = 2.25/3 = 0.75
     pm = out["pattern_snapshot"][2]
-    pm["score"] = 0.625  # (1.0 + 0.25) / 2
-    pm["success_evidence_span_ids"] = ["ES-T005"]  # Only OE-005 (1.0) >= 0.75 threshold
+    pm["score"] = 0.75
+    pm["success_evidence_span_ids"] = ["ES-T005", "ES-T031-032"]  # OE-005 (1.0) and OE-007 (1.0) >= 0.75
 
     return out
 
@@ -396,8 +391,8 @@ def test_success_threshold_tiered_rubric_ra_requires_0_75(valid_single_meeting_o
         "event_ids": ["OE-013"],
     })
 
-    # Update resolution_and_alignment pattern
-    ra = out["pattern_snapshot"][4]
+    # Update resolution_and_alignment pattern (index 4: trust_and_credibility is at 3)
+    ra = out["pattern_snapshot"][4]  # resolution_and_alignment
     ra["score"] = 0.5  # (0.5 + 0.5) / 2
     ra["opportunity_count"] = 2
     ra["evidence_span_ids"] = ["ES-T020-021", "ES-T038-039"]

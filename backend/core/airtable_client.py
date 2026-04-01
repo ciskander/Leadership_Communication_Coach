@@ -163,6 +163,8 @@ F_EXP_ENDED_AT = "Ended At"
 F_EXP_LAST_ATTEMPT_MODEL = "Last Attempt (model)"
 F_EXP_LAST_ATTEMPT_DATE = "Last Attempt Date"
 F_EXP_ATTEMPT_COUNT = "Attempt Count (model)"
+F_EXP_RELATED_PATTERNS = "Related Patterns"
+F_EXP_JOURNEY_SUMMARY = "Journey Summary"
 
 # experiment_events
 F_EE_EVENT_ID = "Event ID"

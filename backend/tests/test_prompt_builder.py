@@ -250,12 +250,12 @@ def test_single_meeting_prompt_with_active_experiment_in_message():
     transcript = _make_transcript()
     memory = build_memory_block(
         baseline_pack_id="BP-000001",
-        focus_pattern="resolution_and_alignment",
         active_experiment={
             "experiment_id": "EXP-000001",
             "title": "Close decisions out loud",
             "instruction": "Say it aloud.",
             "success_marker": "2 of 3 closures explicit.",
+            "related_patterns": ["resolution_and_alignment"],
             "pattern_id": "resolution_and_alignment",
             "status": "active",
         },
@@ -409,11 +409,9 @@ def test_build_memory_block_with_baseline():
     memory = build_memory_block(
         baseline_pack_id="BP-000001",
         strengths=["purposeful_framing"],
-        focus_pattern="resolution_and_alignment",
     )
     assert memory.baseline_profile is not None
     assert memory.baseline_profile["baseline_pack_id"] == "BP-000001"
-    assert memory.baseline_profile["focus"] == "resolution_and_alignment"
     assert "purposeful_framing" in memory.baseline_profile["strengths"]
 
 
