@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.com/schemas/mvp.v0.4.0.json",
-  "title": "Leadership Coaching Analysis Output (mvp.v0.4.0)",
+  "$id": "https://example.com/schemas/mvp.v0.5.0.json",
+  "title": "Leadership Coaching Analysis Output (mvp.v0.5.0)",
   "description": "Reasoning-aligned schema: output order follows reasoning order (OEs -> evidence -> scoring -> detection -> coaching).",
   "type": "object",
   "additionalProperties": false,
@@ -18,7 +18,7 @@
   ],
   "properties": {
     "schema_version": {
-      "const": "mvp.v0.4.0"
+      "const": "mvp.v0.5.0"
     },
     "meta": {
       "$ref": "#/$defs/Meta"
@@ -120,11 +120,11 @@
         },
         "taxonomy_version": {
           "type": "string",
-          "const": "v3.0"
+          "const": "v3.1"
         },
         "output_mode": {
           "type": "string",
-          "const": "coaching_first_2s1e"
+          "enum": ["coaching_first_2s1e", "scoring_only"]
         },
         "schema_hash": {
           "type": ["string", "null"]
