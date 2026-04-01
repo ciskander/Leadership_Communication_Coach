@@ -207,14 +207,31 @@ In the new architecture, the baseline pack is a **cross-sectional multi-meeting 
 
 The user wants a plan organized into phases that can be reviewed and executed incrementally. Here's a suggested ordering, but refine this based on your codebase exploration:
 
-**Phase P1: Integrate two-stage pipeline (backend only)**
-- Create `system_prompt_scoring_v1.0.txt` (from `system_prompt_v0_4_0.txt`, stripped of coaching)
-- Create `system_prompt_coaching_v1.0.txt` (from `system_prompt_stage2_v0.1.txt`, adapted for production)
-- Wire up the two-call pipeline in `workers.py`
-- Add Gate 1 (scoring) and Gate 2 (coaching) validation
-- Deprecate editor (`editor.py`'s `run_editor` function — keep OE removal utility functions)
-- **Critical: Phase P1 preserves the current output schema.** The merged output must have the same JSON shape as today (including `focus`, `experiment.pattern_id`, etc.) so the frontend continues working without changes. Schema changes happen in Phase P2.
-- **Test:** Existing frontend works unchanged with the new pipeline's merged output
+**Phase P1: Integrate two-stage pipeline (backend only) — COMPLETE**
+
+Merged to `main`. The two-stage pipeline is live in production. Key files created/modified:
+
+- `system_prompt_scoring_v1.0.txt` — Stage 1 scoring-only prompt
+- `system_prompt_coaching_v1.0.txt` — Stage 2 coaching prompt
+- `backend/core/stage2_merge.py` — Merges Stage 1 scoring + Stage 2 coaching output (includes OE removal processing)
+- `backend/core/workers.py` — `process_single_meeting_analysis` rewritten as two-call pipeline
+- `backend/core/prompt_builder.py` — Added `build_stage2_system_prompt()`, `build_stage2_user_message()`, experiment context builder
+- `backend/core/gate1_validator.py` — Added `scoring_only` validation mode for Stage 1; business rules skip coaching checks in scoring mode; auto-corrects `opportunity_count` and `score` when OE `count_decision` changes
+- `backend/core/output_patches.py` — Added `scoring_only` flag to skip coaching-related patches
+- `backend/core/config.py` — `EDITOR_ENABLED=False`
+- `backend/schemas/mvp_v0_5_0.json` — Removed `maxLength` on evidence span `excerpt` (long excerpts are allowed; validator warns at 2500 chars)
+
+Airtable field changes already applied by user:
+- Run table: Added "Stage 2 Raw Output" (Long text), "Scoring Valid" (Checkbox)
+- Run table: Renamed "Editor Changelog" → "Stage 2 Changelog", "Editor Tokens" → "Stage 2 Tokens"
+
+Bugs fixed during smoke testing:
+- Dockerfile needed new prompt files added to COPY
+- Scoring-only validation was still running coaching business rule checks against empty dicts
+- `micro_experiment` variable unbound in scoring-only path
+- Airtable field constants needed updating for renamed fields
+- Missing `count_decision` on OEs now defaults to `"counted"` in sanitiser, with arithmetic auto-correction
+- Strengths with score < 0.70 now flagged as `STRENGTH_LOW_SCORE` warning; self-audit check added to coaching prompt
 
 **Phase P2: Decouple experiments from patterns + deprecate focus_area**
 - Update experiment data model (Airtable field changes → user does manually, code changes → Claude)
