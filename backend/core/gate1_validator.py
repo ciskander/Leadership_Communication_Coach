@@ -943,9 +943,11 @@ def _business_rules(data: dict, *, scoring_only: bool = False) -> list[Validatio
     if "baseline_pack_id" in ctx:
         _check_id_format(data, "context.baseline_pack_id", ctx["baseline_pack_id"], "baseline_pack_id", issues)
 
-    if micro_experiment:
-        exp_id = micro_experiment[0].get("experiment_id")
-        _check_id_format(data, "coaching.micro_experiment[0].experiment_id", exp_id, "experiment_id", issues)
+    if not scoring_only:
+        micro_experiment = coaching.get("micro_experiment", [])
+        if micro_experiment:
+            exp_id = micro_experiment[0].get("experiment_id")
+            _check_id_format(data, "coaching.micro_experiment[0].experiment_id", exp_id, "experiment_id", issues)
 
     return issues
 
