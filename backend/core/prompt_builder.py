@@ -526,7 +526,7 @@ def build_single_meeting_prompt(
     }
 
     user_message = (
-        "Analyze and return ONLY one JSON object conforming to mvp.v0.4.0.\n\n"
+        "Analyze and return ONLY one JSON object conforming to mvp.v0.5.0.\n\n"
         "INPUT_PAYLOAD\n"
         + json.dumps(input_payload, ensure_ascii=False, indent=2)
         + _HARD_REMINDERS
@@ -612,7 +612,7 @@ def build_baseline_pack_prompt(
     }
 
     user_message = (
-        "Synthesize and return ONLY one JSON object conforming to mvp.v0.4.0.\n\n"
+        "Synthesize and return ONLY one JSON object conforming to mvp.v0.5.0.\n\n"
         "INPUT_PAYLOAD\n"
         + json.dumps(input_payload, ensure_ascii=False, indent=2)
         + _BASELINE_HARD_REMINDERS
