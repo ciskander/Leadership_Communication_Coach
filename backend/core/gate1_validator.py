@@ -355,7 +355,14 @@ def _sanitise_output(data: dict) -> int:
             fixes += 1
 
         cd = event.get("count_decision")
-        if cd is not None and cd not in _VALID_COUNT_DECISION:
+        if cd is None:
+            event["count_decision"] = "counted"
+            logger.warning(
+                "Sanitiser: missing count_decision → 'counted' (event %s)",
+                event.get("event_id"),
+            )
+            fixes += 1
+        elif cd not in _VALID_COUNT_DECISION:
             inferred = "counted" if cd in ("yes",) else "excluded"
             logger.warning(
                 "Sanitiser: count_decision %r → %r (event %s)",
