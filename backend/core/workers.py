@@ -457,9 +457,9 @@ def _persist_run_fields(
             fields[F_RUN_ATTEMPT_MODEL] = detection.get("attempt")
 
     if editor_changelog:
-        fields[F_RUN_EDITOR_CHANGELOG] = _safe_json_dumps(editor_changelog)
+        fields[F_RUN_STAGE2_CHANGELOG] = _safe_json_dumps(editor_changelog)
     if editor_tokens is not None:
-        fields[F_RUN_EDITOR_TOKENS] = editor_tokens
+        fields[F_RUN_STAGE2_TOKENS] = editor_tokens
 
     # Two-stage pipeline fields
     if stage2_raw_output:
