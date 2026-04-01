@@ -19,6 +19,8 @@ COPY system_prompt_next_experiment_v0_4_0.txt ./system_prompt_next_experiment_v0
 COPY clearvoice_pattern_taxonomy_v3.1.txt ./clearvoice_pattern_taxonomy_v3.1.txt
 COPY system_prompt_editor_v1.0.txt ./system_prompt_editor_v1.0.txt
 COPY editor_pattern_definitions_v1.0.txt ./editor_pattern_definitions_v1.0.txt
+COPY system_prompt_scoring_v1.0.txt ./system_prompt_scoring_v1.0.txt
+COPY system_prompt_coaching_v1.0.txt ./system_prompt_coaching_v1.0.txt
 
 # Default: run API server
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
