@@ -122,6 +122,7 @@ The current architecture fuses detection, scoring, and coaching into one LLM pas
 2. The editor can remove bad coaching but can't replace it with good coaching
 3. Suppressing coaching_note for low-scoring patterns creates incoherent states
 4. The editor's only reliable function is pattern suppression — text rewrites don't improve judge ratings
+5. Coaching becomes narrowly focused around individual patterns and can miss more interesting cross-pattern or holistic observations that transcend pattern definitions. 
 
 ### The proposed solution
 
@@ -134,10 +135,9 @@ The current architecture fuses detection, scoring, and coaching into one LLM pas
 
 **Stage 2: Coaching Synthesis (replaces current editor)**
 - Input: transcript + Stage 1 output (scores, evidence, OEs) + memory/experiment context
-- Output: executive summary, coaching themes, strengths, focus area, per-pattern coaching, micro-experiment
+- Output: executive summary, coaching themes, strengths, focus area, per-pattern coaching (only where valuable and insightful; never pattern-driven or pedantic), micro-experiment
 - Holistic judgment — synthesize what matters for THIS leader in THIS meeting
-- Free to skip patterns that don't add coaching value (CC scores in sparkline, no coaching card)
-- Can generate coaching that crosses pattern boundaries ("your clarity is a strength, but in this meeting it was used to shut down valid input")
+- Coaching for each pattern no longer suffers from tunnel vision and can be much more context-aware / can cross pattern boundaries ("your clarity is a strength, but in this meeting it was used to shut down valid input")
 - Addresses the "coach the person, not the rubric" principle directly
 
 ### Why this is cost-neutral
@@ -166,9 +166,9 @@ The editor is eliminated — Stage 2 IS the editorial judgment layer, but it gen
 
 A key architectural insight: not all leadership skills are moment-based. The current taxonomy treats everything as OE-based (detect discrete moments, score each, aggregate). But some skills are inherently **process-level** — they describe how a leader governs an arc across many turns, not what they did at a specific moment.
 
-**Stage 1 patterns (moment-based):** Detect discrete behavioral events (OEs), score each against a rubric, aggregate. Score = sum(OE_scores) / count(OEs). Works well for: closing a decision (RA), handling a specific disagreement (DN), asking a question (QQ), framing a topic (PF).
+**Stage 1 patterns (moment-based):** Detect discrete behavioral events (OEs), score each against a rubric, aggregate. Score = sum(OE_scores) / count(OEs). Works well for: giving feedback (FQ), handling a specific disagreement (DN), closing a decision (RA), asking a question (QQ), framing a topic (PF), moments that build or erode trust and credibility (TC), delegating an assignment (AC),  .
 
-**Stage 2 patterns (meeting-level):** Evaluate a dimension of leadership across the entire meeting (or decision arc), producing a single holistic score. No OE detection. The rubric describes quality levels at the meeting level. Works well for: decision governance, executive presence, stakeholder orchestration.
+**Stage 2 patterns (meeting-level):** Evaluate a dimension of leadership across the entire meeting (or decision arc), producing a single holistic score. No OE detection. The rubric describes quality levels at the meeting level. Works well for: possible new decision_quality pattern(DQ) , focus_management (FM), communication_clarity (CC)
 
 | | Stage 1 patterns | Stage 2 patterns |
 |--|--|--|
@@ -181,8 +181,10 @@ A key architectural insight: not all leadership skills are moment-based. The cur
 
 **decision_quality belongs here.** Trying to force it into the Stage 1 OE framework creates the same instability problems PM had — the construct requires evaluating a multi-turn process, not scoring individual moments. As a Stage 2 pattern with a meeting-level rubric, it avoids OE detection variance entirely.
 
-**Other potential Stage 2 patterns** (not yet designed, listed for future consideration):
-- executive_presence / structured_summarization (8 judge occurrences)
+**Other potential Stage 2 patterns** 
+- communication_clarity (CC)
+- focus_management (FM)
+- structured_summarization (8 judge occurrences) - or is this OE detectable? Would need to think this through. Low priority right now. 
 - stakeholder orchestration (residual signal after PM removal)
 
 Start with decision_quality as the sole Stage 2 pattern. Prove the concept before expanding.
@@ -318,6 +320,13 @@ Write the Stage 2 prompt — it takes existing run_*.json files (Stage 1 output)
 - Coaching output (executive_summary, coaching_themes, strengths, focus, pattern_coaching, experiment_coaching)
 - decision_quality score (meeting-level rubric)
 - experiment_score (universal progress rubric, if active experiment)
+
+***Better yet: write a script that removes the coaching text from Stage 1 output json files and passes only pattern OEs, scores, evidence_spans, etc. from Stage 1 on to Stage 2.
+*** This way, Stage 2 will not be biased by Stage 1's coaching text. This also more truly represents what Stage 2 would receive from Stage 1 in the full implementation. 
+
+At this proof-of-concept phase, we can either:
+(a) test Stage 2 using scripts, entirely outside of the application; or
+(b) integrate it into the app but include a toggle in Airtable.config to turn it on or off. 
 
 Test on Phase M outputs (which already contain the scoring data Stage 2 needs). This lets us evaluate Stage 2 without changing Stage 1 at all.
 

@@ -150,6 +150,9 @@ The current system tracks scores per pattern. With a two-stage architecture:
 - Coaching addresses holistic themes ("your defensive use of redirects is eroding trust")
 
 Acting on the coaching should improve the behavioral scores because the coaching is grounded in the same rubric dimensions. Key validation question: if a coachee improves their scores, does that actually represent better leadership? If the rubrics measure the right quality dimensions (not just frequency), then yes. The current rubrics already do this well — e.g., FM's distinction between 1.0 (genuine tangent redirect) and 0.0 (suppressing a risk signal) is a meaningful quality dimension.
+Also, the Stage 2 coaching layer should suppress (or reduce) pattern scores that are mechanistically strong but that represent ineffective leadership behavior in context. And vice versa: perhaps a behavior was mechanistically weak per the rubric but actually showed strong leadership for subtle reasons the rubric didn't catch. Perhaps Stage 2 should have some way to modify the scoring to reflect this as well.
+
+This also has significant implications for experiment definition, tracking, and detection. Experiments are currently linked to patterns. This could change. 
 
 **Implication for the frontend:** The progress page currently shows per-pattern scores over time. That can stay. But the coaching insights page would show synthesized themes rather than pattern-by-pattern feedback. This is actually a better user experience — leaders don't think in "focus management" and "trust and credibility" categories; they think "how do I handle pushback in meetings?"
 
@@ -178,7 +181,7 @@ The current judge evaluates per-pattern coaching quality (insightful/adequate/pe
 - **Stage 1 foundation**: `system_prompt_v0_4_0.txt` + `clearvoice_pattern_taxonomy_v3.0.txt` (needs simplification, not replacement)
 - **Stage 2 foundation**: `backend/core/editor.py` — `run_editor()`, `merge_editor_output()`, delta format, pipeline integration in `backend/core/workers.py` (~line 622)
 - **Eval infrastructure**: `backend/evals/replay_eval.py`, `backend/evals/judge_eval.py`, `backend/evals/variance_eval.py` — all well-tested and functional
-- **Scoring rubrics**: The 0.0-1.0 tier definitions in the taxonomy are well-designed and should be preserved
+- **Scoring rubrics**: The 0.0-1.0 tier definitions in the taxonomy are well-designed and should be preserved, but can be improved if applicable
 - **7 test transcripts** with extensive baseline data across Phases A-K
 
 ### Key codebase references

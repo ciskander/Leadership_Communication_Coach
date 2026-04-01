@@ -599,18 +599,19 @@ def run_compare(
 
 # ── Offline compare mode ─────────────────────────────────────────────────────
 
-def run_compare_offline(outputs_dir: Path, detail: bool = False) -> dict[str, Any]:
+def run_compare_offline(outputs_dir: Path, detail: bool = False, file_prefix: str = "run_") -> dict[str, Any]:
     """Load existing output JSON files and compute cross-meeting discriminant validity.
 
     Groups files by context.meeting_id (falls back to filename stem).
     Multiple files with the same meeting_id are treated as multiple runs.
     No LLM calls are made.
     """
-    # Only load run_*.json files to avoid contamination from editor, judge,
-    # post_editor, and report files in the same directory tree.
-    json_files = sorted(outputs_dir.rglob("run_*.json"))
+    # Only load files matching the prefix to avoid contamination from editor,
+    # judge, post_editor, and report files in the same directory tree.
+    glob_pattern = f"{file_prefix}*.json"
+    json_files = sorted(outputs_dir.rglob(glob_pattern))
     if not json_files:
-        logger.error("No run_*.json files found in %s", outputs_dir)
+        logger.error("No %s files found in %s", glob_pattern, outputs_dir)
         sys.exit(1)
 
     # Load and group by meeting_id
@@ -1027,6 +1028,11 @@ examples:
         help="Include per-opportunity alignment tables, evidence text, and raw reason code cross-tabs",
     )
     parser.add_argument(
+        "--file-prefix", type=str, default="run_",
+        help="Glob prefix for JSON files in offline compare (default: 'run_'). "
+             "Use 'stage2_merged_run_' for Stage 2 merged outputs, 'post_editor_' for PE outputs.",
+    )
+    parser.add_argument(
         "--model-a-dir", type=Path,
         help="Directory of Model A output JSON files for cross-model mode",
     )
@@ -1059,7 +1065,7 @@ examples:
                 logger.warning("--model is ignored in offline mode (--outputs-dir)")
             if args.runs != 5:
                 logger.warning("--runs is ignored in offline mode (--outputs-dir)")
-            run_compare_offline(args.outputs_dir, detail=args.detail)
+            run_compare_offline(args.outputs_dir, detail=args.detail, file_prefix=args.file_prefix)
         elif args.transcripts_dir:
             run_compare(args.transcripts_dir, args.runs, model=args.model, detail=args.detail)
         else:

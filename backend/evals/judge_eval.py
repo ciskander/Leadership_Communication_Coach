@@ -80,6 +80,9 @@ _JUDGE_USER_PROMPT = """\
 ### Executive Summary
 {executive_summary}
 
+### Coaching Themes
+{coaching_themes_text}
+
 ### Strengths Identified
 {strengths_text}
 
@@ -171,6 +174,33 @@ example of this pattern, or was there a stronger moment?>",
       }}
     ],
     "overall_notes": "<summary>"
+  }},
+  "executive_summary_quality": {{
+    "rating": "insightful|adequate|generic|misleading",
+    "captures_meeting_essence": <true|false>,
+    "identifies_key_development_edge": <true|false>,
+    "specific_to_this_leader": <true|false>,
+    "explanation": "<1-2 sentences: why this rating? An 'insightful' summary captures \
+what actually happened in THIS meeting and names a specific development edge for THIS \
+leader. 'Generic' means it could describe any competent/struggling leader. 'Misleading' \
+means it misrepresents what happened.>"
+  }},
+  "coaching_themes_quality": {{
+    "items": [
+      {{
+        "theme_text": "<first 15 words of the theme>",
+        "rating": "insightful|adequate|generic|stretching",
+        "transcends_taxonomy": <true if this theme captures something beyond any single \
+communication pattern — e.g. avoidance habits, pace compression, relational dynamics>,
+        "names_behavioral_habit": <true if the theme names a specific repeating behavior \
+rather than restating a pattern label>,
+        "explanation": "<why this rating>"
+      }}
+    ],
+    "themes_vs_patterns": "themes_add_value|themes_just_restate_patterns|no_themes_present",
+    "overall_notes": "<Do the themes tell the leader something they wouldn't already \
+get from reading the per-pattern coaching notes? Or are they just grouping pattern \
+observations under a new heading?>"
   }},
   "internal_consistency": {{
     "score_coaching_aligned": <true|false>,
@@ -304,6 +334,25 @@ def _format_pattern_coaching(coaching: dict, evidence_spans: list, pattern_snaps
     return "\n\n".join(parts)
 
 
+def _format_coaching_themes(coaching: dict) -> str:
+    """Format coaching_themes for the judge."""
+    themes = coaching.get("coaching_themes", [])
+    if not themes:
+        return "(none)"
+    parts = []
+    for t in themes:
+        lines = [f"- **{t.get('theme', '?')}** (priority: {t.get('priority', '?')})"]
+        if t.get("explanation"):
+            lines.append(f"  {t['explanation']}")
+        rp = t.get("related_patterns", [])
+        if rp:
+            lines.append(f"  Related patterns: {', '.join(rp)}")
+        else:
+            lines.append("  Related patterns: (none — theme transcends taxonomy)")
+        parts.append("\n".join(lines))
+    return "\n\n".join(parts)
+
+
 def _format_experiment_coaching(coaching: dict) -> str:
     ec = coaching.get("experiment_coaching")
     if not ec:
@@ -367,6 +416,7 @@ def judge_analysis(
     user_message = _JUDGE_USER_PROMPT.format(
         transcript_text=transcript_text,
         executive_summary=coaching.get("executive_summary", "(none)"),
+        coaching_themes_text=_format_coaching_themes(coaching),
         strengths_text=_format_strengths(coaching),
         focus_text=_format_focus(coaching),
         pattern_coaching_text=_format_pattern_coaching(coaching, evidence_spans, pattern_snapshot),
