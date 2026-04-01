@@ -153,6 +153,7 @@ Structural checks:
 
 (g) JSON parses. All required top-level keys present. No extra keys.
 (h) coaching_themes has 1-3 items. strengths has 0-2 items. focus has exactly 1 item. micro_experiment has exactly 1 item.
+(h2) Every pattern in strengths has a Stage 1 score >= 0.70 (use post-removal adjusted score from Step 3 where applicable). If a strength's pattern scores below 0.70, remove it from strengths.
 (i) Every rewrite_for_span_id references a valid evidence span ID from the pattern's evidence_span_ids in Stage 1, and is NOT in that pattern's success_evidence_span_ids. suggested_rewrite and rewrite_for_span_id are non-null only when coaching_note is non-null.
 (j) Every best_success_span_id references a valid span from the pattern's success_evidence_span_ids in Stage 1. best_success_span_id is non-null only when notes is non-null.
 (k) micro_experiment.evidence_span_ids contains at least one span ID.

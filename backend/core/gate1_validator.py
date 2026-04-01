@@ -884,6 +884,18 @@ def _business_rules(data: dict, *, scoring_only: bool = False) -> list[Validatio
                 "coaching.strengths",
                 f"strengths must have 0-2 items, got {len(strengths)}.",
             ))
+        for si, s_item in enumerate(strengths):
+            s_pid = s_item.get("pattern_id", "")
+            s_pattern = pattern_by_id.get(s_pid)
+            if s_pattern:
+                s_score = s_pattern.get("score", 0)
+                if s_score is not None and s_score < 0.70:
+                    issues.append(_warn(
+                        "STRENGTH_LOW_SCORE",
+                        f"coaching.strengths[{si}]",
+                        f"Pattern '{s_pid}' listed as strength but scores {s_score} "
+                        f"(threshold 0.70).",
+                    ))
         if len(focus) != 1:
             issues.append(_err(
                 "COACHING_FOCUS_COUNT",
