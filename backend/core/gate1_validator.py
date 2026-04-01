@@ -355,7 +355,14 @@ def _sanitise_output(data: dict) -> int:
             fixes += 1
 
         cd = event.get("count_decision")
-        if cd is not None and cd not in _VALID_COUNT_DECISION:
+        if cd is None:
+            event["count_decision"] = "counted"
+            logger.warning(
+                "Sanitiser: missing count_decision → 'counted' (event %s)",
+                event.get("event_id"),
+            )
+            fixes += 1
+        elif cd not in _VALID_COUNT_DECISION:
             inferred = "counted" if cd in ("yes",) else "excluded"
             logger.warning(
                 "Sanitiser: count_decision %r → %r (event %s)",
@@ -676,11 +683,12 @@ def _business_rules(data: dict, *, scoring_only: bool = False) -> list[Validatio
         # (b) OE → pattern: opportunity_count must match counted OEs
         #     (skip for baseline_pack — aggregate counts don't map to individual OEs)
         if analysis_type != "baseline_pack" and opp_count is not None and opp_count != counted_actual:
+            item["opportunity_count"] = counted_actual
             issues.append(_warn(
                 "OPP_COUNT_COUNTED_MISMATCH",
                 f"{path}.opportunity_count",
-                f"opportunity_count ({opp_count}) != counted OEs for "
-                f"pattern '{pid}' ({counted_actual}).",
+                f"opportunity_count corrected from {opp_count} to {counted_actual} "
+                f"for pattern '{pid}'.",
             ))
 
         # Score arithmetic auto-correction
