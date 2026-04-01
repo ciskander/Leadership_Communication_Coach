@@ -19,6 +19,10 @@ SCHEMA_VERSION: str = "mvp.v0.5.0"
 TAXONOMY_VERSION: str = "v3.1"
 CONFIG_VERSION: str = "1"          # bump when prompt/model defaults change
 OUTPUT_MODE: str = "coaching_first_2s1e"
+SCORING_OUTPUT_MODE: str = "scoring_only"
+
+# ── Two-stage pipeline ────────────────────────────────────────────────────
+EDITOR_ENABLED: bool = False  # Editor is deprecated; Stage 2 coaching call replaces it
 
 # ── OpenAI ───────────────────────────────────────────────────────────────────
 OPENAI_MODEL_DEFAULT: str = "gpt-5.4"

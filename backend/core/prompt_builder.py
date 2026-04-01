@@ -125,6 +125,259 @@ def build_experiment_taxonomy_block() -> str:
     return "\n".join(lines).rstrip()
 
 
+def extract_stage2_pattern_definitions() -> str:
+    """Extract condensed pattern definitions for the Stage 2 coaching prompt.
+
+    For each pattern, extracts from the canonical taxonomy file:
+    - What it measures (from "What it measures:" field)
+    - NOT this pattern (from "Excluded from both numerator AND denominator" section)
+    - Disambiguation (from "Detection notes:" focusing on cross-pattern distinctions)
+
+    Produces output matching the format of ``stage2_pattern_definitions_v0.1.txt``,
+    replacing that separate file with programmatic extraction from the single
+    source of truth.
+    """
+    raw = _load_taxonomy_raw()
+    pattern_ids = extract_pattern_ids()
+
+    lines: list[str] = []
+    for pid in pattern_ids:
+        section = _extract_section(raw, f"PATTERN:{pid}")
+
+        # Extract "What it measures"
+        what_it_measures = _extract_stage2_field(section, "What it measures:")
+
+        # Extract "NOT this pattern" from the exclusion section
+        not_this = _extract_stage2_exclusion_summary(section)
+
+        # Extract disambiguation hints from detection notes
+        disambiguation = _extract_stage2_disambiguation(section)
+
+        lines.append(f"--- {pid} ---")
+        lines.append(f"What it measures: {what_it_measures}")
+        if not_this:
+            lines.append(f"NOT this pattern: {not_this}")
+        if disambiguation:
+            lines.append(f"Disambiguation: {disambiguation}")
+        lines.append("")
+
+    return "\n".join(lines).rstrip()
+
+
+def _extract_stage2_field(section_text: str, field_label: str) -> str:
+    """Extract a simple field value that follows a label, up to the next blank line or section."""
+    idx = section_text.find(field_label)
+    if idx == -1:
+        return ""
+    value_start = idx + len(field_label)
+    rest = section_text[value_start:]
+    # Take up to the next double newline or next section header
+    end = rest.find("\n\n")
+    if end == -1:
+        return rest.strip()
+    return rest[:end].strip().lstrip("- ")
+
+
+def _extract_stage2_exclusion_summary(section_text: str) -> str:
+    """Extract a concise NOT-this-pattern summary from the exclusion rules."""
+    # Look for "Excluded from both numerator AND denominator" section
+    markers = [
+        "Excluded from both numerator AND denominator",
+        "Excluded from both numerator and denominator",
+    ]
+    idx = -1
+    for marker in markers:
+        idx = section_text.find(marker)
+        if idx != -1:
+            break
+    if idx == -1:
+        return ""
+
+    # Find the content after the marker (skip the header line)
+    rest = section_text[idx:]
+    first_newline = rest.find("\n")
+    if first_newline == -1:
+        return ""
+    content = rest[first_newline + 1:]
+
+    # Collect bullet points until we hit a non-bullet section
+    items: list[str] = []
+    for line in content.split("\n"):
+        stripped = line.strip()
+        if stripped.startswith("- "):
+            # Take just the core description, strip examples in parens
+            item = stripped[2:]
+            # Truncate at first example parenthetical for brevity
+            paren_idx = item.find("(e.g.,")
+            if paren_idx == -1:
+                paren_idx = item.find("(e.g.")
+            if paren_idx > 0:
+                item = item[:paren_idx].rstrip(" ,;—")
+            items.append(item.rstrip("."))
+            if len(items) >= 4:  # Keep it concise
+                break
+        elif stripped and not stripped.startswith("-"):
+            break  # Hit the next section
+
+    return "; ".join(items) + "." if items else ""
+
+
+def _extract_stage2_disambiguation(section_text: str) -> str:
+    """Extract disambiguation hints relevant for coaching alignment checks.
+
+    Looks for cross-pattern distinction notes in the Detection notes section
+    and Role notes that clarify what does/doesn't belong to this pattern.
+    """
+    # Look for explicit "Disambiguation" or cross-pattern notes in Detection notes
+    detection_idx = section_text.find("Detection notes:")
+    if detection_idx == -1:
+        return ""
+
+    detection_section = section_text[detection_idx:]
+    # Find the end of detection notes (next major section)
+    next_section = detection_section.find("\nExperiment guidance:")
+    if next_section == -1:
+        next_section = detection_section.find("\n### END:")
+    if next_section != -1:
+        detection_section = detection_section[:next_section]
+
+    # Look for lines that mention other patterns (cross-pattern disambiguation)
+    disambiguation_parts: list[str] = []
+    for line in detection_section.split("\n"):
+        stripped = line.strip()
+        if stripped.startswith("- ") and any(
+            kw in stripped.lower()
+            for kw in ["not this pattern", "belongs to", "classify under",
+                       "distinct from", "not ", "rather than", "repackag"]
+        ):
+            item = stripped[2:].rstrip(".")
+            disambiguation_parts.append(item)
+            if len(disambiguation_parts) >= 2:
+                break
+
+    # Also check for a dedicated "Coaching materiality" or similar note
+    materiality_idx = section_text.find("Coaching materiality:")
+    if materiality_idx != -1:
+        rest = section_text[materiality_idx:]
+        end = rest.find("\n\n")
+        if end != -1:
+            note = rest[len("Coaching materiality:"):end].strip().lstrip("- ")
+            disambiguation_parts.append(note)
+
+    return " ".join(disambiguation_parts) if disambiguation_parts else ""
+
+
+def build_stage2_system_prompt(memory: MemoryBlock) -> str:
+    """Assemble the full Stage 2 coaching system prompt with substitutions.
+
+    Loads ``system_prompt_coaching_v1.0.txt``, substitutes:
+    - ``__PATTERN_DEFINITIONS__`` with extracted taxonomy definitions
+    - ``__EXPERIMENT_CONTEXT__`` with experiment context from memory
+
+    Args:
+        memory: The coachee's memory block (may contain active experiment).
+
+    Returns:
+        Complete system prompt string ready for the LLM call.
+    """
+    prompt_path = Path(__file__).resolve().parent.parent.parent / "system_prompt_coaching_v1.0.txt"
+    if not prompt_path.exists():
+        raise FileNotFoundError(f"Stage 2 coaching prompt not found at {prompt_path}")
+
+    raw = prompt_path.read_text(encoding="utf-8").strip()
+
+    # Substitute pattern definitions from canonical taxonomy
+    pattern_defs = extract_stage2_pattern_definitions()
+    raw = raw.replace("__PATTERN_DEFINITIONS__", pattern_defs)
+
+    # Substitute experiment context
+    experiment_context = _build_experiment_context_for_stage2(memory)
+    raw = raw.replace("__EXPERIMENT_CONTEXT__", experiment_context)
+
+    return raw
+
+
+def _build_experiment_context_for_stage2(memory: MemoryBlock) -> str:
+    """Build experiment context string for the Stage 2 coaching prompt.
+
+    Mirrors the logic from ``editor.py::build_experiment_context()`` but
+    reads from the MemoryBlock directly.
+    """
+    if not memory or not memory.active_experiment:
+        return ""
+
+    exp = memory.active_experiment
+    status = exp.get("status", "none")
+    if status not in ("active", "assigned"):
+        return ""
+
+    exp_id = exp.get("experiment_id", "unknown")
+    title = exp.get("title", "")
+    instruction = exp.get("instruction", "")
+    success_marker = exp.get("success_marker", "")
+    pattern_id = exp.get("pattern_id", "")
+
+    lines = [
+        "",
+        "===============================================================",
+        "ACTIVE EXPERIMENT CONTEXT",
+        "===============================================================",
+        "",
+        f"The coachee has an active experiment (status: {status}):",
+        f"- Experiment ID: {exp_id}",
+        f"- Title: {title}",
+        f"- Instruction: {instruction}",
+        f"- Success marker: {success_marker}",
+    ]
+    if pattern_id:
+        lines.append(f"- Primary pattern: {pattern_id}")
+
+    lines.extend([
+        "",
+        "You MUST evaluate whether the target speaker attempted this experiment in this meeting.",
+        "Search the transcript for moments matching the experiment's instruction and success marker.",
+        "Report your findings in experiment_tracking.detection_in_this_meeting.",
+        "",
+        "ACTIVE EXPERIMENT CONTINUITY: focus[0].pattern_id MUST equal the active experiment's",
+        f"pattern_id ({pattern_id}) unless the Stage 1 score for that pattern is >= 0.80,",
+        "in which case acknowledge the improvement and suggest it may be time for a new experiment.",
+        "",
+        "micro_experiment: Refine or evolve the current experiment (reuse experiment_id:",
+        f"{exp_id}). Do not propose an unrelated experiment while this one is active.",
+    ])
+
+    return "\n".join(lines)
+
+
+def build_stage2_user_message(
+    stage1_output: dict,
+    transcript_turns: list[dict],
+) -> str:
+    """Build the user message for the Stage 2 coaching LLM call.
+
+    Contains the transcript (speaker turns) and the Stage 1 scoring output.
+    This is the canonical format used by both the production pipeline and
+    the eval scripts.
+
+    Args:
+        stage1_output: The Stage 1 JSON output (scoring only, no coaching fields).
+        transcript_turns: List of transcript turn dicts from the prompt payload.
+
+    Returns:
+        Formatted user message string.
+    """
+    import json as _json
+    transcript_json = _json.dumps(transcript_turns, ensure_ascii=False, indent=2)
+    stage1_json = _json.dumps(stage1_output, ensure_ascii=False, indent=2)
+
+    return (
+        "=== MEETING TRANSCRIPT (speaker turns) ===\n\n"
+        f"{transcript_json}\n\n"
+        "=== STAGE 1 ANALYSIS OUTPUT (scoring only — no coaching) ===\n\n"
+        f"{stage1_json}"
+    )
+
+
 def _extract_field(section_text: str, field_label: str) -> str:
     """Extract a field value from a pattern section.
 
