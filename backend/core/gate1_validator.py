@@ -761,82 +761,6 @@ def _business_rules(data: dict, *, scoring_only: bool = False) -> list[Validatio
                     f"for {scoring_type}) but IS in success_evidence_span_ids.",
                 ))
 
-    # ── 3c5. Rewrite checks on coaching.pattern_coaching ─────────────────────
-    for pci, pc in enumerate(coaching.get("pattern_coaching", [])):
-        pc_path = f"coaching.pattern_coaching[{pci}]"
-        pc_pid = pc.get("pattern_id", "")
-        rewrite_span = pc.get("rewrite_for_span_id")
-
-        if not rewrite_span:
-            continue
-
-        pattern = pattern_by_id.get(pc_pid)
-        scoring_type = pattern.get("scoring_type", "") if pattern else ""
-        threshold = _SUCCESS_THRESHOLDS.get(scoring_type, 0.75)
-
-        # V2: rewrite_for_span_id should target a low-scored span
-        span = span_by_id.get(rewrite_span)
-        if span:
-            for event_id in span.get("event_ids", []):
-                oe = oe_by_id.get(event_id)
-                if oe and oe.get("pattern_id") == pc_pid and oe.get("count_decision") == "counted":
-                    if oe.get("success", 0) >= threshold:
-                        issues.append(_warn(
-                            "REWRITE_TARGETS_SUCCESS",
-                            f"{pc_path}.rewrite_for_span_id",
-                            f"rewrite_for_span_id {rewrite_span} maps to OE with "
-                            f"score {oe.get('success', 0)} (>= {threshold} threshold for "
-                            f"{scoring_type}). Rewrite should target a missed "
-                            f"opportunity.",
-                        ))
-                    break
-
-        # V3: rewrite/span content plausibility — zero content-word overlap
-        if pc.get("suggested_rewrite") and span and span.get("excerpt"):
-            excerpt_words = _extract_content_words(span["excerpt"])
-            rewrite_words = _extract_content_words(pc["suggested_rewrite"])
-            if (excerpt_words and rewrite_words
-                    and len(excerpt_words) >= 3
-                    and len(rewrite_words) >= 3
-                    and not excerpt_words & rewrite_words):
-                issues.append(_warn(
-                    "REWRITE_CONTENT_MISMATCH",
-                    f"{pc_path}.suggested_rewrite",
-                    f"suggested_rewrite shares no content words with the "
-                    f"excerpt of {rewrite_span}. The rewrite may address "
-                    f"a different topic.",
-                ))
-
-    # ── 3c6. best_success_span_id checks on coaching.pattern_coaching ────────
-    for pci, pc in enumerate(coaching.get("pattern_coaching", [])):
-        pc_path = f"coaching.pattern_coaching[{pci}]"
-        pc_pid = pc.get("pattern_id", "")
-        best_span = pc.get("best_success_span_id")
-
-        pattern = pattern_by_id.get(pc_pid)
-        if not pattern:
-            continue
-
-        success_ids = set(pattern.get("success_evidence_span_ids") or [])
-
-        if best_span and best_span not in success_ids:
-            issues.append(_warn(
-                "BEST_SUCCESS_SPAN_NOT_IN_SUCCESS_LIST",
-                f"{pc_path}.best_success_span_id",
-                f"best_success_span_id {best_span} is not in "
-                f"success_evidence_span_ids for pattern {pc_pid}.",
-            ))
-
-        # Auto-repair: if missing but success spans exist, pick the first one
-        if not best_span and success_ids:
-            pc["best_success_span_id"] = sorted(success_ids)[0]
-            issues.append(_warn(
-                "BEST_SUCCESS_SPAN_AUTO_FILLED",
-                f"{pc_path}.best_success_span_id",
-                f"best_success_span_id was null/missing but success spans "
-                f"exist. Auto-filled with {pc['best_success_span_id']}.",
-            ))
-
     # ── 3d. turn_start_id / turn_end_id in evidence_spans ────────────────────
     for idx, span in enumerate(evidence_spans):
         path = f"evidence_spans[{idx}]"
@@ -850,86 +774,165 @@ def _business_rules(data: dict, *, scoring_only: bool = False) -> list[Validatio
                         f"{field} must be an integer >= 1, got {val!r}.",
                     ))
 
-    # ── 3e. coaching cardinality ─────────────────────────────────────────────
-    strengths = coaching.get("strengths", [])
-    focus = coaching.get("focus", [])
-    micro_experiment = coaching.get("micro_experiment", [])
+    # ── 3c5–3f: Coaching and experiment checks (skipped for scoring-only) ────
+    if not scoring_only:
 
-    if not (0 <= len(strengths) <= 2):
-        issues.append(_err(
-            "COACHING_STRENGTHS_COUNT",
-            "coaching.strengths",
-            f"strengths must have 0-2 items, got {len(strengths)}.",
-        ))
-    if len(focus) != 1:
-        issues.append(_err(
-            "COACHING_FOCUS_COUNT",
-            "coaching.focus",
-            f"focus must have exactly 1 item, got {len(focus)}.",
-        ))
-    if len(micro_experiment) != 1:
-        issues.append(_err(
-            "COACHING_MICRO_EXP_COUNT",
-            "coaching.micro_experiment",
-            f"micro_experiment must have exactly 1 item, got {len(micro_experiment)}.",
-        ))
+        # ── 3c5. Rewrite checks on coaching.pattern_coaching ─────────────────
+        for pci, pc in enumerate(coaching.get("pattern_coaching", [])):
+            pc_path = f"coaching.pattern_coaching[{pci}]"
+            pc_pid = pc.get("pattern_id", "")
+            rewrite_span = pc.get("rewrite_for_span_id")
 
-    # evidence_span_ids must be non-empty and valid for micro_experiment.
-    for key, items in [("micro_experiment", micro_experiment)]:
-        for i, item in enumerate(items):
-            es_ids = item.get("evidence_span_ids", [])
-            if not es_ids and analysis_type != "baseline_pack":
-                issues.append(_err(
-                    "COACHING_EMPTY_ES_IDS",
-                    f"coaching.{key}[{i}].evidence_span_ids",
-                    "evidence_span_ids must be non-empty in coaching items.",
-                ))
-            for es_id in es_ids:
-                if es_id not in valid_es_ids:
-                    issues.append(_err(
-                        "COACHING_DANGLING_ES",
-                        f"coaching.{key}[{i}].evidence_span_ids",
-                        f"evidence_span_id {es_id} not found in evidence_spans.",
+            if not rewrite_span:
+                continue
+
+            pattern = pattern_by_id.get(pc_pid)
+            scoring_type = pattern.get("scoring_type", "") if pattern else ""
+            threshold = _SUCCESS_THRESHOLDS.get(scoring_type, 0.75)
+
+            # V2: rewrite_for_span_id should target a low-scored span
+            span = span_by_id.get(rewrite_span)
+            if span:
+                for event_id in span.get("event_ids", []):
+                    oe = oe_by_id.get(event_id)
+                    if oe and oe.get("pattern_id") == pc_pid and oe.get("count_decision") == "counted":
+                        if oe.get("success", 0) >= threshold:
+                            issues.append(_warn(
+                                "REWRITE_TARGETS_SUCCESS",
+                                f"{pc_path}.rewrite_for_span_id",
+                                f"rewrite_for_span_id {rewrite_span} maps to OE with "
+                                f"score {oe.get('success', 0)} (>= {threshold} threshold for "
+                                f"{scoring_type}). Rewrite should target a missed "
+                                f"opportunity.",
+                            ))
+                        break
+
+            # V3: rewrite/span content plausibility — zero content-word overlap
+            if pc.get("suggested_rewrite") and span and span.get("excerpt"):
+                excerpt_words = _extract_content_words(span["excerpt"])
+                rewrite_words = _extract_content_words(pc["suggested_rewrite"])
+                if (excerpt_words and rewrite_words
+                        and len(excerpt_words) >= 3
+                        and len(rewrite_words) >= 3
+                        and not excerpt_words & rewrite_words):
+                    issues.append(_warn(
+                        "REWRITE_CONTENT_MISMATCH",
+                        f"{pc_path}.suggested_rewrite",
+                        f"suggested_rewrite shares no content words with the "
+                        f"excerpt of {rewrite_span}. The rewrite may address "
+                        f"a different topic.",
                     ))
 
-    # ── 3f. Experiment tracking conditional rules ─────────────────────────────
-    active_exp = experiment_tracking.get("active_experiment", {}) or {}
-    detection = experiment_tracking.get("detection_in_this_meeting")
-    status = active_exp.get("status", "none")
+        # ── 3c6. best_success_span_id checks on coaching.pattern_coaching ────
+        for pci, pc in enumerate(coaching.get("pattern_coaching", [])):
+            pc_path = f"coaching.pattern_coaching[{pci}]"
+            pc_pid = pc.get("pattern_id", "")
+            best_span = pc.get("best_success_span_id")
 
-    if analysis_type == "baseline_pack":
-        if detection is not None:
-            issues.append(_err(
-                "BP_DETECTION_MUST_BE_NULL",
-                "experiment_tracking.detection_in_this_meeting",
-                "baseline_pack analysis must have detection_in_this_meeting = null.",
-            ))
-    elif analysis_type == "single_meeting":
-        if status in ("assigned", "active", "proposed"):
-            if detection is None:
-                issues.append(_err(
-                    "SINGLE_MEETING_DETECTION_REQUIRED",
-                    "experiment_tracking.detection_in_this_meeting",
-                    "active/proposed experiment requires detection_in_this_meeting to be non-null.",
-                ))
-            elif detection is not None:
-                # If attempt detected, evidence_span_ids must be non-empty
-                attempt = detection.get("attempt")
-                if attempt in ("partial", "yes"):
-                    es_ids = detection.get("evidence_span_ids", [])
-                    if not es_ids:
-                        issues.append(_err(
-                            "DETECTION_ATTEMPT_NO_EVIDENCE",
-                            "experiment_tracking.detection_in_this_meeting.evidence_span_ids",
-                            "attempt_detected requires non-empty evidence_span_ids.",
-                        ))
-        elif status in ("none", "completed", "abandoned") or status is None:
-            if detection is not None:
+            pattern = pattern_by_id.get(pc_pid)
+            if not pattern:
+                continue
+
+            success_ids = set(pattern.get("success_evidence_span_ids") or [])
+
+            if best_span and best_span not in success_ids:
                 issues.append(_warn(
-                    "DETECTION_UNEXPECTED",
-                    "experiment_tracking.detection_in_this_meeting",
-                    "detection_in_this_meeting should be null when no active experiment.",
+                    "BEST_SUCCESS_SPAN_NOT_IN_SUCCESS_LIST",
+                    f"{pc_path}.best_success_span_id",
+                    f"best_success_span_id {best_span} is not in "
+                    f"success_evidence_span_ids for pattern {pc_pid}.",
                 ))
+
+            # Auto-repair: if missing but success spans exist, pick the first one
+            if not best_span and success_ids:
+                pc["best_success_span_id"] = sorted(success_ids)[0]
+                issues.append(_warn(
+                    "BEST_SUCCESS_SPAN_AUTO_FILLED",
+                    f"{pc_path}.best_success_span_id",
+                    f"best_success_span_id was null/missing but success spans "
+                    f"exist. Auto-filled with {pc['best_success_span_id']}.",
+                ))
+
+        # ── 3e. coaching cardinality ─────────────────────────────────────────
+        strengths = coaching.get("strengths", [])
+        focus = coaching.get("focus", [])
+        micro_experiment = coaching.get("micro_experiment", [])
+
+        if not (0 <= len(strengths) <= 2):
+            issues.append(_err(
+                "COACHING_STRENGTHS_COUNT",
+                "coaching.strengths",
+                f"strengths must have 0-2 items, got {len(strengths)}.",
+            ))
+        if len(focus) != 1:
+            issues.append(_err(
+                "COACHING_FOCUS_COUNT",
+                "coaching.focus",
+                f"focus must have exactly 1 item, got {len(focus)}.",
+            ))
+        if len(micro_experiment) != 1:
+            issues.append(_err(
+                "COACHING_MICRO_EXP_COUNT",
+                "coaching.micro_experiment",
+                f"micro_experiment must have exactly 1 item, got {len(micro_experiment)}.",
+            ))
+
+        # evidence_span_ids must be non-empty and valid for micro_experiment.
+        for key, items in [("micro_experiment", micro_experiment)]:
+            for i, item in enumerate(items):
+                es_ids = item.get("evidence_span_ids", [])
+                if not es_ids and analysis_type != "baseline_pack":
+                    issues.append(_err(
+                        "COACHING_EMPTY_ES_IDS",
+                        f"coaching.{key}[{i}].evidence_span_ids",
+                        "evidence_span_ids must be non-empty in coaching items.",
+                    ))
+                for es_id in es_ids:
+                    if es_id not in valid_es_ids:
+                        issues.append(_err(
+                            "COACHING_DANGLING_ES",
+                            f"coaching.{key}[{i}].evidence_span_ids",
+                            f"evidence_span_id {es_id} not found in evidence_spans.",
+                        ))
+
+        # ── 3f. Experiment tracking conditional rules ─────────────────────────
+        active_exp = experiment_tracking.get("active_experiment", {}) or {}
+        detection = experiment_tracking.get("detection_in_this_meeting")
+        status = active_exp.get("status", "none")
+
+        if analysis_type == "baseline_pack":
+            if detection is not None:
+                issues.append(_err(
+                    "BP_DETECTION_MUST_BE_NULL",
+                    "experiment_tracking.detection_in_this_meeting",
+                    "baseline_pack analysis must have detection_in_this_meeting = null.",
+                ))
+        elif analysis_type == "single_meeting":
+            if status in ("assigned", "active", "proposed"):
+                if detection is None:
+                    issues.append(_err(
+                        "SINGLE_MEETING_DETECTION_REQUIRED",
+                        "experiment_tracking.detection_in_this_meeting",
+                        "active/proposed experiment requires detection_in_this_meeting to be non-null.",
+                    ))
+                elif detection is not None:
+                    # If attempt detected, evidence_span_ids must be non-empty
+                    attempt = detection.get("attempt")
+                    if attempt in ("partial", "yes"):
+                        es_ids = detection.get("evidence_span_ids", [])
+                        if not es_ids:
+                            issues.append(_err(
+                                "DETECTION_ATTEMPT_NO_EVIDENCE",
+                                "experiment_tracking.detection_in_this_meeting.evidence_span_ids",
+                                "attempt_detected requires non-empty evidence_span_ids.",
+                            ))
+            elif status in ("none", "completed", "abandoned") or status is None:
+                if detection is not None:
+                    issues.append(_warn(
+                        "DETECTION_UNEXPECTED",
+                        "experiment_tracking.detection_in_this_meeting",
+                        "detection_in_this_meeting should be null when no active experiment.",
+                    ))
 
     # ── 3g. ID format validation ──────────────────────────────────────────────
     _check_id_format(data, "meta.analysis_id", data.get("meta", {}).get("analysis_id"), "analysis_id", issues)
