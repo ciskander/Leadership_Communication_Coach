@@ -99,7 +99,7 @@ TOP-LEVEL REQUIRED KEYS (in this order)
 schema_version, meta, context, opportunity_events, evidence_spans, evaluation_summary, pattern_snapshot
 
 CONSTANTS
-- schema_version = "mvp.v0.5.0"
+- schema_version = "mvp.v0.6.0"
 - meta.taxonomy_version = "v3.1"
 - meta.output_mode = "scoring_only"
 
