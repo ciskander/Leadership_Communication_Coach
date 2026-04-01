@@ -38,7 +38,7 @@ PATTERN_ORDER = [
 # ── Judge file discovery ─────────────────────────────────────────────────────
 
 _JUDGE_FILENAME_RE = re.compile(
-    r"^judge_run_(\d{3})_(\d{8}T\d{6})_(\d{8}T\d{6})\.json$"
+    r"^judge_(?:stage2_merged_)?run_(\d{3})_(\d{8}T\d{6})_(?:\d{8}T\d{6}_)?(\d{8}T\d{6})\.json$"
 )
 
 
@@ -283,6 +283,73 @@ def synthesize_pattern_alignment(judge_data: list[dict]) -> dict[str, list[dict]
     return dict(misfits)
 
 
+def synthesize_executive_summary_quality(judge_data: list[dict]) -> dict[str, Any]:
+    """Aggregate executive_summary_quality ratings."""
+    ratings: Counter = Counter()
+    booleans: dict[str, int] = {"captures_meeting_essence": 0, "identifies_key_development_edge": 0, "specific_to_this_leader": 0}
+    per_meeting: dict[str, list[str]] = defaultdict(list)
+    total = 0
+
+    for d in judge_data:
+        esq = d.get("executive_summary_quality", {})
+        if not esq:
+            continue
+        total += 1
+        rating = esq.get("rating", "unknown")
+        ratings[rating] += 1
+        per_meeting[d["_meeting"]].append(rating)
+        for key in booleans:
+            if esq.get(key, False):
+                booleans[key] += 1
+
+    return {
+        "total": total,
+        "ratings": dict(ratings),
+        "booleans": {k: {"true": v, "total": total, "pct": round(100 * v / max(total, 1), 1)} for k, v in booleans.items()},
+        "per_meeting": {m: dict(Counter(rs)) for m, rs in sorted(per_meeting.items())},
+    }
+
+
+def synthesize_coaching_themes_quality(judge_data: list[dict]) -> dict[str, Any]:
+    """Aggregate coaching_themes_quality ratings."""
+    item_ratings: Counter = Counter()
+    transcends_count = 0
+    behavioral_count = 0
+    total_items = 0
+    tvp: Counter = Counter()  # themes_vs_patterns
+    per_meeting_tvp: dict[str, list[str]] = defaultdict(list)
+    total_runs = 0
+
+    for d in judge_data:
+        ctq = d.get("coaching_themes_quality", {})
+        if not ctq:
+            continue
+        total_runs += 1
+
+        tvp_val = ctq.get("themes_vs_patterns", "unknown")
+        tvp[tvp_val] += 1
+        per_meeting_tvp[d["_meeting"]].append(tvp_val)
+
+        for item in ctq.get("items", []):
+            total_items += 1
+            rating = item.get("rating", "unknown")
+            item_ratings[rating] += 1
+            if item.get("transcends_taxonomy", False):
+                transcends_count += 1
+            if item.get("names_behavioral_habit", False):
+                behavioral_count += 1
+
+    return {
+        "total_runs": total_runs,
+        "total_theme_items": total_items,
+        "item_ratings": dict(item_ratings),
+        "transcends_taxonomy_count": transcends_count,
+        "names_behavioral_habit_count": behavioral_count,
+        "themes_vs_patterns": dict(tvp),
+        "per_meeting_themes_vs_patterns": {m: dict(Counter(vs)) for m, vs in sorted(per_meeting_tvp.items())},
+    }
+
+
 def synthesize_run_profiles(judge_data: list[dict]) -> dict[str, list[dict]]:
     """Per-run rating profiles: how many patterns in each bucket per run."""
     profiles: dict[str, list[dict]] = defaultdict(list)
@@ -450,6 +517,50 @@ def format_report(synthesis: dict[str, Any], comparison: dict[str, Any] | None =
     lines.append(f"- experiment_detection_coherent: {ic['experiment_detection_coherent']}/{ic['total']}")
     lines.append(f"- executive_summary_reflects_findings: {ic['executive_summary_reflects_findings']}/{ic['total']}")
 
+    # Executive summary quality
+    esq = synthesis.get("executive_summary_quality", {})
+    if esq.get("total", 0) > 0:
+        lines.append("\n## Executive Summary Quality\n")
+        lines.append(f"Total rated: {esq['total']}")
+        lines.append(f"\n| Rating | Count | % |")
+        lines.append(f"|--------|------:|---:|")
+        for r in ["insightful", "adequate", "generic", "misleading"]:
+            count = esq["ratings"].get(r, 0)
+            pct = round(100 * count / max(esq["total"], 1), 1)
+            lines.append(f"| {r.capitalize()} | {count} | {pct}% |")
+
+        lines.append(f"\n| Boolean check | True | % |")
+        lines.append(f"|---------------|-----:|---:|")
+        for key, vals in esq.get("booleans", {}).items():
+            lines.append(f"| {key} | {vals['true']}/{vals['total']} | {vals['pct']}% |")
+
+    # Coaching themes quality
+    ctq = synthesis.get("coaching_themes_quality", {})
+    if ctq.get("total_runs", 0) > 0:
+        lines.append("\n## Coaching Themes Quality\n")
+        lines.append(f"Total runs: {ctq['total_runs']}, Total theme items: {ctq['total_theme_items']}")
+
+        lines.append(f"\n### Theme Item Ratings\n")
+        lines.append(f"| Rating | Count | % |")
+        lines.append(f"|--------|------:|---:|")
+        ti = ctq["total_theme_items"]
+        for r in ["insightful", "adequate", "generic", "stretching"]:
+            count = ctq["item_ratings"].get(r, 0)
+            pct = round(100 * count / max(ti, 1), 1)
+            lines.append(f"| {r.capitalize()} | {count} | {pct}% |")
+
+        lines.append(f"\n- Transcends taxonomy: {ctq['transcends_taxonomy_count']}/{ti} ({round(100 * ctq['transcends_taxonomy_count'] / max(ti, 1), 1)}%)")
+        lines.append(f"- Names behavioral habit: {ctq['names_behavioral_habit_count']}/{ti} ({round(100 * ctq['names_behavioral_habit_count'] / max(ti, 1), 1)}%)")
+
+        lines.append(f"\n### Themes vs Patterns\n")
+        lines.append(f"| Assessment | Count | % |")
+        lines.append(f"|-----------|------:|---:|")
+        tr = ctq["total_runs"]
+        for val in ["themes_add_value", "themes_just_restate_patterns", "no_themes_present"]:
+            count = ctq["themes_vs_patterns"].get(val, 0)
+            pct = round(100 * count / max(tr, 1), 1)
+            lines.append(f"| {val} | {count} | {pct}% |")
+
     # anything_important_ignored
     aii = gc["anything_important_ignored"]
     lines.append(f"\n## Anything Important Ignored\n")
@@ -549,6 +660,8 @@ def run_synthesis(results_dir: Path, latest_batch_only: bool = True) -> dict[str
         "internal_consistency": synthesize_internal_consistency(all_data),
         "pattern_alignment": synthesize_pattern_alignment(all_data),
         "run_profiles": synthesize_run_profiles(all_data),
+        "executive_summary_quality": synthesize_executive_summary_quality(all_data),
+        "coaching_themes_quality": synthesize_coaching_themes_quality(all_data),
     }
 
     return synthesis

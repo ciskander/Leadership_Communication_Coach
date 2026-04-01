@@ -70,6 +70,7 @@ def patch_analysis_output(
     active_experiment: Optional[dict] = None,
     has_active_experiment: bool = False,
     cleanup_enabled: bool = False,
+    scoring_only: bool = False,
 ) -> dict:
     """Apply all post-LLM corrections to a parsed analysis output dict.
 
@@ -100,86 +101,89 @@ def patch_analysis_output(
         output["meta"].setdefault("analysis_type", prompt_meta.get("analysis_type"))
         output["meta"].setdefault("generated_at", prompt_meta.get("generated_at"))
 
-    # 2. Fix experiment_tracking detection structure
-    exp_track = output.get("experiment_tracking", {})
-    active_exp_data = exp_track.get("active_experiment", {})
-    active_status = (active_exp_data or {}).get("status", "none")
+    # Steps 2-6 only apply to full (coaching-included) output.
+    # For scoring-only Stage 1 output, skip directly to legacy patches.
+    if not scoring_only:
+        # 2. Fix experiment_tracking detection structure
+        exp_track = output.get("experiment_tracking", {})
+        active_exp_data = exp_track.get("active_experiment", {})
+        active_status = (active_exp_data or {}).get("status", "none")
 
-    if active_status == "active":
-        detection = exp_track.get("detection_in_this_meeting")
-        if not isinstance(detection, dict):
+        if active_status == "active":
+            detection = exp_track.get("detection_in_this_meeting")
+            if not isinstance(detection, dict):
+                exp_track["detection_in_this_meeting"] = {
+                    "experiment_id": (active_exp_data or {}).get("experiment_id", "EXP-000000"),
+                    "attempt": "no",
+                    "count_attempts": 0,
+                    "evidence_span_ids": [],
+                }
+        else:
             exp_track["detection_in_this_meeting"] = {
-                "experiment_id": (active_exp_data or {}).get("experiment_id", "EXP-000000"),
+                "experiment_id": "EXP-000000",
                 "attempt": "no",
                 "count_attempts": 0,
                 "evidence_span_ids": [],
             }
-    else:
-        exp_track["detection_in_this_meeting"] = {
-            "experiment_id": "EXP-000000",
-            "attempt": "no",
-            "count_attempts": 0,
-            "evidence_span_ids": [],
+
+        if active_exp_data:
+            if active_exp_data.get("experiment_id") is None:
+                exp_track["active_experiment"] = {"experiment_id": "EXP-000000", "status": "none"}
+                exp_track["detection_in_this_meeting"] = None
+
+        # 3. Coerce missing evidence_span_ids on micro_experiment items
+        coaching = output.get("coaching", {})
+        for item in coaching.get("micro_experiment", []):
+            if isinstance(item, dict):
+                item.setdefault("evidence_span_ids", [])
+
+        # 4. Ensure coaching.pattern_coaching and experiment_coaching exist
+        coaching.setdefault("pattern_coaching", [])
+        coaching.setdefault("experiment_coaching", None)
+
+        # 5. Focus override safety gate: when an active experiment exists, force
+        # the focus pattern_id to match the experiment's pattern_id.
+        if has_active_experiment and active_experiment:
+            expected_pattern = active_experiment.get("pattern_id")
+            focus_items = coaching.get("focus", [])
+            if expected_pattern and focus_items:
+                actual_pattern = focus_items[0].get("pattern_id")
+                if actual_pattern != expected_pattern:
+                    logger.warning(
+                        "Focus override: LLM returned '%s' but active experiment requires '%s'",
+                        actual_pattern, expected_pattern,
+                    )
+                    focus_items[0]["pattern_id"] = expected_pattern
+                    # Replace the message with the coaching_note from the matching
+                    # pattern_coaching entry so the text is relevant to the
+                    # overridden pattern.
+                    pattern_coaching = coaching.get("pattern_coaching", [])
+                    match = next(
+                        (pc for pc in pattern_coaching
+                         if pc.get("pattern_id") == expected_pattern),
+                        None,
+                    )
+                    if match and match.get("coaching_note"):
+                        focus_items[0]["message"] = match["coaching_note"]
+
+        # 6. Ensure rewrite_for_span_id references in coaching.pattern_coaching are
+        # included in the corresponding pattern's evidence_span_ids and NOT in
+        # success_evidence_span_ids (it is always a failure).
+        _pc_rewrite_by_pattern = {
+            pc.get("pattern_id"): pc.get("rewrite_for_span_id")
+            for pc in coaching.get("pattern_coaching", [])
+            if pc.get("rewrite_for_span_id")
         }
-
-    if active_exp_data:
-        if active_exp_data.get("experiment_id") is None:
-            exp_track["active_experiment"] = {"experiment_id": "EXP-000000", "status": "none"}
-            exp_track["detection_in_this_meeting"] = None
-
-    # 3. Coerce missing evidence_span_ids on micro_experiment items
-    coaching = output.get("coaching", {})
-    for item in coaching.get("micro_experiment", []):
-        if isinstance(item, dict):
-            item.setdefault("evidence_span_ids", [])
-
-    # 4. Ensure coaching.pattern_coaching and experiment_coaching exist
-    coaching.setdefault("pattern_coaching", [])
-    coaching.setdefault("experiment_coaching", None)
-
-    # 5. Focus override safety gate: when an active experiment exists, force
-    # the focus pattern_id to match the experiment's pattern_id.
-    if has_active_experiment and active_experiment:
-        expected_pattern = active_experiment.get("pattern_id")
-        focus_items = coaching.get("focus", [])
-        if expected_pattern and focus_items:
-            actual_pattern = focus_items[0].get("pattern_id")
-            if actual_pattern != expected_pattern:
-                logger.warning(
-                    "Focus override: LLM returned '%s' but active experiment requires '%s'",
-                    actual_pattern, expected_pattern,
-                )
-                focus_items[0]["pattern_id"] = expected_pattern
-                # Replace the message with the coaching_note from the matching
-                # pattern_coaching entry so the text is relevant to the
-                # overridden pattern.
-                pattern_coaching = coaching.get("pattern_coaching", [])
-                match = next(
-                    (pc for pc in pattern_coaching
-                     if pc.get("pattern_id") == expected_pattern),
-                    None,
-                )
-                if match and match.get("coaching_note"):
-                    focus_items[0]["message"] = match["coaching_note"]
-
-    # 6. Ensure rewrite_for_span_id references in coaching.pattern_coaching are
-    # included in the corresponding pattern's evidence_span_ids and NOT in
-    # success_evidence_span_ids (it is always a failure).
-    _pc_rewrite_by_pattern = {
-        pc.get("pattern_id"): pc.get("rewrite_for_span_id")
-        for pc in coaching.get("pattern_coaching", [])
-        if pc.get("rewrite_for_span_id")
-    }
-    for ps in output.get("pattern_snapshot", []):
-        rewrite_span = _pc_rewrite_by_pattern.get(ps.get("pattern_id"))
-        if not rewrite_span:
-            continue
-        es_ids = ps.get("evidence_span_ids", [])
-        if rewrite_span not in es_ids:
-            es_ids.append(rewrite_span)
-        success_ids = ps.get("success_evidence_span_ids", [])
-        if rewrite_span in success_ids:
-            success_ids.remove(rewrite_span)
+        for ps in output.get("pattern_snapshot", []):
+            rewrite_span = _pc_rewrite_by_pattern.get(ps.get("pattern_id"))
+            if not rewrite_span:
+                continue
+            es_ids = ps.get("evidence_span_ids", [])
+            if rewrite_span not in es_ids:
+                es_ids.append(rewrite_span)
+            success_ids = ps.get("success_evidence_span_ids", [])
+            if rewrite_span in success_ids:
+                success_ids.remove(rewrite_span)
 
     # 7. Legacy field cleanup (strip old numeric fields, backfill defaults, etc.)
     output = _patch_legacy_fields(output)

@@ -39,6 +39,29 @@ def _load_schema() -> dict:
 _SCHEMA: dict = _load_schema()
 _VALIDATOR = Draft202012Validator(_SCHEMA)
 
+# Scoring-only validator: schema with coaching and experiment_tracking not required
+def _build_scoring_only_schema() -> dict:
+    """Create a variant of the main schema that does not require coaching or experiment_tracking.
+
+    Used for Gate 1 validation of Stage 1 (scoring-only) output.
+    """
+    import copy
+    schema = copy.deepcopy(_SCHEMA)
+    # Remove coaching and experiment_tracking from required top-level keys
+    if "required" in schema:
+        schema["required"] = [
+            k for k in schema["required"]
+            if k not in ("coaching", "experiment_tracking")
+        ]
+    # Remove coaching and experiment_tracking from properties if they have
+    # sub-schema validation that would fail on missing data
+    # (keeping them in properties is fine — they just won't be required)
+    return schema
+
+
+_SCORING_SCHEMA: dict = _build_scoring_only_schema()
+_SCORING_VALIDATOR = Draft202012Validator(_SCORING_SCHEMA)
+
 # ── ID format regexes ─────────────────────────────────────────────────────────
 _ID_PATTERNS = {
     "analysis_id": re.compile(r"^A-\d{6}$"),
@@ -397,9 +420,18 @@ def _sanitise_output(data: dict) -> int:
 
 # ── Public entry point ────────────────────────────────────────────────────────
 
-def validate(raw_text: str) -> Gate1Result:
+def validate(raw_text: str, *, mode: str = "full") -> Gate1Result:
     """
-    Run the full Gate1 validation pipeline.
+    Run the Gate1 validation pipeline.
+
+    Args:
+        raw_text: JSON string to validate.
+        mode: Validation mode.
+            - ``"full"``: Validate the complete output (scoring + coaching + experiment_tracking).
+              This is the default and matches the existing behaviour.
+            - ``"scoring_only"``: Validate scoring-only output from Stage 1.
+              coaching and experiment_tracking are not required and coaching-related
+              business rules are skipped.
 
     Steps:
         1. JSON parse
@@ -410,6 +442,9 @@ def validate(raw_text: str) -> Gate1Result:
     Returns:
         Gate1Result with passed flag and list of issues.
     """
+    if mode not in ("full", "scoring_only"):
+        raise ValueError(f"Invalid validation mode: {mode!r}. Must be 'full' or 'scoring_only'.")
+
     issues: list[ValidationIssue] = []
 
     # ── Step 1: JSON parse ────────────────────────────────────────────────────
@@ -423,7 +458,8 @@ def validate(raw_text: str) -> Gate1Result:
     _sanitise_output(data)
 
     # ── Step 2: JSON Schema ───────────────────────────────────────────────────
-    schema_errors = list(_VALIDATOR.iter_errors(data))
+    validator = _SCORING_VALIDATOR if mode == "scoring_only" else _VALIDATOR
+    schema_errors = list(validator.iter_errors(data))
     for error in schema_errors:
         path = ".".join(str(p) for p in error.absolute_path) or "$"
         issues.append(_err("SCHEMA_VIOLATION", path, error.message))
@@ -433,7 +469,7 @@ def validate(raw_text: str) -> Gate1Result:
         return Gate1Result(passed=False, issues=issues)
 
     # ── Step 3: Business rules (may auto-correct data in-place) ────────────────
-    issues.extend(_business_rules(data))
+    issues.extend(_business_rules(data, scoring_only=(mode == "scoring_only")))
 
     has_corrections = any(i.issue_code == "SCORE_ARITHMETIC_AUTOCORRECTED" for i in issues)
     passed = all(i.severity != "error" for i in issues)
@@ -442,6 +478,10 @@ def validate(raw_text: str) -> Gate1Result:
         issues=issues,
         corrected_data=data if has_corrections else None,
     )
+
+
+# Keep backward-compatible alias
+gate1_validate = validate
 
 
 # ── Success classification thresholds ─────────────────────────────────────────
@@ -468,15 +508,15 @@ _PATTERN_ALLOWED_SUCCESS: dict[str, set[float]] = {
 }
 
 
-def _business_rules(data: dict) -> list[ValidationIssue]:
+def _business_rules(data: dict, *, scoring_only: bool = False) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
 
     analysis_type = data.get("meta", {}).get("analysis_type", "")
     pattern_snapshot = data.get("pattern_snapshot", [])
     evidence_spans = data.get("evidence_spans", [])
     opportunity_events = data.get("opportunity_events", [])
-    coaching = data.get("coaching", {})
-    experiment_tracking = data.get("experiment_tracking", {})
+    coaching = data.get("coaching", {}) if not scoring_only else {}
+    experiment_tracking = data.get("experiment_tracking", {}) if not scoring_only else {}
 
     # ── Build lookup structures ──────────────────────────────────────────────
     valid_es_ids = {span.get("evidence_span_id") for span in evidence_spans}

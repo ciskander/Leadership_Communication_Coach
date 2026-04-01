@@ -81,8 +81,12 @@ from .airtable_client import (
     F_RUN_ACTIVE_EXPERIMENT,
     F_RUN_EDITOR_CHANGELOG,
     F_RUN_EDITOR_TOKENS,
+    F_RUN_STAGE2_CHANGELOG,
+    F_RUN_STAGE2_TOKENS,
+    F_RUN_STAGE2_RAW_OUTPUT,
+    F_RUN_SCORING_VALID,
 )
-from .config import CONFIG_VERSION
+from .config import CONFIG_VERSION, EDITOR_ENABLED
 from .gate1_validator import validate as gate1_validate
 from .idempotency import (
     check_experiment_event_exists,
@@ -397,6 +401,8 @@ def _persist_run_fields(
     user_record_id: Optional[str] = None,
     editor_changelog: Optional[list] = None,
     editor_tokens: Optional[int] = None,
+    stage2_raw_output: Optional[str] = None,
+    scoring_valid: Optional[bool] = None,
 ) -> dict:
     """Create the run record in Airtable and return it."""
     fields: dict = {
@@ -454,6 +460,12 @@ def _persist_run_fields(
         fields[F_RUN_EDITOR_CHANGELOG] = _safe_json_dumps(editor_changelog)
     if editor_tokens is not None:
         fields[F_RUN_EDITOR_TOKENS] = editor_tokens
+
+    # Two-stage pipeline fields
+    if stage2_raw_output:
+        fields[F_RUN_STAGE2_RAW_OUTPUT] = stage2_raw_output[:100_000]
+    if scoring_valid is not None:
+        fields[F_RUN_SCORING_VALID] = scoring_valid
 
     return client.create_run(fields)
 
@@ -560,10 +572,17 @@ def process_single_meeting_analysis(
                 existing_run["id"],
             )
 
-    # 4. Build memory block
+    # 4. Build memory block (full — includes active experiment for Stage 2)
     memory = _build_memory_for_user(client, user_record_id, active_exp_record_id)
 
-    # 5. Build prompt
+    # 5. Build prompt payload (transcript parsing, context assembly)
+    # Stage 1 gets a stateless memory block (no active experiment)
+    from .models import MemoryBlock as _MB
+    stage1_memory = _MB(
+        baseline_profile=memory.baseline_profile if memory else None,
+        active_experiment=None,  # Stage 1 is stateless
+        recent_pattern_snapshots=memory.recent_pattern_snapshots if memory else [],
+    )
     prompt_payload = build_single_meeting_prompt(
         meeting_id=transcript_id_str,
         meeting_type=meeting_type,
@@ -572,30 +591,31 @@ def process_single_meeting_analysis(
         target_speaker_name=target_speaker_name,
         target_speaker_label=target_speaker_label,
         parsed_transcript=parsed,
-        memory=memory,
+        memory=stage1_memory,
     )
 
-    # 6. Load system prompt + developer message
-    sys_prompt = system_prompt_override or _load_system_prompt_from_config(client, config_links)
+    # ═══════════════════════════════════════════════════════════════════════════
+    # STAGE 1: SCORING ONLY
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    # 6. Load scoring system prompt + developer message (full taxonomy)
+    from .openai_client import load_scoring_system_prompt
+    sys_prompt = system_prompt_override or load_scoring_system_prompt()
     dev_message = developer_message_override or _load_developer_message_from_config(client, config_links)
 
-    # 6a. Debug: log taxonomy content being sent to LLM
-    _dev_pattern_ids = [m.group(1) for m in re.finditer(r'### BEGIN:PATTERN:(\w+) ###', dev_message)]
     logger.info(
-        "TAXONOMY DEBUG [single_meeting] run_request=%s | sys_prompt=%d chars | "
-        "dev_message=%d chars | %d patterns: %s | has CORE_RULES=%s | "
-        "user_message=%d chars",
+        "STAGE 1 [scoring] run_request=%s | sys_prompt=%d chars | "
+        "dev_message=%d chars | user_message=%d chars",
         run_request_id, len(sys_prompt), len(dev_message),
-        len(_dev_pattern_ids), _dev_pattern_ids,
-        "### BEGIN:CORE_RULES ###" in dev_message,
         len(prompt_payload.raw_user_message),
     )
 
-    # 6b. Mark run_request as processing so the frontend knows work has started
-    client.update_run_request_status(run_request_id, "processing", progress_message="Generating coaching feedback…")
+    # 6b. Mark run_request as processing
+    client.update_run_request_status(run_request_id, "processing", progress_message="Scoring communication patterns…")
 
-    # 6c. Call LLM
-    openai_resp = call_llm(
+    # 6c. Call LLM — Stage 1 (scoring only)
+    import json as _json
+    stage1_resp = call_llm(
         system_prompt=sys_prompt,
         developer_message=dev_message,
         user_message=prompt_payload.raw_user_message,
@@ -603,74 +623,130 @@ def process_single_meeting_analysis(
         max_tokens=_get_config_max_tokens(client, config_links),
     )
 
-    # 6c. Apply all post-LLM output patches (shared with eval pipeline)
-    import json as _json
-    _parsed_output = _json.loads(openai_resp.raw_text)
-    _parsed_output = patch_analysis_output(
-        _parsed_output,
+    # 6d. Apply post-LLM patches (scoring-only mode)
+    stage1_parsed = _json.loads(stage1_resp.raw_text)
+    stage1_parsed = patch_analysis_output(
+        stage1_parsed,
         prompt_meta=prompt_payload.meta,
-        active_experiment=memory.active_experiment if memory else None,
-        has_active_experiment=bool(active_exp_record_id),
+        scoring_only=True,
         cleanup_enabled=_CLEANUP_ENABLED,
     )
+    stage1_raw = _json.dumps(stage1_parsed, ensure_ascii=False, indent=2)
 
-    patched_raw = _json.dumps(_parsed_output, ensure_ascii=False, indent=2)
-    openai_resp = OpenAIResponse(
-        parsed=_parsed_output,
-        raw_text=patched_raw,
-        model=openai_resp.model,
-        prompt_tokens=openai_resp.prompt_tokens,
-        completion_tokens=openai_resp.completion_tokens,
-        total_tokens=openai_resp.total_tokens,
+    # 6e. Gate 1 validation (scoring-only)
+    try:
+        client.update_run_request_progress(run_request_id, "Validating scoring output…")
+    except Exception:
+        pass
+
+    scoring_gate = gate1_validate(stage1_raw, mode="scoring_only")
+    scoring_valid = scoring_gate.passed
+    if scoring_gate.corrected_data:
+        stage1_parsed = scoring_gate.corrected_data
+        stage1_raw = _json.dumps(stage1_parsed, ensure_ascii=False, indent=2)
+
+    if not scoring_valid:
+        # Stage 1 failed — persist and abort
+        logger.warning("Stage 1 scoring validation failed for run_request %s", run_request_id)
+        run_record = _persist_run_fields(
+            client,
+            transcript_record_id=transcript_record_id,
+            run_request_record_id=run_request_id,
+            baseline_pack_record_id=baseline_pack_record_id,
+            active_experiment_record_id=active_exp_record_id,
+            request_payload=prompt_payload.raw_user_message,
+            raw_output=stage1_raw,
+            parsed_json=stage1_parsed,
+            parse_ok=True,
+            schema_ok=False,
+            business_ok=False,
+            gate1_pass=False,
+            model_name=stage1_resp.model,
+            target_speaker_name=target_speaker_name,
+            target_speaker_label=target_speaker_label,
+            target_role=target_role,
+            analysis_type=analysis_type,
+            idempotency_key=idem_key,
+            coachee_id=coachee_id,
+            user_record_id=user_record_id or None,
+        )
+        run_record_id = run_record["id"]
+        try:
+            client.update_run(run_record_id, {F_RUN_SCORING_VALID: False})
+        except Exception:
+            pass
+        if scoring_gate.issues:
+            client.bulk_create_validation_issues(run_record_id, scoring_gate.issues)
+        client.update_run_request_status(run_request_id, "gate1_failed", run_record_id=run_record_id)
+        return run_record_id
+
+    logger.info("Stage 1 scoring validated for run_request %s", run_request_id)
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # STAGE 2: COACHING SYNTHESIS
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    try:
+        client.update_run_request_progress(run_request_id, "Generating coaching feedback…")
+    except Exception:
+        pass
+
+    # 7a. Build Stage 2 system prompt (with pattern definitions + experiment context)
+    from .prompt_builder import build_stage2_system_prompt, build_stage2_user_message
+    stage2_sys_prompt = build_stage2_system_prompt(memory)
+
+    # 7b. Build Stage 2 user message (transcript + Stage 1 output)
+    transcript_turns = prompt_payload.transcript_payload["turns"]
+    stage2_user_msg = build_stage2_user_message(stage1_parsed, transcript_turns)
+
+    logger.info(
+        "STAGE 2 [coaching] run_request=%s | sys_prompt=%d chars | user_message=%d chars",
+        run_request_id, len(stage2_sys_prompt), len(stage2_user_msg),
     )
 
-    # 6e. Editor pass (optional 2nd LLM call for coaching quality)
-    editor_changelog = None
-    editor_tokens = None
-    if _EDITOR_ENABLED or cfg_fields.get("Editor Enabled"):
-        from .editor import build_experiment_context, run_editor, merge_editor_output
-
-        try:
-            client.update_run_request_progress(run_request_id, "Editing coaching quality…")
-        except Exception:
-            pass  # non-blocking
-
-        exp_context = build_experiment_context(memory, _parsed_output)
-        transcript_turns = prompt_payload.transcript_payload["turns"]
-        editor_result, ed_prompt_tokens, ed_completion_tokens = run_editor(
-            _parsed_output, transcript_turns, exp_context, model=openai_resp.model,
+    # 7c. Call LLM — Stage 2 (coaching)
+    stage2_changelog = None
+    stage2_tokens = None
+    try:
+        stage2_resp = call_llm(
+            system_prompt=stage2_sys_prompt,
+            developer_message="",
+            user_message=stage2_user_msg,
+            model=_get_config_model(client, config_links),
+            max_tokens=_get_config_max_tokens(client, config_links),
         )
-        _parsed_output, editor_changelog = merge_editor_output(
-            _parsed_output, editor_result,
-        )
-        editor_tokens = ed_prompt_tokens + ed_completion_tokens
+        stage2_parsed = stage2_resp.parsed
+        stage2_raw = stage2_resp.raw_text
+        stage2_tokens = stage2_resp.prompt_tokens + stage2_resp.completion_tokens
 
-        # Reconstruct openai_resp with editor-merged output
-        patched_raw = _json.dumps(_parsed_output, ensure_ascii=False, indent=2)
-        openai_resp = OpenAIResponse(
-            parsed=_parsed_output,
-            raw_text=patched_raw,
-            model=openai_resp.model,
-            prompt_tokens=openai_resp.prompt_tokens,
-            completion_tokens=openai_resp.completion_tokens,
-            total_tokens=openai_resp.total_tokens,
-        )
         logger.info(
-            "Editor: %d prompt tokens, %d completion tokens, %d changes",
-            ed_prompt_tokens, ed_completion_tokens, len(editor_changelog),
+            "Stage 2: %d prompt + %d completion tokens",
+            stage2_resp.prompt_tokens, stage2_resp.completion_tokens,
         )
 
-    # Progress: LLM call(s) complete
+        # 7d. Merge Stage 1 scoring + Stage 2 coaching
+        from .stage2_merge import merge_stage2_output
+        merged_output, stage2_changelog = merge_stage2_output(stage1_parsed, stage2_parsed)
+
+    except Exception as exc:
+        logger.error("Stage 2 call/merge failed for run_request %s: %s", run_request_id, exc, exc_info=True)
+        # Fall back: persist Stage 1 scoring only, mark as failed
+        merged_output = stage1_parsed
+        stage2_raw = ""
+        stage2_changelog = [{"field": "stage2", "action": "failed", "reason": str(exc)}]
+
+    # Progress: LLM calls complete
     try:
         client.update_run_request_progress(run_request_id, "Reviewing output quality…")
     except Exception:
         pass  # non-blocking
 
-    # 7. Gate1 validate (may auto-correct scores in-place)
-    gate1_result = gate1_validate(openai_resp.raw_text)
-    persisted_json = gate1_result.corrected_data or openai_resp.parsed
+    # 8. Gate 2 validation on merged output (full schema)
+    merged_raw = _json.dumps(merged_output, ensure_ascii=False, indent=2)
+    gate2_result = gate1_validate(merged_raw, mode="full")
+    persisted_json = gate2_result.corrected_data or merged_output
 
-    # 8/9. Persist run
+    # 9. Persist run
     run_record = _persist_run_fields(
         client,
         transcript_record_id=transcript_record_id,
@@ -678,13 +754,13 @@ def process_single_meeting_analysis(
         baseline_pack_record_id=baseline_pack_record_id,
         active_experiment_record_id=active_exp_record_id,
         request_payload=prompt_payload.raw_user_message,
-        raw_output=openai_resp.raw_text,
+        raw_output=stage1_raw,
         parsed_json=persisted_json,
         parse_ok=True,
-        schema_ok=all(i.issue_code != "SCHEMA_VIOLATION" for i in gate1_result.issues),
-        business_ok=gate1_result.passed,
-        gate1_pass=gate1_result.passed,
-        model_name=openai_resp.model,
+        schema_ok=all(i.issue_code != "SCHEMA_VIOLATION" for i in gate2_result.issues),
+        business_ok=gate2_result.passed,
+        gate1_pass=gate2_result.passed,
+        model_name=stage1_resp.model,
         target_speaker_name=target_speaker_name,
         target_speaker_label=target_speaker_label,
         target_role=target_role,
@@ -692,14 +768,16 @@ def process_single_meeting_analysis(
         idempotency_key=idem_key,
         coachee_id=coachee_id,
         user_record_id=user_record_id or None,
-        editor_changelog=editor_changelog,
-        editor_tokens=editor_tokens,
+        editor_changelog=stage2_changelog,
+        editor_tokens=stage2_tokens,
+        stage2_raw_output=stage2_raw,
+        scoring_valid=scoring_valid,
     )
     run_record_id = run_record["id"]
 
     # Persist validation issues if any
-    if gate1_result.issues:
-        client.bulk_create_validation_issues(run_record_id, gate1_result.issues)
+    if gate2_result.issues:
+        client.bulk_create_validation_issues(run_record_id, gate2_result.issues)
 
     # 8. Post-pass actions
     if gate1_result.passed:

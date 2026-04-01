@@ -102,8 +102,12 @@ F_RUN_RUN_REQUESTS = "run_requests"          # Link
 F_RUN_EXPERIMENT_INSTANTIATED = "Experiment Instantiated?"
 F_RUN_ATTEMPT_EVENT_CREATED = "Attempt Event Created?"
 F_RUN_ACTIVE_EXPERIMENT = "Active Experiment"   # Link to experiments table
-F_RUN_EDITOR_CHANGELOG = "Editor Changelog"
-F_RUN_EDITOR_TOKENS = "Editor Tokens"
+F_RUN_EDITOR_CHANGELOG = "Editor Changelog"    # Deprecated — renamed to Stage 2 Changelog in Airtable
+F_RUN_EDITOR_TOKENS = "Editor Tokens"          # Deprecated — renamed to Stage 2 Tokens in Airtable
+F_RUN_STAGE2_CHANGELOG = "Stage 2 Changelog"
+F_RUN_STAGE2_TOKENS = "Stage 2 Tokens"
+F_RUN_STAGE2_RAW_OUTPUT = "Stage 2 Raw Output"
+F_RUN_SCORING_VALID = "Scoring Valid"
 
 # Transcript metadata on the Runs table — all Airtable lookup fields that
 # auto-populate from the linked transcript record (returned as single-element

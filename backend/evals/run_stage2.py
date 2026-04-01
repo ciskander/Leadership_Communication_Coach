@@ -21,7 +21,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import copy
 import json
 import logging
 import sys
@@ -35,9 +34,14 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 from backend.core.config import OPENAI_MODEL_DEFAULT
-from backend.core.editor import _process_oe_removals, _recalculate_pattern_score
 from backend.core.llm_client import call_llm
-from backend.core.prompt_builder import build_single_meeting_prompt
+from backend.core.models import MemoryBlock
+from backend.core.prompt_builder import (
+    build_single_meeting_prompt,
+    build_stage2_system_prompt,
+    build_stage2_user_message,
+)
+from backend.core.stage2_merge import merge_stage2_output
 from backend.evals.replay_eval import load_raw_transcript, _load_eval_config
 from backend.evals.report import save_json
 from backend.evals.strip_to_stage1 import strip_coaching, discover_run_files
@@ -53,102 +57,32 @@ _TOKENS_PER_CALL = 35_000
 
 # ── Prompt loading ───────────────────────────────────────────────────────────
 
-def _load_stage2_prompt() -> str:
-    """Load the Stage 2 system prompt from the repo file."""
-    p = _REPO_ROOT / "system_prompt_stage2_v0.1.txt"
-    if p.exists():
-        return p.read_text(encoding="utf-8").strip()
-    raise FileNotFoundError(f"Stage 2 system prompt not found at {p}")
+def _build_stage2_system_prompt_for_eval(experiment_context: str = "") -> str:
+    """Build the Stage 2 system prompt for eval runs (no active experiment).
+
+    Uses the same production functions but with an empty MemoryBlock.
+    For eval runs with experiment context, pass it via the experiment_context
+    parameter (backward compatible with existing eval scripts).
+    """
+    # Use the production build function with an empty memory block.
+    # This substitutes pattern definitions from canonical taxonomy
+    # and leaves experiment context empty.
+    return build_stage2_system_prompt(MemoryBlock())
 
 
-def _load_stage2_pattern_definitions() -> str:
-    """Load the Stage 2 pattern definitions (includes DQ)."""
-    p = _REPO_ROOT / "stage2_pattern_definitions_v0.1.txt"
-    if p.exists():
-        return p.read_text(encoding="utf-8").strip()
-    raise FileNotFoundError(f"Stage 2 pattern definitions not found at {p}")
-
-
-def _build_stage2_system_prompt(experiment_context: str = "") -> str:
-    """Assemble the full Stage 2 system prompt with substitutions."""
-    raw = _load_stage2_prompt()
-    pattern_defs = _load_stage2_pattern_definitions()
-    return (
-        raw
-        .replace("__PATTERN_DEFINITIONS__", pattern_defs)
-        .replace("__EXPERIMENT_CONTEXT__", experiment_context)
-    )
-
-
-def _build_stage2_user_message(
+def _build_stage2_user_message_for_eval(
     stage1_output: dict,
     transcript_turns: list[dict],
 ) -> str:
-    """Build the user message for the Stage 2 LLM call.
+    """Build the Stage 2 user message for eval runs.
 
-    Contains the transcript and the stripped Stage 1 output.
+    Delegates to the production function for format consistency.
     """
-    transcript_json = json.dumps(transcript_turns, ensure_ascii=False, indent=2)
-    stage1_json = json.dumps(stage1_output, ensure_ascii=False, indent=2)
-
-    return (
-        "=== MEETING TRANSCRIPT (speaker turns) ===\n\n"
-        f"{transcript_json}\n\n"
-        "=== STAGE 1 ANALYSIS OUTPUT (scoring only — no coaching) ===\n\n"
-        f"{stage1_json}"
-    )
+    return build_stage2_user_message(stage1_output, transcript_turns)
 
 
-# ── Merge Stage 2 output with Stage 1 ──────────────────────────────────────
-
-def merge_stage2_output(
-    stage1_original: dict,
-    stage2_output: dict,
-) -> tuple[dict, list[dict]]:
-    """Merge Stage 2 coaching output into Stage 1 scoring.
-
-    Processing order:
-    1. OE removals → score recalculation → possible demotion
-    2. Overlay coaching fields from Stage 2
-
-    Returns (merged_output, changelog).
-    """
-    merged = copy.deepcopy(stage1_original)
-    changelog = stage2_output.get("changes", [])
-
-    # 1. OE removals (reuses editor.py logic)
-    oe_removals = stage2_output.get("oe_removals", [])
-    demoted: set[str] = set()
-    if oe_removals:
-        demoted = _process_oe_removals(merged, oe_removals)
-        if demoted:
-            logger.info("  Patterns demoted after OE removal: %s", sorted(demoted))
-
-    # 2. Overlay coaching fields
-    coaching = merged.setdefault("coaching", {})
-
-    # Replace coaching fields from Stage 2
-    for field in [
-        "executive_summary", "coaching_themes", "strengths",
-        "focus", "micro_experiment", "experiment_coaching",
-    ]:
-        if field in stage2_output:
-            coaching[field] = stage2_output[field]
-
-    # Pattern coaching: Stage 2 provides its own array
-    if "pattern_coaching" in stage2_output:
-        coaching["pattern_coaching"] = stage2_output["pattern_coaching"]
-
-    # Null out coaching for demoted patterns
-    if demoted and "pattern_coaching" in coaching:
-        for pc in coaching["pattern_coaching"]:
-            if pc.get("pattern_id") in demoted:
-                pc["notes"] = None
-                pc["coaching_note"] = None
-                pc["suggested_rewrite"] = None
-                pc["rewrite_for_span_id"] = None
-
-    return merged, changelog
+# ── Merge: delegates to production module ──────────────────────────────────
+# merge_stage2_output is imported from backend.core.stage2_merge at the top
 
 
 # ── Meeting discovery ────────────────────────────────────────────────────────
@@ -200,7 +134,7 @@ def _process_one_run(
     stage1_stripped = strip_coaching(stage1_full)
 
     # Build Stage 2 user message
-    user_message = _build_stage2_user_message(stage1_stripped, transcript_turns)
+    user_message = _build_stage2_user_message_for_eval(stage1_stripped, transcript_turns)
 
     # Call Stage 2 LLM
     response = call_llm(
@@ -285,7 +219,7 @@ def main() -> None:
 
     # Load eval config and Stage 2 prompt
     eval_config = _load_eval_config(args.transcripts_dir)
-    system_prompt = _build_stage2_system_prompt()
+    system_prompt = _build_stage2_system_prompt_for_eval()
 
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
 
