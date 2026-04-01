@@ -274,8 +274,7 @@
         "turn_end_id": { "type": "integer", "minimum": 1 },
         "excerpt": {
           "type": "string",
-          "minLength": 1,
-          "maxLength": 2000
+          "minLength": 1
         },
         "event_ids": {
           "type": "array",

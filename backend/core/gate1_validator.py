@@ -774,6 +774,18 @@ def _business_rules(data: dict, *, scoring_only: bool = False) -> list[Validatio
                         f"{field} must be an integer >= 1, got {val!r}.",
                     ))
 
+    # ── 3d2. Excerpt length check (warning only — long excerpts are allowed) ──
+    _EXCERPT_WARN_LEN = 2500
+    for idx, span in enumerate(evidence_spans):
+        excerpt = span.get("excerpt", "")
+        if len(excerpt) > _EXCERPT_WARN_LEN:
+            issues.append(_warn(
+                "EXCERPT_LENGTH",
+                f"evidence_spans[{idx}].excerpt",
+                f"Excerpt is {len(excerpt)} chars (warning threshold {_EXCERPT_WARN_LEN}). "
+                f"Long excerpts are allowed but may display poorly in the UI.",
+            ))
+
     # ── 3c5–3f: Coaching and experiment checks (skipped for scoring-only) ────
     if not scoring_only:
 
