@@ -29,6 +29,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
   const [acceptedExpId, setAcceptedExpId] = useState<string | null>(null);
   const [acceptLoading, setAcceptLoading] = useState(false);
   const [activeExpData, setActiveExpData] = useState<ActiveExperiment | null>(null);
+  const [expCheckDone, setExpCheckDone] = useState(false);
   const [trendData, setTrendData] = useState<Record<string, PatternTrendData> | undefined>(undefined);
 
   // Restore human confirmation state from the backend (survives refresh).
@@ -59,18 +60,21 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         // after this run was analyzed (run data reflects analysis-time state)
         api.getActiveExperiment()
           .then((data) => { if (data?.experiment) setActiveExpData(data); })
-          .catch(() => {});
+          .catch(() => {})
+          .finally(() => setExpCheckDone(true));
       } else if (run.active_experiment_detail) {
         // Use experiment data embedded in the run response
         setActiveExpData({
           experiment: run.active_experiment_detail,
           recent_events: run.active_experiment_events ?? [],
         });
+        setExpCheckDone(true);
       } else {
         // Fallback: fetch from the dedicated endpoint
         api.getActiveExperiment()
           .then(setActiveExpData)
-          .catch(() => {});
+          .catch(() => {})
+          .finally(() => setExpCheckDone(true));
       }
 
       // Fetch trend data for sparklines (non-blocking, best-effort)
@@ -742,6 +746,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         targetSpeaker={targetSpeaker}
         microExperiment={
           hasActiveExp ||
+          !expCheckDone ||
           proposedExperiments.length > 0 ||
           !!acceptedExpId ||
           !!run.baseline_pack_id
