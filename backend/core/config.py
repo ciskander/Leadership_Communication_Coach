@@ -36,10 +36,9 @@ ANTHROPIC_MAX_TOKENS: int = 65536
 ANTHROPIC_READ_TIMEOUT: float = 600.0  # Sonnet with thinking on large prompts; extra headroom for rate-limit queuing
 ANTHROPIC_READ_TIMEOUT_OPUS: float = 300.0  # Opus with extended thinking needs more headroom
 ANTHROPIC_JSON_REPAIR_MODEL: str = os.getenv("ANTHROPIC_JSON_REPAIR_MODEL", "claude-sonnet-4-6")
-ANTHROPIC_RETRY_ATTEMPTS: int = 2  # Fewer retries than OpenAI — long timeouts make 4 attempts too slow
-
-# ── Retry policy (shared for OpenAI + Anthropic + Airtable) ───────────────────
-RETRY_ATTEMPTS: int = 4
+# ── Retry policy ─────────────────────────────────────────────────────────────
+LLM_RETRY_ATTEMPTS: int = 2       # Max attempts per LLM call (1 initial + 1 retry)
+RETRY_ATTEMPTS: int = 4           # Airtable / non-LLM HTTP retries
 RETRY_BASE_DELAY: float = 1.0       # seconds
 RETRY_MAX_DELAY: float = 30.0
 

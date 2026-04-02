@@ -19,7 +19,7 @@ from .config import (
     OPENAI_MAX_TOKENS,
     OPENAI_MODEL_DEFAULT,
     OPENAI_READ_TIMEOUT,
-    RETRY_ATTEMPTS,
+    LLM_RETRY_ATTEMPTS,
     RETRY_BASE_DELAY,
     RETRY_MAX_DELAY,
 )
@@ -78,9 +78,9 @@ def call_openai(
     messages.append({"role": "user", "content": user_message})
 
     last_exc: Optional[Exception] = None
-    for attempt in range(RETRY_ATTEMPTS):
+    for attempt in range(LLM_RETRY_ATTEMPTS):
         try:
-            logger.info("OpenAI call attempt %d/%d model=%s", attempt + 1, RETRY_ATTEMPTS, effective_model)
+            logger.info("OpenAI call attempt %d/%d model=%s", attempt + 1, LLM_RETRY_ATTEMPTS, effective_model)
             response = client.chat.completions.create(
                 model=effective_model,
                 messages=messages,

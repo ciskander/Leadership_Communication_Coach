@@ -120,12 +120,16 @@ def enqueue_single_meeting(self, run_request_id: str) -> str:
     name="backend.queue.tasks.process_baseline_pack_task",
     bind=True,
     base=BaseWorkerTask,
-    max_retries=2,
+    max_retries=0,
     default_retry_delay=30,
 )
 def enqueue_baseline_pack_build(self, baseline_pack_id: str) -> str:
     """
     Build a baseline pack.
+
+    No Celery-level retries (max_retries=0). Transient errors are handled
+    by the LLM client retry loop (LLM_RETRY_ATTEMPTS). Re-running the
+    entire task is too expensive for baseline packs.
 
     Returns:
         Airtable run record ID for the baseline pack run.
@@ -140,33 +144,11 @@ def enqueue_baseline_pack_build(self, baseline_pack_id: str) -> str:
         logger.exception(
             "Baseline pack build failed for pack %s", baseline_pack_id
         )
-
-        if not _is_retryable(exc):
-            logger.error(
-                "Non-retryable error for baseline pack %s: %s", baseline_pack_id, exc
-            )
-            try:
-                AirtableClient().update_baseline_pack(baseline_pack_id, {"Status": "error"})
-            except Exception:
-                pass
-            raise
-
-        # Retryable — update progress but don't mark as error yet
         try:
-            AirtableClient().update_baseline_pack_progress(
-                baseline_pack_id, "Retrying — this can take a moment…"
-            )
+            AirtableClient().update_baseline_pack(baseline_pack_id, {"Status": "error"})
         except Exception:
             pass
-
-        try:
-            raise self.retry(exc=exc)
-        except MaxRetriesExceededError:
-            try:
-                AirtableClient().update_baseline_pack(baseline_pack_id, {"Status": "error"})
-            except Exception:
-                pass
-            raise
+        raise
 
 
 @celery_app.task(
