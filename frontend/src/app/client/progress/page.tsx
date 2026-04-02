@@ -207,7 +207,14 @@ function PatternTrendsChart({
     if (viewMode === 'all') return allPatterns;
     if (hasExpPattern) {
       const extra = expIds.filter(pid => allPatterns.includes(pid) && !topPatterns.includes(pid));
-      return [...topPatterns, ...extra];
+      if (extra.length === 0) return topPatterns;
+      // Swap experiment patterns in, dropping lowest-ranked top-5 entries to stay at 5
+      const combined = [...topPatterns];
+      for (const pid of extra) {
+        if (combined.length >= 5) combined.pop();
+        combined.push(pid);
+      }
+      return combined;
     }
     return topPatterns;
   }, [viewMode, hasExpPattern, expIds, allPatterns, topPatterns]);
