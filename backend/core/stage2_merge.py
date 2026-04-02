@@ -72,4 +72,19 @@ def merge_stage2_output(
     if "experiment_tracking" in stage2_output:
         merged["experiment_tracking"] = stage2_output["experiment_tracking"]
 
+    # 4. Append experiment detection evidence spans from Stage 2
+    stage2_spans = stage2_output.get("evidence_spans", [])
+    if stage2_spans:
+        merged_spans = merged.setdefault("evidence_spans", [])
+        existing_ids = {s.get("evidence_span_id") for s in merged_spans}
+        added = 0
+        for span in stage2_spans:
+            sid = span.get("evidence_span_id", "")
+            if sid and sid not in existing_ids:
+                merged_spans.append(span)
+                existing_ids.add(sid)
+                added += 1
+        if added:
+            logger.info("  Appended %d experiment detection spans from Stage 2", added)
+
     return merged, changelog

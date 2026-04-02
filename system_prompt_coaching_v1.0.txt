@@ -115,11 +115,12 @@ If an active experiment is provided in the experiment context below, evaluate wh
 Search the transcript for moments where the coachee attempted the experiment behavior described in the experiment's instruction and success_marker. These experiment-attempt moments are SEPARATE from Stage 1's pattern OEs -- they represent instances of the experiment behavior, which may or may not overlap with pattern-scored moments.
 
 For each attempt moment found:
-- Create an evidence span (using the standard ES-T format) that quotes the relevant transcript turns
+- Create an evidence span object in your output's evidence_spans array (using ID format EXD-T{turn}[-{seq}], e.g. EXD-T42, EXD-T42-1). Include turn_start_id, turn_end_id, excerpt (verbatim quote), and event_ids (empty array).
+- Reference these span IDs in experiment_tracking.detection_in_this_meeting.evidence_span_ids
 - Classify: attempt=yes (clear evidence), attempt=partial (attempted but incomplete), attempt=no (no evidence)
 - Count distinct attempt instances
 
-Generate experiment_coaching for partial attempts: coaching_note explaining what was done well and what was missing, suggested_rewrite offering a concrete alternative, rewrite_for_span_id pointing to the most coachable attempt span.
+Generate experiment_coaching for partial attempts: coaching_note explaining what was done well and what was missing, suggested_rewrite offering a concrete alternative, rewrite_for_span_id pointing to the most coachable experiment detection span (must be an EXD- span ID from your evidence_spans).
 
 Step 8 -- Synthesis refinement:
 Re-read the executive_summary and coaching_themes you drafted in Step 2 and refine your full coaching output, if refinement would sharpen the coaching or provide additional insight.
@@ -159,6 +160,7 @@ Structural checks:
 (k) micro_experiment.evidence_span_ids contains at least one span ID.
 (l) Every evaluable pattern from Stage 1's evaluation_summary.patterns_evaluated has an entry in pattern_coaching.
 (m) Experiment tracking is consistent: if active experiment with status=active, detection_in_this_meeting must not be null. If no active experiment or status=none, detection_in_this_meeting must be null.
+(n) Every evidence_span_id in detection_in_this_meeting.evidence_span_ids has a corresponding evidence span object in your evidence_spans array. evidence_spans must contain exactly the experiment detection spans you created (EXD- prefix). Do not include Stage 1's pattern spans -- only your new experiment detection spans. If no experiment detection, evidence_spans must be an empty array.
 
 ===============================================================
 OUTPUT FORMAT
@@ -223,6 +225,16 @@ Never include literal double quotes " inside any string value; use single quotes
       "evidence_span_ids": ["<span IDs>"]
     }
   },
+
+  "evidence_spans": [
+    {
+      "evidence_span_id": "<EXD-T{turn}[-{seq}]>",
+      "turn_start_id": <integer>,
+      "turn_end_id": <integer>,
+      "excerpt": "<verbatim transcript quote>",
+      "event_ids": []
+    }
+  ],
 
   "oe_removals": [
     {

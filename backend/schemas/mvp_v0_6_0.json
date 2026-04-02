@@ -268,7 +268,7 @@
       "properties": {
         "evidence_span_id": {
           "type": "string",
-          "pattern": "^ES-T[0-9]+(-[0-9]+)?$"
+          "pattern": "^E(S|XD)-T[0-9]+(-[0-9]+)?$"
         },
         "turn_start_id": { "type": "integer", "minimum": 1 },
         "turn_end_id": { "type": "integer", "minimum": 1 },
@@ -359,7 +359,7 @@
           "minItems": 0,
           "items": {
             "type": "string",
-            "pattern": "^ES-T[0-9]+(-[0-9]+)?$"
+            "pattern": "^E(S|XD)-T[0-9]+(-[0-9]+)?$"
           },
           "uniqueItems": true
         },
@@ -367,7 +367,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "pattern": "^ES-T[0-9]+(-[0-9]+)?$"
+            "pattern": "^E(S|XD)-T[0-9]+(-[0-9]+)?$"
           },
           "uniqueItems": true
         }
@@ -472,7 +472,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "pattern": "^ES-T[0-9]+(-[0-9]+)?$"
+            "pattern": "^E(S|XD)-T[0-9]+(-[0-9]+)?$"
           },
           "uniqueItems": true
         }
@@ -489,11 +489,11 @@
         "suggested_rewrite": { "type": ["string", "null"], "maxLength": 1000 },
         "rewrite_for_span_id": {
           "type": ["string", "null"],
-          "pattern": "^ES-T[0-9]+(-[0-9]+)?$"
+          "pattern": "^E(S|XD)-T[0-9]+(-[0-9]+)?$"
         },
         "best_success_span_id": {
           "type": ["string", "null"],
-          "pattern": "^ES-T[0-9]+(-[0-9]+)?$"
+          "pattern": "^E(S|XD)-T[0-9]+(-[0-9]+)?$"
         }
       }
     },
@@ -522,7 +522,7 @@
         "suggested_rewrite": { "type": ["string", "null"], "maxLength": 1000 },
         "rewrite_for_span_id": {
           "type": ["string", "null"],
-          "pattern": "^ES-T[0-9]+(-[0-9]+)?$"
+          "pattern": "^E(S|XD)-T[0-9]+(-[0-9]+)?$"
         }
       }
     },
@@ -598,7 +598,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "pattern": "^ES-T[0-9]+(-[0-9]+)?$"
+            "pattern": "^E(S|XD)-T[0-9]+(-[0-9]+)?$"
           },
           "uniqueItems": true
         }

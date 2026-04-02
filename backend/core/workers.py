@@ -624,13 +624,13 @@ def process_single_meeting_analysis(
         max_tokens=_get_config_max_tokens(client, config_links),
     )
 
-    # 6d. Apply post-LLM patches (scoring-only mode)
+    # 6d. Apply post-LLM patches (scoring-only mode, no quote cleanup yet)
     stage1_parsed = _json.loads(stage1_resp.raw_text)
     stage1_parsed = patch_analysis_output(
         stage1_parsed,
         prompt_meta=prompt_payload.meta,
         scoring_only=True,
-        cleanup_enabled=_CLEANUP_ENABLED,
+        cleanup_enabled=False,
     )
     stage1_raw = _json.dumps(stage1_parsed, ensure_ascii=False, indent=2)
 
@@ -742,10 +742,32 @@ def process_single_meeting_analysis(
     except Exception:
         pass  # non-blocking
 
+    # 7e. Apply coaching-related patches on merged output (deterministic, no LLM)
+    merged_output = patch_analysis_output(
+        merged_output,
+        active_experiment=memory.active_experiment if memory else None,
+        has_active_experiment=bool(active_exp_record_id),
+        scoring_only=False,
+        cleanup_enabled=False,
+    )
+
     # 8. Gate 2 validation on merged output (full schema)
     merged_raw = _json.dumps(merged_output, ensure_ascii=False, indent=2)
     gate2_result = gate1_validate(merged_raw, mode="full")
     persisted_json = gate2_result.corrected_data or merged_output
+
+    # 8b. Quote cleanup on final output (LLM call — cleans ASR artifacts in
+    #     evidence span excerpts, including experiment detection spans from Stage 2)
+    if _CLEANUP_ENABLED:
+        try:
+            from .quote_cleanup import cleanup_parsed_json
+            cleanup_parsed_json(persisted_json)  # mutates in-place
+        except Exception:
+            logger.warning(
+                "Quote cleanup failed for run_request %s; raw text will be persisted",
+                run_request_id,
+                exc_info=True,
+            )
 
     # 9. Persist run
     run_record = _persist_run_fields(

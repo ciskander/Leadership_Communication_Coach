@@ -68,7 +68,7 @@ _ID_PATTERNS = {
     "meeting_id": re.compile(r"^M-\d{6}$"),
     "baseline_pack_id": re.compile(r"^BP-\d{6}$"),
     "experiment_id": re.compile(r"^EXP-\d{6}$"),
-    "evidence_span_id": re.compile(r"^ES-T[0-9]+(-[0-9]+)?$"),
+    "evidence_span_id": re.compile(r"^E(S|XD)-T[0-9]+(-[0-9]+)?$"),
 }
 
 _PATTERN_ID_ENUM = set(PATTERN_ORDER)
