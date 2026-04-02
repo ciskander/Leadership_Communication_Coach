@@ -1111,6 +1111,10 @@ def process_baseline_pack_build(
     if not isinstance(_exp_track.get("detection_in_this_meeting"), dict):
         _exp_track["detection_in_this_meeting"] = None
 
+    # Apply output patches before stripping so patching can normalise
+    # malformed structures (e.g. missing fields) before we iterate them.
+    _parsed_output = _patch_parsed_output(_parsed_output)
+
     # ── Strip evidence-span arrays from baseline-pack aggregate ─────────
     # The LLM uses spans as *input* (in meeting_summaries) to write grounded
     # prose, but the *output* span ID arrays have namespace collisions
@@ -1118,19 +1122,34 @@ def process_baseline_pack_build(
     # at the aggregate level (the API already returns quotes: []).
     # Strip them so Gate1 doesn't choke on duplicates or dangling refs.
     for ps in _parsed_output.get("pattern_snapshot", []):
+        if not isinstance(ps, dict):
+            continue
         ps["evidence_span_ids"] = []
         ps["success_evidence_span_ids"] = []
 
     # Strip coaching rewrite span refs (namespace collision risk)
     for pc in (_parsed_output.get("coaching", {}) or {}).get("pattern_coaching", []):
+        if not isinstance(pc, dict):
+            continue
         pc["rewrite_for_span_id"] = None
 
-    for me in (_parsed_output.get("coaching", {}) or {}).get("micro_experiment", []):
+    # Strip micro_experiment evidence spans; filter out malformed (non-dict) items
+    _coaching = _parsed_output.get("coaching", {}) or {}
+    _micro_list = _coaching.get("micro_experiment", [])
+    _malformed = [me for me in _micro_list if not isinstance(me, dict)]
+    if _malformed:
+        logger.warning(
+            "Baseline pack %s: %d malformed micro_experiment item(s) "
+            "(non-dict) — filtering out. Fallback experiment generation "
+            "will be used.",
+            bp_pack_id_str, len(_malformed),
+        )
+        _micro_list = [me for me in _micro_list if isinstance(me, dict)]
+        _coaching["micro_experiment"] = _micro_list
+    for me in _micro_list:
         me["evidence_span_ids"] = []
 
     _parsed_output["evidence_spans"] = []
-
-    _parsed_output = _patch_parsed_output(_parsed_output)
 
     # Auto-correct baseline scores from sub-run data (deterministic weighted averages)
     baseline_corrections = _auto_correct_baseline_scores(_parsed_output, meeting_run_data)
@@ -1218,6 +1237,7 @@ def process_baseline_pack_build(
         })
 
     # 7b. Propose experiment from baseline pack output if gate1 passed
+    exp_record_id = None
     if gate1_result.passed:
         # Set the user's Active Baseline Pack so the client dashboard can find it
         if user_record_id:
@@ -1247,6 +1267,24 @@ def process_baseline_pack_build(
                         "Failed to generate additional experiments after baseline pack %s",
                         baseline_pack_id,
                     )
+
+    # 7c. Fallback: if primary experiment instantiation failed (malformed
+    # micro_experiment, gate1 failure, etc.), generate experiments from
+    # coaching history so the coachee always has a proposed experiment.
+    if not exp_record_id and user_record_id:
+        logger.info(
+            "Baseline pack %s: primary experiment instantiation failed — "
+            "using fallback experiment generation for user %s",
+            baseline_pack_id, user_record_id,
+        )
+        try:
+            process_next_experiment_suggestion(user_record_id, client=client)
+        except Exception:
+            logger.warning(
+                "Fallback experiment generation also failed for baseline pack %s",
+                baseline_pack_id,
+                exc_info=True,
+            )
 
     logger.info(
         "Completed baseline_pack build %s → run %s (gate1_pass=%s)",

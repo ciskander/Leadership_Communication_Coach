@@ -362,6 +362,123 @@ def _sanitise_output(data: dict) -> int:
                 )
             fixes += len(stripped)
 
+            # ── Clean dangling event_ids in evidence_spans after OE strip ──
+            stripped_event_ids = {oe.get("event_id") for oe in stripped if oe.get("event_id")}
+            for span in data.get("evidence_spans", []):
+                if not isinstance(span, dict):
+                    continue
+                orig_ids = span.get("event_ids", [])
+                cleaned = [eid for eid in orig_ids if eid not in stripped_event_ids]
+                if len(cleaned) < len(orig_ids):
+                    removed = set(orig_ids) - set(cleaned)
+                    for eid in removed:
+                        logger.warning(
+                            "Sanitiser: removing dangling event_id %s from "
+                            "evidence_span %s (OE stripped for non-evaluable pattern)",
+                            eid, span.get("evidence_span_id"),
+                        )
+                    span["event_ids"] = cleaned
+                    fixes += len(orig_ids) - len(cleaned)
+
+    # ── Auto-correct success_evidence_span_ids (deterministic rebuild) ──
+    # Rebuild from OE scores vs thresholds so downstream consumers
+    # (Stage 2, Gate1 business rules) see correct success classifications.
+    oe_list = data.get("opportunity_events", [])
+    span_list = data.get("evidence_spans", [])
+    span_lookup = {s.get("evidence_span_id"): s for s in span_list if isinstance(s, dict)}
+    oe_lookup = {oe.get("event_id"): oe for oe in oe_list if isinstance(oe, dict)}
+    for snap in ps_list:
+        if snap.get("evaluable_status") != "evaluable":
+            continue
+        pid = snap.get("pattern_id", "")
+        scoring_type = snap.get("scoring_type", "")
+        threshold = _SUCCESS_THRESHOLDS.get(scoring_type, 0.75)
+        pattern_es_ids = snap.get("evidence_span_ids") or []
+
+        rebuilt_success: list[str] = []
+        for es_id in pattern_es_ids:
+            span = span_lookup.get(es_id)
+            if not span:
+                continue
+            max_success = None
+            for event_id in span.get("event_ids", []):
+                oe = oe_lookup.get(event_id)
+                if oe and oe.get("pattern_id") == pid and oe.get("count_decision") == "counted":
+                    s = oe.get("success", 0)
+                    if max_success is None or s > max_success:
+                        max_success = s
+            if max_success is not None and max_success >= threshold:
+                rebuilt_success.append(es_id)
+
+        existing_success = snap.get("success_evidence_span_ids") or []
+        if set(rebuilt_success) != set(existing_success):
+            added = set(rebuilt_success) - set(existing_success)
+            removed = set(existing_success) - set(rebuilt_success)
+            if added:
+                logger.warning(
+                    "Sanitiser: success_evidence_span_ids for %s — adding %s "
+                    "(score >= %s threshold)",
+                    pid, sorted(added), threshold,
+                )
+            if removed:
+                logger.warning(
+                    "Sanitiser: success_evidence_span_ids for %s — removing %s "
+                    "(score < %s threshold)",
+                    pid, sorted(removed), threshold,
+                )
+            snap["success_evidence_span_ids"] = rebuilt_success
+            fixes += len(added) + len(removed)
+
+    # ── Auto-correct strengths with low pattern scores ──────────────────
+    coaching = data.get("coaching")
+    if isinstance(coaching, dict):
+        pattern_score_lookup = {
+            s.get("pattern_id"): s.get("score")
+            for s in ps_list if isinstance(s, dict)
+        }
+        strengths = coaching.get("strengths")
+        if isinstance(strengths, list):
+            orig_len = len(strengths)
+            filtered = []
+            for s_item in strengths:
+                if not isinstance(s_item, dict):
+                    continue
+                s_pid = s_item.get("pattern_id", "")
+                s_score = pattern_score_lookup.get(s_pid)
+                if s_score is not None and s_score < 0.70:
+                    logger.warning(
+                        "Sanitiser: removing strength for pattern %s "
+                        "(score %.4f < 0.70 threshold)",
+                        s_pid, s_score,
+                    )
+                    fixes += 1
+                else:
+                    filtered.append(s_item)
+            if len(filtered) < orig_len:
+                coaching["strengths"] = filtered
+
+        # ── Null out best_success_span_id referencing non-success spans ──
+        pattern_success_lookup = {
+            s.get("pattern_id"): set(s.get("success_evidence_span_ids") or [])
+            for s in ps_list if isinstance(s, dict)
+        }
+        for pc in coaching.get("pattern_coaching", []):
+            if not isinstance(pc, dict):
+                continue
+            best = pc.get("best_success_span_id")
+            if not best:
+                continue
+            pc_pid = pc.get("pattern_id", "")
+            success_ids = pattern_success_lookup.get(pc_pid, set())
+            if best not in success_ids:
+                logger.warning(
+                    "Sanitiser: nulling best_success_span_id %s for pattern %s "
+                    "(not in success_evidence_span_ids)",
+                    best, pc_pid,
+                )
+                pc["best_success_span_id"] = None
+                fixes += 1
+
     # ── Fix known LLM enum confusions in top-level opportunity_events ────
     for event in data.get("opportunity_events", []):
         if not isinstance(event, dict):
@@ -484,7 +601,7 @@ def validate(raw_text: str, *, mode: str = "full") -> Gate1Result:
         return Gate1Result(passed=False, issues=issues)
 
     # ── Step 1b: Sanitise known LLM output quirks ─────────────────────────────
-    _sanitise_output(data)
+    sanitiser_fixes = _sanitise_output(data)
 
     # ── Step 2: JSON Schema ───────────────────────────────────────────────────
     validator = _SCORING_VALIDATOR if mode == "scoring_only" else _VALIDATOR
@@ -495,12 +612,16 @@ def validate(raw_text: str, *, mode: str = "full") -> Gate1Result:
 
     if issues:
         # Schema errors are fatal; skip business rules for cleaner reporting
-        return Gate1Result(passed=False, issues=issues)
+        return Gate1Result(passed=False, issues=issues, corrected_data=data if sanitiser_fixes else None)
 
     # ── Step 3: Business rules (may auto-correct data in-place) ────────────────
     issues.extend(_business_rules(data, scoring_only=(mode == "scoring_only")))
 
-    has_corrections = any(i.issue_code == "SCORE_ARITHMETIC_AUTOCORRECTED" for i in issues)
+    has_corrections = sanitiser_fixes > 0 or any(
+        i.issue_code in ("SCORE_ARITHMETIC_AUTOCORRECTED", "OPP_COUNT_COUNTED_MISMATCH",
+                         "BEST_SUCCESS_SPAN_AUTO_FILLED")
+        for i in issues
+    )
     passed = all(i.severity != "error" for i in issues)
     return Gate1Result(
         passed=passed,

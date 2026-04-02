@@ -229,26 +229,37 @@ def _make_output_with_oe(valid_single_meeting_output):
     return out
 
 
-def test_success_span_missing_warns(valid_single_meeting_output):
-    """A span with OE score 1.0 not in success_evidence_span_ids triggers warning."""
+def test_success_span_missing_auto_corrected(valid_single_meeting_output):
+    """A span with OE score 1.0 not in success_evidence_span_ids is auto-corrected by sanitiser."""
     out = _make_output_with_oe(valid_single_meeting_output)
     pm = out["pattern_snapshot"][2]
     # Remove ES-T005 (score 1.0) from success list
     pm["success_evidence_span_ids"] = []
     result = validate(json.dumps(out))
     codes = {i.issue_code for i in result.issues}
-    assert "SUCCESS_SPAN_MISSING" in codes
+    # Sanitiser auto-corrects before business rules, so no warning is generated
+    assert "SUCCESS_SPAN_MISSING" not in codes
+    # Verify the corrected data has ES-T005 restored
+    assert result.corrected_data is not None
+    corrected_pm = result.corrected_data["pattern_snapshot"][2]
+    assert "ES-T005" in corrected_pm["success_evidence_span_ids"]
 
 
-def test_success_span_incorrect_warns(valid_single_meeting_output):
-    """A span with OE score 0.25 in success_evidence_span_ids triggers warning."""
+def test_success_span_incorrect_auto_corrected(valid_single_meeting_output):
+    """A span with OE score 0.25 in success_evidence_span_ids is auto-corrected by sanitiser."""
     out = _make_output_with_oe(valid_single_meeting_output)
     pm = out["pattern_snapshot"][2]
     # Add ES-T015 (score 0.25) to success list — incorrect for tiered_rubric
     pm["success_evidence_span_ids"] = ["ES-T005", "ES-T015"]
     result = validate(json.dumps(out))
     codes = {i.issue_code for i in result.issues}
-    assert "SUCCESS_SPAN_INCORRECT" in codes
+    # Sanitiser auto-corrects before business rules, so no warning is generated
+    assert "SUCCESS_SPAN_INCORRECT" not in codes
+    # Verify the corrected data has ES-T015 removed
+    assert result.corrected_data is not None
+    corrected_pm = result.corrected_data["pattern_snapshot"][2]
+    assert "ES-T015" not in corrected_pm["success_evidence_span_ids"]
+    assert "ES-T005" in corrected_pm["success_evidence_span_ids"]
 
 
 def test_success_span_correct_no_warning(valid_single_meeting_output):
@@ -355,8 +366,11 @@ def test_success_threshold_binary_requires_1_0(valid_single_meeting_output):
     qq["success_evidence_span_ids"] = ["ES-T025", "ES-T035"]
 
     result = validate(json.dumps(out))
-    codes = {i.issue_code for i in result.issues}
-    assert "SUCCESS_SPAN_INCORRECT" in codes
+    # Sanitiser auto-corrects: ES-T035 (score 0.0) removed from success list
+    assert result.corrected_data is not None
+    corrected_qq = result.corrected_data["pattern_snapshot"][6]
+    assert "ES-T035" not in corrected_qq["success_evidence_span_ids"]
+    assert "ES-T025" in corrected_qq["success_evidence_span_ids"]
 
 
 def test_success_threshold_tiered_rubric_ra_requires_0_75(valid_single_meeting_output):
@@ -400,8 +414,10 @@ def test_success_threshold_tiered_rubric_ra_requires_0_75(valid_single_meeting_o
     ra["success_evidence_span_ids"] = ["ES-T020-021"]
 
     result = validate(json.dumps(out))
-    codes = {i.issue_code for i in result.issues}
-    assert "SUCCESS_SPAN_INCORRECT" in codes
+    # Sanitiser auto-corrects: ES-T020-021 (score 0.5) removed from success list
+    assert result.corrected_data is not None
+    corrected_ra = result.corrected_data["pattern_snapshot"][4]
+    assert "ES-T020-021" not in corrected_ra["success_evidence_span_ids"]
 
 
 # ---------------------------------------------------------------------------
