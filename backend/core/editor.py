@@ -330,7 +330,10 @@ def _recalculate_pattern_score(
     min_threshold = snap.get("min_required_threshold")
     if min_threshold is not None and len(counted_oes) < min_threshold:
         snap["evaluable_status"] = "insufficient_signal"
-        snap["score"] = None
+        snap.pop("score", None)
+        snap["opportunity_count"] = 0
+        snap["evidence_span_ids"] = []
+        snap.pop("success_evidence_span_ids", None)
         demoted.add(pattern_id)
         logger.info(
             "Editor: pattern %s demoted to insufficient_signal "
@@ -341,7 +344,10 @@ def _recalculate_pattern_score(
 
     if len(counted_oes) == 0:
         snap["evaluable_status"] = "insufficient_signal"
-        snap["score"] = None
+        snap.pop("score", None)
+        snap["opportunity_count"] = 0
+        snap["evidence_span_ids"] = []
+        snap.pop("success_evidence_span_ids", None)
         demoted.add(pattern_id)
         logger.info("Editor: pattern %s demoted -- 0 counted OEs remain", pattern_id)
         return

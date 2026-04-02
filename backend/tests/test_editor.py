@@ -309,7 +309,7 @@ class TestOERemoval:
         assert pf_snap["evaluable_status"] == "evaluable"
 
     def test_remove_all_oes_demotes_to_insufficient_signal(self):
-        """Remove all OEs for a pattern → insufficient_signal, score=None."""
+        """Remove all OEs for a pattern → insufficient_signal, score removed."""
         original = _make_analysis_output()
         editor_output = {
             "oe_removals": [
@@ -321,8 +321,10 @@ class TestOERemoval:
 
         fm_snap = next(ps for ps in merged["pattern_snapshot"] if ps["pattern_id"] == "focus_management")
         assert fm_snap["evaluable_status"] == "insufficient_signal"
-        assert fm_snap["score"] is None
+        assert "score" not in fm_snap
         assert fm_snap["opportunity_count"] == 0
+        assert fm_snap["evidence_span_ids"] == []
+        assert "success_evidence_span_ids" not in fm_snap
 
     def test_remove_below_min_threshold_demotes(self):
         """Remove enough OEs to drop below min_required_threshold → insufficient_signal."""
@@ -339,7 +341,7 @@ class TestOERemoval:
 
         cc_snap = next(ps for ps in merged["pattern_snapshot"] if ps["pattern_id"] == "communication_clarity")
         assert cc_snap["evaluable_status"] == "insufficient_signal"
-        assert cc_snap["score"] is None
+        assert "score" not in cc_snap
 
     def test_only_counted_oes_contribute_to_score(self):
         """Excluded OEs should not affect score recalculation."""

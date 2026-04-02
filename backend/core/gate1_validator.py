@@ -321,6 +321,30 @@ def _sanitise_output(data: dict) -> int:
                     insuff_list.append(pid)
             fixes += 1
 
+    # ── Strip leftover scoring fields from insufficient_signal / not_evaluable ──
+    for snap in ps_list:
+        if snap.get("evaluable_status") in ("insufficient_signal", "not_evaluable"):
+            pid = snap.get("pattern_id", "?")
+            changed = False
+            if "score" in snap:
+                snap.pop("score")
+                changed = True
+            if snap.get("opportunity_count") not in (None, 0):
+                snap["opportunity_count"] = 0
+                changed = True
+            if snap.get("evidence_span_ids"):
+                snap["evidence_span_ids"] = []
+                changed = True
+            if snap.get("success_evidence_span_ids"):
+                snap.pop("success_evidence_span_ids")
+                changed = True
+            if changed:
+                logger.warning(
+                    "Sanitiser: stripped leftover scoring fields from %s pattern %s",
+                    snap.get("evaluable_status"), pid,
+                )
+                fixes += 1
+
     # ── Strip OEs for non-evaluable patterns ────────────────────────────
     non_evaluable_pids = {
         p.get("pattern_id") for p in ps_list
