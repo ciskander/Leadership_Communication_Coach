@@ -61,12 +61,15 @@ class BaseWorkerTask(Task):
     name="backend.queue.tasks.process_single_meeting_task",
     bind=True,
     base=BaseWorkerTask,
-    max_retries=1,
+    max_retries=0,
     default_retry_delay=15,
 )
 def enqueue_single_meeting(self, run_request_id: str) -> str:
     """
     Process a single_meeting analysis run.
+
+    No Celery-level retries (max_retries=0). Transient errors are handled
+    by the LLM client retry loop (LLM_RETRY_ATTEMPTS).
 
     Returns:
         Airtable run record ID.
@@ -81,39 +84,13 @@ def enqueue_single_meeting(self, run_request_id: str) -> str:
         logger.exception(
             "Single meeting analysis failed for run_request %s", run_request_id
         )
-
-        if not _is_retryable(exc):
-            logger.error(
-                "Non-retryable error for run_request %s: %s", run_request_id, exc
-            )
-            # Mark as error only for non-retryable failures
-            try:
-                AirtableClient().update_run_request_status(
-                    run_request_id, "error", error=str(exc)[:2000],
-                )
-            except Exception:
-                pass
-            raise
-
-        # Retryable — update progress but don't mark as error yet
         try:
-            AirtableClient().update_run_request_progress(
-                run_request_id, "Retrying analysis…"
+            AirtableClient().update_run_request_status(
+                run_request_id, "error", error=str(exc)[:2000],
             )
         except Exception:
             pass
-
-        try:
-            raise self.retry(exc=exc)
-        except MaxRetriesExceededError:
-            # All retries exhausted — now mark as error
-            try:
-                AirtableClient().update_run_request_status(
-                    run_request_id, "error", error=str(exc)[:2000],
-                )
-            except Exception:
-                pass
-            raise
+        raise
 
 
 @celery_app.task(
