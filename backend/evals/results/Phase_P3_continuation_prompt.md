@@ -30,6 +30,8 @@ Key files: `workers.py` (pipeline orchestration), `prompt_builder.py` (prompt co
 
 ### Phase P2: Decouple experiments from patterns + deprecate focus_area (COMPLETE — merged to main)
 
+Work was done on `claude/practical-ptolemy` branch and merged to `main`.
+
 Experiments are now behavioral-change-first objects. Key changes:
 
 **Schema (v0.6.0):**
@@ -78,11 +80,21 @@ The coachee context document provides:
 1. **Active experiment** (already implemented): title, instruction, success criteria, related_patterns, attempt history
 2. **Prior coaching themes** (2-3 recent meetings): so the LLM avoids repeating itself and can build on prior observations
 3. **Prior executive summaries** (2-3 recent meetings): so it can reference growth or persistent issues
-4. **Experiment history** (completed/parked experiments): so it understands the coachee's coaching journey
+4. **Experiment history** (completed/parked experiments with journey summaries): so it understands the coachee's coaching journey
 
 ### What NOT to include
 
 **Pattern score trendlines** were deliberately excluded. There is no evidence that experiment completion correlates with pattern score movement, and including scores could create artificial tension — pulling the LLM toward pattern-score-driven recommendations that conflict with theme-based coaching insights. Coaching themes should be the primary longitudinal signal.
+
+### Existing code that already fetches this data
+
+`process_next_experiment_suggestion` (~line 1560 in `workers.py`) already fetches and formats coaching themes, executive summaries, and experiment progress from recent runs. The data-fetching logic extracts from each run's `Parsed JSON` field:
+- `coaching.coaching_themes` → list of `{theme, explanation, priority, related_patterns}`
+- `coaching.executive_summary` → string
+- `experiment_tracking.detection_in_this_meeting` → `{attempt, count_attempts}`
+- `coaching.experiment_coaching.coaching_note` → string
+
+This logic should be **extracted into a shared helper** and reused by `_build_memory_for_user`, not duplicated. The formatting (how the context is serialized into prompt text) may differ between the two use cases.
 
 ### Current state of `_build_memory_for_user` (~line 1954 in workers.py)
 
@@ -91,29 +103,56 @@ Currently builds a `MemoryBlock` with:
 - `active_experiment`: full experiment dict with related_patterns (or null)
 - `recent_pattern_snapshots`: always `[]` — placeholder marked "Populated via future enhancement"
 
-The `recent_pattern_snapshots` field was designed for this purpose but was never populated. This is the designated place for coachee history context.
+The `recent_pattern_snapshots` field name is misleading — it suggests pattern data, but the intent was always to hold coaching history context. Either rename it (e.g., `coaching_history`) or add a new field alongside it. The plan should propose a concrete field name and shape.
 
-### Design constraints
+### Design questions to address in the plan
 
-1. **Schema stability**: Whatever schema is chosen for the coachee context must be stable before coaching themes start accumulating in production, since those themes will be read back as historical context in future meetings.
+1. **How many meetings of history?** The prompt says "2-3 recent meetings" but the plan should propose a specific number (or make it configurable). Consider: too few limits context; too many risks the LLM fixating on stale details.
 
-2. **Data source**: Coaching themes and executive summaries live in each run's `Parsed JSON` field in Airtable. The context builder needs to fetch recent runs and extract these fields.
+2. **Data shape in the MemoryBlock**: What does the new field look like? Suggestion to consider:
+   ```python
+   coaching_history: list[dict] = []
+   # Each entry: {
+   #   "meeting_date": "2026-03-15",
+   #   "executive_summary": "...",
+   #   "coaching_themes": [{"theme": "...", "explanation": "...", "priority": "..."}],
+   # }
+   ```
 
-3. **Token budget**: The context document competes for tokens in the Stage 2 prompt. Keep it concise — summaries of themes, not full theme objects. Consider what the minimum viable context is that would meaningfully improve coaching quality.
+3. **How to serialize into the prompt**: Should the context be formatted as a structured block (like the experiment context), prose summary, or JSON? The experiment context uses a labeled text block with `===` headers. The same approach would be consistent.
 
-4. **Experiment attempt history**: The active experiment's attempt events are already fetchable via `client.get_experiment_events()`. Consider including a compact summary (e.g., "3 meetings analyzed, 2 partial attempts, 1 full attempt").
+4. **Prompt instructions for the LLM**: The Stage 2 prompt needs instructions telling the LLM *how* to use the history. Key behaviors:
+   - Build on prior themes, don't repeat them verbatim
+   - Reference growth or persistent issues when writing the executive summary
+   - Note when a coaching theme from a prior meeting reappears (or resolves)
+   - Do NOT let prior context override what's actually observed in this transcript
 
-5. **Prompt integration**: The Stage 2 prompt has `__EXPERIMENT_CONTEXT__` substitution already. The coachee context could extend this or use a new `__COACHEE_HISTORY__` substitution point.
+5. **Prompt integration point**: The Stage 2 prompt has `__EXPERIMENT_CONTEXT__` substitution. The coachee history should use a new `__COACHEE_HISTORY__` substitution — separate concerns, since experiment context is conditional but coachee history is always present (even if empty).
+
+6. **Experiment history shape**: Completed/parked experiments have these fields in Airtable: `Title`, `Instructions`, `Success Criteria`, `Status`, `Journey Summary`, `Related Patterns`, `Started At`, `Ended At`. The `Journey Summary` field (added in P2) is a coach's retrospective generated by the next-experiment prompt. Include title, status, related_patterns, and journey_summary for each past experiment (most recent 3-5).
+
+7. **Active experiment attempt history**: The active experiment's attempt events are fetchable via `client.get_experiment_events()`. Include a compact summary in the context (e.g., "3 meetings analyzed: 1 full attempt, 2 partial attempts"). This data is already available in the experiment context block — consider enriching it rather than duplicating in the history block.
+
+### Curation quality over token-stinginess
+
+The context document should provide enough information for the LLM to see the coaching trajectory and avoid repetition. Include the full coaching themes (theme + explanation + priority) and full executive summaries — these are already concise (themes are 1-3 items per meeting, exec summaries are max 1200 chars). Don't summarize them further; let the LLM see the actual prior output so it can meaningfully build on it.
+
+Think of it as a coach's working notes from the last few sessions — enough to walk into the room prepared, not a database export.
 
 ### Key files to modify
 
 | File | Purpose | What changes |
 |---|---|---|
-| `backend/core/workers.py` | `_build_memory_for_user` (~L1954) | Populate `recent_pattern_snapshots` (or richer equivalent) from recent runs |
-| `backend/core/prompt_builder.py` | `build_memory_block`, `build_stage2_system_prompt` | Add coachee history to the memory block; inject into Stage 2 prompt |
-| `backend/core/models.py` | `MemoryBlock` dataclass | May need new fields for coaching history |
-| `system_prompt_coaching_v1.0.txt` | Stage 2 coaching prompt | Add substitution point for coachee history; add instructions for using longitudinal context |
-| `system_prompt_next_experiment_v1.0.txt` | Next-experiment prompt | Already uses coaching themes; may benefit from experiment history context |
+| `backend/core/workers.py` | `_build_memory_for_user` (~L1954) | Fetch recent runs, extract coaching themes + exec summaries + experiment history; populate new MemoryBlock field. Extract shared data-fetching logic from `process_next_experiment_suggestion` into a reusable helper. |
+| `backend/core/prompt_builder.py` | `build_memory_block` (~L631), `build_stage2_system_prompt` (~L270) | Accept new coaching history data in `build_memory_block`; add new `__COACHEE_HISTORY__` substitution builder; inject into Stage 2 prompt |
+| `backend/core/models.py` | `MemoryBlock` dataclass | Add new field for coaching history (e.g., `coaching_history: list[dict]`). Consider renaming or deprecating `recent_pattern_snapshots`. |
+| `system_prompt_coaching_v1.0.txt` | Stage 2 coaching prompt | Add `__COACHEE_HISTORY__` substitution point; add instructions for using longitudinal context (build on prior themes, reference growth, don't repeat) |
+
+### Testing strategy
+
+1. **Unit tests**: Test the shared data-fetching helper — given mock run records with `Parsed JSON`, verify correct extraction of themes, summaries, and experiment progress. Test the prompt builder's history serialization.
+2. **Smoke test in production**: Run a single meeting analysis for a coachee with 3+ prior runs. Inspect the Stage 2 system prompt (logged in worker output) to verify the coachee history block is present and well-formatted. Verify the coaching output references or builds on prior themes.
+3. **Eval comparison** (future): Once stable, use the eval suite to compare coaching quality with vs. without longitudinal context. This is a separate effort — don't block P3 on it.
 
 ### Important: Eval infrastructure
 
