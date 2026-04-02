@@ -125,7 +125,8 @@ _DEFAULT_EVAL_CONFIG = {
     "target_speaker_label": "Speaker",
     "memory": {
         "baseline_profile": None,
-        "recent_pattern_snapshots": [],
+        "coaching_history": [],
+        "experiment_history": [],
         "active_experiment": None,
     },
 }
@@ -190,7 +191,8 @@ def load_raw_transcript(
     mem_data = metadata.get("memory", {})
     memory = MemoryBlock(
         baseline_profile=mem_data.get("baseline_profile") if isinstance(mem_data, dict) else None,
-        recent_pattern_snapshots=mem_data.get("recent_pattern_snapshots", []) if isinstance(mem_data, dict) else [],
+        coaching_history=mem_data.get("coaching_history", []) if isinstance(mem_data, dict) else [],
+        experiment_history=mem_data.get("experiment_history", []) if isinstance(mem_data, dict) else [],
         active_experiment=mem_data.get("active_experiment") if isinstance(mem_data, dict) else None,
     )
 

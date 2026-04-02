@@ -402,7 +402,8 @@ def test_build_memory_block_null_when_no_baseline_or_experiment():
     memory = build_memory_block()
     assert memory.baseline_profile is None
     assert memory.active_experiment is None
-    assert memory.recent_pattern_snapshots == []
+    assert memory.coaching_history == []
+    assert memory.experiment_history == []
 
 
 def test_build_memory_block_with_baseline():

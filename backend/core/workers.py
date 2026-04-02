@@ -281,24 +281,24 @@ def _build_slim_meeting_summary(run_fields: dict, parsed_json: dict) -> dict:
                     item[key] = val
         enriched_snapshot.append(item)
 
-    # Enriched coaching output: include messages for strengths and focus
+    # Enriched coaching output: include coaching themes, executive summary,
+    # strengths, and micro_experiment for the baseline synthesis LLM.
+    coaching_themes = coaching.get("coaching_themes") or []
+    executive_summary = coaching.get("executive_summary") or ""
     strengths = coaching.get("strengths") or []
-    focus = coaching.get("focus") or []
     micro = (coaching.get("micro_experiment") or [{}])[0]
-    coaching_enriched = {
+    coaching_enriched: dict = {
+        "executive_summary": executive_summary,
+        "coaching_themes": coaching_themes,
         "strengths": [
             {"pattern_id": s.get("pattern_id"), "message": s.get("message")}
             for s in strengths
-        ],
-        "focus": [
-            {"pattern_id": f.get("pattern_id"), "message": f.get("message")}
-            for f in focus
         ],
         "micro_experiment": {
             "title": micro.get("title"),
             "instruction": micro.get("instruction"),
             "success_marker": micro.get("success_marker"),
-            "pattern_id": micro.get("pattern_id"),
+            "related_patterns": micro.get("related_patterns", []),
             "evidence_span_ids": micro.get("evidence_span_ids"),
         },
     }
@@ -582,7 +582,6 @@ def process_single_meeting_analysis(
     stage1_memory = _MB(
         baseline_profile=memory.baseline_profile if memory else None,
         active_experiment=None,  # Stage 1 is stateless
-        recent_pattern_snapshots=memory.recent_pattern_snapshots if memory else [],
     )
     prompt_payload = build_single_meeting_prompt(
         meeting_id=transcript_id_str,
@@ -1449,6 +1448,128 @@ def create_attempt_event_from_run(
 # ── Worker 5: process_next_experiment_suggestion ──────────────────────────────
 
 MAX_PARKED = 3
+MAX_COACHING_HISTORY_MEETINGS = 3
+MAX_EXPERIMENT_HISTORY = 5
+
+
+# ── Shared data-fetching helpers ──────────────────────────────────────────────
+
+def _fetch_recent_coaching_data(
+    client: AirtableClient,
+    user_record_id: str,
+    max_runs: int = 5,
+) -> tuple[
+    list[tuple[str, list]],                          # coaching_themes_by_run
+    list[tuple[str, str]],                           # executive_summaries_by_run
+    list[tuple[str, str, int, Optional[str]]],       # experiment_progress
+    list[dict],                                      # eligible_run_records (raw)
+]:
+    """Fetch recent Gate1-passing runs and extract coaching data.
+
+    Returns coaching themes, executive summaries, and experiment progress
+    extracted from each eligible run's Parsed JSON. Used by both
+    ``_build_memory_for_user`` (coachee history) and
+    ``process_next_experiment_suggestion`` (experiment proposals).
+
+    Eligible runs: standalone single_meeting runs and baseline_pack synthesis
+    runs. Baseline pack sub-runs (single_meeting with a baseline_pack link)
+    are excluded.
+    """
+    runs_formula = (
+        f"AND("
+        f"{{Coachee ID}} = '{user_record_id}', "
+        f"{{Gate1 Pass}} = TRUE()"
+        f")"
+    )
+    run_records = client.search_records("runs", runs_formula, max_records=max_runs)
+
+    # Exclude single_meeting sub-runs that belong to a baseline pack
+    eligible_runs = [
+        r for r in run_records
+        if not (
+            _extract_fields(r).get(F_RUN_ANALYSIS_TYPE) == "single_meeting"
+            and _get_link_ids(_extract_fields(r), F_RUN_BASELINE_PACK)
+        )
+    ]
+
+    coaching_themes_by_run: list[tuple[str, list]] = []
+    executive_summaries_by_run: list[tuple[str, str]] = []
+    experiment_progress: list[tuple[str, str, int, Optional[str]]] = []
+
+    for r in eligible_runs:
+        rf = _extract_fields(r)
+        parsed_json_str = rf.get(F_RUN_PARSED_JSON) or "{}"
+        meeting_date = rf.get("Meeting Date") or rf.get("Created At") or "unknown"
+        try:
+            parsed = json.loads(parsed_json_str)
+            # Coaching themes
+            themes = (parsed.get("coaching", {}) or {}).get("coaching_themes", [])
+            if themes:
+                coaching_themes_by_run.append((meeting_date, themes))
+            # Executive summary
+            exec_summary = (parsed.get("coaching", {}) or {}).get("executive_summary")
+            if exec_summary:
+                executive_summaries_by_run.append((meeting_date, exec_summary))
+            # Experiment progress (if run had active experiment)
+            exp_tracking = parsed.get("experiment_tracking", {})
+            detection = exp_tracking.get("detection_in_this_meeting") if exp_tracking else None
+            if detection:
+                exp_coaching = (parsed.get("coaching", {}) or {}).get("experiment_coaching")
+                coaching_note = exp_coaching.get("coaching_note") if exp_coaching else None
+                experiment_progress.append((
+                    meeting_date,
+                    detection.get("attempt", "unknown"),
+                    detection.get("count_attempts", 0),
+                    coaching_note,
+                ))
+        except Exception:
+            pass
+
+    logger.info(
+        "_fetch_recent_coaching_data: user=%s | %d total runs, %d eligible, "
+        "%d with themes, %d with exec summaries",
+        user_record_id, len(run_records), len(eligible_runs),
+        len(coaching_themes_by_run), len(executive_summaries_by_run),
+    )
+
+    return coaching_themes_by_run, executive_summaries_by_run, experiment_progress, eligible_runs
+
+
+def _fetch_experiment_history(
+    client: AirtableClient,
+    user_record_id: str,
+    max_experiments: int = 20,
+) -> tuple[list[dict], list[str]]:
+    """Fetch completed/abandoned/parked experiments for a user.
+
+    Returns (past_exp_records, past_titles) sorted most-recent-first by
+    Ended At date. Used by both ``_build_memory_for_user`` and
+    ``process_next_experiment_suggestion``.
+    """
+    user_rec = client.get_user(user_record_id)
+    user_primary_id = _extract_fields(user_rec).get("User ID", "")
+
+    past_exp_formula = (
+        f"AND("
+        f"FIND('{user_primary_id}', ARRAYJOIN({{User}})), "
+        f"OR({{Status}} = 'completed', {{Status}} = 'abandoned', {{Status}} = 'parked')"
+        f")"
+    )
+    past_exp_records = client.search_records("experiments", past_exp_formula, max_records=max_experiments)
+    past_exp_records.sort(
+        key=lambda x: _extract_fields(x).get(F_EXP_ENDED_AT) or "",
+        reverse=True,
+    )
+
+    past_titles: list[str] = []
+    if past_exp_records:
+        past_titles = [
+            _extract_fields(r).get(F_EXP_TITLE, "")
+            for r in past_exp_records
+            if _extract_fields(r).get(F_EXP_TITLE)
+        ]
+
+    return past_exp_records, past_titles
 
 
 def process_next_experiment_suggestion(
@@ -1497,23 +1618,10 @@ def process_next_experiment_suggestion(
 
     num_to_generate = MAX_PARKED - total_options  # generate enough to reach 3 total
 
-    # 1. Fetch up to 5 recent Gate1-passing runs for this user
-    runs_formula = (
-        f"AND("
-        f"{{Coachee ID}} = '{user_record_id}', "
-        f"{{Gate1 Pass}} = TRUE()"
-        f")"
+    # 1. Fetch recent coaching data (themes, summaries, experiment progress)
+    coaching_themes_by_run, executive_summaries_by_run, experiment_progress, eligible_runs = (
+        _fetch_recent_coaching_data(client, user_record_id, max_runs=5)
     )
-    run_records = client.search_records("runs", runs_formula, max_records=5)
-
-    # Exclude single_meeting sub-runs that belong to a baseline pack
-    eligible_runs = [
-        r for r in run_records
-        if not (
-            _extract_fields(r).get(F_RUN_ANALYSIS_TYPE) == "single_meeting"
-            and _get_link_ids(_extract_fields(r), F_RUN_BASELINE_PACK)
-        )
-    ]
 
     if not eligible_runs:
         logger.info(
@@ -1522,31 +1630,12 @@ def process_next_experiment_suggestion(
         )
         return None
 
-    # 2. Fetch past experiments (completed + abandoned + parked), most recent first
-    user_rec = client.get_user(user_record_id)
-    user_primary_id = _extract_fields(user_rec).get("User ID", "")
-
-    past_exp_formula = (
-        f"AND("
-        f"FIND('{user_primary_id}', ARRAYJOIN({{User}})), "
-        f"OR({{Status}} = 'completed', {{Status}} = 'abandoned', {{Status}} = 'parked')"
-        f")"
-    )
-    past_exp_records = client.search_records("experiments", past_exp_formula, max_records=20)
-    past_exp_records.sort(
-        key=lambda x: _extract_fields(x).get(F_EXP_ENDED_AT) or "",
-        reverse=True,
-    )
-
-    past_titles: list[str] = []
-    if past_exp_records:
-        past_titles = [
-            _extract_fields(r).get(F_EXP_TITLE, "")
-            for r in past_exp_records
-            if _extract_fields(r).get(F_EXP_TITLE)
-        ]
+    # 2. Fetch past experiments and active experiment
+    past_exp_records, past_titles = _fetch_experiment_history(client, user_record_id)
 
     # Fetch active experiment (if any) for progress section
+    user_rec = client.get_user(user_record_id)
+    user_primary_id = _extract_fields(user_rec).get("User ID", "")
     active_exp_formula = (
         f"AND("
         f"FIND('{user_primary_id}', ARRAYJOIN({{User}})), "
@@ -1556,48 +1645,7 @@ def process_next_experiment_suggestion(
     active_exp_records = client.search_records("experiments", active_exp_formula, max_records=1)
     active_experiment = active_exp_records[0] if active_exp_records else None
 
-    # 3. Extract coaching themes, executive summaries, and experiment progress from eligible runs
-    coaching_themes_by_run: list[tuple[str, list]] = []  # (meeting_date, themes_list)
-    executive_summaries_by_run: list[tuple[str, str]] = []  # (meeting_date, summary_str)
-    experiment_progress: list[tuple[str, str, int, Optional[str]]] = []  # (meeting_date, attempt, count, coaching_note)
-
-    for r in eligible_runs:
-        rf = _extract_fields(r)
-        parsed_json_str = rf.get(F_RUN_PARSED_JSON) or "{}"
-        meeting_date = rf.get("Meeting Date") or rf.get("Created At") or "unknown"
-        try:
-            parsed = json.loads(parsed_json_str)
-            # Coaching themes
-            themes = (parsed.get("coaching", {}) or {}).get("coaching_themes", [])
-            if themes:
-                coaching_themes_by_run.append((meeting_date, themes))
-            # Executive summary
-            exec_summary = (parsed.get("coaching", {}) or {}).get("executive_summary")
-            if exec_summary:
-                executive_summaries_by_run.append((meeting_date, exec_summary))
-            # Experiment progress (if run had active experiment)
-            exp_tracking = parsed.get("experiment_tracking", {})
-            detection = exp_tracking.get("detection_in_this_meeting") if exp_tracking else None
-            if detection:
-                exp_coaching = (parsed.get("coaching", {}) or {}).get("experiment_coaching")
-                coaching_note = exp_coaching.get("coaching_note") if exp_coaching else None
-                experiment_progress.append((
-                    meeting_date,
-                    detection.get("attempt", "unknown"),
-                    detection.get("count_attempts", 0),
-                    coaching_note,
-                ))
-        except Exception:
-            pass
-
-    logger.info(
-        "process_next_experiment_suggestion: %d total runs fetched, %d eligible, "
-        "%d runs with coaching themes, %d with executive summaries",
-        len(run_records), len(eligible_runs),
-        len(coaching_themes_by_run), len(executive_summaries_by_run),
-    )
-
-    # 4. Build user message with coaching themes, executive summaries, and experiment context
+    # 3. Build user message with coaching themes, executive summaries, and experiment context
 
     # ── COACHING THEME HISTORY ──
     theme_lines: list[str] = []
@@ -1956,7 +2004,11 @@ def _build_memory_for_user(
     user_record_id: Optional[str],
     active_exp_record_id: Optional[str],
 ) -> MemoryBlock:
-    """Build the memory block for a single_meeting prompt."""
+    """Build the memory block for a single_meeting prompt.
+
+    Includes baseline profile, active experiment, coaching history from
+    recent meetings, and experiment history (completed/parked/abandoned).
+    """
     if not user_record_id:
         return MemoryBlock()
 
@@ -2012,11 +2064,66 @@ def _build_memory_for_user(
             "status": exp_fields.get("Status"),
         }
 
+    # Coaching history: recent meeting themes + executive summaries
+    coaching_history: list[dict] = []
+    try:
+        themes_by_run, summaries_by_run, _, _ = _fetch_recent_coaching_data(
+            client, user_record_id, max_runs=MAX_COACHING_HISTORY_MEETINGS,
+        )
+        # Build one entry per meeting, keyed by date. Merge themes and
+        # summaries since they come from the same runs but are extracted
+        # into separate lists.
+        summaries_map = dict(summaries_by_run)
+        dates_seen: set[str] = set()
+        for meeting_date, themes in themes_by_run:
+            if meeting_date in dates_seen:
+                continue
+            dates_seen.add(meeting_date)
+            coaching_history.append({
+                "meeting_date": meeting_date,
+                "executive_summary": summaries_map.get(meeting_date, ""),
+                "coaching_themes": themes,
+            })
+        # Add any meetings that had an executive summary but no themes
+        for meeting_date, summary in summaries_by_run:
+            if meeting_date not in dates_seen:
+                dates_seen.add(meeting_date)
+                coaching_history.append({
+                    "meeting_date": meeting_date,
+                    "executive_summary": summary,
+                    "coaching_themes": [],
+                })
+    except Exception as exc:
+        logger.warning("Failed to fetch coaching history: %s", exc)
+
+    # Experiment history: completed/parked/abandoned experiments
+    experiment_history: list[dict] = []
+    try:
+        past_exp_records, _ = _fetch_experiment_history(client, user_record_id)
+        for exp_rec in past_exp_records[:MAX_EXPERIMENT_HISTORY]:
+            ef = _extract_fields(exp_rec)
+            related_raw = ef.get(F_EXP_RELATED_PATTERNS, "")
+            related_list: list[str] = []
+            if related_raw:
+                try:
+                    related_list = json.loads(related_raw) if isinstance(related_raw, str) else related_raw
+                except Exception:
+                    related_list = []
+            experiment_history.append({
+                "title": ef.get(F_EXP_TITLE, "unknown"),
+                "status": ef.get(F_EXP_STATUS, "unknown"),
+                "related_patterns": related_list,
+                "journey_summary": ef.get(F_EXP_JOURNEY_SUMMARY, ""),
+            })
+    except Exception as exc:
+        logger.warning("Failed to fetch experiment history: %s", exc)
+
     return build_memory_block(
         baseline_pack_id=baseline_pack_id_str,
         strengths=strengths,
         active_experiment=active_exp_data,
-        recent_snapshots=[],  # Populated via future enhancement
+        coaching_history=coaching_history,
+        experiment_history=experiment_history,
     )
 
 

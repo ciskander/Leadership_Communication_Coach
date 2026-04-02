@@ -271,11 +271,13 @@ def build_stage2_system_prompt(memory: MemoryBlock) -> str:
     """Assemble the full Stage 2 coaching system prompt with substitutions.
 
     Loads ``system_prompt_coaching_v1.0.txt``, substitutes:
+    - ``__COACHEE_HISTORY__`` with prior meeting coaching context
     - ``__PATTERN_DEFINITIONS__`` with extracted taxonomy definitions
     - ``__EXPERIMENT_CONTEXT__`` with experiment context from memory
 
     Args:
-        memory: The coachee's memory block (may contain active experiment).
+        memory: The coachee's memory block (may contain active experiment,
+                coaching history, and experiment history).
 
     Returns:
         Complete system prompt string ready for the LLM call.
@@ -285,6 +287,10 @@ def build_stage2_system_prompt(memory: MemoryBlock) -> str:
         raise FileNotFoundError(f"Stage 2 coaching prompt not found at {prompt_path}")
 
     raw = prompt_path.read_text(encoding="utf-8").strip()
+
+    # Substitute coachee history (prior meeting context)
+    coachee_history = _build_coachee_history_for_stage2(memory)
+    raw = raw.replace("__COACHEE_HISTORY__", coachee_history)
 
     # Substitute pattern definitions from canonical taxonomy
     pattern_defs = extract_stage2_pattern_definitions()
@@ -614,7 +620,7 @@ def build_baseline_pack_prompt(
     }
 
     user_message = (
-        "Synthesize and return ONLY one JSON object conforming to mvp.v0.5.0.\n\n"
+        "Synthesize and return ONLY one JSON object conforming to mvp.v0.6.0.\n\n"
         "INPUT_PAYLOAD\n"
         + json.dumps(input_payload, ensure_ascii=False, indent=2)
         + _BASELINE_HARD_REMINDERS
@@ -635,20 +641,15 @@ def build_memory_block(
     baseline_pack_id: Optional[str] = None,
     strengths: Optional[list[str]] = None,
     active_experiment: Optional[dict] = None,
-    recent_snapshots: Optional[list[dict]] = None,
+    coaching_history: Optional[list[dict]] = None,
+    experiment_history: Optional[list[dict]] = None,
 ) -> MemoryBlock:
     """
     Assemble the memory block for a single_meeting prompt.
 
-    If there is no active baseline or experiment, returns a null memory block.
+    If there is no active baseline or experiment, returns a null memory block
+    (but may still carry coaching_history and experiment_history).
     """
-    if not baseline_pack_id and not active_experiment:
-        return MemoryBlock(
-            baseline_profile=None,
-            active_experiment=None,
-            recent_pattern_snapshots=[],
-        )
-
     baseline_profile: Optional[dict] = None
     if baseline_pack_id:
         baseline_profile = {
@@ -674,5 +675,78 @@ def build_memory_block(
     return MemoryBlock(
         baseline_profile=baseline_profile,
         active_experiment=active_exp_block,
-        recent_pattern_snapshots=recent_snapshots or [],
+        coaching_history=coaching_history or [],
+        experiment_history=experiment_history or [],
     )
+
+
+def _build_coachee_history_for_stage2(memory: MemoryBlock) -> str:
+    """Build the coachee history context string for the Stage 2 coaching prompt.
+
+    Serializes coaching_history (recent meeting themes + summaries) and
+    experiment_history (completed/parked/abandoned experiments) into a
+    structured text block that replaces ``__COACHEE_HISTORY__``.
+
+    Returns empty string if both lists are empty (new coachee).
+    """
+    if not memory or (not memory.coaching_history and not memory.experiment_history):
+        return ""
+
+    lines: list[str] = [
+        "",
+        "===============================================================",
+        "COACHEE HISTORY \u2014 PRIOR MEETING CONTEXT",
+        "===============================================================",
+        "",
+        "This coachee has been coached across multiple meetings. Use this history to:",
+        "- Build on prior coaching themes rather than repeating them verbatim",
+        "- Reference growth or persistent patterns when writing the executive summary",
+        "- Note when a prior coaching theme reappears or resolves",
+        "- Do NOT let this history override what you observe in the current transcript",
+    ]
+
+    # ── Recent meeting analyses ──
+    if memory.coaching_history:
+        lines.append("")
+        lines.append("\u2500\u2500 Recent Meeting Analyses (most recent first) \u2500\u2500")
+
+        for entry in memory.coaching_history:
+            meeting_date = entry.get("meeting_date", "unknown")
+            lines.append("")
+            lines.append(f"Meeting: {meeting_date}")
+
+            exec_summary = entry.get("executive_summary", "")
+            if exec_summary:
+                lines.append(f'  Executive summary: "{exec_summary}"')
+
+            themes = entry.get("coaching_themes", [])
+            if themes:
+                lines.append("  Coaching themes:")
+                for theme in themes:
+                    if isinstance(theme, dict):
+                        label = theme.get("theme", "unknown")
+                        explanation = theme.get("explanation", "")
+                        priority = theme.get("priority", "")
+                        prefix = f"    {priority.capitalize()}: " if priority else "    Theme: "
+                        lines.append(f'{prefix}"{label}" \u2014 {explanation}')
+                    elif isinstance(theme, str):
+                        lines.append(f"    Theme: {theme}")
+
+    # ── Experiment journey ──
+    if memory.experiment_history:
+        lines.append("")
+        lines.append("\u2500\u2500 Experiment Journey \u2500\u2500")
+
+        for exp in memory.experiment_history:
+            title = exp.get("title", "unknown")
+            status = exp.get("status", "unknown")
+            related = exp.get("related_patterns", [])
+            journey = exp.get("journey_summary", "")
+
+            patterns_str = f" ({', '.join(related)})" if related else ""
+            lines.append("")
+            lines.append(f"{status.capitalize()}: \"{title}\"{patterns_str}")
+            if journey:
+                lines.append(f'  "{journey}"')
+
+    return "\n".join(lines)

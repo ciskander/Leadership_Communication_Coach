@@ -11,7 +11,8 @@
       "focus": "participation_management",
       "baseline_pack_id": "BP-000052"
     },
-    "recent_pattern_snapshots": [],
+    "coaching_history": [],
+    "experiment_history": [],
     "active_experiment": {
       "experiment_id": "EXP-000080",
       "title": "Name one voice before every close",

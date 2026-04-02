@@ -6,7 +6,8 @@
   "target_speaker_label": "Speaker",
   "memory": {
     "baseline_profile": null,
-    "recent_pattern_snapshots": [],
+    "coaching_history": [],
+    "experiment_history": [],
     "active_experiment": null
   }
 }

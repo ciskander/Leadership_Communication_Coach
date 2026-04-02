@@ -187,13 +187,16 @@ class TestBuildSlimMeetingSummary:
                 }
             ],
             "coaching": {
+                "executive_summary": "Strong facilitation overall.",
+                "coaching_themes": [
+                    {"theme": "Direct feedback", "explanation": "Clear and direct.", "priority": "primary", "related_patterns": []}
+                ],
                 "strengths": [],
-                "focus": [{"pattern_id": "resolution_and_alignment", "message": "Improve."}],
                 "micro_experiment": [
                     {
                         "title": "Close decisions",
                         "instruction": "Say it aloud.",
-                        "pattern_id": "resolution_and_alignment",
+                        "related_patterns": ["resolution_and_alignment"],
                     }
                 ],
                 "pattern_coaching": [],
@@ -247,15 +250,22 @@ class TestBuildSlimMeetingSummary:
         assert snap["notes"] == "Good agenda."
         assert snap["evidence_span_ids"] == ["ES-001"]
 
-    def test_coaching_includes_focus(self):
+    def test_coaching_includes_executive_summary(self):
         run_fields, parsed_json = self._make_inputs()
         result = _build_slim_meeting_summary(run_fields, parsed_json)
-        assert result["coaching"]["focus"][0]["pattern_id"] == "resolution_and_alignment"
+        assert result["coaching"]["executive_summary"] == "Strong facilitation overall."
+
+    def test_coaching_includes_coaching_themes(self):
+        run_fields, parsed_json = self._make_inputs()
+        result = _build_slim_meeting_summary(run_fields, parsed_json)
+        assert len(result["coaching"]["coaching_themes"]) == 1
+        assert result["coaching"]["coaching_themes"][0]["theme"] == "Direct feedback"
 
     def test_coaching_includes_micro_experiment_title(self):
         run_fields, parsed_json = self._make_inputs()
         result = _build_slim_meeting_summary(run_fields, parsed_json)
         assert result["coaching"]["micro_experiment"]["title"] == "Close decisions"
+        assert result["coaching"]["micro_experiment"]["related_patterns"] == ["resolution_and_alignment"]
 
     def test_includes_evidence_spans(self):
         run_fields, parsed_json = self._make_inputs()

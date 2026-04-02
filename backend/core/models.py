@@ -156,7 +156,8 @@ class ExperimentEvent(BaseModel):
 
 class MemoryBlock(BaseModel):
     baseline_profile: Optional[dict[str, Any]] = None
-    recent_pattern_snapshots: list[dict[str, Any]] = Field(default_factory=list)
+    coaching_history: list[dict[str, Any]] = Field(default_factory=list)
+    experiment_history: list[dict[str, Any]] = Field(default_factory=list)
     active_experiment: Optional[dict[str, Any]] = None
 
 
