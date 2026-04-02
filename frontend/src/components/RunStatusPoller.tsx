@@ -55,6 +55,11 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         api.getProposedExperiments()
           .then(setProposedExperiments)
           .catch(() => {});
+        // Also check if there's an active experiment that was accepted
+        // after this run was analyzed (run data reflects analysis-time state)
+        api.getActiveExperiment()
+          .then((data) => { if (data?.experiment) setActiveExpData(data); })
+          .catch(() => {});
       } else if (run.active_experiment_detail) {
         // Use experiment data embedded in the run response
         setActiveExpData({
@@ -137,9 +142,11 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
   const activeExp = et?.active_experiment as Record<string, unknown> | null;
   const detection = run.experiment_detection;
 
-	const hasActiveExp =
+	const hasActiveExpFromRun =
 	  !!activeExp &&
 	  activeExp.status === 'active';
+	// Also consider an active experiment that was accepted after this run
+	const hasActiveExp = hasActiveExpFromRun || (activeExpData?.experiment?.status === 'active');
 
   const attempt = detection?.attempt ?? null;
   const countAttempts = detection?.count_attempts ?? null;
@@ -234,6 +241,10 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
               try {
                 await api.acceptExperiment(exp.experiment_record_id);
                 setAcceptedExpId(exp.experiment_record_id);
+                // Fetch active experiment data so ExperimentSection renders
+                api.getActiveExperiment()
+                  .then(setActiveExpData)
+                  .catch(() => {});
               } catch {
                 // non-fatal — user can always accept from the dashboard
               } finally {
@@ -403,7 +414,8 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
             </div>
           )}
 
-          {/* "In this meeting" heading + detection banner */}
+          {/* "In this meeting" heading + detection banner (only when run had active experiment at analysis time) */}
+          {hasActiveExpFromRun && <>
           <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-amber-800">{STRINGS.runStatusPoller.inThisMeeting}</p>
           <div className="rounded border border-cv-stone-400 overflow-hidden">
             <div className={`flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 ${attemptConfig.bgColor}`}>
@@ -572,6 +584,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
             </p>
           </div>
           </div>
+          </>}
 
           {/* Attempt history (pulled from ExperimentTracker) */}
           {activeExpData?.experiment && (() => {
@@ -730,6 +743,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         microExperiment={
           hasActiveExp ||
           proposedExperiments.length > 0 ||
+          !!acceptedExpId ||
           !!run.baseline_pack_id
             ? null
             : run.micro_experiment
