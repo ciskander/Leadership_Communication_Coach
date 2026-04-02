@@ -885,17 +885,22 @@ def process_baseline_pack_build(
         raise ValueError(f"BaselinePack {baseline_pack_id} has only {len(items)} items (need 3).")
 
     # 2. Ensure single_meeting runs exist for each item (idempotent sub-trigger)
-    meeting_run_data: list[dict] = []
-    meetings_meta: list[dict] = []
+    # Sub-runs are fully independent — run them concurrently.
+    try:
+        client.update_baseline_pack_progress(
+            baseline_pack_id, "Analyzing 3 meetings concurrently…"
+        )
+    except Exception:
+        pass  # non-blocking
 
-    for item_idx, item in enumerate(items[:3]):
-        # Progress: analyzing meeting N of 3
-        try:
-            client.update_baseline_pack_progress(
-                baseline_pack_id, f"Analyzing meeting {item_idx + 1} of 3…"
-            )
-        except Exception:
-            pass  # non-blocking
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    def _process_baseline_item(
+        item: dict,
+        item_idx: int,
+    ) -> tuple[dict, dict]:
+        """Process a single baseline pack item. Thread-safe — uses its own AirtableClient."""
+        thread_client = AirtableClient()
 
         item_fields = _extract_fields(item)
         transcript_links = _get_link_ids(item_fields, "Transcript")
@@ -906,7 +911,7 @@ def process_baseline_pack_build(
 
         # If the linked run failed Gate1, discard it so we can create a fresh one.
         if run_record_id:
-            linked_run = client.get_run(run_record_id)
+            linked_run = thread_client.get_run(run_record_id)
             if not _extract_fields(linked_run).get("Gate1 Pass"):
                 logger.info(
                     "Linked run %s for item %s failed Gate1 — unlinking and retrying.",
@@ -917,14 +922,14 @@ def process_baseline_pack_build(
         if not run_record_id:
             # Look for an existing passing run by Transcript ID
             if transcript_record_id:
-                tr_rec = client.get_record("transcripts", transcript_record_id)
+                tr_rec = thread_client.get_record("transcripts", transcript_record_id)
                 transcript_id_str = tr_rec.get("fields", {}).get("Transcript ID", "")
                 if transcript_id_str:
                     formula = f"AND(FIND('{transcript_id_str}', {{Transcript ID (from Transcript)}}), {{Gate1 Pass}}=TRUE(), {{Analysis Type}}='single_meeting')"
-                    existing_runs = client.search_records("runs", formula, max_records=1)
+                    existing_runs = thread_client.search_records("runs", formula, max_records=1)
                     if existing_runs:
                         run_record_id = existing_runs[0]["id"]
-                        client.update_record("baseline_pack_items", item["id"], {"Run": [run_record_id]})
+                        thread_client.update_record("baseline_pack_items", item["id"], {"Run": [run_record_id]})
 
             if not run_record_id:
                 if not transcript_record_id:
@@ -943,11 +948,11 @@ def process_baseline_pack_build(
                     f"FIND('{baseline_pack_id}', ARRAYJOIN({{Baseline Pack}}))"
                     f")"
                 )
-                existing_rrs = client.search_records("run_requests", rr_formula, max_records=1)
+                existing_rrs = thread_client.search_records("run_requests", rr_formula, max_records=1)
                 if existing_rrs:
                     rr_id = existing_rrs[0]["id"]
                     # Reset status so process_single_meeting_analysis treats it as new.
-                    client.update_run_request_status(rr_id, "queued")
+                    thread_client.update_run_request_status(rr_id, "queued")
                     logger.info("Reusing existing run_request %s for transcript %s", rr_id, transcript_record_id)
                 else:
                     rr_fields: dict = {
@@ -964,16 +969,16 @@ def process_baseline_pack_build(
                     if config_links:
                         rr_fields["Config"] = config_links
 
-                    rr_record = client.create_run_request(rr_fields)
+                    rr_record = thread_client.create_run_request(rr_fields)
                     rr_id = rr_record["id"]
 
                 try:
-                    run_record_id = process_single_meeting_analysis(rr_id, client=client)
+                    run_record_id = process_single_meeting_analysis(rr_id, client=thread_client)
                 except Exception as exc:
                     # Mark the run_request as error so it doesn't remain stuck
                     # in "processing" status forever.
                     try:
-                        client.update_run_request_status(
+                        thread_client.update_run_request_status(
                             rr_id, "error", error=str(exc)[:2000]
                         )
                     except Exception:
@@ -985,10 +990,10 @@ def process_baseline_pack_build(
                     ) from exc
 
                 # Link the newly created run back to the baseline_pack_item.
-                client.update_baseline_pack_item(item["id"], {F_BPI_RUN: [run_record_id]})
+                thread_client.update_baseline_pack_item(item["id"], {F_BPI_RUN: [run_record_id]})
                 logger.info("Auto-linked run %s to item %s", run_record_id, item["id"])
 
-        run_rec = client.get_run(run_record_id)
+        run_rec = thread_client.get_run(run_record_id)
         run_fields = _extract_fields(run_rec)
 
         if not run_fields.get("Gate1 Pass"):
@@ -1002,27 +1007,43 @@ def process_baseline_pack_build(
 
         # Build slim summary
         slim = _build_slim_meeting_summary(run_fields, parsed_json)
-        meeting_run_data.append({
+        run_data_entry = {
             "item_record_id": item["id"],
             "run_record_id": run_record_id,
             "transcript_record_id": transcript_record_id,
             "slim_summary": slim,
             "run_fields": run_fields,
             "parsed_json": parsed_json,
-        })
+        }
 
         tr_fields_for_meta = {}
         if transcript_record_id:
-            tr_rec = client.get_transcript(transcript_record_id)
+            tr_rec = thread_client.get_transcript(transcript_record_id)
             tr_fields_for_meta = _extract_fields(tr_rec)
 
-        meetings_meta.append({
+        meta_entry = {
             "meeting_id": slim.get("meeting_id") or tr_fields_for_meta.get("Transcript ID", ""),
             "meeting_type": slim.get("meeting_type") or tr_fields_for_meta.get("Meeting Type", "other"),
             "target_speaker_name": slim.get("target_speaker_name", ""),
             "target_speaker_label": slim.get("target_speaker_label", speaker_label),
             "target_speaker_role": slim.get("target_role", target_role),
-        })
+        }
+
+        return run_data_entry, meta_entry
+
+    # Run all 3 sub-runs concurrently
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        futures = {
+            executor.submit(_process_baseline_item, item, idx): idx
+            for idx, item in enumerate(items[:3])
+        }
+        results: list[Optional[tuple[dict, dict]]] = [None, None, None]
+        for future in as_completed(futures):
+            idx = futures[future]
+            results[idx] = future.result()  # raises if sub-run failed
+
+    meeting_run_data = [r[0] for r in results]  # type: ignore[index]
+    meetings_meta = [r[1] for r in results]  # type: ignore[index]
 
     # Determine role / meeting type consistency
     roles = {m["target_speaker_role"] for m in meetings_meta}
