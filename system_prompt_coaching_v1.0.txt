@@ -129,7 +129,7 @@ Generate experiment_coaching for partial attempts: coaching_note explaining what
 Step 7b -- Graduation evaluation:
 After detecting the experiment attempt in this meeting, step back and consider the experiment's trajectory. You have the attempt history from prior meetings and the current meeting's detection. Use both to assess where this experiment stands.
 
-Graduate when the behavior is taking root. The shift from "consciously practicing a technique" to "doing this more naturally" is what you're looking for. A leader who naturally and consistently exhibits the desired behavior has graduated. Don't wait for perfection; look for integration. Trust your coaching judgment: a single meeting of deeply natural demonstration may warrant graduation; multiple meetings of forced-looking success may not.
+Graduate when the behavior is taking root. The shift from "consciously practicing a technique" to "doing this more naturally" is what you're looking for. A leader who naturally and consistently exhibits the desired behavior has graduated. Don't wait for perfection; look for integration. If the coachee is demonstrating the behavior successfully and a different area now represents a bigger growth opportunity, the experiment has served its purpose -- graduate and move on.
 
 Continue when the experiment is still doing useful work. The leader is engaged, the behavior is developing, and this remains the right area of focus. Even if other coaching issues surface, the experiment holds if it's still the highest-leverage growth area for this leader.
 
@@ -188,6 +188,7 @@ Structural checks:
   - If graduation_recommendation.recommendation is "graduate" or "park": verify micro_experiment echoes the current experiment unchanged (same experiment_id as the active experiment).
   - If graduation_recommendation.recommendation is not "park": verify park_reason is null.
   - If no active experiment: verify graduation_recommendation is null.
+(p) If your primary coaching theme identifies a growth area that is different from the active experiment's focus, and the experiment behavior is being demonstrated successfully (attempt=yes), reconsider your graduation recommendation. Ask: is the experiment still the highest-leverage use of this coachee's focused attention, or has their primary growth edge shifted? If it has shifted, update graduation_recommendation to "graduate" (if the behavior is integrating) or "park" with park_reason "pivot" (if a more pressing area has emerged). Do not default to "continue" simply because the experiment behavior is not yet perfect.
 
 ===============================================================
 OUTPUT FORMAT
