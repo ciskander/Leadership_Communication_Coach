@@ -49,6 +49,7 @@ export const STRINGS = {
     successLooksLike: 'Success looks like',
     howYoullKnowItWorked: "How you'll know it worked",
     forExampleYouSaid: 'For example, in this meeting you said',
+    referringToExampleAbove: 'Referring to the example above',
     nextTimeTry: 'Next time, try something like',
     whatYouDidWell: 'What you did well',
     whereYouCanImprove: 'Where you can improve',

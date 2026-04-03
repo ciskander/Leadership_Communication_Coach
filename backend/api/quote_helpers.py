@@ -95,7 +95,10 @@ def resolve_quotes(
     turn_map: Optional[dict[int, Turn]] = None,
     target_speaker_label: Optional[str] = None,
 ) -> list[QuoteObject]:
-    quotes: list[QuoteObject] = []
+    # Collect (sort_key, quote) tuples so we can sort by turn order at the end.
+    # This ensures correct chronological ordering even if evidence_span_ids
+    # are not in turn order (e.g., sub-spans from a long behavioral arc).
+    keyed_quotes: list[tuple[int, QuoteObject]] = []
     norm_target = target_speaker_label.replace("\\_", "_").strip().lower() if target_speaker_label else None
     for es_id in evidence_span_ids:
         span = spans_by_id.get(es_id)
@@ -139,7 +142,8 @@ def resolve_quotes(
                 is_target: Optional[bool] = None
                 if norm_target is not None:
                     is_target = turn.speaker_label.replace("\\_", "_").strip().lower() == norm_target
-                quotes.append(
+                keyed_quotes.append((
+                    tid,
                     QuoteObject(
                         speaker_label=turn.speaker_label,
                         quote_text=turn.text[:_QUOTE_MAX_CHARS],
@@ -148,8 +152,8 @@ def resolve_quotes(
                         span_id=es_id,
                         start_timestamp=ts,
                         is_target_speaker=is_target,
-                    )
-                )
+                    ),
+                ))
         else:
             excerpt = _strip_speaker_prefix((span.get("excerpt") or ""))[:_QUOTE_MAX_CHARS]
             start_ts: Optional[str] = None
@@ -160,7 +164,8 @@ def resolve_quotes(
             # Single-speaker spans are selected by the LLM as evidence for a
             # specific pattern — leave is_target_speaker as None so the
             # frontend falls back to its default (target) styling.
-            quotes.append(
+            keyed_quotes.append((
+                turn_start if isinstance(turn_start, int) else 0,
                 QuoteObject(
                     speaker_label=None,
                     quote_text=excerpt,
@@ -168,9 +173,11 @@ def resolve_quotes(
                     transcript_id=transcript_id,
                     span_id=es_id,
                     start_timestamp=start_ts,
-                )
-            )
-    return quotes
+                ),
+            ))
+    # Sort by turn order for correct chronological rendering
+    keyed_quotes.sort(key=lambda kq: kq[0])
+    return [q for _, q in keyed_quotes]
 
 
 def resolve_coaching_output(

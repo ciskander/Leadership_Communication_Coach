@@ -597,10 +597,14 @@ export function PatternCard({
                     <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{coaching?.coaching_note}</p>
                   )}
                   {rewriteTargetQuotes.length > 0 && (
-                    <div>
-                      <SectionLabel text={STRINGS.common.forExampleYouSaid} />
-                      <EvidenceQuoteList quotes={rewriteTargetQuotes} targetSpeaker={targetSpeaker} />
-                    </div>
+                    rewriteSpanId && rewriteSpanId === bestSuccessSpanId ? (
+                      <p className="text-xs text-cv-stone-400 italic mb-2">{STRINGS.common.referringToExampleAbove}</p>
+                    ) : (
+                      <div>
+                        <SectionLabel text={STRINGS.common.forExampleYouSaid} />
+                        <EvidenceQuoteList quotes={rewriteTargetQuotes} targetSpeaker={targetSpeaker} />
+                      </div>
+                    )
                   )}
                   {coaching?.suggested_rewrite && (
                     <div className="mt-2">
@@ -622,10 +626,14 @@ export function PatternCard({
                 <p className="text-sm text-cv-stone-700 leading-relaxed mb-2">{coaching?.coaching_note}</p>
               )}
               {rewriteTargetQuotes.length > 0 && (
-                <div>
-                  <SectionLabel text={STRINGS.common.forExampleYouSaid} />
-                  <EvidenceQuoteList quotes={rewriteTargetQuotes} targetSpeaker={targetSpeaker} />
-                </div>
+                rewriteSpanId && rewriteSpanId === bestSuccessSpanId ? (
+                  <p className="text-xs text-cv-stone-400 italic mb-2">{STRINGS.common.referringToExampleAbove}</p>
+                ) : (
+                  <div>
+                    <SectionLabel text={STRINGS.common.forExampleYouSaid} />
+                    <EvidenceQuoteList quotes={rewriteTargetQuotes} targetSpeaker={targetSpeaker} />
+                  </div>
+                )
               )}
               {coaching?.suggested_rewrite && (
                 <div className="mt-2">
