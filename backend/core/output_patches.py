@@ -131,6 +131,9 @@ def patch_analysis_output(
                 exp_track["active_experiment"] = {"experiment_id": "EXP-000000", "status": "none"}
                 exp_track["detection_in_this_meeting"] = None
 
+        # 2b. Default graduation_recommendation to null if LLM omitted it
+        exp_track.setdefault("graduation_recommendation", None)
+
         # 3. Coerce missing evidence_span_ids on micro_experiment items
         coaching = output.get("coaching", {})
         for item in coaching.get("micro_experiment", []):

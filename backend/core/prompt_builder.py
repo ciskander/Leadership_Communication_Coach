@@ -344,14 +344,32 @@ def _build_experiment_context_for_stage2(memory: MemoryBlock) -> str:
     if related_patterns:
         lines.append(f"- Related patterns: {', '.join(related_patterns)}")
 
+    # Attempt history from prior meetings
+    if memory.experiment_progress:
+        lines.append("")
+        lines.append("── ATTEMPT HISTORY (most recent first) ──")
+        for entry in memory.experiment_progress:
+            meeting_date = entry.get("meeting_date", "unknown")
+            attempt = entry.get("attempt", "unknown")
+            count = entry.get("count_attempts", 0)
+            note = entry.get("coaching_note")
+            note_part = f" — \"{note}\"" if note else ""
+            lines.append(f"  Meeting {meeting_date}: {attempt} ({count} instances){note_part}")
+
     lines.extend([
         "",
         "You MUST evaluate whether the target speaker attempted this experiment in this meeting.",
         "Search the transcript for moments matching the experiment's instruction and success marker.",
         "Report your findings in experiment_tracking.detection_in_this_meeting.",
         "",
+        "Use this attempt history AND your experiment detection from the current transcript to evaluate",
+        "whether the experiment should graduate, continue, or be parked.",
+        "Set experiment_tracking.graduation_recommendation accordingly.",
+        "",
         "micro_experiment: Refine or evolve the current experiment (reuse experiment_id:",
         f"{exp_id}). Do not propose an unrelated experiment while this one is active.",
+        "Exception: if graduation_recommendation is 'graduate' or 'park', echo the current",
+        "experiment unchanged (same experiment_id, title, instruction, success_marker).",
     ])
 
     return "\n".join(lines)
@@ -643,6 +661,7 @@ def build_memory_block(
     active_experiment: Optional[dict] = None,
     coaching_history: Optional[list[dict]] = None,
     experiment_history: Optional[list[dict]] = None,
+    experiment_progress: Optional[list[dict]] = None,
 ) -> MemoryBlock:
     """
     Assemble the memory block for a single_meeting prompt.
@@ -677,6 +696,7 @@ def build_memory_block(
         active_experiment=active_exp_block,
         coaching_history=coaching_history or [],
         experiment_history=experiment_history or [],
+        experiment_progress=experiment_progress or [],
     )
 
 

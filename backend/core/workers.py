@@ -1820,6 +1820,31 @@ def process_next_experiment_suggestion(
             + "\n".join(active_lines)
         )
 
+    # ── COACHING PRIORITY (pivot-park steering) ──
+    coaching_priority_section = ""
+    if eligible_runs:
+        # Check the most recent run for a pivot-park graduation recommendation
+        most_recent_run = eligible_runs[0]
+        try:
+            mr_parsed = json.loads(_extract_fields(most_recent_run).get(F_RUN_PARSED_JSON) or "{}")
+            grad_rec = (mr_parsed.get("experiment_tracking") or {}).get("graduation_recommendation")
+            if (
+                isinstance(grad_rec, dict)
+                and grad_rec.get("recommendation") == "park"
+                and grad_rec.get("park_reason") == "pivot"
+            ):
+                pivot_rationale = grad_rec.get("rationale", "")
+                if pivot_rationale:
+                    coaching_priority_section = (
+                        "\n── COACHING PRIORITY (from most recent analysis) ──\n"
+                        "The coachee's previous experiment was parked because a more pressing priority emerged:\n"
+                        f'"{pivot_rationale}"\n'
+                        "Design your top-pick experiment to address this priority. The remaining options\n"
+                        "should draw from the broader coaching history.\n"
+                    )
+        except Exception:
+            pass
+
     # ── EXCLUDED TITLES ──
     avoid_titles_note = ""
     if past_titles:
@@ -1839,6 +1864,7 @@ def process_next_experiment_suggestion(
         f"{past_experiments_section}"
         f"{experiment_journey_section}"
         f"{active_experiment_section}"
+        f"{coaching_priority_section}"
         f"{avoid_titles_note}\n\n"
         f"── REQUEST ──\n"
         f"Propose exactly {llm_request_count} {exp_word} based on recurring coaching themes and behavioral gaps.\n"
@@ -2126,7 +2152,7 @@ def _build_memory_for_user(
     # Coaching history: recent meeting themes + executive summaries
     coaching_history: list[dict] = []
     try:
-        themes_by_run, summaries_by_run, _, _ = _fetch_recent_coaching_data(
+        themes_by_run, summaries_by_run, experiment_progress_tuples, _ = _fetch_recent_coaching_data(
             client, user_record_id, max_runs=MAX_COACHING_HISTORY_MEETINGS,
         )
         # Build one entry per meeting, keyed by date. Merge themes and
@@ -2154,6 +2180,17 @@ def _build_memory_for_user(
                 })
     except Exception as exc:
         logger.warning("Failed to fetch coaching history: %s", exc)
+
+    # Experiment progress: per-meeting attempt history for the active experiment
+    experiment_progress: list[dict] = [
+        {
+            "meeting_date": meeting_date,
+            "attempt": attempt,
+            "count_attempts": count,
+            "coaching_note": note,
+        }
+        for meeting_date, attempt, count, note in experiment_progress_tuples
+    ]
 
     # Experiment history: completed/parked/abandoned experiments
     experiment_history: list[dict] = []
@@ -2183,6 +2220,7 @@ def _build_memory_for_user(
         active_experiment=active_exp_data,
         coaching_history=coaching_history,
         experiment_history=experiment_history,
+        experiment_progress=experiment_progress,
     )
 
 

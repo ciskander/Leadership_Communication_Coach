@@ -604,15 +604,41 @@
         }
       }
     },
+    "GraduationRecommendation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recommendation", "rationale", "park_reason"],
+      "properties": {
+        "recommendation": {
+          "type": "string",
+          "enum": ["graduate", "continue", "park"]
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 600
+        },
+        "park_reason": {
+          "type": ["string", "null"],
+          "enum": ["pivot", "stale", null]
+        }
+      }
+    },
     "ExperimentTracking": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["active_experiment", "detection_in_this_meeting"],
+      "required": ["active_experiment", "detection_in_this_meeting", "graduation_recommendation"],
       "properties": {
         "active_experiment": { "$ref": "#/$defs/ActiveExperiment" },
         "detection_in_this_meeting": {
           "oneOf": [
             { "$ref": "#/$defs/ExperimentDetection" },
+            { "type": "null" }
+          ]
+        },
+        "graduation_recommendation": {
+          "oneOf": [
+            { "$ref": "#/$defs/GraduationRecommendation" },
             { "type": "null" }
           ]
         }

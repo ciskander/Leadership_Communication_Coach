@@ -253,6 +253,7 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
     "experiment_tracking": {
         "active_experiment": {"experiment_id": "EXP-000000", "status": "none"},
         "detection_in_this_meeting": None,
+        "graduation_recommendation": None,
     },
     "coaching": {
         "executive_summary": "You showed strong purposeful framing throughout the meeting. Focus on closing decisions with explicit verbal alignment to strengthen resolution patterns.",

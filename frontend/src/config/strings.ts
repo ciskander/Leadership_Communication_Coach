@@ -282,6 +282,9 @@ export const STRINGS = {
       `The model detected ${count ?? 'multiple'} clear attempt${(typeof count === 'number' && count !== 1) || count === 'multiple' ? 's' : ''} at your experiment in this meeting. Keep it up.`,
     partialAttemptDesc: (count: number | null) =>
       `You made a partial attempt at your experiment${count ? ` — ${count} instance${count !== 1 ? 's' : ''} noted` : ''}. You're on the right track.`,
+    // Graduation / parking recommendations
+    graduationRecommendationTitle: 'Ready to graduate',
+    parkRecommendationTitle: 'Consider parking this experiment',
   },
 
   // ── Experiment tracker ──────────────────────────────────────────────────────

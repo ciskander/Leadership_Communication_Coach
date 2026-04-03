@@ -156,6 +156,11 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
   const countAttempts = detection?.count_attempts ?? null;
   const detectionQuotes = detection?.quotes ?? [];
   const targetSpeaker = run?.target_speaker_label ?? null;
+  const graduationRec = et?.graduation_recommendation as {
+    recommendation: string;
+    rationale: string;
+    park_reason: string | null;
+  } | null;
   const expRecordId = activeExp
     ? (run.experiment_tracking as Record<string, unknown> & { _record_id?: string })?._record_id ?? null
     : null;
@@ -589,6 +594,34 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           </div>
           </div>
           </>}
+
+          {/* Graduation / parking recommendation banner */}
+          {graduationRec && graduationRec.recommendation === 'graduate' && (
+            <div className="rounded border border-cv-teal-300 bg-cv-teal-50 overflow-hidden">
+              <div className="flex items-center gap-2.5 px-5 py-3 border-b border-cv-teal-200 bg-cv-teal-100">
+                <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0 text-cv-teal-700" aria-hidden="true">
+                  <path d="M8 1l2.5 5 5.5.8-4 3.9.9 5.3L8 13.3 3.1 16l.9-5.3-4-3.9L5.5 6z" stroke="currentColor" strokeWidth={1.2} strokeLinejoin="round"/>
+                </svg>
+                <h4 className="text-sm font-semibold text-cv-teal-800">{STRINGS.runStatusPoller.graduationRecommendationTitle}</h4>
+              </div>
+              <div className="px-5 py-3.5 space-y-2">
+                <p className="text-sm text-cv-stone-700 leading-relaxed">{graduationRec.rationale}</p>
+              </div>
+            </div>
+          )}
+          {graduationRec && graduationRec.recommendation === 'park' && (
+            <div className="rounded border border-cv-amber-200 bg-cv-amber-50 overflow-hidden">
+              <div className="flex items-center gap-2.5 px-5 py-3 border-b border-cv-amber-200 bg-cv-amber-100">
+                <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0 text-cv-amber-700" aria-hidden="true">
+                  <rect x="3.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/><rect x="9.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/>
+                </svg>
+                <h4 className="text-sm font-semibold text-cv-amber-800">{STRINGS.runStatusPoller.parkRecommendationTitle}</h4>
+              </div>
+              <div className="px-5 py-3.5 space-y-2">
+                <p className="text-sm text-cv-stone-700 leading-relaxed">{graduationRec.rationale}</p>
+              </div>
+            </div>
+          )}
 
           {/* Attempt history (pulled from ExperimentTracker) */}
           {activeExpData?.experiment && (() => {

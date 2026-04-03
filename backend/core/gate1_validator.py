@@ -260,6 +260,9 @@ def _sanitise_output(data: dict) -> int:
         det = et.get("detection_in_this_meeting")
         if isinstance(det, dict):
             fixes += _fix_extra_keys(det, _ALLOWED_KEYS.get("ExperimentDetection", set()), "$.experiment_tracking.detection_in_this_meeting")
+        grad_rec = et.get("graduation_recommendation")
+        if isinstance(grad_rec, dict):
+            fixes += _fix_extra_keys(grad_rec, _ALLOWED_KEYS.get("GraduationRecommendation", set()), "$.experiment_tracking.graduation_recommendation")
 
     # ── Normalise experiment_id format ─────────────────────────────────────
     # The LLM sometimes generates IDs like "EXP-260316-01" instead of the
@@ -1103,6 +1106,43 @@ def _business_rules(data: dict, *, scoring_only: bool = False) -> list[Validatio
                         "DETECTION_UNEXPECTED",
                         "experiment_tracking.detection_in_this_meeting",
                         "detection_in_this_meeting should be null when no active experiment.",
+                    ))
+
+        # ── 3f2. Graduation recommendation validation ──────────────────────
+        grad_rec = experiment_tracking.get("graduation_recommendation")
+        if grad_rec is not None:
+            if not isinstance(grad_rec, dict):
+                issues.append(_err(
+                    "GRADUATION_REC_INVALID_TYPE",
+                    "experiment_tracking.graduation_recommendation",
+                    "graduation_recommendation must be an object or null.",
+                ))
+            else:
+                rec = grad_rec.get("recommendation")
+                if rec not in ("graduate", "continue", "park"):
+                    issues.append(_err(
+                        "GRADUATION_REC_INVALID_VALUE",
+                        "experiment_tracking.graduation_recommendation.recommendation",
+                        f"Invalid recommendation '{rec}'; must be graduate, continue, or park.",
+                    ))
+                park_reason = grad_rec.get("park_reason")
+                if rec == "park" and park_reason not in ("pivot", "stale"):
+                    issues.append(_err(
+                        "GRADUATION_REC_PARK_REASON_REQUIRED",
+                        "experiment_tracking.graduation_recommendation.park_reason",
+                        "park_reason must be 'pivot' or 'stale' when recommendation is 'park'.",
+                    ))
+                if rec != "park" and park_reason is not None:
+                    issues.append(_warn(
+                        "GRADUATION_REC_PARK_REASON_UNEXPECTED",
+                        "experiment_tracking.graduation_recommendation.park_reason",
+                        "park_reason should be null when recommendation is not 'park'.",
+                    ))
+                if status not in ("active", "proposed"):
+                    issues.append(_warn(
+                        "GRADUATION_REC_NO_ACTIVE_EXP",
+                        "experiment_tracking.graduation_recommendation",
+                        "graduation_recommendation should be null when no active experiment.",
                     ))
 
     # ── 3g. ID format validation ──────────────────────────────────────────────
