@@ -271,14 +271,18 @@ def _process_oe_removals(
         if pid:
             oes_by_pattern.setdefault(pid, []).append((i, oe))
 
-    # Collect global indices to remove
+    # Collect global indices to remove and their event_ids
     indices_to_remove: set[int] = set()
+    removed_event_ids: set[str] = set()
     for pid, removal_indices in removals_by_pattern.items():
         pattern_oes = oes_by_pattern.get(pid, [])
         for local_idx in removal_indices:
             if 0 <= local_idx < len(pattern_oes):
-                global_idx, _ = pattern_oes[local_idx]
+                global_idx, oe = pattern_oes[local_idx]
                 indices_to_remove.add(global_idx)
+                eid = oe.get("event_id")
+                if eid:
+                    removed_event_ids.add(eid)
             else:
                 logger.warning(
                     "Editor OE removal: invalid index %d for pattern %s (has %d OEs)",
@@ -289,6 +293,23 @@ def _process_oe_removals(
     for idx in sorted(indices_to_remove, reverse=True):
         if idx < len(oe_list):
             oe_list.pop(idx)
+
+    # Clean dangling event_ids from evidence_spans
+    if removed_event_ids:
+        for span in merged.get("evidence_spans", []):
+            if not isinstance(span, dict):
+                continue
+            orig_ids = span.get("event_ids", [])
+            cleaned = [eid for eid in orig_ids if eid not in removed_event_ids]
+            if len(cleaned) < len(orig_ids):
+                removed = set(orig_ids) - set(cleaned)
+                for eid in removed:
+                    logger.info(
+                        "OE removal cleanup: removing event_id %s from "
+                        "evidence_span %s",
+                        eid, span.get("evidence_span_id"),
+                    )
+                span["event_ids"] = cleaned
 
     # Recalculate scores for affected patterns
     demoted: set[str] = set()
