@@ -303,9 +303,6 @@ function MeetingAccordionCard({
                 </section>
               )}
 
-              {/* Coaching themes */}
-              <CoachingThemesSection themes={meeting.sub_run_coaching_themes ?? []} />
-
               {/* Strengths & Focus */}
               {(meeting.sub_run_strengths?.length || meeting.sub_run_focus) && (
                 <CoachingCard
@@ -317,6 +314,9 @@ function MeetingAccordionCard({
                   patternCoaching={meeting.sub_run_pattern_coaching}
                 />
               )}
+
+              {/* Coaching themes */}
+              <CoachingThemesSection themes={meeting.sub_run_coaching_themes ?? []} />
 
               {/* Detailed Feedback — pattern snapshot grouped by cluster */}
               {meeting.sub_run_pattern_snapshot &&
@@ -510,9 +510,6 @@ export default function BaselineDetailPage() {
             </section>
           )}
 
-          {/* Coaching themes */}
-          <CoachingThemesSection themes={pack.coaching_themes ?? []} />
-
           {/* Aggregate coaching — micro_experiment suppressed at baseline */}
           <CoachingCard
             strengths={pack.strengths ?? []}
@@ -522,6 +519,9 @@ export default function BaselineDetailPage() {
             patternSnapshot={pack.pattern_snapshot as unknown as PatternSnapshotItem[]}
             patternCoaching={pack.pattern_coaching}
           />
+
+          {/* Coaching themes */}
+          <CoachingThemesSection themes={pack.coaching_themes ?? []} />
 
           {/* Hint to check individual meeting sections */}
           {meetings.length > 0 && (

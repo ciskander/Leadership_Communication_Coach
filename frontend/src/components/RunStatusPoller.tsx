@@ -708,7 +708,25 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         </section>
       )}
 
-      {/* Coaching themes — rose styling, rendered before CoachingCard */}
+      <CoachingCard
+        strengths={run.strengths}
+        focus={run.focus}
+        targetSpeaker={targetSpeaker}
+        microExperiment={
+          hasActiveExp ||
+          !expCheckDone ||
+          proposedExperiments.length > 0 ||
+          !!acceptedExpId ||
+          !!run.baseline_pack_id
+            ? null
+            : run.micro_experiment
+        }
+        patternSnapshot={run.pattern_snapshot}
+        patternCoaching={run.pattern_coaching}
+        trendData={trendData}
+      />
+
+      {/* Coaching themes — rose styling, rendered after strengths */}
       {run.coaching_themes && run.coaching_themes.length > 0 && (
         <section className="bg-white rounded border border-cv-rose-700 overflow-hidden">
           <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-rose-700">
@@ -739,24 +757,6 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           </div>
         </section>
       )}
-
-      <CoachingCard
-        strengths={run.strengths}
-        focus={run.focus}
-        targetSpeaker={targetSpeaker}
-        microExperiment={
-          hasActiveExp ||
-          !expCheckDone ||
-          proposedExperiments.length > 0 ||
-          !!acceptedExpId ||
-          !!run.baseline_pack_id
-            ? null
-            : run.micro_experiment
-        }
-        patternSnapshot={run.pattern_snapshot}
-        patternCoaching={run.pattern_coaching}
-        trendData={trendData}
-      />
 
       <ProposedExperimentSection />
 
