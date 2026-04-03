@@ -954,12 +954,14 @@ def _business_rules(data: dict, *, scoring_only: bool = False) -> list[Validatio
             threshold = _SUCCESS_THRESHOLDS.get(scoring_type, 0.75)
 
             # V2: rewrite_for_span_id should target a low-scored span
+            # Scores exactly AT the threshold are borderline — coaching judgment
+            # should prevail, so we only warn for scores strictly above threshold.
             span = span_by_id.get(rewrite_span)
             if span:
                 for event_id in span.get("event_ids", []):
                     oe = oe_by_id.get(event_id)
                     if oe and oe.get("pattern_id") == pc_pid and oe.get("count_decision") == "counted":
-                        if oe.get("success", 0) >= threshold:
+                        if oe.get("success", 0) > threshold:
                             issues.append(_warn(
                                 "REWRITE_TARGETS_SUCCESS",
                                 f"{pc_path}.rewrite_for_span_id",
