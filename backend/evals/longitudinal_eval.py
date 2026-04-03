@@ -156,6 +156,7 @@ def _initial_state() -> dict:
         "coaching_history": [],
         "experiment_history": [],
         "active_experiment": None,
+        "experiment_progress": [],  # attempt history for the CURRENT experiment
         "experiment_transitions": [],
         "next_experiment_number": 1,
     }
@@ -188,11 +189,13 @@ def _build_memory_from_state(state: dict) -> MemoryBlock:
     ch = state.get("coaching_history", [])
     eh = state.get("experiment_history", [])
     ae = state.get("active_experiment")
+    ep = state.get("experiment_progress", [])
 
     return build_memory_block(
         coaching_history=ch[-MAX_COACHING_HISTORY_MEETINGS:] if ch else None,
         experiment_history=eh[-MAX_EXPERIMENT_HISTORY:] if eh else None,
         active_experiment=ae,
+        experiment_progress=ep if ep else None,
     )
 
 
@@ -753,10 +756,19 @@ def _update_state_from_analysis(
     persona_idx: int,
     m_dir: Path,
 ) -> None:
-    """Update state after a completed follow-up meeting analysis."""
-    coaching = analysis.get("coaching", {}) or {}
+    """Update state after a completed follow-up meeting analysis.
 
-    # Append coaching history
+    Handles the full experiment lifecycle:
+    - Tracks attempt history (experiment_progress) for the active experiment
+    - Acts on graduation_recommendation: graduate, park, or continue
+    - On graduate/park: moves experiment to history, clears progress,
+      so the NEXT meeting's analysis will propose a new experiment
+    - On continue: keeps experiment active, applies safety cap nudge if needed
+    """
+    coaching = analysis.get("coaching", {}) or {}
+    exp_tracking = analysis.get("experiment_tracking", {}) or {}
+
+    # ── Append coaching history ──
     state["coaching_history"].append({
         "meeting_date": _meeting_date(meeting_number),
         "executive_summary": coaching.get("executive_summary", ""),
@@ -764,102 +776,195 @@ def _update_state_from_analysis(
     })
     state["last_completed_meeting"] = meeting_number
 
-    # Experiment transition detection
-    micro_exps = coaching.get("micro_experiment", [])
-    if not micro_exps or not isinstance(micro_exps, list) or len(micro_exps) == 0:
-        return
+    # ── Track experiment attempt for this meeting ──
+    detection = exp_tracking.get("detection_in_this_meeting")
+    if detection and isinstance(detection, dict):
+        exp_coaching = coaching.get("experiment_coaching")
+        coaching_note = ""
+        if exp_coaching and isinstance(exp_coaching, dict):
+            coaching_note = exp_coaching.get("coaching_note", "")
 
-    new_exp = micro_exps[0]
-    active = state.get("active_experiment")
-
-    if active is None:
-        # Adopt as new experiment
-        exp_num = state["next_experiment_number"]
-        state["active_experiment"] = {
-            "experiment_id": _experiment_id(persona_idx, exp_num),
-            "title": new_exp.get("title", ""),
-            "instruction": new_exp.get("instruction", ""),
-            "success_marker": new_exp.get("success_marker", ""),
-            "related_patterns": new_exp.get("related_patterns", []),
-            "status": "active",
-        }
-        state["next_experiment_number"] = exp_num + 1
-        return
-
-    # Compare titles
-    if new_exp.get("title", "").strip() != active.get("title", "").strip():
-        # Transition: complete old, adopt new
-        journey = _compose_journey_summary(state, meeting_number, analysis)
-        old_exp = dict(active)
-        old_exp["status"] = "completed"
-        old_exp["journey_summary"] = journey
-        state["experiment_history"].append(old_exp)
-
-        exp_num = state["next_experiment_number"]
-        state["active_experiment"] = {
-            "experiment_id": _experiment_id(persona_idx, exp_num),
-            "title": new_exp.get("title", ""),
-            "instruction": new_exp.get("instruction", ""),
-            "success_marker": new_exp.get("success_marker", ""),
-            "related_patterns": new_exp.get("related_patterns", []),
-            "status": "active",
-        }
-        state["next_experiment_number"] = exp_num + 1
-
-        state["experiment_transitions"].append({
-            "meeting": meeting_number,
-            "from": old_exp["experiment_id"],
-            "to": state["active_experiment"]["experiment_id"],
-            "journey_summary": journey,
+        state["experiment_progress"].append({
+            "meeting_date": _meeting_date(meeting_number),
+            "meeting_number": meeting_number,
+            "attempt": detection.get("attempt", "unknown"),
+            "count_attempts": detection.get("count_attempts", 0),
+            "coaching_note": coaching_note,
         })
-    else:
-        # Same experiment — check safety cap
-        active_since = _experiment_active_since(state)
-        meetings_active = meeting_number - active_since + 1
-        if meetings_active >= EXPERIMENT_SAFETY_CAP:
-            state["story_so_far"] += (
-                f"\n\nNote: The current experiment '{active['title']}' has been "
-                f"active for {meetings_active} meetings. Consider whether the "
-                "coachee might be ready for a new challenge."
+
+    # ── Process graduation_recommendation ──
+    active = state.get("active_experiment")
+    grad_rec = exp_tracking.get("graduation_recommendation")
+
+    if active and isinstance(grad_rec, dict):
+        recommendation = grad_rec.get("recommendation", "continue")
+        rationale = grad_rec.get("rationale", "")
+        park_reason = grad_rec.get("park_reason")
+
+        if recommendation == "graduate":
+            # Move to history as completed
+            journey = _compose_journey_summary(state, meeting_number, "completed")
+            _transition_experiment(
+                state, persona_idx, meeting_number,
+                new_status="completed", journey_summary=journey,
+            )
+            logger.info(
+                "P%02d M%02d: Experiment graduated: %s",
+                persona_idx, meeting_number, active.get("title", "?"),
+            )
+
+        elif recommendation == "park":
+            # Move to history as parked
+            journey = _compose_journey_summary(state, meeting_number, "parked")
+            if park_reason == "pivot" and rationale:
+                journey += f" Pivot reason: {rationale}"
+            _transition_experiment(
+                state, persona_idx, meeting_number,
+                new_status="parked", journey_summary=journey,
+                park_reason=park_reason, rationale=rationale,
+            )
+            logger.info(
+                "P%02d M%02d: Experiment parked (%s): %s",
+                persona_idx, meeting_number, park_reason, active.get("title", "?"),
+            )
+
+        elif recommendation == "continue":
+            # Keep active — check safety cap
+            active_since = _experiment_active_since(state)
+            meetings_active = meeting_number - active_since + 1
+            if meetings_active >= EXPERIMENT_SAFETY_CAP:
+                state["story_so_far"] += (
+                    f"\n\nNote: The current experiment '{active['title']}' has been "
+                    f"active for {meetings_active} meetings. Consider whether the "
+                    "coachee might be ready for a new challenge."
+                )
+
+    elif active is None:
+        # No active experiment — check if the analysis proposed one
+        micro_exps = coaching.get("micro_experiment", [])
+        if micro_exps and isinstance(micro_exps, list) and len(micro_exps) > 0:
+            new_exp = micro_exps[0]
+            exp_num = state["next_experiment_number"]
+            state["active_experiment"] = {
+                "experiment_id": _experiment_id(persona_idx, exp_num),
+                "title": new_exp.get("title", ""),
+                "instruction": new_exp.get("instruction", ""),
+                "success_marker": new_exp.get("success_marker", ""),
+                "related_patterns": new_exp.get("related_patterns", []),
+                "status": "active",
+            }
+            state["next_experiment_number"] = exp_num + 1
+            state["experiment_progress"] = []  # fresh progress for new experiment
+            logger.info(
+                "P%02d M%02d: New experiment adopted: %s",
+                persona_idx, meeting_number, new_exp.get("title", "?"),
             )
 
 
+def _transition_experiment(
+    state: dict,
+    persona_idx: int,
+    meeting_number: int,
+    *,
+    new_status: str,
+    journey_summary: str,
+    park_reason: str | None = None,
+    rationale: str = "",
+) -> None:
+    """Move the active experiment to history and clear state for next experiment.
+
+    After this, active_experiment is None. The NEXT meeting's analysis
+    (with no active experiment) will propose a new one via micro_experiment.
+
+    Also updates story_so_far so the transcript generator knows the coaching
+    arc has shifted — this is a lightweight substitute for the production
+    ``process_next_experiment_suggestion`` flow, which synthesizes 3 candidates
+    from the full coaching theme history. We can't call that directly (Airtable
+    dependency), so instead we carry forward the transition context so Stage 2
+    and the transcript generator produce a well-grounded next experiment.
+    """
+    old_exp = dict(state["active_experiment"])
+    old_title = old_exp.get("title", "unknown")
+    old_exp["status"] = new_status
+    old_exp["journey_summary"] = journey_summary
+    if park_reason:
+        old_exp["park_reason"] = park_reason
+    state["experiment_history"].append(old_exp)
+
+    state["experiment_transitions"].append({
+        "meeting": meeting_number,
+        "from": old_exp["experiment_id"],
+        "to": None,  # next experiment will be proposed by the next meeting's analysis
+        "recommendation": new_status,  # "completed" or "parked"
+        "journey_summary": journey_summary,
+    })
+
+    state["active_experiment"] = None
+    state["experiment_progress"] = []  # clear for next experiment
+
+    # Nudge story_so_far so the transcript generator and Stage 2 know about
+    # the transition and can orient the next experiment appropriately.
+    if new_status == "completed":
+        state["story_so_far"] += (
+            f"\n\nThe leader's experiment '{old_title}' has been completed — "
+            f"the behavior is integrating naturally. The coaching focus should "
+            f"now shift to the next highest-leverage growth area."
+        )
+    elif new_status == "parked" and park_reason == "pivot":
+        state["story_so_far"] += (
+            f"\n\nThe leader's experiment '{old_title}' has been parked "
+            f"because a more pressing priority emerged. "
+        )
+        if rationale:
+            state["story_so_far"] += (
+                f"The coaching system identified this priority: \"{rationale}\" "
+                f"The next experiment should address this area."
+            )
+    elif new_status == "parked" and park_reason == "stale":
+        state["story_so_far"] += (
+            f"\n\nThe leader's experiment '{old_title}' has been parked — "
+            f"the leader wasn't engaging with it across recent meetings. "
+            f"The next experiment should target a behavior the leader is more "
+            f"likely to practice in their typical meeting contexts."
+        )
+
+
 def _compose_journey_summary(
-    state: dict, current_meeting: int, current_analysis: dict,
+    state: dict, current_meeting: int, final_status: str,
 ) -> str:
-    """Compose a journey summary for an experiment that's transitioning out."""
-    active = state.get("active_experiment", {})
+    """Compose a journey summary from the experiment_progress history."""
+    progress = state.get("experiment_progress", [])
     active_since = _experiment_active_since(state)
-    duration = current_meeting - active_since
+    duration = current_meeting - active_since + 1
 
-    # Collect detection results from coaching_history
-    detections = []
-    for ch in state.get("coaching_history", []):
-        # Detection info isn't stored in coaching_history — it's in the analysis
-        # We track what we can from the coaching notes
-        pass
+    # Build per-meeting detection line
+    detection_parts = []
+    for entry in progress:
+        m_num = entry.get("meeting_number", "?")
+        attempt = entry.get("attempt", "?")
+        detection_parts.append(f"M{m_num:02d}={attempt}")
 
-    # Simple summary based on duration
-    exp_tracking = current_analysis.get("experiment_tracking", {}) or {}
-    detection = exp_tracking.get("detection_in_this_meeting")
-    last_attempt = detection.get("attempt", "unknown") if detection else "unknown"
-    coaching_note = ""
-    exp_coaching = (current_analysis.get("coaching", {}) or {}).get("experiment_coaching")
-    if exp_coaching and isinstance(exp_coaching, dict):
-        coaching_note = exp_coaching.get("coaching_note", "")
+    summary = f"Active for {duration} meetings (M{active_since:02d}-M{current_meeting:02d}). "
+    summary += f"Status: {final_status}. "
 
-    summary = f"Active for {duration} meetings (M{active_since:02d}-M{current_meeting:02d})."
-    if coaching_note:
-        summary += f' Final coaching note: "{coaching_note}"'
+    if detection_parts:
+        summary += f"Detection: {', '.join(detection_parts)}. "
 
-    return summary
+    # Include last coaching note if available
+    if progress:
+        last_note = progress[-1].get("coaching_note", "")
+        if last_note:
+            summary += f'Final coaching note: "{last_note}"'
+
+    return summary.strip()
 
 
 def _experiment_active_since(state: dict) -> int:
     """Determine which meeting the current experiment became active."""
     transitions = state.get("experiment_transitions", [])
     if transitions:
-        return transitions[-1]["meeting"]
+        # The experiment became active in the meeting AFTER the last transition
+        return transitions[-1]["meeting"] + 1
     # First experiment — active since after baseline
     return BASELINE_MEETING_COUNT + 1
 
