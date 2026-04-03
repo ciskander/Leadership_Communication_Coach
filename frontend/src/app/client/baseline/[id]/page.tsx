@@ -8,6 +8,7 @@ import type {
   BaselinePack,
   BaselinePackMeeting,
   CoachingItem,
+  CoachingTheme,
   Experiment,
   ActiveExperiment,
   PatternSnapshotItem,
@@ -42,6 +43,40 @@ function RelatedPatternsLabel({ relatedPatterns, patternId }: { relatedPatterns?
     <span className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400">
       {pids.map(pid => STRINGS.patternLabels[pid] ?? pid.replace(/_/g, ' ')).join(', ')}
     </span>
+  );
+}
+
+function CoachingThemesSection({ themes }: { themes: CoachingTheme[] }) {
+  if (!themes || themes.length === 0) return null;
+  return (
+    <section className="bg-white rounded border border-cv-rose-700 overflow-hidden">
+      <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-rose-700">
+        <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-rose-50 shrink-0" aria-hidden="true">
+          <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+          <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+        </svg>
+        <h3 className="text-sm font-semibold text-cv-rose-50">{STRINGS.coachingCard.coachingThemesHeading}</h3>
+      </div>
+      <div className="divide-y divide-cv-warm-300">
+        {themes.map((theme, idx) => (
+          <div key={idx} className="px-5 py-4">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                theme.priority === 'primary'
+                  ? 'bg-cv-rose-100 text-cv-rose-800'
+                  : 'bg-stone-100 text-stone-600'
+              }`}>
+                {theme.priority === 'primary'
+                  ? STRINGS.runStatusPoller.primaryThemeLabel
+                  : STRINGS.runStatusPoller.secondaryThemeLabel}
+              </span>
+            </div>
+            <p className="text-sm font-medium text-stone-800 mb-1">{theme.theme}</p>
+            <p className="text-sm text-stone-600 leading-relaxed">{theme.explanation}</p>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -268,6 +303,9 @@ function MeetingAccordionCard({
                 </section>
               )}
 
+              {/* Coaching themes */}
+              <CoachingThemesSection themes={meeting.sub_run_coaching_themes ?? []} />
+
               {/* Strengths & Focus */}
               {(meeting.sub_run_strengths?.length || meeting.sub_run_focus) && (
                 <CoachingCard
@@ -471,6 +509,9 @@ export default function BaselineDetailPage() {
               </div>
             </section>
           )}
+
+          {/* Coaching themes */}
+          <CoachingThemesSection themes={pack.coaching_themes ?? []} />
 
           {/* Aggregate coaching — micro_experiment suppressed at baseline */}
           <CoachingCard

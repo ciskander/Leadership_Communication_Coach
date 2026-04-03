@@ -219,6 +219,7 @@ export interface BaselinePackMeeting {
   meeting_type: string | null;
   target_role: string | null;
   sub_run_executive_summary?: string | null;
+  sub_run_coaching_themes?: CoachingTheme[];
   sub_run_strengths?: CoachingItem[];
   sub_run_focus?: CoachingItem | null;
   sub_run_pattern_snapshot?: Record<string, unknown>[];
@@ -232,6 +233,7 @@ export interface BaselinePack {
   target_speaker_label?: string | null;
   run_id?: string | null;
   executive_summary?: string | null;
+  coaching_themes?: CoachingTheme[];
   strengths?: CoachingItem[];
   focus?: CoachingItem | null;
   micro_experiment?: MicroExperiment | null;

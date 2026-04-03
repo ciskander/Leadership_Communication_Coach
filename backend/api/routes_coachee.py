@@ -230,6 +230,7 @@ async def get_baseline_pack(
 
     # ── Parse aggregate run coaching data ─────────────────────────────────
     executive_summary = None
+    coaching_themes = []
     strengths, focus, micro_experiment, pattern_snapshot = [], None, None, []
     agg_pattern_coaching = []
     agg_run_rec = phase1_map.get("agg_run")
@@ -240,6 +241,17 @@ async def get_baseline_pack(
 
             coaching = parsed.get("coaching", {})
             executive_summary = coaching.get("executive_summary")
+            raw_themes = coaching.get("coaching_themes", [])
+            coaching_themes = [
+                {
+                    "theme": t.get("theme", ""),
+                    "explanation": t.get("explanation", ""),
+                    "related_patterns": t.get("related_patterns", []),
+                    "priority": t.get("priority", "primary"),
+                }
+                for t in raw_themes
+                if isinstance(t, dict) and t.get("theme")
+            ]
             strengths = [
                 {"pattern_id": s.get("pattern_id", ""), "message": s.get("message", "")}
                 for s in coaching.get("strengths", [])
@@ -379,6 +391,17 @@ async def get_baseline_pack(
 
                 sub_coaching = sub_parsed.get("coaching", {})
                 meeting_info["sub_run_executive_summary"] = sub_coaching.get("executive_summary")
+                sub_raw_themes = sub_coaching.get("coaching_themes", [])
+                meeting_info["sub_run_coaching_themes"] = [
+                    {
+                        "theme": t.get("theme", ""),
+                        "explanation": t.get("explanation", ""),
+                        "related_patterns": t.get("related_patterns", []),
+                        "priority": t.get("priority", "primary"),
+                    }
+                    for t in sub_raw_themes
+                    if isinstance(t, dict) and t.get("theme")
+                ]
                 meeting_info["_sub_strengths"] = sub_strengths
                 meeting_info["_sub_focus"] = sub_focus
                 meeting_info["_sub_snapshot"] = sub_pattern_snapshot
@@ -435,6 +458,7 @@ async def get_baseline_pack(
         "role_consistency": bf.get("Role Consistency"),
         "meeting_type_consistency": bf.get("Meeting Type Consistency"),
         "executive_summary": executive_summary,
+        "coaching_themes": coaching_themes,
         "strengths": strengths,
         "focus": focus,
         "micro_experiment": micro_experiment,
