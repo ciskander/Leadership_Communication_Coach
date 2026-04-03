@@ -66,10 +66,11 @@ Apply Pattern Priority Rules from the taxonomy to resolve overlaps.
 If overlap is not allowed per the taxonomy rules, remove the weaker-fit pattern from the OE.
 
 Step 4 -- Evidence spans (output: evidence_spans):
-For each counted OE, create an evidence span quoting the relevant turns verbatim.
+For each counted OE, create evidence span(s) quoting the relevant turns verbatim.
 Use turn-anchored IDs: ES-T{start} for single turn, ES-T{start}-{end} for multi-turn.
 Link each span to its source OE(s) via the event_ids field.
 If two patterns share the same turns, create ONE shared span with both event_ids.
+When an OE covers more than approximately 5 turns (common for disagreement_navigation and trust_and_credibility arcs), break the evidence into focused sub-spans instead of one monolithic span. Each sub-span should capture a distinct coaching-relevant moment in the arc (e.g., the opening tension, the pivot or acknowledgment, the resolution). Aim for sub-spans of roughly 2-4 turns each — enough to show context but short enough that a coachee can scan it quickly. Use your judgment on how many sub-spans are needed based on the length and structure of the arc. All sub-spans for the same OE list that OE in their event_ids. List sub-spans in chronological order in pattern_snapshot.evidence_span_ids.
 
 Step 5 -- Pattern scoring (output: pattern_snapshot):
 For each pattern, compute: score = sum(success for counted OEs) / counted_OE_count.
