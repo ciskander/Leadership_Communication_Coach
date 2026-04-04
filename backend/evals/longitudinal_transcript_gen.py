@@ -633,9 +633,11 @@ def build_condensed_history(
             for theme in themes:
                 if isinstance(theme, dict):
                     priority = theme.get("priority", "")
+                    nature = theme.get("nature", "")
                     label = theme.get("theme", "")
                     explanation = theme.get("explanation", "")
-                    lines.append(f"  {priority}: \"{label}\" \u2014 {explanation}")
+                    nature_tag = f" [{nature}]" if nature else ""
+                    lines.append(f"  {priority}{nature_tag}: \"{label}\" \u2014 {explanation}")
 
         # Experiment status
         active_exp = exp_tracking.get("active_experiment", {})
@@ -649,6 +651,19 @@ def build_condensed_history(
             attempt = detection.get("attempt", "N/A")
             count = detection.get("count_attempts", 0)
             lines.append(f"  Detection: attempt={attempt}, count={count}")
+
+        # Graduation recommendation (if present)
+        grad_rec = exp_tracking.get("graduation_recommendation")
+        if grad_rec and isinstance(grad_rec, dict):
+            recommendation = grad_rec.get("recommendation", "")
+            rationale = grad_rec.get("rationale", "")
+            park_reason = grad_rec.get("park_reason")
+            rec_str = recommendation
+            if park_reason:
+                rec_str += f" ({park_reason})"
+            lines.append(f"  Graduation recommendation: {rec_str}")
+            if rationale:
+                lines.append(f"    Rationale: {rationale}")
 
         # Relevant pattern scores
         if relevant_patterns and snapshot:

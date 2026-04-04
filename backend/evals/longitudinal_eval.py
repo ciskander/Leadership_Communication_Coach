@@ -159,6 +159,7 @@ def _initial_state() -> dict:
         "experiment_progress": [],  # attempt history for the CURRENT experiment
         "experiment_transitions": [],
         "next_experiment_number": 1,
+        "baseline_pack_id": None,
     }
 
 
@@ -190,8 +191,10 @@ def _build_memory_from_state(state: dict) -> MemoryBlock:
     eh = state.get("experiment_history", [])
     ae = state.get("active_experiment")
     ep = state.get("experiment_progress", [])
+    bp_id = state.get("baseline_pack_id")
 
     return build_memory_block(
+        baseline_pack_id=bp_id,
         coaching_history=ch[-MAX_COACHING_HISTORY_MEETINGS:] if ch else None,
         experiment_history=eh[-MAX_EXPERIMENT_HISTORY:] if eh else None,
         active_experiment=ae,
@@ -385,6 +388,9 @@ def _process_meeting(
         result.stage1_passed = stage1.get("gate1_passed", False)
     else:
         transcript_path = m_dir / "transcript.txt"
+        if not transcript_path.exists():
+            result.error = f"transcript.txt missing in {m_dir.name}"
+            return result
         parsed = parse_transcript(
             data=transcript_path.read_bytes(),
             filename="transcript.txt",
@@ -412,6 +418,10 @@ def _process_meeting(
 
     # Need transcript_turns for Stage 2
     transcript_path = m_dir / "transcript.txt"
+    if not transcript_path.exists():
+        result.error = f"transcript.txt missing for Stage 2 in {m_dir.name}"
+        result.token_counts = tokens or None
+        return result
     parsed = parse_transcript(
         data=transcript_path.read_bytes(),
         filename="transcript.txt",
@@ -564,6 +574,9 @@ def run_persona_series(
                     target_speaker_label=speaker_label,
                     model=config.model,
                 )
+
+                # Record baseline pack ID in state
+                state["baseline_pack_id"] = f"EVAL-L-P{persona_idx:02d}-BP"
 
                 # Extract coaching history entry from synthesis
                 coaching = synthesis.get("coaching", {}) or {}

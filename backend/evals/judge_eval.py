@@ -378,6 +378,10 @@ def _format_coaching_themes(coaching: dict, evidence_spans: list | None = None) 
                     f"\"{span.get('excerpt', '')}\""
                 )
             elif best_span_id:
+                logger.warning(
+                    "Theme '%s': best_success_span_id %s not found in evidence_spans",
+                    t.get("theme", "?"), best_span_id,
+                )
                 lines.append(f"**Strength evidence**: {best_span_id} (quote not resolved)")
         else:
             # Developmental or mixed — show coaching artifacts
@@ -385,6 +389,11 @@ def _format_coaching_themes(coaching: dict, evidence_spans: list | None = None) 
                 lines.append(f"**Coaching Note**: {t['coaching_note']}")
 
             rewrite_span_id = t.get("rewrite_for_span_id")
+            if rewrite_span_id and rewrite_span_id not in span_map:
+                logger.warning(
+                    "Theme '%s': rewrite_for_span_id %s not found in evidence_spans",
+                    t.get("theme", "?"), rewrite_span_id,
+                )
             if rewrite_span_id and rewrite_span_id in span_map:
                 span = span_map[rewrite_span_id]
                 lines.append(
