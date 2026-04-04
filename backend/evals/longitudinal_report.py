@@ -281,8 +281,11 @@ def _append_score_trajectories(
 
 
 def _append_theme_evolution(lines: list[str], meetings: list[dict]) -> None:
-    """Append coaching theme evolution across meetings."""
+    """Append coaching theme evolution across meetings, categorized by nature."""
     theme_appearances: dict[str, list[int]] = defaultdict(list)
+    theme_natures: dict[str, list[str]] = defaultdict(list)
+
+    nature_counts: dict[str, int] = defaultdict(int)
 
     for m in meetings:
         analysis = m.get("analysis")
@@ -293,31 +296,45 @@ def _append_theme_evolution(lines: list[str], meetings: list[dict]) -> None:
         for t in coaching.get("coaching_themes", []):
             if isinstance(t, dict):
                 label = t.get("theme", "")
+                nature = t.get("nature", "developmental")
                 if label:
                     theme_appearances[label].append(m_num)
+                    theme_natures[label].append(nature)
+                    nature_counts[nature] += 1
 
     if not theme_appearances:
         lines.append("No coaching themes found.")
         lines.append("")
         return
 
+    # Nature distribution summary
+    total = sum(nature_counts.values())
+    dist_parts = [f"{n}={c}" for n, c in sorted(nature_counts.items())]
+    lines.append(f"**Nature distribution** (n={total}): {', '.join(dist_parts)}")
+    lines.append("")
+
     # Categorize
     persisting = []
     one_off = []
     for theme, appearances in sorted(theme_appearances.items()):
+        natures = theme_natures[theme]
+        # Most common nature for this theme
+        nature_label = max(set(natures), key=natures.count) if natures else "?"
         if len(appearances) >= 2:
-            persisting.append((theme, appearances))
+            persisting.append((theme, appearances, nature_label))
         else:
-            one_off.append((theme, appearances))
+            one_off.append((theme, appearances, nature_label))
 
     if persisting:
         lines.append("**Persisting themes** (appear in 2+ meetings):")
-        for theme, apps in persisting:
-            lines.append(f"- {theme} (M{', M'.join(str(a) for a in apps)})")
+        for theme, apps, nature in persisting:
+            lines.append(f"- {theme} [{nature}] (M{', M'.join(str(a) for a in apps)})")
         lines.append("")
 
     if one_off:
-        lines.append(f"**One-off themes** ({len(one_off)} themes appeared once only)")
+        lines.append(f"**One-off themes** ({len(one_off)} themes appeared once only):")
+        for theme, apps, nature in one_off:
+            lines.append(f"- {theme} [{nature}] (M{apps[0]})")
         lines.append("")
 
 
