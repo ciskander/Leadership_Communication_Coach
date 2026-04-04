@@ -31,7 +31,7 @@ _HTML_TAG_RE = re.compile(r"<[^>]+>")
 _VOICE_TAG_RE = re.compile(r"<v ([^>]+)>")  # <v Speaker Name>
 _TIMESTAMP_INLINE_RE = re.compile(r"\b\d{1,2}:\d{2}(:\d{2})?(\.\d+)?\b")
 _HEADER_LINE_RE = re.compile(
-    r"^(Meeting(\s*(#|Type|Name|Title))?|Leader|Participants|Date|Location|Duration|Agenda|Subject|Topic|Project"
+    r"^(Meeting(\s*(#|Type|Name|Title))?|Leader|Role|Participants|Date|Location|Duration|Agenda|Subject|Topic|Project"
     r"|Customer|Call\s*Title|Time(\s*/\s*Time\s*Zone)?|Time\s*Zone|Company|Attendees|Facilitator"
     r"|Prepared\s*by|Recorded\s*by|Type|Title|Reference|Notes|Duration)\s*:",
     re.IGNORECASE,
