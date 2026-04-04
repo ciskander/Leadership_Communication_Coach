@@ -454,9 +454,11 @@ def format_coaching_context_for_prompt(analysis_json: dict) -> str:
     for theme in themes:
         if isinstance(theme, dict):
             priority = theme.get("priority", "")
+            nature = theme.get("nature", "")
             label = theme.get("theme", "")
             explanation = theme.get("explanation", "")
-            theme_lines.append(f'- {priority}: "{label}" \u2014 {explanation}')
+            nature_tag = f" ({nature})" if nature else ""
+            theme_lines.append(f'- {priority}{nature_tag}: "{label}" \u2014 {explanation}')
         elif isinstance(theme, str):
             theme_lines.append(f"- {theme}")
     themes_text = "\n".join(theme_lines) if theme_lines else "None"

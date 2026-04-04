@@ -80,11 +80,8 @@ _JUDGE_USER_PROMPT = """\
 ### Executive Summary
 {executive_summary}
 
-### Coaching Themes
+### Coaching Themes (with evidence)
 {coaching_themes_text}
-
-### Strengths Identified
-{strengths_text}
 
 ### Focus Area
 {focus_text}
@@ -189,7 +186,23 @@ means it misrepresents what happened.>"
     "items": [
       {{
         "theme_text": "<first 15 words of the theme>",
+        "nature": "<strength|developmental|mixed>",
         "rating": "insightful|adequate|generic|stretching",
+        "nature_accurate": <true if the nature classification is correct>,
+        "nature_explanation": "<Is the classification correct? Is a 'strength' theme \
+actually showing strong behavior? Is 'developmental' actually a gap? Does a 'mixed' \
+theme genuinely show capability in some moments and missed opportunities in others?>",
+        "evidence_grounding": "well_grounded|adequate|weak|misaligned",
+        "evidence_explanation": "<Does the selected evidence quote genuinely support \
+this theme's claims? For strength themes: does the best_success quote show the \
+behavior done well? For developmental/mixed: does the rewrite quote show the \
+coachable moment?>",
+        "coaching_note_quality": "actionable|generic|misaligned|null",
+        "coaching_note_explanation": "<For developmental/mixed themes: is the coaching \
+note specific to THIS leader in THIS meeting and actionable? null for strength themes.>",
+        "rewrite_quality": "strong_model|generic|misaligned|null",
+        "rewrite_explanation": "<For developmental/mixed themes: does the suggested \
+rewrite genuinely improve on what was said while staying natural? null for strength themes.>",
         "transcends_taxonomy": <true if this theme captures something beyond any single \
 communication pattern — e.g. avoidance habits, pace compression, relational dynamics>,
         "names_behavioral_habit": <true if the theme names a specific repeating behavior \
@@ -262,15 +275,6 @@ def _format_transcript_for_judge(transcript_data: dict) -> str:
     return "\n".join(lines)
 
 
-def _format_strengths(coaching: dict) -> str:
-    items = coaching.get("strengths", [])
-    if not items:
-        return "(none)"
-    return "\n".join(
-        f"- **{s.get('pattern_id', '?')}**: {s.get('message', '')}" for s in items
-    )
-
-
 def _format_focus(coaching: dict) -> str:
     items = coaching.get("focus", [])
     if not items:
@@ -334,21 +338,62 @@ def _format_pattern_coaching(coaching: dict, evidence_spans: list, pattern_snaps
     return "\n\n".join(parts)
 
 
-def _format_coaching_themes(coaching: dict) -> str:
-    """Format coaching_themes for the judge."""
+def _format_coaching_themes(coaching: dict, evidence_spans: list | None = None) -> str:
+    """Format coaching_themes with nature and evidence for the judge.
+
+    Each theme includes its nature classification, evidence grounding,
+    and coaching artifacts (coaching_note, suggested_rewrite for
+    developmental/mixed; best_success quote for strength themes).
+    """
     themes = coaching.get("coaching_themes", [])
     if not themes:
         return "(none)"
+
+    # Build evidence span lookup for resolving IDs to quotes
+    span_map: dict[str, dict] = {}
+    if evidence_spans:
+        span_map = {es.get("evidence_span_id", ""): es for es in evidence_spans}
+
     parts = []
     for t in themes:
-        lines = [f"- **{t.get('theme', '?')}** (priority: {t.get('priority', '?')})"]
+        nature = t.get("nature", "developmental")
+        lines = [
+            f"#### {t.get('theme', '?')} "
+            f"(priority: {t.get('priority', '?')}, nature: {nature})"
+        ]
         if t.get("explanation"):
-            lines.append(f"  {t['explanation']}")
+            lines.append(f"**Explanation**: {t['explanation']}")
+
         rp = t.get("related_patterns", [])
         if rp:
-            lines.append(f"  Related patterns: {', '.join(rp)}")
+            lines.append(f"**Related patterns**: {', '.join(rp)}")
+
+        # Evidence grounding
+        if nature == "strength":
+            best_span_id = t.get("best_success_span_id")
+            if best_span_id and best_span_id in span_map:
+                span = span_map[best_span_id]
+                lines.append(
+                    f"**Strength evidence** [{best_span_id}]: "
+                    f"\"{span.get('excerpt', '')}\""
+                )
+            elif best_span_id:
+                lines.append(f"**Strength evidence**: {best_span_id} (quote not resolved)")
         else:
-            lines.append("  Related patterns: (none — theme transcends taxonomy)")
+            # Developmental or mixed — show coaching artifacts
+            if t.get("coaching_note"):
+                lines.append(f"**Coaching Note**: {t['coaching_note']}")
+
+            rewrite_span_id = t.get("rewrite_for_span_id")
+            if rewrite_span_id and rewrite_span_id in span_map:
+                span = span_map[rewrite_span_id]
+                lines.append(
+                    f"**Original (from transcript)** [{rewrite_span_id}]: "
+                    f"\"{span.get('excerpt', '')}\""
+                )
+            if t.get("suggested_rewrite"):
+                lines.append(f"**Suggested Rewrite**: {t['suggested_rewrite']}")
+
         parts.append("\n".join(lines))
     return "\n\n".join(parts)
 
@@ -416,8 +461,7 @@ def judge_analysis(
     user_message = _JUDGE_USER_PROMPT.format(
         transcript_text=transcript_text,
         executive_summary=coaching.get("executive_summary", "(none)"),
-        coaching_themes_text=_format_coaching_themes(coaching),
-        strengths_text=_format_strengths(coaching),
+        coaching_themes_text=_format_coaching_themes(coaching, evidence_spans),
         focus_text=_format_focus(coaching),
         pattern_coaching_text=_format_pattern_coaching(coaching, evidence_spans, pattern_snapshot),
         experiment_coaching_text=_format_experiment_coaching(coaching),

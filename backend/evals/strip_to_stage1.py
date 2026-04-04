@@ -30,7 +30,6 @@ logger = logging.getLogger(__name__)
 _COACHING_FIELDS_TO_STRIP = [
     "executive_summary",
     "coaching_themes",
-    "strengths",
     "focus",
     "micro_experiment",
     "pattern_coaching",
@@ -46,7 +45,7 @@ def strip_coaching(data: dict) -> dict:
         evidence_spans, evaluation_summary, pattern_snapshot,
         experiment_tracking
     Removes:
-      - coaching.executive_summary, coaching_themes, strengths, focus,
+      - coaching.executive_summary, coaching_themes, focus,
         micro_experiment, pattern_coaching, experiment_coaching
     """
     stripped = copy.deepcopy(data)

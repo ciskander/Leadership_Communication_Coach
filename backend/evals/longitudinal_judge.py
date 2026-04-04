@@ -227,11 +227,12 @@ def _format_coaching_for_ab(analysis: dict) -> dict[str, str]:
     for t in themes:
         if isinstance(t, dict):
             priority = t.get("priority", "")
+            nature = t.get("nature", "")
             label = t.get("theme", "")
             explanation = t.get("explanation", "")
             rp = t.get("related_patterns", [])
             theme_lines.append(
-                f"- **{label}** (priority: {priority})\n"
+                f"- **{label}** (priority: {priority}, nature: {nature})\n"
                 f"  {explanation}\n"
                 f"  Related patterns: {', '.join(rp) if rp else '(none)'}"
             )
