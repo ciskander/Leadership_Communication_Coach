@@ -109,6 +109,12 @@ class CoachingTheme(BaseModel):
     explanation: str
     related_patterns: list[str] = Field(default_factory=list)
     priority: str = "primary"  # "primary" or "secondary"
+    nature: str = "developmental"  # "strength", "developmental", or "mixed"
+    best_success_span_id: Optional[str] = None
+    coaching_note: Optional[str] = None
+    suggested_rewrite: Optional[str] = None
+    rewrite_for_span_id: Optional[str] = None
+    quotes: list[QuoteObject] = Field(default_factory=list)
 
 
 class ExperimentCoachingItem(BaseModel):

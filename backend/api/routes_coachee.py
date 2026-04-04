@@ -248,6 +248,11 @@ async def get_baseline_pack(
                     "explanation": t.get("explanation", ""),
                     "related_patterns": t.get("related_patterns", []),
                     "priority": t.get("priority", "primary"),
+                    "nature": t.get("nature", "developmental"),
+                    "best_success_span_id": t.get("best_success_span_id"),
+                    "coaching_note": t.get("coaching_note"),
+                    "suggested_rewrite": t.get("suggested_rewrite"),
+                    "rewrite_for_span_id": t.get("rewrite_for_span_id"),
                 }
                 for t in raw_themes
                 if isinstance(t, dict) and t.get("theme")
@@ -384,6 +389,11 @@ async def get_baseline_pack(
                         "explanation": t.get("explanation", ""),
                         "related_patterns": t.get("related_patterns", []),
                         "priority": t.get("priority", "primary"),
+                        "nature": t.get("nature", "developmental"),
+                        "best_success_span_id": t.get("best_success_span_id"),
+                        "coaching_note": t.get("coaching_note"),
+                        "suggested_rewrite": t.get("suggested_rewrite"),
+                        "rewrite_for_span_id": t.get("rewrite_for_span_id"),
                     }
                     for t in sub_raw_themes
                     if isinstance(t, dict) and t.get("theme")

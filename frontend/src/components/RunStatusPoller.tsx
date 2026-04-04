@@ -18,15 +18,16 @@ import { STRINGS } from '@/config/strings';
 /** Renders a single strength-nature coaching theme (teal section). */
 function StrengthThemeCard({
   theme,
-  findQuotesBySpanId,
   targetSpeaker,
 }: {
   theme: CoachingTheme;
-  findQuotesBySpanId: (spanId: string | null | undefined) => QuoteObject[];
   targetSpeaker: string | null;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const successQuotes = findQuotesBySpanId(theme.best_success_span_id);
+  const themeQuotes = theme.quotes ?? [];
+  const successQuotes = theme.best_success_span_id
+    ? themeQuotes.filter((q) => q.span_id === theme.best_success_span_id)
+    : [];
   const hasDetail = successQuotes.length > 0;
 
   return (
@@ -62,17 +63,20 @@ function StrengthThemeCard({
 function DevelopmentalThemeCard({
   theme,
   showPriorityBadge,
-  findQuotesBySpanId,
   targetSpeaker,
 }: {
   theme: CoachingTheme;
   showPriorityBadge: boolean;
-  findQuotesBySpanId: (spanId: string | null | undefined) => QuoteObject[];
   targetSpeaker: string | null;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const successQuotes = findQuotesBySpanId(theme.best_success_span_id);
-  const rewriteQuotes = findQuotesBySpanId(theme.rewrite_for_span_id);
+  const themeQuotes = theme.quotes ?? [];
+  const successQuotes = theme.best_success_span_id
+    ? themeQuotes.filter((q) => q.span_id === theme.best_success_span_id)
+    : [];
+  const rewriteQuotes = theme.rewrite_for_span_id
+    ? themeQuotes.filter((q) => q.span_id === theme.rewrite_for_span_id)
+    : [];
   const hasDetail = !!(theme.coaching_note || theme.suggested_rewrite || successQuotes.length > 0 || rewriteQuotes.length > 0);
 
   // Mode A: best_success_span_id is set AND coaching_note is set
@@ -936,7 +940,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           </div>
           <div className="divide-y divide-cv-warm-300">
             {strengthThemes.map((theme, idx) => (
-              <StrengthThemeCard key={idx} theme={theme} findQuotesBySpanId={findQuotesBySpanId} targetSpeaker={targetSpeaker} />
+              <StrengthThemeCard key={idx} theme={theme} targetSpeaker={targetSpeaker} />
             ))}
           </div>
         </section>
@@ -954,7 +958,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           </div>
           <div className="divide-y divide-cv-warm-300">
             {developmentalThemes.map((theme, idx) => (
-              <DevelopmentalThemeCard key={idx} theme={theme} showPriorityBadge={developmentalThemes.length >= 2} findQuotesBySpanId={findQuotesBySpanId} targetSpeaker={targetSpeaker} />
+              <DevelopmentalThemeCard key={idx} theme={theme} showPriorityBadge={developmentalThemes.length >= 2} targetSpeaker={targetSpeaker} />
             ))}
           </div>
         </section>

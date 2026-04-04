@@ -195,16 +195,29 @@ async def _build_run_response(run_record: dict, at_client: Optional[AirtableClie
     raw_themes = coaching_section.get("coaching_themes", [])
     if raw_themes and isinstance(raw_themes, list):
         from backend.api.dto import CoachingTheme
-        resp.coaching_themes = [
-            CoachingTheme(
+        for t in raw_themes:
+            if not isinstance(t, dict) or not t.get("theme"):
+                continue
+            # Resolve CT- span quotes for this theme
+            theme_span_ids = [
+                sid for sid in [t.get("best_success_span_id"), t.get("rewrite_for_span_id")]
+                if sid
+            ]
+            theme_quotes = resolve_quotes(
+                theme_span_ids, spans_by_id, transcript_id, meeting_id, turn_map, effective_target,
+            ) if theme_span_ids else []
+            resp.coaching_themes.append(CoachingTheme(
                 theme=t.get("theme", ""),
                 explanation=t.get("explanation", ""),
                 related_patterns=t.get("related_patterns", []),
                 priority=t.get("priority", "primary"),
-            )
-            for t in raw_themes
-            if isinstance(t, dict) and t.get("theme")
-        ]
+                nature=t.get("nature", "developmental"),
+                best_success_span_id=t.get("best_success_span_id"),
+                coaching_note=t.get("coaching_note"),
+                suggested_rewrite=t.get("suggested_rewrite"),
+                rewrite_for_span_id=t.get("rewrite_for_span_id"),
+                quotes=theme_quotes,
+            ))
 
     # Coaching output with resolved quotes
     focus, micro_exp = resolve_coaching_output(
