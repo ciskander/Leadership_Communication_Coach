@@ -1511,7 +1511,7 @@ def _fetch_recent_coaching_data(
 ) -> tuple[
     list[tuple[str, list]],                          # coaching_themes_by_run
     list[tuple[str, str]],                           # executive_summaries_by_run
-    list[tuple[str, str, int, Optional[str]]],       # experiment_progress
+    list[tuple[str, str, int, Optional[str], Optional[str]]],  # experiment_progress (date, attempt, count, note, exp_id)
     list[dict],                                      # eligible_run_records (raw)
 ]:
     """Fetch recent Gate1-passing runs and extract coaching data.
@@ -1544,7 +1544,7 @@ def _fetch_recent_coaching_data(
 
     coaching_themes_by_run: list[tuple[str, list]] = []
     executive_summaries_by_run: list[tuple[str, str]] = []
-    experiment_progress: list[tuple[str, str, int, Optional[str]]] = []
+    experiment_progress: list[tuple[str, str, int, Optional[str], Optional[str]]] = []
 
     for r in eligible_runs:
         rf = _extract_fields(r)
@@ -1566,11 +1566,13 @@ def _fetch_recent_coaching_data(
             if detection:
                 exp_coaching = (parsed.get("coaching", {}) or {}).get("experiment_coaching")
                 coaching_note = exp_coaching.get("coaching_note") if exp_coaching else None
+                det_exp_id = detection.get("experiment_id")
                 experiment_progress.append((
                     meeting_date,
                     detection.get("attempt", "unknown"),
                     detection.get("count_attempts", 0),
                     coaching_note,
+                    det_exp_id,
                 ))
         except Exception:
             pass
@@ -1788,7 +1790,7 @@ def process_next_experiment_suggestion(
     experiment_journey_section = ""
     if needs_summary_exp_record_id and experiment_progress:
         journey_lines = [f'Just completed: "{needs_summary_exp_title}"']
-        for meeting_date, attempt, count, coaching_note in experiment_progress:
+        for meeting_date, attempt, count, coaching_note, *_ in experiment_progress:
             note_part = f' — "{coaching_note}"' if coaching_note else ""
             journey_lines.append(f"  Meeting {meeting_date}: {attempt} ({count} instances){note_part}")
         experiment_journey_section = (
@@ -1803,7 +1805,7 @@ def process_next_experiment_suggestion(
         ae_title = ae_fields.get(F_EXP_TITLE, "unknown")
         ae_instruction = ae_fields.get(F_EXP_INSTRUCTIONS, "") or ae_fields.get("Instruction", "")
         active_lines = [f'Active: "{ae_title}" — {ae_instruction}']
-        for meeting_date, attempt, count, coaching_note in experiment_progress:
+        for meeting_date, attempt, count, coaching_note, *_ in experiment_progress:
             note_part = f' — "{coaching_note}"' if coaching_note else ""
             active_lines.append(f"  Meeting {meeting_date}: {attempt} ({count} instances){note_part}")
         active_experiment_section = (
@@ -2160,7 +2162,10 @@ def _build_memory_for_user(
     except Exception as exc:
         logger.warning("Failed to fetch coaching history: %s", exc)
 
-    # Experiment progress: per-meeting attempt history for the active experiment
+    # Experiment progress: per-meeting attempt history for the active experiment.
+    # Filter to only include attempts for the CURRENT active experiment to prevent
+    # cross-contamination from prior experiments.
+    active_exp_id = active_exp_data.get("experiment_id") if active_exp_data else None
     experiment_progress: list[dict] = [
         {
             "meeting_date": meeting_date,
@@ -2168,7 +2173,8 @@ def _build_memory_for_user(
             "count_attempts": count,
             "coaching_note": note,
         }
-        for meeting_date, attempt, count, note in experiment_progress_tuples
+        for meeting_date, attempt, count, note, det_exp_id in experiment_progress_tuples
+        if not active_exp_id or det_exp_id == active_exp_id
     ]
 
     # Experiment history: completed/parked/abandoned experiments

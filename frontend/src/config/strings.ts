@@ -155,7 +155,7 @@ export const STRINGS = {
   // ── Highlight badges (shown on pattern cards in cluster view) ────────────
   highlightBadges: {
     strength: 'Strength',
-    focus: 'Focus area',
+    focus: 'Growth area',
   },
 
   // ── Trend sparkline labels ──────────────────────────────────────────────────

@@ -676,8 +676,8 @@ interface PatternSnapshotProps {
   groupByCluster?: boolean;
   /** Pattern IDs that should show a "Strength" badge. */
   strengthPatternIds?: string[];
-  /** Pattern ID that should show a "Focus area" badge. */
-  focusPatternId?: string | null;
+  /** Pattern IDs that should show a "Growth area" badge. */
+  growthAreaPatternIds?: string[];
 }
 
 export function PatternSnapshot({
@@ -688,7 +688,7 @@ export function PatternSnapshot({
   excludePatternIds,
   groupByCluster,
   strengthPatternIds,
-  focusPatternId,
+  growthAreaPatternIds,
 }: PatternSnapshotProps) {
   const filtered = excludePatternIds?.length
     ? patterns.filter((p) => !excludePatternIds.includes(p.pattern_id))
@@ -703,10 +703,12 @@ export function PatternSnapshot({
   }
 
   const strengthSet = new Set(strengthPatternIds ?? []);
+  const growthAreaSet = new Set(growthAreaPatternIds ?? []);
 
   function getHighlightType(patternId: string): 'strength' | 'focus' | null {
+    // Growth area takes precedence if both apply
+    if (growthAreaSet.has(patternId)) return 'focus';
     if (strengthSet.has(patternId)) return 'strength';
-    if (focusPatternId === patternId) return 'focus';
     return null;
   }
 

@@ -857,11 +857,19 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
     );
   }
 
-  // Build strength/focus pattern IDs for highlight badges
+  // Build strength/growth-area pattern IDs for highlight badges
+  const patternScores: Record<string, number> = {};
+  for (const ps of run.pattern_snapshot ?? []) {
+    if (ps.score != null) patternScores[ps.pattern_id] = ps.score;
+  }
   const strengthThemePatternIds = run.coaching_themes
     .filter((t) => t.nature === 'strength')
-    .flatMap((t) => t.related_patterns);
-  const focusPatternId = run.focus?.pattern_id ?? null;
+    .flatMap((t) => t.related_patterns)
+    .filter((pid) => (patternScores[pid] ?? 0) >= 0.70);
+  const growthAreaPatternIds = run.coaching_themes
+    .filter((t) => t.nature === 'developmental' || t.nature === 'mixed')
+    .flatMap((t) => t.related_patterns)
+    .filter((pid) => run.pattern_coaching.some((pc) => pc.pattern_id === pid && pc.suggested_rewrite));
 
   // Helper: find quote(s) by span_id across all pattern snapshot items
   const allQuotes = (run.pattern_snapshot ?? []).flatMap((p) => p.quotes ?? []);
@@ -991,7 +999,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
               trendData={trendData}
               groupByCluster
               strengthPatternIds={strengthThemePatternIds}
-              focusPatternId={focusPatternId}
+              growthAreaPatternIds={growthAreaPatternIds}
             />
           </div>
         </section>

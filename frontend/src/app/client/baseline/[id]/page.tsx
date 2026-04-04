@@ -249,7 +249,6 @@ function MeetingAccordionCard({
     meeting.sub_run_pattern_snapshot?.length
   );
 
-  const focusPatternId = (meeting.sub_run_focus as CoachingItem | null)?.pattern_id ?? null;
 
   return (
     <div className={`bg-white border rounded overflow-hidden transition-colors ${
@@ -332,7 +331,7 @@ function MeetingAccordionCard({
                       targetSpeaker={targetSpeaker}
                       groupByCluster
                       strengthPatternIds={(meeting.sub_run_coaching_themes ?? []).filter((t: CoachingTheme) => t.nature === 'strength').flatMap((t: CoachingTheme) => t.related_patterns)}
-                      focusPatternId={focusPatternId}
+                      growthAreaPatternIds={[]}
                     />
                   </div>
                 </section>
@@ -569,7 +568,7 @@ export default function BaselineDetailPage() {
                   targetSpeaker={pack.target_speaker_label}
                   groupByCluster
                   strengthPatternIds={(pack.coaching_themes ?? []).filter((t: CoachingTheme) => t.nature === 'strength').flatMap((t: CoachingTheme) => t.related_patterns)}
-                  focusPatternId={pack.focus?.pattern_id ?? null}
+                  growthAreaPatternIds={[]}
                 />
               </div>
             </section>
