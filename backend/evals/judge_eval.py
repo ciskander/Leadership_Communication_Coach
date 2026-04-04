@@ -109,8 +109,8 @@ with the following structure:
         "explanation": "<why this rating>"
       }}
     ],
-    "pattern_first_detected": <true if any items feel like pattern-matching \
-rather than genuine coaching>,
+    "pedantic_count": <number of items rated 'pedantic' in the items array above>,
+    "total_patterns_judged": <total number of items in the items array above>,
     "overall_notes": "<summary>"
   }},
   "evidence_quality": {{
@@ -539,8 +539,10 @@ def _print_summary(result: dict) -> None:
     print(f"  Leader would feel respected: {gut.get('leader_would_feel_respected', '?')}")
 
     insight = result.get("coaching_insight_quality", {})
-    if insight.get("pattern_first_detected"):
-        print("  WARNING: Pattern-first coaching detected")
+    pedantic = insight.get("pedantic_count", 0)
+    total = insight.get("total_patterns_judged", 0)
+    if pedantic:
+        print(f"  WARNING: {pedantic}/{total} patterns rated pedantic")
 
     items = insight.get("items", [])
     for item in items:
