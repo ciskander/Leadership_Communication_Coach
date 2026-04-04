@@ -154,7 +154,7 @@ export const STRINGS = {
 
   // ── Highlight badges (shown on pattern cards in cluster view) ────────────
   highlightBadges: {
-    strength: 'Strength',
+    strength: 'Key strength',
     focus: 'Coaching insight',
   },
 
