@@ -133,14 +133,6 @@ def test_micro_experiment_must_be_exactly_one(valid_single_meeting_output):
     assert result.passed is False
 
 
-def test_strengths_max_two(valid_single_meeting_output):
-    bad = copy.deepcopy(valid_single_meeting_output)
-    strength = bad["coaching"]["strengths"][0]
-    bad["coaching"]["strengths"] = [strength] * 3
-    result = validate(json.dumps(bad))
-    assert result.passed is False
-
-
 # ---------------------------------------------------------------------------
 # Evidence span failures
 # ---------------------------------------------------------------------------

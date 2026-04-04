@@ -200,7 +200,7 @@ def merge_editor_output(
         has_any_edit = any(
             k in editor_output
             for k in (
-                "executive_summary", "coaching_themes", "strengths_edits",
+                "executive_summary", "coaching_themes",
                 "focus_message", "micro_experiment_edits",
                 "pattern_coaching_edits", "experiment_coaching_edits",
                 "oe_removals",
@@ -563,16 +563,6 @@ def _apply_toplevel_edits(merged: dict, editor_output: dict) -> None:
     # Coaching themes
     if "coaching_themes" in editor_output and editor_output["coaching_themes"] is not None:
         coaching["coaching_themes"] = editor_output["coaching_themes"]
-
-    # Strengths edits (message text only, pattern_id preserved)
-    strengths_edits = editor_output.get("strengths_edits", {})
-    if strengths_edits:
-        for strength in coaching.get("strengths", []):
-            pid = strength.get("pattern_id")
-            if pid in strengths_edits:
-                edit = strengths_edits[pid]
-                if isinstance(edit, dict) and "message" in edit and edit["message"] is not None:
-                    strength["message"] = edit["message"]
 
     # Focus message (text only, structure preserved)
     if "focus_message" in editor_output and editor_output["focus_message"] is not None:

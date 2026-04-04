@@ -245,12 +245,10 @@ function MeetingAccordionCard({
 
   const hasSubRunData = !!(
     meeting.sub_run_executive_summary ||
-    meeting.sub_run_strengths?.length ||
     meeting.sub_run_focus ||
     meeting.sub_run_pattern_snapshot?.length
   );
 
-  const strengthPatternIds = ((meeting.sub_run_strengths ?? []) as CoachingItem[]).map((s) => s.pattern_id);
   const focusPatternId = (meeting.sub_run_focus as CoachingItem | null)?.pattern_id ?? null;
 
   return (
@@ -303,10 +301,9 @@ function MeetingAccordionCard({
                 </section>
               )}
 
-              {/* Strengths & Focus */}
-              {(meeting.sub_run_strengths?.length || meeting.sub_run_focus) && (
+              {/* Focus */}
+              {meeting.sub_run_focus && (
                 <CoachingCard
-                  strengths={(meeting.sub_run_strengths ?? []) as CoachingItem[]}
                   focus={(meeting.sub_run_focus ?? null) as CoachingItem | null}
                   microExperiment={null}
                   targetSpeaker={targetSpeaker}
@@ -334,7 +331,7 @@ function MeetingAccordionCard({
                       patternCoaching={meeting.sub_run_pattern_coaching}
                       targetSpeaker={targetSpeaker}
                       groupByCluster
-                      strengthPatternIds={strengthPatternIds}
+                      strengthPatternIds={(meeting.sub_run_coaching_themes ?? []).filter((t: CoachingTheme) => t.nature === 'strength').flatMap((t: CoachingTheme) => t.related_patterns)}
                       focusPatternId={focusPatternId}
                     />
                   </div>
@@ -512,7 +509,6 @@ export default function BaselineDetailPage() {
 
           {/* Aggregate coaching — micro_experiment suppressed at baseline */}
           <CoachingCard
-            strengths={pack.strengths ?? []}
             focus={pack.focus ?? null}
             microExperiment={null}
             targetSpeaker={pack.target_speaker_label}
@@ -572,7 +568,7 @@ export default function BaselineDetailPage() {
                   patternCoaching={pack.pattern_coaching}
                   targetSpeaker={pack.target_speaker_label}
                   groupByCluster
-                  strengthPatternIds={(pack.strengths ?? []).map((s: CoachingItem) => s.pattern_id)}
+                  strengthPatternIds={(pack.coaching_themes ?? []).filter((t: CoachingTheme) => t.nature === 'strength').flatMap((t: CoachingTheme) => t.related_patterns)}
                   focusPatternId={pack.focus?.pattern_id ?? null}
                 />
               </div>

@@ -207,10 +207,9 @@ async def _build_run_response(run_record: dict, at_client: Optional[AirtableClie
         ]
 
     # Coaching output with resolved quotes
-    strengths, focus, micro_exp = resolve_coaching_output(
+    focus, micro_exp = resolve_coaching_output(
         parsed_json, spans_by_id, transcript_id, meeting_id, turn_map, effective_target
     )
-    resp.strengths = strengths
     resp.focus = focus
     resp.micro_experiment = micro_exp
 

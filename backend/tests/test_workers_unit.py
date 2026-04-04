@@ -104,11 +104,9 @@ class TestExtractCoachingFromRun:
         focus_pattern="resolution_and_alignment",
         micro_pattern="resolution_and_alignment",
         micro_exp_id="EXP-000001",
-        strengths_patterns=("purposeful_framing",),
     ) -> dict:
         return {
             "coaching": {
-                "strengths": [{"pattern_id": p, "message": "Good."} for p in strengths_patterns],
                 "focus": [{"pattern_id": focus_pattern, "message": "Improve this."}],
                 "micro_experiment": [
                     {
@@ -136,21 +134,14 @@ class TestExtractCoachingFromRun:
         result = _extract_coaching_from_run(self._make_parsed_json(micro_exp_id="EXP-000042"))
         assert result["experiment_id"] == "EXP-000042"
 
-    def test_extracts_strengths_as_json_array(self):
-        result = _extract_coaching_from_run(
-            self._make_parsed_json(strengths_patterns=("purposeful_framing", "question_quality"))
-        )
-        strengths = json.loads(result["strengths_patterns"])
-        assert strengths == ["purposeful_framing", "question_quality"]
-
     def test_empty_coaching_focus_pattern_still_none(self):
         """Even with empty coaching, focus_pattern is always None (deprecated)."""
-        parsed = {"coaching": {"strengths": [], "focus": [], "micro_experiment": []}}
+        parsed = {"coaching": {"focus": [], "micro_experiment": []}}
         result = _extract_coaching_from_run(parsed)
         assert result["focus_pattern"] is None
 
     def test_empty_micro_experiment_returns_none(self):
-        parsed = {"coaching": {"strengths": [], "focus": [], "micro_experiment": []}}
+        parsed = {"coaching": {"focus": [], "micro_experiment": []}}
         result = _extract_coaching_from_run(parsed)
         assert result["experiment_id"] is None
 

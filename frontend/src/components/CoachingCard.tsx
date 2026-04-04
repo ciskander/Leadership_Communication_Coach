@@ -1,4 +1,4 @@
-import type { CoachingItem, MicroExperiment, PatternSnapshotItem, PatternCoachingItem } from '@/lib/types';
+import type { MicroExperiment, PatternSnapshotItem, PatternCoachingItem, CoachingItem } from '@/lib/types';
 import { EvidenceQuoteList } from './EvidenceQuote';
 import { PatternCard } from './PatternSnapshot';
 import type { PatternTrendData } from './PatternSnapshot';
@@ -37,7 +37,6 @@ function InsetBox({ label, children }: { label: string; children: React.ReactNod
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface CoachingCardProps {
-  strengths: CoachingItem[];
   focus: CoachingItem | null;
   microExperiment: MicroExperiment | null;
   targetSpeaker?: string | null;
@@ -47,7 +46,6 @@ interface CoachingCardProps {
 }
 
 export function CoachingCard({
-  strengths,
   focus,
   microExperiment,
   targetSpeaker,
@@ -67,45 +65,6 @@ export function CoachingCard({
 
   return (
     <div className="space-y-4">
-
-      {/* ── Strengths ────────────────────────────────────────────────────── */}
-      {strengths.length > 0 && (
-        <section className="bg-white rounded border border-cv-teal-700 overflow-hidden">
-          {/* Header */}
-          <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-teal-700">
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-teal-50 shrink-0" aria-hidden="true">
-              <path fillRule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clipRule="evenodd" />
-            </svg>
-            <h3 className="text-sm font-semibold text-cv-teal-50">{STRINGS.coachingCard.strengthsHeading}</h3>
-          </div>
-
-          {/* Body */}
-          <div className="divide-y divide-cv-warm-300">
-            {strengths.map((s) => {
-              const card = findPatternCard(s.pattern_id);
-              const coaching = findPatternCoaching(s.pattern_id);
-              return (
-                <div key={s.pattern_id} className="px-5 py-4">
-                  <div className={card ? 'grid grid-cols-1 lg:grid-cols-2 gap-4 items-start' : ''}>
-                    <div className="space-y-2">
-                      <PatternLabel id={s.pattern_id} />
-                      <p className="text-sm text-cv-stone-700 leading-relaxed">{s.message}</p>
-                    </div>
-                    {card && (
-                      <PatternCard
-                        pattern={card}
-                        coaching={coaching}
-                        targetSpeaker={targetSpeaker ?? null}
-                        trend={trendData?.[s.pattern_id]}
-                      />
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
 
       {/* ── Focus ────────────────────────────────────────────────────────── */}
       {focus && (

@@ -69,7 +69,6 @@ from .airtable_client import (
     F_RUN_RUN_REQUESTS,
     F_RUN_SCHEMA_OK,
     F_RUN_SCHEMA_VERSION_OUT,
-    F_RUN_STRENGTHS_PATTERNS,
     F_RUN_TARGET_SPEAKER_LABEL,
     F_RUN_TARGET_SPEAKER_NAME,
     F_RUN_TARGET_SPEAKER_ROLE,
@@ -145,11 +144,9 @@ def _extract_coaching_from_run(parsed_json: dict) -> dict:
     """Extract key coaching fields from a run's parsed JSON output."""
     coaching = parsed_json.get("coaching", {})
     micro = coaching.get("micro_experiment", [{}])[0] if coaching.get("micro_experiment") else {}
-    strengths = coaching.get("strengths", [])
     return {
         "focus_pattern": None,  # Deprecated in P2.4 — focus decoupled from experiments
         "micro_experiment_pattern": None,  # Deprecated in P2.4 — micro_experiment no longer has pattern_id
-        "strengths_patterns": json.dumps([s.get("pattern_id") for s in strengths]),
         "experiment_id": micro.get("experiment_id"),
         "micro_experiment_title": micro.get("title"),
         "micro_experiment_instruction": micro.get("instruction"),
@@ -282,18 +279,13 @@ def _build_slim_meeting_summary(run_fields: dict, parsed_json: dict) -> dict:
         enriched_snapshot.append(item)
 
     # Enriched coaching output: include coaching themes, executive summary,
-    # strengths, and micro_experiment for the baseline synthesis LLM.
+    # and micro_experiment for the baseline synthesis LLM.
     coaching_themes = coaching.get("coaching_themes") or []
     executive_summary = coaching.get("executive_summary") or ""
-    strengths = coaching.get("strengths") or []
     micro = (coaching.get("micro_experiment") or [{}])[0]
     coaching_enriched: dict = {
         "executive_summary": executive_summary,
         "coaching_themes": coaching_themes,
-        "strengths": [
-            {"pattern_id": s.get("pattern_id"), "message": s.get("message")}
-            for s in strengths
-        ],
         "micro_experiment": {
             "title": micro.get("title"),
             "instruction": micro.get("instruction"),
@@ -439,7 +431,6 @@ def _persist_run_fields(
         coaching = _extract_coaching_from_run(parsed_json)
         fields[F_RUN_FOCUS_PATTERN] = ""  # Deprecated in P2.4
         fields[F_RUN_MICRO_EXP_PATTERN] = ""  # Deprecated in P2.4
-        fields[F_RUN_STRENGTHS_PATTERNS] = coaching["strengths_patterns"]
         fields[F_RUN_EXPERIMENT_ID_OUT] = coaching["experiment_id"]
 
         # Derive evaluated count from pattern_snapshot (source of truth) rather
@@ -2103,23 +2094,11 @@ def _build_memory_for_user(
     # Check for active baseline pack
     bp_links = _get_link_ids(user_fields, "Active Baseline Pack")
     baseline_pack_id_str = None
-    strengths: list[str] = []
 
     if bp_links:
         bp_rec = client.get_baseline_pack(bp_links[0])
         bp_fields = _extract_fields(bp_rec)
         baseline_pack_id_str = bp_fields.get("Baseline Pack ID")
-
-        # Try to get strengths from the last baseline run
-        last_run_links = _get_link_ids(bp_fields, "Last Run")
-        if last_run_links:
-            lr_rec = client.get_run(last_run_links[0])
-            lr_fields = _extract_fields(lr_rec)
-            strengths_json = lr_fields.get("Strengths Patterns") or "[]"
-            try:
-                strengths = json.loads(strengths_json)
-            except (json.JSONDecodeError, TypeError):
-                strengths = []
 
     # Active experiment
     active_exp_data: Optional[dict] = None
@@ -2216,7 +2195,6 @@ def _build_memory_for_user(
 
     return build_memory_block(
         baseline_pack_id=baseline_pack_id_str,
-        strengths=strengths,
         active_experiment=active_exp_data,
         coaching_history=coaching_history,
         experiment_history=experiment_history,

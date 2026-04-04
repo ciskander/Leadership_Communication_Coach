@@ -84,7 +84,6 @@ F_RUN_GATE1_PASS = "Gate1 Pass"
 F_RUN_SCHEMA_VERSION_OUT = "Schema Version Out"
 F_RUN_FOCUS_PATTERN = "Focus Pattern"
 F_RUN_MICRO_EXP_PATTERN = "Micro-Experiment Pattern"
-F_RUN_STRENGTHS_PATTERNS = "Strengths Patterns"
 F_RUN_EVALUATED_COUNT = "Evaluated Patterns Count"
 F_RUN_EVIDENCE_SPAN_COUNT = "Evidence Span Count"
 F_RUN_CONFIG_USED = "Config Used"            # Link

@@ -8,10 +8,162 @@ import { PatternSnapshot, buildTrendData } from './PatternSnapshot';
 import type { PatternTrendData } from './PatternSnapshot';
 import { ExperimentTracker } from './ExperimentTracker';
 import { api } from '@/lib/api';
-import type { Experiment, ActiveExperiment, PatternSnapshotItem } from '@/lib/types';
+import type { Experiment, ActiveExperiment, PatternSnapshotItem, CoachingTheme, QuoteObject } from '@/lib/types';
 import { EvidenceQuote, EvidenceQuoteList } from './EvidenceQuote';
 import Link from 'next/link';
 import { STRINGS } from '@/config/strings';
+
+// ─── Theme card sub-components ──────────────────────────────────────────────
+
+/** Renders a single strength-nature coaching theme (teal section). */
+function StrengthThemeCard({
+  theme,
+  findQuotesBySpanId,
+  targetSpeaker,
+}: {
+  theme: CoachingTheme;
+  findQuotesBySpanId: (spanId: string | null | undefined) => QuoteObject[];
+  targetSpeaker: string | null;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const successQuotes = findQuotesBySpanId(theme.best_success_span_id);
+  const hasDetail = successQuotes.length > 0;
+
+  return (
+    <div className="px-5 py-4">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-stone-800 mb-1">{theme.theme}</p>
+          <p className="text-sm text-stone-600 leading-relaxed">{theme.explanation}</p>
+        </div>
+        {hasDetail && (
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            className="text-xs text-cv-teal-600 hover:text-cv-teal-800 whitespace-nowrap shrink-0 mt-0.5"
+          >
+            {expanded ? STRINGS.runStatusPoller.hideDetails : STRINGS.runStatusPoller.showDetails}
+          </button>
+        )}
+      </div>
+      {expanded && successQuotes.length > 0 && (
+        <div className="mt-3">
+          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+            {STRINGS.runStatusPoller.whatYouDidWell}
+          </p>
+          <EvidenceQuoteList quotes={successQuotes} targetSpeaker={targetSpeaker} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Renders a single developmental/mixed coaching theme (rose section). */
+function DevelopmentalThemeCard({
+  theme,
+  showPriorityBadge,
+  findQuotesBySpanId,
+  targetSpeaker,
+}: {
+  theme: CoachingTheme;
+  showPriorityBadge: boolean;
+  findQuotesBySpanId: (spanId: string | null | undefined) => QuoteObject[];
+  targetSpeaker: string | null;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const successQuotes = findQuotesBySpanId(theme.best_success_span_id);
+  const rewriteQuotes = findQuotesBySpanId(theme.rewrite_for_span_id);
+  const hasDetail = !!(theme.coaching_note || theme.suggested_rewrite || successQuotes.length > 0 || rewriteQuotes.length > 0);
+
+  // Mode A: best_success_span_id is set AND coaching_note is set
+  // Mode B: best_success_span_id is null AND coaching_note is set
+  const modeA = !!theme.best_success_span_id && !!theme.coaching_note;
+
+  return (
+    <div className="px-5 py-4">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          {showPriorityBadge && (
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                theme.priority === 'primary'
+                  ? 'bg-cv-rose-100 text-cv-rose-800'
+                  : 'bg-stone-100 text-stone-600'
+              }`}>
+                {theme.priority === 'primary'
+                  ? STRINGS.runStatusPoller.primaryThemeLabel
+                  : STRINGS.runStatusPoller.secondaryThemeLabel}
+              </span>
+            </div>
+          )}
+          <p className="text-sm font-medium text-stone-800 mb-1">{theme.theme}</p>
+          <p className="text-sm text-stone-600 leading-relaxed">{theme.explanation}</p>
+        </div>
+        {hasDetail && (
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            className="text-xs text-cv-rose-600 hover:text-cv-rose-800 whitespace-nowrap shrink-0 mt-0.5"
+          >
+            {expanded ? STRINGS.runStatusPoller.hideDetails : STRINGS.runStatusPoller.showDetails}
+          </button>
+        )}
+      </div>
+
+      {expanded && hasDetail && (
+        <div className="mt-3 space-y-3">
+          {/* Mode A: What you did well + coaching note */}
+          {modeA && successQuotes.length > 0 && (
+            <div>
+              <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                {STRINGS.runStatusPoller.whatYouDidWell}
+              </p>
+              <EvidenceQuoteList quotes={successQuotes} targetSpeaker={targetSpeaker} />
+            </div>
+          )}
+
+          {/* Mode B heading, or Mode A coaching_note continuation */}
+          {theme.coaching_note && (
+            <div>
+              {!modeA && (
+                <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                  {STRINGS.runStatusPoller.whatWorkedMissing}
+                </p>
+              )}
+              <p className="text-sm text-cv-stone-700 leading-relaxed">{theme.coaching_note}</p>
+            </div>
+          )}
+
+          {/* For example, in this meeting you said */}
+          {rewriteQuotes.length > 0 && (
+            <div>
+              <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                {STRINGS.common.forExampleYouSaid}
+              </p>
+              <EvidenceQuoteList quotes={rewriteQuotes} targetSpeaker={targetSpeaker} />
+            </div>
+          )}
+
+          {/* Next time, try something like */}
+          {theme.suggested_rewrite && (
+            <div>
+              <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                {STRINGS.common.nextTimeTry}
+              </p>
+              <blockquote className="border-l-[2px] border-cv-teal-700 pl-4 py-1 my-2 bg-cv-teal-50 rounded-r-md">
+                <p className="text-sm text-cv-stone-700 italic">
+                  &ldquo;{theme.suggested_rewrite}&rdquo;
+                </p>
+              </blockquote>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main component ─────────────────────────────────────────────────────────
 
 interface RunStatusPollerProps {
   runId: string;
@@ -702,8 +854,23 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
   }
 
   // Build strength/focus pattern IDs for highlight badges
-  const strengthPatternIds = run.strengths.map((s) => s.pattern_id);
+  const strengthThemePatternIds = run.coaching_themes
+    .filter((t) => t.nature === 'strength')
+    .flatMap((t) => t.related_patterns);
   const focusPatternId = run.focus?.pattern_id ?? null;
+
+  // Helper: find quote(s) by span_id across all pattern snapshot items
+  const allQuotes = (run.pattern_snapshot ?? []).flatMap((p) => p.quotes ?? []);
+  function findQuotesBySpanId(spanId: string | null | undefined) {
+    if (!spanId) return [];
+    return allQuotes.filter((q) => q.span_id === spanId);
+  }
+
+  // Split coaching themes by nature
+  const strengthThemes = run.coaching_themes.filter((t) => t.nature === 'strength');
+  const developmentalThemes = run.coaching_themes.filter(
+    (t) => t.nature === 'developmental' || t.nature === 'mixed'
+  );
 
   return (
     <div className="space-y-6">
@@ -742,7 +909,6 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
       )}
 
       <CoachingCard
-        strengths={run.strengths}
         focus={run.focus}
         targetSpeaker={targetSpeaker}
         microExperiment={
@@ -759,8 +925,25 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
         trendData={trendData}
       />
 
-      {/* Coaching themes — rose styling, rendered after strengths */}
-      {run.coaching_themes && run.coaching_themes.length > 0 && (
+      {/* Strength themes — teal styling */}
+      {strengthThemes.length > 0 && (
+        <section className="bg-white rounded border border-cv-teal-700 overflow-hidden">
+          <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-teal-700">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-teal-50 shrink-0" aria-hidden="true">
+              <path fillRule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clipRule="evenodd" />
+            </svg>
+            <h3 className="text-sm font-semibold text-cv-teal-50">{STRINGS.coachingCard.strengthsHeading}</h3>
+          </div>
+          <div className="divide-y divide-cv-warm-300">
+            {strengthThemes.map((theme, idx) => (
+              <StrengthThemeCard key={idx} theme={theme} findQuotesBySpanId={findQuotesBySpanId} targetSpeaker={targetSpeaker} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Developmental/mixed themes — rose styling */}
+      {developmentalThemes.length > 0 && (
         <section className="bg-white rounded border border-cv-rose-700 overflow-hidden">
           <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-rose-700">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-rose-50 shrink-0" aria-hidden="true">
@@ -770,22 +953,8 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
             <h3 className="text-sm font-semibold text-cv-rose-50">{STRINGS.coachingCard.coachingThemesHeading}</h3>
           </div>
           <div className="divide-y divide-cv-warm-300">
-            {run.coaching_themes.map((theme, idx) => (
-              <div key={idx} className="px-5 py-4">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                    theme.priority === 'primary'
-                      ? 'bg-cv-rose-100 text-cv-rose-800'
-                      : 'bg-stone-100 text-stone-600'
-                  }`}>
-                    {theme.priority === 'primary'
-                      ? STRINGS.runStatusPoller.primaryThemeLabel
-                      : STRINGS.runStatusPoller.secondaryThemeLabel}
-                  </span>
-                </div>
-                <p className="text-sm font-medium text-stone-800 mb-1">{theme.theme}</p>
-                <p className="text-sm text-stone-600 leading-relaxed">{theme.explanation}</p>
-              </div>
+            {developmentalThemes.map((theme, idx) => (
+              <DevelopmentalThemeCard key={idx} theme={theme} showPriorityBadge={developmentalThemes.length >= 2} findQuotesBySpanId={findQuotesBySpanId} targetSpeaker={targetSpeaker} />
             ))}
           </div>
         </section>
@@ -817,7 +986,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
               targetSpeaker={targetSpeaker}
               trendData={trendData}
               groupByCluster
-              strengthPatternIds={strengthPatternIds}
+              strengthPatternIds={strengthThemePatternIds}
               focusPatternId={focusPatternId}
             />
           </div>

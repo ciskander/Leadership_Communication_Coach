@@ -231,7 +231,7 @@ async def get_baseline_pack(
     # ── Parse aggregate run coaching data ─────────────────────────────────
     executive_summary = None
     coaching_themes = []
-    strengths, focus, micro_experiment, pattern_snapshot = [], None, None, []
+    focus, micro_experiment, pattern_snapshot = None, None, []
     agg_pattern_coaching = []
     agg_run_rec = phase1_map.get("agg_run")
     if agg_run_rec:
@@ -251,10 +251,6 @@ async def get_baseline_pack(
                 }
                 for t in raw_themes
                 if isinstance(t, dict) and t.get("theme")
-            ]
-            strengths = [
-                {"pattern_id": s.get("pattern_id", ""), "message": s.get("message", "")}
-                for s in coaching.get("strengths", [])
             ]
             focus_list = coaching.get("focus", [])
             if focus_list:
@@ -299,15 +295,6 @@ async def get_baseline_pack(
                 d.pop("rewrite_for_span_id", None)
                 agg_pattern_coaching.append(d)
 
-            # Guardrail: filter out strengths whose pattern score is below 50%
-            score_by_pattern = {
-                ps.get("pattern_id"): ps.get("score")
-                for ps in raw_snapshot
-            }
-            strengths = [
-                s for s in strengths
-                if (score_by_pattern.get(s["pattern_id"]) or 0) >= 0.5
-            ]
         except Exception:
             pass
 
@@ -350,7 +337,6 @@ async def get_baseline_pack(
             "meeting_date": None,
             "meeting_type": None,
             "target_role": None,
-            "sub_run_strengths": [],
             "sub_run_focus": None,
             "sub_run_pattern_snapshot": [],
         }
@@ -382,7 +368,7 @@ async def get_baseline_pack(
                 sub_turn_map = build_turn_map_from_record(tr_rec) if tr_rec else {}
 
                 sub_target_label = sub_parsed.get("context", {}).get("target_speaker_label")
-                sub_strengths, sub_focus, _ = resolve_coaching_output(
+                sub_focus, _ = resolve_coaching_output(
                     sub_parsed, sub_spans, sub_transcript_id, sub_meeting_id, sub_turn_map, sub_target_label
                 )
                 sub_pattern_snapshot = resolve_pattern_snapshot(
@@ -402,7 +388,6 @@ async def get_baseline_pack(
                     for t in sub_raw_themes
                     if isinstance(t, dict) and t.get("theme")
                 ]
-                meeting_info["_sub_strengths"] = sub_strengths
                 meeting_info["_sub_focus"] = sub_focus
                 meeting_info["_sub_snapshot"] = sub_pattern_snapshot
                 meeting_info["_sub_pattern_coaching"] = resolve_pattern_coaching(sub_parsed)
@@ -413,12 +398,9 @@ async def get_baseline_pack(
 
     # Serialize meeting data (cleanup already applied in Parsed JSON by worker)
     for m in meetings:
-        sub_s = m.pop("_sub_strengths", None)
         sub_f = m.pop("_sub_focus", None)
         sub_snap = m.pop("_sub_snapshot", None)
         sub_pc = m.pop("_sub_pattern_coaching", None)
-        if sub_s:
-            m["sub_run_strengths"] = [s.model_dump() for s in sub_s]
         if sub_pc:
             m["sub_run_pattern_coaching"] = [pc.model_dump() for pc in sub_pc]
         if sub_f:
@@ -445,7 +427,6 @@ async def get_baseline_pack(
             for item in data:
                 _annotate_quotes(item)
 
-    _annotate_quotes(strengths)
     _annotate_quotes(focus)
     _annotate_quotes(pattern_snapshot)
 
@@ -459,7 +440,6 @@ async def get_baseline_pack(
         "meeting_type_consistency": bf.get("Meeting Type Consistency"),
         "executive_summary": executive_summary,
         "coaching_themes": coaching_themes,
-        "strengths": strengths,
         "focus": focus,
         "micro_experiment": micro_experiment,
         "pattern_snapshot": pattern_snapshot,

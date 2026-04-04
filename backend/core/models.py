@@ -88,7 +88,6 @@ class Run(BaseModel):
     schema_version_out: Optional[str] = None
     focus_pattern: Optional[str] = None
     micro_experiment_pattern: Optional[str] = None
-    strengths_patterns: Optional[str] = None    # JSON array string
     evaluated_patterns_count: Optional[int] = None
     evidence_span_count: Optional[int] = None
     target_speaker_name: Optional[str] = None

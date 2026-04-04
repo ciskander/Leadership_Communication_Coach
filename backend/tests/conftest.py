@@ -127,6 +127,13 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
             "excerpt": "That's a good point. The main constraint is timeline, not budget.",
             "event_ids": ["OE-007", "OE-012"],
         },
+        {
+            "evidence_span_id": "CT-T020",
+            "turn_start_id": 20,
+            "turn_end_id": 21,
+            "excerpt": "So we're agreed: the budget is approved at 1.2M. Final decision.",
+            "event_ids": [],
+        },
     ],
     "evaluation_summary": {
         "patterns_evaluated": [
@@ -263,12 +270,11 @@ VALID_SINGLE_MEETING_OUTPUT: dict[str, Any] = {
                 "explanation": "Strengthen how you close out decisions explicitly.",
                 "related_patterns": ["resolution_and_alignment"],
                 "priority": "primary",
-            }
-        ],
-        "strengths": [
-            {
-                "pattern_id": "purposeful_framing",
-                "message": "You consistently framed each topic with clear objectives.",
+                "nature": "developmental",
+                "best_success_span_id": None,
+                "coaching_note": "You moved through decisions efficiently but didn't always pause to confirm alignment.",
+                "suggested_rewrite": "Before we move on, let me confirm — we've agreed that Alex owns the timeline review by Friday. Does that work for everyone?",
+                "rewrite_for_span_id": "CT-T020",
             }
         ],
         "micro_experiment": [

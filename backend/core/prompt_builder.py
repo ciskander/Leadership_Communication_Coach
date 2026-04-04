@@ -472,7 +472,7 @@ Hard reminders:
 - pattern_snapshot must include all 9 pattern IDs in required order, each with cluster_id and scoring_type. pattern_snapshot contains SCORING ONLY — no notes, coaching_note, suggested_rewrite, or rewrite_for_span_id.
 - evidence_spans: turn_start_id/turn_end_id must be integers. evidence_span_id must be turn-anchored: ES-T{start} or ES-T{start}-{end}. Each span must include event_ids linking to its source opportunity_events.
 - opportunity_events: top-level array. Each OE must include pattern_id. OE event_ids must be referenced by evidence_spans.
-- coaching.focus length=1, coaching.micro_experiment length=1. Focus and strengths items only need {pattern_id, message}.
+- coaching.focus length=1, coaching.micro_experiment length=1. Focus items only need {pattern_id, message}.
 - coaching.pattern_coaching: array of per-pattern coaching items. Each has pattern_id, notes, coaching_note, suggested_rewrite, rewrite_for_span_id. rewrite_for_span_id must be chosen from a missed-opportunity span (NOT in success_evidence_span_ids). Pick the clearest example for a meaningful rewrite. Avoid rewriting very short or garbled excerpts.
 - coaching.experiment_coaching: set for partial experiment attempts only (coaching_note + suggested_rewrite + rewrite_for_span_id). Null otherwise.
 - Before finalizing, re-check that each evidence span counted in a pattern's opportunity_count is a genuine opportunity per the taxonomy definition. Remove clear mismatches (e.g., a non-question counted under question_quality, or a 2-word fragment). For question_quality specifically, exclude procedural/technical questions (audio checks, roll call, scheduling logistics) from both scoring and opportunity_count — never quote them as evidence or in coaching. Do NOT remove spans simply because the transcript has rough ASR formatting — read past missing punctuation and filler words to assess the speaker's actual behavior.
@@ -480,7 +480,7 @@ Hard reminders:
 - CRITICAL: success_evidence_span_ids must be consistent with opportunity event scores. binary requires success >= 1.0; tiered_rubric/complexity_tiered require success >= 0.75; multi_element requires success >= 0.8. Classify spans BEFORE selecting rewrite_for_span_id — do NOT adjust the success list to satisfy the rewrite constraint.
 - CRITICAL: After writing suggested_rewrite in coaching.pattern_coaching, re-read the excerpt of rewrite_for_span_id and confirm the rewrite addresses the SAME topic and conversational moment. If the topics differ, either fix the span ID or rewrite the text.
 - CRITICAL: Before finalizing, self-audit: (1) every counted OE must have a corresponding evidence span; (2) every evidence_span_id in pattern_snapshot must exist in evidence_spans; (3) opportunity_count must equal counted OEs; (4) rewrite_for_span_id must reference an existing, non-success span.
-- CRITICAL: Never reference turn numbers, evidence_span_ids, event_ids, or any internal identifier in coaching text (notes, coaching_note, executive_summary, strengths, focus). Describe moments by what the speaker said or did.
+- CRITICAL: Never reference turn numbers, evidence_span_ids, event_ids, or any internal identifier in coaching text (notes, coaching_note, executive_summary, focus). Describe moments by what the speaker said or did.
 - If a pattern's counted OE count is below its min_required_threshold, mark it insufficient_signal with evidence_span_ids=[]. Do NOT mark it evaluable without providing score and opportunity_count.
 - For feedback_quality and question_quality: apply the taxonomy's inclusion tests and exclusion bright lines strictly. When uncertain whether a moment qualifies as an opportunity, exclude it. Consistency across runs matters more than completeness — undercounting is better than inconsistent counting."""
 
@@ -577,7 +577,7 @@ Hard reminders (baseline_pack):
 - evaluation_summary: Every one of the 9 pattern_ids must appear in EXACTLY ONE of patterns_evaluated, patterns_insufficient_signal, or patterns_not_evaluable. Must be consistent with pattern_snapshot evaluable_status.
 - pattern_snapshot must include all 9 pattern IDs in required order, each with cluster_id and scoring_type. pattern_snapshot contains SCORING ONLY — no coaching fields.
 - Score = WEIGHTED AVERAGE of meeting-level scores (weighted by opportunity_count). Opportunity_count = SUM of meeting opportunity_counts.
-- coaching.focus length=1, coaching.micro_experiment length=1. Focus and strengths items only need {pattern_id, message}.
+- coaching.focus length=1, coaching.micro_experiment length=1. Focus items only need {pattern_id, message}.
 - coaching.pattern_coaching: array of per-pattern coaching items (pattern_id, notes, coaching_note, suggested_rewrite, rewrite_for_span_id).
 - coaching.experiment_coaching MUST be null for baseline_pack.
 - detection_in_this_meeting MUST be null for baseline_pack.
@@ -657,7 +657,6 @@ def build_baseline_pack_prompt(
 def build_memory_block(
     *,
     baseline_pack_id: Optional[str] = None,
-    strengths: Optional[list[str]] = None,
     active_experiment: Optional[dict] = None,
     coaching_history: Optional[list[dict]] = None,
     experiment_history: Optional[list[dict]] = None,
@@ -672,7 +671,6 @@ def build_memory_block(
     baseline_profile: Optional[dict] = None
     if baseline_pack_id:
         baseline_profile = {
-            "strengths": strengths or [],
             "baseline_pack_id": baseline_pack_id,
         }
 

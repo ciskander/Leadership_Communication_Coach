@@ -97,6 +97,11 @@ export interface CoachingTheme {
   explanation: string;
   related_patterns: string[];
   priority: 'primary' | 'secondary';
+  nature: 'strength' | 'developmental' | 'mixed';
+  best_success_span_id?: string | null;
+  coaching_note?: string | null;
+  suggested_rewrite?: string | null;
+  rewrite_for_span_id?: string | null;
 }
 
 export interface ExperimentCoachingItem {
@@ -115,7 +120,6 @@ export interface RunStatus {
   error: Record<string, unknown> | null;
   executive_summary: string | null;
   coaching_themes: CoachingTheme[];
-  strengths: CoachingItem[];
   focus: CoachingItem | null;
   micro_experiment: MicroExperiment | null;
   pattern_snapshot: PatternSnapshotItem[] | null;
@@ -220,7 +224,6 @@ export interface BaselinePackMeeting {
   target_role: string | null;
   sub_run_executive_summary?: string | null;
   sub_run_coaching_themes?: CoachingTheme[];
-  sub_run_strengths?: CoachingItem[];
   sub_run_focus?: CoachingItem | null;
   sub_run_pattern_snapshot?: Record<string, unknown>[];
   sub_run_pattern_coaching?: PatternCoachingItem[];
@@ -234,7 +237,6 @@ export interface BaselinePack {
   run_id?: string | null;
   executive_summary?: string | null;
   coaching_themes?: CoachingTheme[];
-  strengths?: CoachingItem[];
   focus?: CoachingItem | null;
   micro_experiment?: MicroExperiment | null;
   pattern_snapshot?: Record<string, unknown>[];

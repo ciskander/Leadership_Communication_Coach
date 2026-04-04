@@ -493,17 +493,18 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
                 </div>
               )}
 
-              {runDetail.strengths.length > 0 && (
+              {/* Coaching themes — strength nature */}
+              {runDetail.coaching_themes?.filter((t: { nature: string }) => t.nature === 'strength').length > 0 && (
                 <div>
                   <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-teal-50 bg-cv-teal-800 inline-block px-2 py-0.5 rounded mb-1.5">
                     {STRINGS.coachingCard.strengthsHeading}
                   </p>
-                  {runDetail.strengths.map((s, i) => (
+                  {runDetail.coaching_themes.filter((t: { nature: string }) => t.nature === 'strength').map((t: { theme: string; explanation: string }, i: number) => (
                     <div key={i} className="mb-2">
                       <p className="text-xs text-cv-stone-500 font-medium">
-                        {STRINGS.patternLabels[s.pattern_id] ?? s.pattern_id}
+                        {t.theme}
                       </p>
-                      <p className="text-sm text-cv-stone-700">{s.message}</p>
+                      <p className="text-sm text-cv-stone-700">{t.explanation}</p>
                     </div>
                   ))}
                 </div>

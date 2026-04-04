@@ -188,34 +188,15 @@ def resolve_coaching_output(
     turn_map: Optional[dict[int, Turn]] = None,
     target_speaker_label: Optional[str] = None,
 ) -> tuple[
-    list[HighlightItem],
     Optional[HighlightItem],
     Optional[MicroExperimentWithQuotes],
 ]:
-    """Resolve coaching strengths, focus, and micro_experiment.
+    """Resolve coaching focus and micro_experiment.
 
-    Strengths and focus are lightweight HighlightItems (pattern_id + message only).
+    Focus is a lightweight HighlightItem (pattern_id + message only).
     Detailed evidence, rewrites, and quotes live on coaching.pattern_coaching.
     """
     coaching = parsed_json.get("coaching", {})
-
-    # Build a score lookup from pattern_snapshot to filter low-score strengths
-    score_by_pattern = {
-        ps.get("pattern_id"): ps.get("score")
-        for ps in parsed_json.get("pattern_snapshot", [])
-    }
-
-    strengths: list[HighlightItem] = []
-    for s in coaching.get("strengths", []):
-        # Guardrail: skip strengths whose pattern score is below 50%
-        if (score_by_pattern.get(s.get("pattern_id")) or 0) < 0.5:
-            continue
-        strengths.append(
-            HighlightItem(
-                pattern_id=s.get("pattern_id", ""),
-                message=s.get("message", ""),
-            )
-        )
 
     focus: Optional[HighlightItem] = None
     focus_list = coaching.get("focus", [])
@@ -240,7 +221,7 @@ def resolve_coaching_output(
             quotes=quotes,
         )
 
-    return strengths, focus, micro_exp
+    return focus, micro_exp
 
 
 def resolve_pattern_snapshot(
@@ -334,7 +315,6 @@ def _collect_quotes_for_cleanup(
 
 
 def _collect_coaching_blurbs(
-    strengths: list[HighlightItem],
     focus: Optional[HighlightItem],
     snapshot_items: list[PatternSnapshotItem],
     experiment_detection: Optional[ExperimentDetectionWithQuotes] = None,
@@ -345,10 +325,6 @@ def _collect_coaching_blurbs(
     correct DTO field. Returns only non-empty text fields.
     """
     blurbs: list[dict] = []
-
-    for i, s in enumerate(strengths):
-        if s.message:
-            blurbs.append({"id": f"str:{i}:message", "text": s.message, "category": "coaching_blurb"})
 
     if focus and focus.message:
         blurbs.append({"id": "focus:message", "text": focus.message, "category": "coaching_blurb"})
@@ -372,17 +348,11 @@ def _collect_coaching_blurbs(
 
 def _apply_blurb_results(
     cleaned: dict[str, str],
-    strengths: list[HighlightItem],
     focus: Optional[HighlightItem],
     snapshot_items: list[PatternSnapshotItem],
     experiment_detection: Optional[ExperimentDetectionWithQuotes] = None,
 ) -> None:
     """Write cleaned coaching blurb text back to DTO objects in-place."""
-    for i, s in enumerate(strengths):
-        key = f"str:{i}:message"
-        if key in cleaned:
-            s.message = cleaned[key]
-
     if focus:
         if "focus:message" in cleaned:
             focus.message = cleaned["focus:message"]
@@ -406,7 +376,6 @@ def _apply_blurb_results(
 
 
 def apply_quote_cleanup(
-    strengths: list[HighlightItem],
     focus: Optional[HighlightItem],
     micro_exp: Optional[MicroExperimentWithQuotes],
     snapshot_items: list[PatternSnapshotItem],
@@ -445,7 +414,7 @@ def apply_quote_cleanup(
 
     # Collect coaching blurbs (messages, notes, coaching_notes, rewrites)
     blurb_items = _collect_coaching_blurbs(
-        strengths, focus, snapshot_items, experiment_detection
+        focus, snapshot_items, experiment_detection
     )
     cleanup_input.extend(blurb_items)
 
@@ -469,4 +438,4 @@ def apply_quote_cleanup(
                 q.quote_text = cleaned_text
 
     # Write cleaned text back to coaching blurb fields
-    _apply_blurb_results(cleaned, strengths, focus, snapshot_items, experiment_detection)
+    _apply_blurb_results(cleaned, focus, snapshot_items, experiment_detection)

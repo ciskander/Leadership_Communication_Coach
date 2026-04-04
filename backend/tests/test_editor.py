@@ -6,7 +6,7 @@ Tests the merge_editor_output function and its sub-operations:
 - OE removal and score recalculation
 - Coaching discard for demoted patterns
 - Span reference validation
-- Top-level text edits (executive_summary, coaching_themes, strengths, etc.)
+- Top-level text edits (executive_summary, coaching_themes, etc.)
 """
 from __future__ import annotations
 
@@ -140,10 +140,7 @@ def _make_analysis_output() -> dict:
         "coaching": {
             "executive_summary": "Original executive summary.",
             "coaching_themes": [
-                {"theme": "Original theme", "explanation": "Original explanation", "related_patterns": ["purposeful_framing"], "priority": "primary"},
-            ],
-            "strengths": [
-                {"pattern_id": "purposeful_framing", "message": "Original strength message."},
+                {"theme": "Original theme", "explanation": "Original explanation", "related_patterns": ["purposeful_framing"], "priority": "primary", "nature": "developmental", "best_success_span_id": None, "coaching_note": None, "suggested_rewrite": None, "rewrite_for_span_id": None},
             ],
             "focus": [
                 {"pattern_id": "focus_management", "message": "Original focus message."},
@@ -508,19 +505,6 @@ class TestToplevelEdits:
         }
         merged, _ = merge_editor_output(original, editor_output)
         assert merged["coaching"]["coaching_themes"] == new_themes
-
-    def test_strengths_message_rewrite(self):
-        original = _make_analysis_output()
-        editor_output = {
-            "strengths_edits": {
-                "purposeful_framing": {"message": "Better strength message."},
-            },
-            "changes": [],
-        }
-        merged, _ = merge_editor_output(original, editor_output)
-        strength = merged["coaching"]["strengths"][0]
-        assert strength["message"] == "Better strength message."
-        assert strength["pattern_id"] == "purposeful_framing"  # unchanged
 
     def test_focus_message_rewrite(self):
         original = _make_analysis_output()

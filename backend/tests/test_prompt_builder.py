@@ -409,11 +409,9 @@ def test_build_memory_block_null_when_no_baseline_or_experiment():
 def test_build_memory_block_with_baseline():
     memory = build_memory_block(
         baseline_pack_id="BP-000001",
-        strengths=["purposeful_framing"],
     )
     assert memory.baseline_profile is not None
     assert memory.baseline_profile["baseline_pack_id"] == "BP-000001"
-    assert "purposeful_framing" in memory.baseline_profile["strengths"]
 
 
 def test_build_memory_block_with_active_experiment():

@@ -57,7 +57,7 @@ class QuoteObject(BaseModel):
 
 
 class HighlightItem(BaseModel):
-    """Lightweight coaching highlight for strengths/focus — just pattern_id + message."""
+    """Lightweight coaching highlight for focus — just pattern_id + message."""
     pattern_id: str
     message: str
 
@@ -129,7 +129,6 @@ class RunStatusResponse(BaseModel):
     # Populated when status=complete and gate1_pass=True
     executive_summary: Optional[str] = None
     coaching_themes: list[CoachingTheme] = Field(default_factory=list)
-    strengths: list[HighlightItem] = Field(default_factory=list)
     focus: Optional[HighlightItem] = None
     micro_experiment: Optional[MicroExperimentWithQuotes] = None
     pattern_snapshot: Optional[list[PatternSnapshotItem]] = None

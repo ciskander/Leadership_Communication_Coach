@@ -268,7 +268,7 @@
       "properties": {
         "evidence_span_id": {
           "type": "string",
-          "pattern": "^E(S|XD)-T[0-9]+(-[0-9]+)?$"
+          "pattern": "^(ES|EXD|CT)-T[0-9]+(-[0-9]+)?$"
         },
         "turn_start_id": { "type": "integer", "minimum": 1 },
         "turn_end_id": { "type": "integer", "minimum": 1 },
@@ -359,7 +359,7 @@
           "minItems": 0,
           "items": {
             "type": "string",
-            "pattern": "^E(S|XD)-T[0-9]+(-[0-9]+)?$"
+            "pattern": "^(ES|EXD|CT)-T[0-9]+(-[0-9]+)?$"
           },
           "uniqueItems": true
         },
@@ -367,7 +367,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "pattern": "^E(S|XD)-T[0-9]+(-[0-9]+)?$"
+            "pattern": "^(ES|EXD|CT)-T[0-9]+(-[0-9]+)?$"
           },
           "uniqueItems": true
         }
@@ -441,15 +441,6 @@
       ]
     },
 
-    "HighlightItem": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["pattern_id", "message"],
-      "properties": {
-        "pattern_id": { "$ref": "#/$defs/PatternId" },
-        "message": { "type": "string", "minLength": 1, "maxLength": 800 }
-      }
-    },
     "MicroExperiment": {
       "type": "object",
       "additionalProperties": false,
@@ -472,7 +463,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "pattern": "^E(S|XD)-T[0-9]+(-[0-9]+)?$"
+            "pattern": "^(ES|EXD|CT)-T[0-9]+(-[0-9]+)?$"
           },
           "uniqueItems": true
         }
@@ -489,18 +480,18 @@
         "suggested_rewrite": { "type": ["string", "null"], "maxLength": 1000 },
         "rewrite_for_span_id": {
           "type": ["string", "null"],
-          "pattern": "^E(S|XD)-T[0-9]+(-[0-9]+)?$"
+          "pattern": "^(ES|EXD|CT)-T[0-9]+(-[0-9]+)?$"
         },
         "best_success_span_id": {
           "type": ["string", "null"],
-          "pattern": "^E(S|XD)-T[0-9]+(-[0-9]+)?$"
+          "pattern": "^(ES|EXD|CT)-T[0-9]+(-[0-9]+)?$"
         }
       }
     },
     "CoachingTheme": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["theme", "explanation", "related_patterns", "priority"],
+      "required": ["theme", "explanation", "related_patterns", "priority", "nature"],
       "properties": {
         "theme": { "type": "string", "minLength": 1 },
         "explanation": { "type": "string", "minLength": 1 },
@@ -511,6 +502,26 @@
         "priority": {
           "type": "string",
           "enum": ["primary", "secondary"]
+        },
+        "nature": {
+          "type": "string",
+          "enum": ["strength", "developmental", "mixed"]
+        },
+        "best_success_span_id": {
+          "type": ["string", "null"],
+          "pattern": "^(ES|EXD|CT)-T[0-9]+(-[0-9]+)?$"
+        },
+        "coaching_note": {
+          "type": ["string", "null"],
+          "maxLength": 800
+        },
+        "suggested_rewrite": {
+          "type": ["string", "null"],
+          "maxLength": 1000
+        },
+        "rewrite_for_span_id": {
+          "type": ["string", "null"],
+          "pattern": "^(ES|EXD|CT)-T[0-9]+(-[0-9]+)?$"
         }
       }
     },
@@ -522,7 +533,7 @@
         "suggested_rewrite": { "type": ["string", "null"], "maxLength": 1000 },
         "rewrite_for_span_id": {
           "type": ["string", "null"],
-          "pattern": "^E(S|XD)-T[0-9]+(-[0-9]+)?$"
+          "pattern": "^(ES|EXD|CT)-T[0-9]+(-[0-9]+)?$"
         }
       }
     },
@@ -530,7 +541,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "executive_summary", "coaching_themes", "strengths", "micro_experiment",
+        "executive_summary", "coaching_themes", "micro_experiment",
         "pattern_coaching"
       ],
       "properties": {
@@ -544,12 +555,6 @@
           "minItems": 1,
           "maxItems": 3,
           "items": { "$ref": "#/$defs/CoachingTheme" }
-        },
-        "strengths": {
-          "type": "array",
-          "minItems": 0,
-          "maxItems": 2,
-          "items": { "$ref": "#/$defs/HighlightItem" }
         },
         "micro_experiment": {
           "type": "array",
@@ -598,7 +603,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "pattern": "^E(S|XD)-T[0-9]+(-[0-9]+)?$"
+            "pattern": "^(ES|EXD|CT)-T[0-9]+(-[0-9]+)?$"
           },
           "uniqueItems": true
         }

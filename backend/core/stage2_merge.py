@@ -49,7 +49,7 @@ def merge_stage2_output(
 
     # Replace coaching fields from Stage 2
     for field in [
-        "executive_summary", "coaching_themes", "strengths",
+        "executive_summary", "coaching_themes",
         "micro_experiment", "experiment_coaching",
     ]:
         if field in stage2_output:

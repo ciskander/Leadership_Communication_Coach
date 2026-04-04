@@ -68,7 +68,7 @@ _ID_PATTERNS = {
     "meeting_id": re.compile(r"^M-\d{6}$"),
     "baseline_pack_id": re.compile(r"^BP-\d{6}$"),
     "experiment_id": re.compile(r"^EXP-\d{6}$"),
-    "evidence_span_id": re.compile(r"^E(S|XD)-T[0-9]+(-[0-9]+)?$"),
+    "evidence_span_id": re.compile(r"^(ES|EXD|CT)-T[0-9]+(-[0-9]+)?$"),
 }
 
 _PATTERN_ID_ENUM = set(PATTERN_ORDER)
@@ -214,11 +214,10 @@ def _sanitise_output(data: dict) -> int:
         if isinstance(es, list):
             co["executive_summary"] = " ".join(str(item) for item in es if item)
             fixes += 1
-        ci_keys = _ALLOWED_KEYS.get("HighlightItem", set())
-        for i, s in enumerate(co.get("strengths", [])):
-            if isinstance(s, dict):
-                fixes += _fix_extra_keys(s, ci_keys, f"$.coaching.strengths[{i}]")
-        # focus sanitisation removed in P2.4 — focus no longer in schema
+        ct_keys = _ALLOWED_KEYS.get("CoachingTheme", set())
+        for i, t in enumerate(co.get("coaching_themes", [])):
+            if isinstance(t, dict):
+                fixes += _fix_extra_keys(t, ct_keys, f"$.coaching.coaching_themes[{i}]")
         me_keys = _ALLOWED_KEYS.get("MicroExperiment", set())
         for i, m in enumerate(co.get("micro_experiment", [])):
             if isinstance(m, dict):
@@ -432,35 +431,9 @@ def _sanitise_output(data: dict) -> int:
             snap["success_evidence_span_ids"] = rebuilt_success
             fixes += len(added) + len(removed)
 
-    # ── Auto-correct strengths with low pattern scores ──────────────────
+    # ── Null out best_success_span_id referencing non-success spans ──
     coaching = data.get("coaching")
     if isinstance(coaching, dict):
-        pattern_score_lookup = {
-            s.get("pattern_id"): s.get("score")
-            for s in ps_list if isinstance(s, dict)
-        }
-        strengths = coaching.get("strengths")
-        if isinstance(strengths, list):
-            orig_len = len(strengths)
-            filtered = []
-            for s_item in strengths:
-                if not isinstance(s_item, dict):
-                    continue
-                s_pid = s_item.get("pattern_id", "")
-                s_score = pattern_score_lookup.get(s_pid)
-                if s_score is not None and s_score < 0.70:
-                    logger.warning(
-                        "Sanitiser: removing strength for pattern %s "
-                        "(score %.4f < 0.70 threshold)",
-                        s_pid, s_score,
-                    )
-                    fixes += 1
-                else:
-                    filtered.append(s_item)
-            if len(filtered) < orig_len:
-                coaching["strengths"] = filtered
-
-        # ── Null out best_success_span_id referencing non-success spans ──
         pattern_success_lookup = {
             s.get("pattern_id"): set(s.get("success_evidence_span_ids") or [])
             for s in ps_list if isinstance(s, dict)
@@ -1022,28 +995,57 @@ def _business_rules(data: dict, *, scoring_only: bool = False) -> list[Validatio
                 ))
 
         # ── 3e. coaching cardinality ─────────────────────────────────────────
-        strengths = coaching.get("strengths", [])
         micro_experiment = coaching.get("micro_experiment", [])
 
-        if not (0 <= len(strengths) <= 2):
-            issues.append(_err(
-                "COACHING_STRENGTHS_COUNT",
-                "coaching.strengths",
-                f"strengths must have 0-2 items, got {len(strengths)}.",
-            ))
-        for si, s_item in enumerate(strengths):
-            s_pid = s_item.get("pattern_id", "")
-            s_pattern = pattern_by_id.get(s_pid)
-            if s_pattern:
-                s_score = s_pattern.get("score", 0)
-                if s_score is not None and s_score < 0.70:
+        # ── 3e2. coaching theme evidence validation ──────────────────────────
+        coaching_themes = coaching.get("coaching_themes", [])
+        for ti, theme in enumerate(coaching_themes):
+            if not isinstance(theme, dict):
+                continue
+            nature = theme.get("nature")
+            if nature == "strength":
+                if not theme.get("best_success_span_id"):
                     issues.append(_warn(
-                        "STRENGTH_LOW_SCORE",
-                        f"coaching.strengths[{si}]",
-                        f"Pattern '{s_pid}' listed as strength but scores {s_score} "
-                        f"(threshold 0.70).",
+                        "THEME_STRENGTH_NO_SUCCESS_SPAN",
+                        f"coaching.coaching_themes[{ti}].best_success_span_id",
+                        "Strength theme should have best_success_span_id.",
                     ))
-        # focus validation removed in P2.4 — focus is no longer produced by Stage 2
+            elif nature in ("developmental", "mixed"):
+                if not theme.get("coaching_note"):
+                    issues.append(_warn(
+                        "THEME_DEV_NO_COACHING_NOTE",
+                        f"coaching.coaching_themes[{ti}].coaching_note",
+                        "Developmental/mixed theme should have coaching_note.",
+                    ))
+                if not theme.get("suggested_rewrite"):
+                    issues.append(_warn(
+                        "THEME_DEV_NO_REWRITE",
+                        f"coaching.coaching_themes[{ti}].suggested_rewrite",
+                        "Developmental/mixed theme should have suggested_rewrite.",
+                    ))
+                if not theme.get("rewrite_for_span_id"):
+                    issues.append(_warn(
+                        "THEME_DEV_NO_REWRITE_SPAN",
+                        f"coaching.coaching_themes[{ti}].rewrite_for_span_id",
+                        "Developmental/mixed theme should have rewrite_for_span_id.",
+                    ))
+            # Check rewrite/span consistency
+            has_rewrite = theme.get("suggested_rewrite") is not None
+            has_span = theme.get("rewrite_for_span_id") is not None
+            if has_rewrite != has_span:
+                issues.append(_err(
+                    "THEME_REWRITE_SPAN_MISMATCH",
+                    f"coaching.coaching_themes[{ti}]",
+                    "suggested_rewrite and rewrite_for_span_id must both be set or both be null.",
+                ))
+            # Validate primary is developmental or mixed
+            if theme.get("priority") == "primary" and nature == "strength":
+                issues.append(_warn(
+                    "THEME_PRIMARY_IS_STRENGTH",
+                    f"coaching.coaching_themes[{ti}]",
+                    "Primary theme should be developmental or mixed, not strength.",
+                ))
+
         if len(micro_experiment) != 1:
             issues.append(_err(
                 "COACHING_MICRO_EXP_COUNT",
