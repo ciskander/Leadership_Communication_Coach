@@ -103,6 +103,14 @@ def generate_persona(
 
 def _extract_persona_name(persona_text: str) -> str:
     """Best-effort extraction of the persona's name from the generated text."""
+    # Try JSON: {"name": "Priya Anand", ...}
+    try:
+        data = json.loads(persona_text)
+        if isinstance(data, dict) and data.get("name"):
+            return data["name"]
+    except (json.JSONDecodeError, TypeError):
+        pass
+
     # Try "Name: Nadia Petrov" or "**Name:** Nadia Petrov"
     match = re.search(r"(?:\*\*)?Name(?:\*\*)?:\s*(.+)", persona_text, re.IGNORECASE)
     if match:

@@ -149,7 +149,15 @@ def generate_persona_report(
 
         gate1 = "N/A"
         if m.get("stage1"):
-            gate1 = "Pass" if m["stage1"].get("gate1_passed") else "Fail"
+            # stage1.json may have gate1_passed (old wrapper format) or be
+            # just the parsed analysis (new format). If analysis.json exists,
+            # Stage 1 must have passed (pipeline aborts otherwise).
+            if m["stage1"].get("gate1_passed") is not None:
+                gate1 = "Pass" if m["stage1"]["gate1_passed"] else "Fail"
+            elif analysis:
+                gate1 = "Pass"
+            else:
+                gate1 = "?"
 
         has_analysis = "Yes" if analysis else "No"
 
