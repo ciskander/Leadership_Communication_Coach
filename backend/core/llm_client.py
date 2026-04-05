@@ -42,6 +42,7 @@ def call_llm(
     model: Optional[str] = None,
     max_tokens: Optional[int] = None,
     api_key: Optional[str] = None,
+    json_mode: bool = True,
 ) -> OpenAIResponse:
     """Route an LLM call to the appropriate provider based on model name.
 
@@ -59,6 +60,7 @@ def call_llm(
             model=model,
             max_tokens=max_tokens,
             api_key=api_key,
+            json_mode=json_mode,
         )
     else:
         from .openai_client import call_openai

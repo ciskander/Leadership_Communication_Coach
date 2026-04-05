@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 # ── Secrets ──────────────────────────────────────────────────────────────────
 AIRTABLE_TOKEN: str = os.environ["AIRTABLE_TOKEN"]

@@ -189,6 +189,7 @@ def call_anthropic(
     model: Optional[str] = None,
     max_tokens: Optional[int] = None,
     api_key: Optional[str] = None,
+    json_mode: bool = True,
 ) -> OpenAIResponse:
     """
     Call the Anthropic API with the same three-layer message structure as call_openai.
@@ -251,15 +252,18 @@ def call_anthropic(
                 )
 
             # Extract JSON — tries direct parse, fence stripping, brace matching
-            try:
-                parsed = _extract_json(raw_text)
-            except json.JSONDecodeError:
-                # Layer 2: one repair call via a fast model
-                logger.warning(
-                    "JSON extraction failed on attempt %d; raw_text[:200]=%s",
-                    attempt + 1, raw_text[:200],
-                )
-                parsed = _repair_json_via_llm(raw_text, api_key)
+            if json_mode:
+                try:
+                    parsed = _extract_json(raw_text)
+                except json.JSONDecodeError:
+                    # Layer 2: one repair call via a fast model
+                    logger.warning(
+                        "JSON extraction failed on attempt %d; raw_text[:200]=%s",
+                        attempt + 1, raw_text[:200],
+                    )
+                    parsed = _repair_json_via_llm(raw_text, api_key)
+            else:
+                parsed = {}
 
             usage = response.usage
             cache_created = getattr(usage, "cache_creation_input_tokens", 0) or 0
@@ -278,7 +282,7 @@ def call_anthropic(
 
             return OpenAIResponse(
                 parsed=parsed,
-                raw_text=json.dumps(parsed, ensure_ascii=False),
+                raw_text=raw_text if not json_mode else json.dumps(parsed, ensure_ascii=False),
                 model=effective_model,
                 prompt_tokens=usage.input_tokens if usage else 0,
                 completion_tokens=usage.output_tokens if usage else 0,

@@ -34,6 +34,7 @@ from backend.core.models import MemoryBlock
 from backend.core.output_patches import patch_analysis_output
 from backend.core.prompt_builder import (
     build_baseline_pack_prompt,
+    build_developer_message,
     build_memory_block,
     build_single_meeting_prompt,
     build_stage2_system_prompt,
@@ -42,7 +43,7 @@ from backend.core.prompt_builder import (
 from backend.core.stage2_merge import merge_stage2_output
 from backend.core.transcript_parser import parse_transcript
 from backend.core.workers import _build_slim_meeting_summary  # pure data transform
-from backend.core.openai_client import load_baseline_system_prompt
+from backend.core.openai_client import load_baseline_system_prompt, load_scoring_system_prompt
 from backend.evals.longitudinal_transcript_gen import (
     check_transcript_quality,
     format_coaching_context_for_prompt,
@@ -50,7 +51,6 @@ from backend.evals.longitudinal_transcript_gen import (
     generate_followup_transcript,
     generate_persona,
 )
-from backend.evals.replay_eval import run_single_analysis
 from backend.evals.report import save_json
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
@@ -242,30 +242,6 @@ def _run_stage2(
     return analysis, stage2_raw, response.prompt_tokens, response.completion_tokens
 
 
-def _get_transcript_turns(
-    meeting_id: str,
-    meeting_type: str,
-    meeting_date_str: str,
-    target_role: str,
-    target_speaker_name: str,
-    target_speaker_label: str,
-    parsed_transcript: Any,
-    memory: MemoryBlock,
-) -> list[dict]:
-    """Build prompt payload to extract transcript_turns for Stage 2."""
-    payload = build_single_meeting_prompt(
-        meeting_id=meeting_id,
-        meeting_type=meeting_type,
-        meeting_date=meeting_date_str,
-        target_role=target_role,
-        target_speaker_name=target_speaker_name,
-        target_speaker_label=target_speaker_label,
-        parsed_transcript=parsed_transcript,
-        memory=memory,
-    )
-    return payload.transcript_payload["turns"]
-
-
 # ── Baseline synthesis ───────────────────────────────────────────────────────
 
 def _run_baseline_synthesis(
@@ -337,12 +313,15 @@ def _run_baseline_synthesis(
 
     # Post-process: strip evidence spans (namespace collision across meetings)
     for ps in parsed.get("pattern_snapshot", []):
-        ps["evidence_span_ids"] = []
-        ps["success_evidence_span_ids"] = []
+        if isinstance(ps, dict):
+            ps["evidence_span_ids"] = []
+            ps["success_evidence_span_ids"] = []
     for pc in (parsed.get("coaching", {}) or {}).get("pattern_coaching", []):
-        pc["rewrite_for_span_id"] = None
+        if isinstance(pc, dict):
+            pc["rewrite_for_span_id"] = None
     for me in (parsed.get("coaching", {}) or {}).get("micro_experiment", []):
-        me["evidence_span_ids"] = []
+        if isinstance(me, dict):
+            me["evidence_span_ids"] = []
     parsed["evidence_spans"] = []
 
     # Gate1 validate
@@ -362,6 +341,10 @@ def _run_baseline_synthesis(
 
 
 # ── Single meeting pipeline ──────────────────────────────────────────────────
+#
+# Mirrors the production two-stage pipeline in workers.py:
+#   Stage 1: scoring prompt → LLM → patch(scoring_only) → gate1(scoring_only)
+#   Stage 2: coaching prompt → LLM → merge → patch(full) → gate1(full)
 
 def _process_meeting(
     m_dir: Path,
@@ -370,7 +353,7 @@ def _process_meeting(
     *,
     model: str | None = None,
 ) -> MeetingResult:
-    """Run Stage 1 + Stage 2 for one meeting. Returns MeetingResult."""
+    """Run the full two-stage pipeline for one meeting. Returns MeetingResult."""
     mid = metadata["meeting_id"]
     m_num = metadata["meeting_number"]
     phase = metadata.get("meeting_phase", "follow_up")
@@ -381,34 +364,78 @@ def _process_meeting(
     )
     tokens: dict[str, int] = {}
 
-    # ── Stage 1 ──
+    # ── Parse transcript (shared by Stage 1 and Stage 2) ──
+    transcript_path = m_dir / "transcript.txt"
+    if not transcript_path.exists():
+        result.error = f"transcript.txt missing in {m_dir.name}"
+        return result
+    parsed_transcript = parse_transcript(
+        data=transcript_path.read_bytes(),
+        filename="transcript.txt",
+        source_id=mid,
+    )
+
+    # ── Stage 1: Scoring ──
     stage1_path = m_dir / "stage1.json"
     if stage1_path.exists():
-        stage1 = json.loads(stage1_path.read_text(encoding="utf-8"))
-        result.stage1_passed = stage1.get("gate1_passed", False)
+        stage1_parsed = json.loads(stage1_path.read_text(encoding="utf-8"))
+        result.stage1_passed = True
     else:
-        transcript_path = m_dir / "transcript.txt"
-        if not transcript_path.exists():
-            result.error = f"transcript.txt missing in {m_dir.name}"
+        # Build Stage 1 prompt (scoring only)
+        prompt_payload = build_single_meeting_prompt(
+            meeting_id=mid,
+            meeting_type=metadata.get("meeting_type", "single_meeting"),
+            meeting_date=metadata.get("meeting_date", "2026-01-01"),
+            target_role=metadata.get("target_role", "participant"),
+            target_speaker_name=metadata.get("target_speaker_name", "Speaker"),
+            target_speaker_label=metadata.get("target_speaker_label", "Speaker"),
+            parsed_transcript=parsed_transcript,
+            memory=memory,
+        )
+
+        # Load scoring system prompt + taxonomy (same as production)
+        scoring_sys_prompt = load_scoring_system_prompt()
+        dev_message = build_developer_message()
+
+        # Call LLM — Stage 1
+        s1_response = call_llm(
+            system_prompt=scoring_sys_prompt,
+            developer_message=dev_message,
+            user_message=prompt_payload.raw_user_message,
+            model=model,
+        )
+        tokens["stage1"] = s1_response.prompt_tokens + s1_response.completion_tokens
+
+        # Post-LLM patches (scoring-only mode)
+        stage1_parsed = s1_response.parsed
+        stage1_parsed = patch_analysis_output(
+            stage1_parsed,
+            prompt_meta=prompt_payload.meta,
+            scoring_only=True,
+            cleanup_enabled=False,
+        )
+
+        # Gate1 validation (scoring-only mode)
+        stage1_raw = json.dumps(stage1_parsed, ensure_ascii=False, indent=2)
+        gate1_result = gate1_validate(stage1_raw, mode="scoring_only")
+        if gate1_result.corrected_data:
+            stage1_parsed = gate1_result.corrected_data
+
+        result.stage1_passed = gate1_result.passed
+        if not gate1_result.passed:
+            logger.warning(
+                "%s: Stage 1 scoring validation failed (%d issues)",
+                mid, len(gate1_result.issues),
+            )
+            result.error = f"Stage 1 Gate1 failed: {len(gate1_result.issues)} issues"
+            # Save Stage 1 output even on failure for debugging
+            save_json(stage1_parsed, stage1_path)
+            result.token_counts = tokens or None
             return result
-        parsed = parse_transcript(
-            data=transcript_path.read_bytes(),
-            filename="transcript.txt",
-            source_id=mid,
-        )
-        stage1 = run_single_analysis(metadata, parsed, memory, model=model)
-        save_json(stage1, stage1_path)
-        result.stage1_passed = stage1.get("gate1_passed", False)
-        tokens["stage1"] = (
-            stage1.get("prompt_tokens", 0) + stage1.get("completion_tokens", 0)
-        )
 
-    if not result.stage1_passed:
-        result.error = "Stage 1 failed Gate1 validation"
-        result.token_counts = tokens or None
-        return result
+        save_json(stage1_parsed, stage1_path)
 
-    # ── Stage 2 ──
+    # ── Stage 2: Coaching ──
     analysis_path = m_dir / "analysis.json"
     if analysis_path.exists():
         result.has_analysis = True
@@ -416,30 +443,21 @@ def _process_meeting(
         result.token_counts = tokens or None
         return result
 
-    # Need transcript_turns for Stage 2
-    transcript_path = m_dir / "transcript.txt"
-    if not transcript_path.exists():
-        result.error = f"transcript.txt missing for Stage 2 in {m_dir.name}"
-        result.token_counts = tokens or None
-        return result
-    parsed = parse_transcript(
-        data=transcript_path.read_bytes(),
-        filename="transcript.txt",
-        source_id=mid,
-    )
-    transcript_turns = _get_transcript_turns(
+    # Get transcript turns for Stage 2 user message
+    prompt_payload = build_single_meeting_prompt(
         meeting_id=mid,
         meeting_type=metadata.get("meeting_type", "single_meeting"),
-        meeting_date_str=metadata.get("meeting_date", "2026-01-01"),
+        meeting_date=metadata.get("meeting_date", "2026-01-01"),
         target_role=metadata.get("target_role", "participant"),
         target_speaker_name=metadata.get("target_speaker_name", "Speaker"),
         target_speaker_label=metadata.get("target_speaker_label", "Speaker"),
-        parsed_transcript=parsed,
+        parsed_transcript=parsed_transcript,
         memory=memory,
     )
+    transcript_turns = prompt_payload.transcript_payload["turns"]
 
     analysis, stage2_raw, s2_prompt, s2_completion = _run_stage2(
-        stage1["parsed_json"], transcript_turns, memory, model=model,
+        stage1_parsed, transcript_turns, memory, model=model,
     )
     save_json(stage2_raw, m_dir / "stage2_raw.json")
     save_json(analysis, analysis_path)
@@ -1001,7 +1019,7 @@ def _run_ab_for_meeting(
     if not stage1_path.exists() or not analysis_path.exists():
         return m_dir.name, False
 
-    stage1 = json.loads(stage1_path.read_text(encoding="utf-8"))
+    stage1_parsed = json.loads(stage1_path.read_text(encoding="utf-8"))
     metadata = json.loads((m_dir / "metadata.json").read_text(encoding="utf-8"))
 
     # Parse transcript for turns
@@ -1010,19 +1028,20 @@ def _run_ab_for_meeting(
         filename="transcript.txt",
         source_id=metadata["meeting_id"],
     )
-    transcript_turns = _get_transcript_turns(
+    payload = build_single_meeting_prompt(
         meeting_id=metadata["meeting_id"],
         meeting_type=metadata.get("meeting_type", "single_meeting"),
-        meeting_date_str=metadata.get("meeting_date", "2026-01-01"),
+        meeting_date=metadata.get("meeting_date", "2026-01-01"),
         target_role=metadata.get("target_role", "participant"),
         target_speaker_name=metadata.get("target_speaker_name", "Speaker"),
         target_speaker_label=metadata.get("target_speaker_label", "Speaker"),
         parsed_transcript=parsed,
         memory=MemoryBlock(),
     )
+    transcript_turns = payload.transcript_payload["turns"]
 
     analysis, _raw, _pt, _ct = _run_stage2(
-        stage1["parsed_json"], transcript_turns, MemoryBlock(), model=model,
+        stage1_parsed, transcript_turns, MemoryBlock(), model=model,
     )
     save_json(analysis, ab_path)
     return m_dir.name, True

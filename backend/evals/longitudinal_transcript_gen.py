@@ -23,7 +23,7 @@ _PROMPTS_DIR = Path(__file__).resolve().parent / "longitudinal_test"
 
 # ── Default models ───────────────────────────────────────────────────────────
 
-_DEFAULT_TRANSCRIPT_MODEL = "claude-sonnet-4-5-20250514"
+_DEFAULT_TRANSCRIPT_MODEL = "claude-sonnet-4-6"
 
 
 # ── Prompt loading ───────────────────────────────────────────────────────────
@@ -42,7 +42,7 @@ def generate_persona(
     *,
     model: Optional[str] = None,
     diversity_context: Optional[str] = None,
-    max_tokens: int = 4096,
+    max_tokens: Optional[int] = None,
 ) -> dict:
     """Generate a coachee persona using the persona prompt template.
 
@@ -76,6 +76,7 @@ def generate_persona(
         user_message=prompt_text,
         model=model or _DEFAULT_TRANSCRIPT_MODEL,
         max_tokens=max_tokens,
+        json_mode=False,
     )
 
     persona_text = response.raw_text.strip()
@@ -124,7 +125,7 @@ def generate_baseline_transcripts(
     persona_text: str,
     *,
     model: Optional[str] = None,
-    max_tokens: int = 16384,
+    max_tokens: Optional[int] = None,
 ) -> tuple[list[dict], str]:
     """Generate 3 baseline meeting transcripts from a persona.
 
@@ -152,6 +153,7 @@ def generate_baseline_transcripts(
         user_message=prompt_text,
         model=model or _DEFAULT_TRANSCRIPT_MODEL,
         max_tokens=max_tokens,
+        json_mode=False,
     )
 
     raw_text = response.raw_text.strip()
@@ -266,7 +268,7 @@ def generate_followup_transcript(
     story_so_far: str,
     *,
     model: Optional[str] = None,
-    max_tokens: int = 16384,
+    max_tokens: Optional[int] = None,
 ) -> dict:
     """Generate a follow-up meeting transcript with coaching context.
 
@@ -306,6 +308,7 @@ def generate_followup_transcript(
         user_message=prompt_text,
         model=model or _DEFAULT_TRANSCRIPT_MODEL,
         max_tokens=max_tokens,
+        json_mode=False,
     )
 
     raw_text = response.raw_text.strip()
