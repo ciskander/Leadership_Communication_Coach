@@ -63,7 +63,7 @@ For each persona, the pipeline runs these steps sequentially:
 3. **Analyze each baseline** — Stage 1 (scoring) + Stage 2 (coaching) per meeting, all with empty memory (baselines are stateless)
 4. **Run baseline synthesis** — 4th LLM call combines 3 sub-run analyses into one coaching output. This is the coaching the coachee "sees." Its themes and executive summary enter `coaching_history` as the single baseline coaching event. The first experiment is adopted from the synthesis `micro_experiment`.
 5. **For each follow-up meeting** (meeting 4, 5, ... N):
-   - Generate follow-up transcript using coaching context from the most recent analysis + `story_so_far`
+   - Generate follow-up transcript using coaching context from the most recent coaching output + `story_so_far`. For meeting 4, this is `baseline_synthesis.json`; for meeting 5+, this is the previous meeting's `analysis.json`.
    - Run Stage 1 + Stage 2 with populated memory (coaching_history, experiment_history, experiment_progress, active_experiment)
    - Process `graduation_recommendation` (graduate/park/continue the active experiment)
    - If experiment graduated/parked: clear active experiment; the NEXT meeting's Stage 2 will propose a new one
@@ -154,10 +154,13 @@ python -m backend.evals.longitudinal_eval \
   --num-personas 3 \
   --meetings-per-persona 6 \
   --no-pause \
-  --phase Long_Scale_01
+  --phase Long_Scale_01 \
+  2>&1 | tee backend/evals/results/Long_Scale_01_run.log
 ```
 
-This runs 3 personas × 6 meetings (3 baseline + 3 follow-up). Estimated cost: ~$15-25 in API tokens. Expected duration: 15-30 minutes.
+This runs 3 personas × 6 meetings (3 baseline + 3 follow-up). Estimated cost for all 3 steps combined (pipeline + judges + A/B): ~$15-25 in API tokens. Expected duration: 15-30 minutes for Step 1, plus ~5-10 minutes for judges (Step 2).
+
+The `tee` captures the log to a file while still showing progress in the terminal. Check `manifest.json` for `"status": "completed"` to confirm the run finished.
 
 **How it runs**: Within each persona, meetings are strictly sequential (each meeting's coaching feeds the next transcript). Across personas, the pipeline runs in parallel using `ThreadPoolExecutor`. The number of parallel workers is calculated from `--tpm-limit` (default 4M tokens/min): `min(num_personas, tpm_limit * 0.8 / 95_000)`.
 
@@ -195,10 +198,16 @@ Key metrics to check in `reports/aggregate_report.md`:
 - **Detection accuracy**: Expect 40-60% exact match (design intent vs detection). Look for systematic biases.
 - **Score trajectories**: Experiment-targeted patterns should show some improvement over time.
 
-Per-persona reports (`reports/persona_NN_longitudinal.md`):
-- Read the series judge explanations — they're the most informative single artifact
-- Check theme evolution: are themes evolving or repeating?
-- Check experiment journey: are transitions logical?
+Per-persona reports (`reports/persona_NN_longitudinal.md`) — these are the most readable output, containing:
+- Series judge explanations (the most informative single artifact — read these first)
+- Theme evolution with nature distribution
+- Experiment journey timeline
+- A/B comparison table per meeting
+- Score trajectory table with experiment-targeted patterns highlighted
+
+Raw judge JSON is in `judges/persona_NN/` if you need to inspect individual ratings or debug judge behavior. The `_meta` field in each judge file shows the model used and token counts.
+
+`reports/aggregate_stats.json` has the same metrics as the aggregate report in machine-readable form.
 
 ### Step 5: Crash recovery (if needed)
 
@@ -317,9 +326,10 @@ Each returns `preferred: "with_history" | "no_history" | "tie"` with `confidence
 
 ## Important constraints
 
-1. **Do NOT modify the eval infrastructure** (`backend/evals/judge_eval.py`, `backend/evals/report.py`, `backend/evals/replay_eval.py`) without explicit approval.
+1. **Do NOT modify the eval infrastructure** (`backend/evals/report.py`, `backend/evals/replay_eval.py`) without explicit approval. Note: `judge_eval.py` was already updated (strengths removed, nature-classified themes added) — don't revert those changes.
 2. **Do NOT modify production prompts** (`system_prompt_*.txt`) or production backend code (`backend/core/`) without explicit approval.
 3. **Transcript generation uses Claude Sonnet** with `json_mode=False`. Analysis uses GPT-5.4 with standard JSON mode. Do not change these models without discussing with the user.
 4. **The `.env` file** must be in the project root with `OPENAI_API_KEY` and `ANTHROPIC_API_KEY`. `config.py` uses `load_dotenv(override=True)`. If API calls fail with auth errors, check that these keys are present and non-empty.
 5. **Results directories** (`backend/evals/results/Long_*`) are gitignored. Don't commit test output.
 6. **The baseline synthesis** uses `build_developer_message()` (loads the canonical pattern taxonomy file) as the `developer_message` parameter. This mirrors production, where the taxonomy is loaded from Airtable config — the eval loads from the file directly.
+7. **The longitudinal eval does NOT use `run_single_analysis()` from `replay_eval.py`**. That function validates with Gate1 `mode="full"` which fails on Stage 1 scoring-only output. Instead, the orchestrator calls the production building blocks directly (scoring prompt → LLM → patch → Gate1 scoring_only). This is a deliberate design choice to match the production two-stage pipeline exactly.
