@@ -98,7 +98,7 @@ from .idempotency import (
 )
 from .models import Gate1FailureError, MemoryBlock, ValidationIssue, OpenAIResponse
 from .llm_client import call_llm
-from .openai_client import load_baseline_system_prompt, load_next_experiment_system_prompt, load_system_prompt
+from .openai_client import load_baseline_system_prompt, load_next_experiment_system_prompt
 from .prompt_builder import build_baseline_pack_prompt, build_memory_block, build_single_meeting_prompt
 from .output_patches import patch_analysis_output
 from .quote_cleanup import cleanup_parsed_json
@@ -2206,16 +2206,6 @@ def _build_memory_for_user(
         experiment_history=experiment_history,
         experiment_progress=experiment_progress,
     )
-
-
-def _load_system_prompt_from_config(client: AirtableClient, config_links: list[str]) -> str:
-    """Load system prompt from the repo file (single source of truth).
-
-    The client and config_links parameters are kept for backwards
-    compatibility but are no longer used — the prompt is always read
-    from system_prompt_v0_3_0.txt in the repo root.
-    """
-    return load_system_prompt()
 
 
 def _load_developer_message_from_config(client: AirtableClient, config_links: list[str]) -> str:

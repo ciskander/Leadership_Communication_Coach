@@ -140,16 +140,6 @@ def call_openai(
     raise last_exc or RuntimeError("OpenAI call failed after all retries.")
 
 
-def load_system_prompt(path: Optional[str] = None) -> str:
-    """Load the system prompt from the repo file (single source of truth)."""
-    from pathlib import Path as P
-    default_path = P(__file__).parent.parent.parent / "system_prompt_v0_4_0.txt"
-    p = P(path) if path else default_path
-    if p.exists():
-        return p.read_text(encoding="utf-8").strip()
-    raise FileNotFoundError(f"System prompt not found at {p}")
-
-
 def load_scoring_system_prompt(path: Optional[str] = None) -> str:
     """Load the Stage 1 scoring-only system prompt from the repo file."""
     from pathlib import Path as P
