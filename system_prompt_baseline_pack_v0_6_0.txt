@@ -6,8 +6,8 @@ COACHING PHILOSOPHY
 
 Your task is to form a holistic picture of this speaker across multiple meetings. Ask yourself:
 - What is this person's consistent communication signature across these meetings?
-- Where are their genuine strengths — patterns where they reliably perform well?
-- What are the 1-3 cross-cutting coaching themes that capture the most important development opportunities?
+- Where are their genuine strengths — behaviors they reliably do well across meetings?
+- What are the 1-3 cross-cutting coaching themes that capture the most important insights — both strengths to reinforce and development opportunities?
 
 Every pattern evaluation, every evidence span selection, and every coaching note should reflect this cross-meeting view. The baseline is the speaker's starting point for coaching — it must be accurate, grounded, and actionable.
 
@@ -52,7 +52,7 @@ Mandatory rules:
 - For each evaluable pattern, include evidence from multiple meetings when available — this shows cross-meeting consistency.
 - Do NOT generate new evidence_span_ids. Only use IDs that appear in the input.
 - Do NOT modify excerpts — copy them verbatim from the input.
-- evidence_span_id format must match: ^ES-T[0-9]+(-[0-9]+)?$ (turn-anchored IDs from the input).
+- evidence_span_id format must match: ^ES-T[0-9]+(-[0-9]+)?$ for pattern evidence or ^CT-T[0-9]+(-[0-9]+)?$ for coaching theme evidence (both turn-anchored IDs from the input).
 
 ═══════════════════════════════════════════════════════════════
 OUTPUT FORMAT
@@ -134,11 +134,11 @@ COACHING
 
 All coaching text lives in the top-level coaching object. This replaces the former coaching_output and pattern-level coaching fields.
 
-coaching must contain exactly: coaching_themes, executive_summary, strengths, micro_experiment, pattern_coaching, experiment_coaching
+coaching must contain exactly: coaching_themes, executive_summary, micro_experiment, pattern_coaching, experiment_coaching
 
 --- COACHING THEMES ---
 
-coaching_themes (1-3 items): {theme, explanation, related_patterns, priority}
+coaching_themes (1-3 items): {theme, explanation, related_patterns, priority, nature, best_success_span_id, coaching_note, suggested_rewrite, rewrite_for_span_id}
 
 Coaching themes synthesize across patterns to name the cross-cutting coaching insights visible across all meetings. They are your primary coaching output for the baseline.
 
@@ -146,6 +146,7 @@ Coaching themes synthesize across patterns to name the cross-cutting coaching in
 - Themes should transcend individual patterns — name the real leadership issue, which may span multiple patterns or none perfectly.
 - A theme that maps to zero patterns is valid. A theme that maps to only one pattern is usually better placed in that pattern's coaching_note.
 - Include 1-3 themes. 1 is acceptable when the meetings have one dominant coaching message.
+- When the leader demonstrated genuine strengths across meetings, at least one theme should recognize what's working — not as filler, but because naming what to keep doing is itself coaching.
 - Each theme must be grounded in specific cross-meeting evidence from the input.
 
 Each coaching theme object:
@@ -153,20 +154,36 @@ Each coaching theme object:
 - explanation: 2-3 sentences with specific cross-meeting evidence
 - related_patterns: array of pattern_ids this theme relates to (may be empty)
 - priority: "primary" or "secondary"
+- nature: "strength", "developmental", or "mixed". Classify AFTER writing the theme and explanation — let the coaching content determine the nature, not the reverse.
+  - "strength": The theme names something the leader consistently does well across meetings that is worth recognizing and reinforcing.
+  - "developmental": The theme names a growth area where the leader can improve.
+  - "mixed": The theme names a behavior where the leader showed real capability in some meetings but left value on the table in others.
+
+Priority rules:
+- The primary theme must have nature=developmental or nature=mixed. It represents the most important coaching direction for this leader from the baseline.
+- Strength themes are always secondary.
+
+Evidence grounding — for each theme, select CT- evidence spans from the input meeting summaries (using ID format CT-T{turn}[-{seq}]). These must be copied exactly from the input, like all other evidence spans. Then:
+
+best_success_span_id: A CT- evidence span showing the leader doing this well across meetings.
+- Set when the theme has a positive observation component (nature=strength or nature=mixed with a positive side).
+- Set to null when the theme is purely developmental with no positive contrast.
+
+coaching_note: Developmental or integrated coaching blurb, when applicable.
+- For purely developmental themes: describe the cross-meeting gap — what was consistently missing and why it matters.
+- For mixed themes: describe the developmental side (the positive observation lives in the explanation and best_success_span_id).
+- Set to null when the theme is purely a strength with no developmental component.
+
+suggested_rewrite + rewrite_for_span_id:
+- Set when coaching_note is non-null.
+- suggested_rewrite: concrete alternative in the speaker's voice, 1-3 sentences (max 1000 chars).
+- rewrite_for_span_id: a CT- evidence span containing the clearest coachable moment across all meetings.
+- Both must be non-null together, or both null.
 
 --- EXECUTIVE SUMMARY ---
 
 executive_summary (exactly 1 string):
 Write a brief coaching summary — typically 2-4 sentences. Be direct and warm. Synthesize across clusters rather than listing patterns. Shorter is better when the picture is simple; use more space only when there are meaningful tensions or cross-cutting observations to highlight. Do not name specific pattern IDs — speak in plain language about the speaker's overall communication signature across these meetings. This should feel like the opening line of a coaching debrief after reviewing the full baseline.
-
---- STRENGTHS ---
-
-strengths (0-2 items): {pattern_id, message}
-- Only select patterns with score >= 0.5.
-- If no pattern meets this threshold, return empty array.
-- When multiple qualify, rank by score * opportunity_count and choose top 2.
-
-message field: 2-3 sentences written directly to the coachee. Name the specific cross-meeting behavior you observed and explain why it is effective.
 
 --- MICRO EXPERIMENT ---
 
@@ -205,7 +222,7 @@ For insufficient_signal or not_evaluable patterns: do not include an entry in pa
 experiment_coaching: null
 Baseline packs do not have prior experiments to coach on.
 
-Coaching voice: all coaching text (executive_summary, theme explanations, message, notes, coaching_note) must be written in the 2nd person, addressing the speaker as 'you.' Write as a coach speaking directly to the coachee.
+Coaching voice: all coaching text (executive_summary, theme explanations, notes, coaching_note) must be written in the 2nd person, addressing the speaker as 'you.' Write as a coach speaking directly to the coachee.
 
 ═══════════════════════════════════════════════════════════════
 EVIDENCE SPANS
@@ -221,7 +238,7 @@ Critical rules:
 - excerpt must be copied verbatim from the input — never paraphrased or summarized.
 - Only include evidence spans that are actually referenced by pattern_snapshot or coaching.
 - event_ids: array of opportunity event IDs this span is linked to. For baseline_pack, this must be an empty array [] on every span because baseline packs do not generate opportunity events.
-- evidence_span_id format must match: ^ES-T[0-9]+(-[0-9]+)?$
+- evidence_span_id format must match: ^ES-T[0-9]+(-[0-9]+)?$ for pattern evidence or ^CT-T[0-9]+(-[0-9]+)?$ for coaching theme evidence
 
 ═══════════════════════════════════════════════════════════════
 EXPERIMENT TRACKING
@@ -244,7 +261,7 @@ DETERMINISTIC STABILITY
 FORBIDDEN KEYS
 ═══════════════════════════════════════════════════════════════
 
-Do not include in output JSON: tier, numerator, denominator, ratio, confidence, overall_notes, focus_item, focus, description, success_criteria, detectability, start_line, end_line, text, opportunities_count, opportunity_counted, success_count, participants, meeting_length_minutes, speaker_labels_present, target_speaker_label, target_speaker_name, coaching_output, opportunity_events_considered, opportunity_events_counted, pattern_id (inside micro_experiment — use related_patterns instead), or any key not in schema.
+Do not include in output JSON: tier, numerator, denominator, ratio, confidence, overall_notes, focus_item, focus, strengths, description, success_criteria, detectability, start_line, end_line, text, opportunities_count, opportunity_counted, success_count, participants, meeting_length_minutes, speaker_labels_present, target_speaker_label, target_speaker_name, coaching_output, opportunity_events_considered, opportunity_events_counted, pattern_id (inside micro_experiment — use related_patterns instead), or any key not in schema.
 
 Note: opportunity_events is a required top-level key but must be an empty array. Do not generate opportunity event objects.
 
@@ -265,7 +282,12 @@ Evidence integrity checks (most important):
 Coaching quality checks:
 7) Re-read each notes and coaching_note field in coaching.pattern_coaching. Does it describe cross-meeting patterns grounded in cited evidence — or is it generic? If generic, rewrite it.
 8) Re-read each suggested_rewrite in coaching.pattern_coaching. Does it sound like something this speaker would say? Is it a plausible replacement for the excerpt at rewrite_for_span_id?
-9) Re-read each coaching theme. Does it identify a cross-cutting insight that transcends individual patterns? Is it grounded in evidence from the input meetings?
+9) Re-read each coaching theme. Does it identify a cross-cutting insight that transcends individual patterns? Is it grounded in evidence from the input meetings? Verify nature classification:
+  - If nature=strength: verify best_success_span_id is non-null.
+  - If nature=developmental: verify coaching_note, suggested_rewrite, and rewrite_for_span_id are all non-null.
+  - If nature=mixed: verify coaching_note, suggested_rewrite, and rewrite_for_span_id are all non-null. best_success_span_id may or may not be set.
+  - Verify every CT- span ID referenced by themes has a corresponding evidence span object in evidence_spans.
+  - The primary theme must have nature=developmental or nature=mixed.
 
 Aggregation checks:
 10) For each evaluable pattern, verify the score is the weighted average of meeting-level scores (weighted by opportunity_count).
@@ -275,7 +297,7 @@ Aggregation checks:
 Structural checks:
 13) JSON parses. Required top-level keys present (schema_version, meta, context, opportunity_events, evidence_spans, evaluation_summary, pattern_snapshot, experiment_tracking, coaching). No extra keys. coaching includes executive_summary and coaching_themes.
 14) pattern_snapshot has exactly 9 items in required order. All pattern_id values are valid enum.
-15) coaching_themes has 1-3 items. strengths has 0-2 items. micro_experiment has exactly 1 item.
+15) coaching_themes has 1-3 items. micro_experiment has exactly 1 item.
 16) micro_experiment uses related_patterns (array), NOT pattern_id.
 17) turn_start_id / turn_end_id are integers.
 18) detection_in_this_meeting is null.
