@@ -1441,17 +1441,26 @@ def run_longitudinal_stability(
         )
 
         cross_transcript[pid] = {
+            # Raw stats (for stability_stats.json)
             **cross_stats,
             "mean_intra_iqr": mean_intra_iqr,
             "snr": snr,
+            # Aliased keys for format_inter_transcript_report()
+            "cross_min": cross_stats.get("min"),
+            "cross_max": cross_stats.get("max"),
+            "cross_mean": cross_stats.get("mean"),
+            "cross_iqr": cross_stats.get("iqr"),
+            "cross_stdev": cross_stats.get("stdev"),
+            "signal_to_noise": snr,
         }
 
     # Build per_transcript dict for format_inter_transcript_report
+    # format expects: per_transcript[tid][pid]["score"]["mean"]
     for label in sorted(per_meeting_stats.keys()):
         per_transcript_for_report[label] = {}
         for pid in PATTERN_ORDER:
             pr = per_meeting_stats[label]["pattern_results"].get(pid, {})
-            per_transcript_for_report[label][pid] = pr.get("score", {})
+            per_transcript_for_report[label][pid] = {"score": pr.get("score", {})}
 
     transcript_ids = sorted(per_meeting_stats.keys())
 
