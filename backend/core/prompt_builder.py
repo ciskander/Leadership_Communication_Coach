@@ -720,7 +720,8 @@ def _build_coachee_history_for_stage2(memory: MemoryBlock) -> str:
         "- Build on prior coaching themes rather than repeating them verbatim",
         "- Reference growth or persistent patterns when writing the executive summary",
         "- Note when a prior coaching theme reappears or resolves",
-        "- Do NOT let this history override what you observe in the current transcript",
+        "- When a prior strength or theme reappears, describe it using fresh language — different phrasing, a new angle, or new evidence from THIS meeting. The coachee should never feel they are reading the same sentence twice across meetings.",
+    "- Do NOT let this history override what you observe in the current transcript",
     ]
 
     # ── Recent meeting analyses ──
@@ -758,13 +759,16 @@ def _build_coachee_history_for_stage2(memory: MemoryBlock) -> str:
         for exp in memory.experiment_history:
             title = exp.get("title", "unknown")
             status = exp.get("status", "unknown")
+            instruction = exp.get("instruction", "")
             related = exp.get("related_patterns", [])
             journey = exp.get("journey_summary", "")
 
             patterns_str = f" ({', '.join(related)})" if related else ""
             lines.append("")
             lines.append(f"{status.capitalize()}: \"{title}\"{patterns_str}")
+            if instruction:
+                lines.append(f"  Instruction: {instruction}")
             if journey:
-                lines.append(f'  "{journey}"')
+                lines.append(f'  Journey: "{journey}"')
 
     return "\n".join(lines)

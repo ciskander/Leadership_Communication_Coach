@@ -197,6 +197,8 @@ Structural checks:
   - Verify the primary theme has nature=developmental or nature=mixed.
 (r) Verify no pattern coaching_note merely restates a coaching theme that already covers the same insight with its own evidence and rewrite. If overlap exists, set the pattern's coaching_note to null. Similarly for notes: if a strength theme already acknowledges the same behavior, set the pattern's notes to null.
 
+(s) If coachee history is provided, compare your executive_summary and coaching_themes against the prior meeting summaries and themes listed above. If you reused any phrases, sentence structures, or strength descriptions from prior coaching, rewrite them using fresh language grounded in THIS meeting's specific evidence. Repeated substance is fine -- repeated phrasing is not.
+
 ===============================================================
 OUTPUT FORMAT
 ===============================================================
@@ -343,7 +345,7 @@ executive_summary: exactly 1 string.
 --- MICRO EXPERIMENT ---
 
 micro_experiment: exactly 1 item.
-- When no experiment is active: propose a new experiment grounded in the primary coaching theme from this meeting. Generate a new experiment_id. The experiment should target a concrete, observable behavioral change -- not a vague aspiration.
+- When no experiment is active: propose a new experiment grounded in the primary coaching theme from this meeting. Generate a new experiment_id. The experiment should target a concrete, observable behavioral change -- not a vague aspiration. IMPORTANT: Check the Experiment Journey in the coachee history above. Do NOT propose an experiment whose instruction targets the same core behavior as the most recently completed experiment, even with different wording (e.g., if the coachee just graduated 'Name the tradeoff before you close,' do not propose 'State the tradeoff before deciding'). Also avoid duplicating any experiment that was abandoned within the last 2 experiments, or that is currently parked. If a parked experiment represents the highest-leverage growth opportunity, refer to it by name and suggest the coachee consider resuming it. Otherwise, target a DIFFERENT behavioral edge. If you do choose to revisit a prior experiment's territory, explicitly acknowledge why a revisit is warranted.
 - When an experiment is active AND graduation_recommendation is "graduate" or "park": echo the current experiment unchanged -- same experiment_id, title, instruction, success_marker. Do not refine or propose a new experiment.
 - When an experiment is active AND graduation_recommendation is "continue" (or null): refine or evolve the current experiment, informed by the behavior observed in this meeting. Reuse the active experiment_id. Do not propose an unrelated experiment while one is active.
 - related_patterns: list 0-N pattern IDs that this experiment primarily relates to. This is informational -- experiments are defined by their behavioral instruction, not by patterns. An experiment that transcends pattern boundaries may have an empty array.
