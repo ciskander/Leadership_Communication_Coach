@@ -14,6 +14,20 @@ The `.env` file with API keys is in this directory. The eval modules resolve pat
 
 ---
 
+## What this eval tests
+
+The core question: **Does giving the coaching LLM access to a coachee's prior meeting history improve coaching quality?**
+
+The eval generates synthetic coachees (personas), runs them through multiple meetings where coaching feedback accumulates over time, then compares the coaching output with longitudinal context vs without. Three judge types assess different aspects:
+
+- **Series judge** — evaluates the full coaching arc across all meetings for one persona. Does the coaching evolve, or does it repeat itself? Are experiment transitions logical? Does the executive summary track growth?
+- **A/B comparative judge** — per follow-up meeting, compares coaching WITH history vs WITHOUT history (blind, randomized). Which is more specific, fresher, more useful to a leader?
+- **Standard per-meeting judge** — evaluates the with-history coaching output on its own merits (insight quality, evidence grounding, rewrite quality, etc.)
+
+If the system is working well: the series judge should rate arcs as "evolving" with "high" value, the A/B judge should prefer with-history, and the advantage should grow as more history accumulates.
+
+---
+
 ## What's been completed
 
 ### Longitudinal eval suite (4 modules)
@@ -39,6 +53,22 @@ The orchestrator mirrors the production two-stage pipeline exactly:
 - **Judges**: GPT-5.4 — same default. Override with `--model` on the judge command.
 
 Note: `--model` controls analysis and judge models. `--transcript-model` controls transcript generation. If neither is specified, the defaults above are used. These are independent — you can use Claude for transcripts and GPT for analysis simultaneously.
+
+### Per-persona lifecycle
+
+For each persona, the pipeline runs these steps sequentially:
+
+1. **Generate persona** — Claude Sonnet creates a detailed professional profile (role, colleagues, communication strengths/weaknesses)
+2. **Generate 3 baseline transcripts** — one LLM call produces all 3 meeting transcripts + initial `story_so_far`
+3. **Analyze each baseline** — Stage 1 (scoring) + Stage 2 (coaching) per meeting, all with empty memory (baselines are stateless)
+4. **Run baseline synthesis** — 4th LLM call combines 3 sub-run analyses into one coaching output. This is the coaching the coachee "sees." Its themes and executive summary enter `coaching_history` as the single baseline coaching event. The first experiment is adopted from the synthesis `micro_experiment`.
+5. **For each follow-up meeting** (meeting 4, 5, ... N):
+   - Generate follow-up transcript using coaching context from the most recent analysis + `story_so_far`
+   - Run Stage 1 + Stage 2 with populated memory (coaching_history, experiment_history, experiment_progress, active_experiment)
+   - Process `graduation_recommendation` (graduate/park/continue the active experiment)
+   - If experiment graduated/parked: clear active experiment; the NEXT meeting's Stage 2 will propose a new one
+   - Update `state.json`
+6. **A/B comparison** — re-run Stage 2 on each follow-up with empty memory (parallel, independent)
 
 ### Experiment lifecycle
 
@@ -213,10 +243,57 @@ rm -rf backend/evals/results/Long_Scale_01
 
 ### Step 6: Document findings
 
-After reviewing, summarize:
-1. Does longitudinal context improve coaching quality? (A/B results)
-2. Is the coaching arc coherent across meetings? (Series judge)
-3. Are there systematic issues to fix? (Theme repetition, experiment stalling, detection failures)
+Write a summary in `backend/evals/results/Long_Scale_01/findings.md` covering:
+1. **Does longitudinal context improve coaching quality?** — A/B win rate overall + by meeting number + by dimension. Does the advantage grow with more history?
+2. **Is the coaching arc coherent across meetings?** — Series judge coherence rate. Read the series judge explanations for the best qualitative signal.
+3. **Are there systematic issues?** — Theme repetition (freshness ratings), experiment stalling (same experiment >5 meetings), detection failures (systematic bias in intended vs detected). Flag specific personas where things went wrong.
+4. **Recommendations** — Should the coaching prompt be adjusted? Is the memory window (3 meetings) too small or too large? Are experiments transitioning at sensible times?
+
+---
+
+## Judge dimensions reference
+
+### Series judge dimensions
+| Dimension | Ratings | What it checks |
+|---|---|---|
+| `coaching_theme_evolution` | evolving / stagnant / contradictory | Do themes evolve, resolve, introduce new ones? |
+| `executive_summary_arc` | coherent_arc / disconnected / generic | Does the summary narrative build across meetings? |
+| `experiment_coaching_quality` | strong_progression / adequate / illogical | Detection accuracy, logical experiment sequencing |
+| `score_narrative_coherence` | coherent / minor_inconsistencies / contradictory | Do scores and coaching narrative agree? |
+| `coaching_freshness` | fresh_and_deepening / some_repetition / stale | Avoids verbatim repetition, progressively nuanced? |
+| `overall_longitudinal_value` | high / medium / low | Would a real coach find this series useful? |
+
+### A/B judge dimensions
+| Dimension | What it checks |
+|---|---|
+| `specificity` | Which system's coaching is more specific to THIS leader in THIS meeting? |
+| `context_use` | Which system better uses knowledge of the coachee's history? |
+| `freshness` | Which system avoids repeating what the coachee has already heard? |
+| `leader_value` | Which output would a senior leader find more useful? |
+
+Each returns `preferred: "with_history" | "no_history" | "tie"` with `confidence: "high" | "medium" | "low"`.
+
+### Standard judge key fields
+| Field | What it checks |
+|---|---|
+| `overall_coaching_value` | high / medium / low — overall coaching quality |
+| `would_approve_for_delivery` | true / false — would a coach send this to a client? |
+| `coaching_themes_quality.nature_accurate` | Is the strength/developmental/mixed classification correct? |
+| `coaching_themes_quality.evidence_grounding` | Do the evidence quotes support the theme's claims? |
+
+---
+
+## Troubleshooting
+
+**A persona fails mid-run**: Check the log for the specific error. Common causes: LLM rate limits (retry automatically), Gate1 validation failure (check `stage1.json` for issues), transcript parsing failure (check `transcript.txt` format). The pipeline continues to the next meeting — check `state.json` for `last_completed_meeting` and the `MeetingResult` error field.
+
+**Judges return unexpected results**: Inspect the raw judge JSON in `judges/persona_NN/`. The `_meta` field shows token counts and model used. For A/B judges, `_meta.randomization` shows which system was A and which was B. If the judge seems confused, check that the condensed history (`build_condensed_history` output) is well-formed.
+
+**Transcripts are unrealistic**: Check `persona.json` — is the persona detailed enough? Check `quality.json` for heuristic failures (too few turns, speaker domination). The transcript gen model (Claude Sonnet) can be overridden with `--transcript-model`.
+
+**All A/B results are ties**: The coaching history might not be substantive enough. Check `state.json` — does `coaching_history` have meaningful themes and executive summaries? If the baseline synthesis produced generic coaching, the follow-up memory won't add much value.
+
+**Experiment never transitions**: Check `state.json` for `experiment_progress` — is the LLM detecting attempts? Check `graduation_recommendation` in the follow-up `analysis.json` files. If the recommendation is always "continue", the experiment may need more meetings or the transcript generator may not be creating enough variation.
 
 ---
 
