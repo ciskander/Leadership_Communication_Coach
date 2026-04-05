@@ -60,7 +60,7 @@ For each persona, the pipeline runs these steps sequentially:
 
 1. **Generate persona** — Claude Sonnet creates a detailed professional profile (role, colleagues, communication strengths/weaknesses)
 2. **Generate 3 baseline transcripts** — one LLM call produces all 3 meeting transcripts + initial `story_so_far`
-3. **Analyze each baseline** — Stage 1 (scoring) + Stage 2 (coaching) per meeting, all with empty memory (baselines are stateless)
+3. **Analyze each baseline** — Stage 1 (scoring) + Stage 2 (coaching) per meeting, all with empty memory (baselines are stateless). Each baseline still gets full coaching output (themes, executive summary, micro_experiment) — the synthesis in step 4 needs these to aggregate across meetings.
 4. **Run baseline synthesis** — 4th LLM call combines 3 sub-run analyses into one coaching output. This is the coaching the coachee "sees." Its themes and executive summary enter `coaching_history` as the single baseline coaching event. The first experiment is adopted from the synthesis `micro_experiment`.
 5. **For each follow-up meeting** (meeting 4, 5, ... N):
    - Generate follow-up transcript using coaching context from the most recent coaching output + `story_so_far`. For meeting 4, this is `baseline_synthesis.json`; for meeting 5+, this is the previous meeting's `analysis.json`.
@@ -303,6 +303,10 @@ Each returns `preferred: "with_history" | "no_history" | "tie"` with `confidence
 **All A/B results are ties**: The coaching history might not be substantive enough. Check `state.json` — does `coaching_history` have meaningful themes and executive summaries? If the baseline synthesis produced generic coaching, the follow-up memory won't add much value.
 
 **Experiment never transitions**: Check `state.json` for `experiment_progress` — is the LLM detecting attempts? Check `graduation_recommendation` in the follow-up `analysis.json` files. If the recommendation is always "continue", the experiment may need more meetings or the transcript generator may not be creating enough variation.
+
+**Pipeline seems stuck**: It's likely retrying after a rate limit. Both the Anthropic and OpenAI clients have built-in retry logic with backoff. Check the log — rate limit retries are logged at WARNING level. The pipeline will resume automatically.
+
+**Pipeline hangs at "Continue? [y/n]"**: You forgot `--no-pause`. Without this flag, the pipeline pauses after persona_01's baseline transcripts for manual review. Always use `--no-pause` for unattended runs.
 
 ---
 
