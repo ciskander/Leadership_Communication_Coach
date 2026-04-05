@@ -61,6 +61,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import sys
 import time
 from collections import defaultdict
@@ -79,9 +80,15 @@ from backend.core.editor import build_experiment_context, run_editor, merge_edit
 from backend.core.gate1_validator import validate as gate1_validate
 from backend.core.llm_client import call_llm, is_anthropic_model
 from backend.core.models import MemoryBlock, OpenAIResponse, ParsedTranscript
-from backend.core.openai_client import load_system_prompt
+from backend.core.openai_client import load_scoring_system_prompt
 from backend.core.output_patches import patch_analysis_output
-from backend.core.prompt_builder import build_developer_message, build_single_meeting_prompt
+from backend.core.prompt_builder import (
+    build_developer_message,
+    build_single_meeting_prompt,
+    build_stage2_system_prompt,
+    build_stage2_user_message,
+)
+from backend.core.stage2_merge import merge_stage2_output
 from backend.core.transcript_parser import parse_transcript
 from backend.evals.report import (
     align_opportunities_cross_model,
@@ -232,7 +239,7 @@ def run_single_analysis(
         memory=memory,
     )
 
-    sys_prompt = load_system_prompt()
+    sys_prompt = load_scoring_system_prompt()
     dev_message = build_developer_message()
 
     t0 = time.time()
@@ -984,6 +991,531 @@ def run_cross_model(
     return report_data
 
 
+# ── Long-stability mode ─────────────────────────────────────────────────────
+
+
+def _enumerate_longitudinal_meetings(
+    phase_dirs: list[Path],
+    persona_filter: list[int] | None = None,
+    meeting_filter: list[int] | None = None,
+) -> list[dict]:
+    """Scan longitudinal phase directories for persona/meeting subdirectories.
+
+    Returns a list of meeting descriptors with metadata and a phase-prefixed
+    label to avoid collisions across phase dirs (e.g., "LS01-P01-M01").
+    """
+    meetings = []
+    for phase_dir in phase_dirs:
+        phase_dir = phase_dir.resolve()
+        if not phase_dir.is_dir():
+            logger.warning("Phase dir does not exist: %s", phase_dir)
+            continue
+
+        # Derive short prefix: Long_Scale_01 → LS01
+        dir_name = phase_dir.name
+        m = re.match(r"Long_Scale_(\d+)", dir_name)
+        prefix = f"LS{m.group(1)}" if m else dir_name[:4]
+
+        for persona_dir in sorted(phase_dir.iterdir()):
+            pm = re.match(r"persona_(\d+)", persona_dir.name)
+            if not pm or not persona_dir.is_dir():
+                continue
+            persona_idx = int(pm.group(1))
+            if persona_filter and persona_idx not in persona_filter:
+                continue
+
+            for meeting_dir in sorted(persona_dir.iterdir()):
+                mm = re.match(r"meeting_(\d+)", meeting_dir.name)
+                if not mm or not meeting_dir.is_dir():
+                    continue
+                meeting_number = int(mm.group(1))
+                if meeting_filter and meeting_number not in meeting_filter:
+                    continue
+
+                transcript_path = meeting_dir / "transcript.txt"
+                metadata_path = meeting_dir / "metadata.json"
+                if not transcript_path.exists() or not metadata_path.exists():
+                    logger.warning(
+                        "Skipping %s/%s: missing transcript.txt or metadata.json",
+                        persona_dir.name, meeting_dir.name,
+                    )
+                    continue
+
+                metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+                meetings.append({
+                    "persona_idx": persona_idx,
+                    "meeting_number": meeting_number,
+                    "meeting_dir": meeting_dir,
+                    "transcript_path": transcript_path,
+                    "metadata": metadata,
+                    "meeting_label": f"{prefix}-P{persona_idx:02d}-M{meeting_number:02d}",
+                    "phase_dir": phase_dir,
+                })
+
+    logger.info("Enumerated %d meetings from %d phase dir(s)", len(meetings), len(phase_dirs))
+    return meetings
+
+
+def _load_longitudinal_transcript(meeting_dir: Path, metadata: dict) -> ParsedTranscript:
+    """Load and parse a transcript from a longitudinal eval meeting directory."""
+    transcript_path = meeting_dir / "transcript.txt"
+    return parse_transcript(
+        data=transcript_path.read_bytes(),
+        filename="transcript.txt",
+        source_id=metadata["meeting_id"],
+    )
+
+
+def _run_two_stage_analysis(
+    metadata: dict,
+    parsed_transcript: ParsedTranscript,
+    memory: MemoryBlock,
+    model: str | None,
+    scoring_sys_prompt: str,
+    dev_message: str,
+) -> dict[str, Any]:
+    """Run the production two-stage pipeline (scoring + coaching).
+
+    Mirrors _process_meeting() in longitudinal_eval.py but returns a flat dict
+    suitable for stability analysis. Uses pre-loaded system prompts for efficiency.
+    """
+    t0 = time.time()
+    model = model or OPENAI_MODEL_DEFAULT
+
+    # ── Stage 1: Scoring ──
+    prompt_payload = build_single_meeting_prompt(
+        meeting_id=metadata["meeting_id"],
+        meeting_type=metadata.get("meeting_type", "single_meeting"),
+        meeting_date=metadata.get("meeting_date", "2026-01-01"),
+        target_role=metadata.get("target_role", "participant"),
+        target_speaker_name=metadata.get("target_speaker_name", "Speaker"),
+        target_speaker_label=metadata.get("target_speaker_label", "Speaker"),
+        parsed_transcript=parsed_transcript,
+        memory=memory,
+    )
+
+    s1_response = call_llm(
+        system_prompt=scoring_sys_prompt,
+        developer_message=dev_message,
+        user_message=prompt_payload.raw_user_message,
+        model=model,
+    )
+    stage1_tokens = s1_response.prompt_tokens + s1_response.completion_tokens
+
+    # Post-LLM patches (scoring-only)
+    stage1_parsed = patch_analysis_output(
+        s1_response.parsed,
+        prompt_meta=prompt_payload.meta,
+        scoring_only=True,
+        cleanup_enabled=False,
+    )
+
+    # Gate1 validation (scoring-only)
+    stage1_raw = json.dumps(stage1_parsed, ensure_ascii=False, indent=2)
+    gate1_result = gate1_validate(stage1_raw, mode="scoring_only")
+    if gate1_result.corrected_data:
+        stage1_parsed = gate1_result.corrected_data
+
+    if not gate1_result.passed:
+        elapsed = time.time() - t0
+        return {
+            "parsed_json": stage1_parsed,
+            "pattern_scores": {},
+            "pattern_opp_counts": {},
+            "pattern_statuses": {},
+            "pattern_oe_counts": {},
+            "gate1_passed": False,
+            "stage1_tokens": stage1_tokens,
+            "stage2_tokens": 0,
+            "elapsed_sec": round(elapsed, 1),
+            "error": f"Stage 1 Gate1 failed: {len(gate1_result.issues)} issues",
+        }
+
+    # ── Stage 2: Coaching ──
+    s2_sys_prompt = build_stage2_system_prompt(memory)
+    transcript_turns = prompt_payload.transcript_payload["turns"]
+    s2_user_msg = build_stage2_user_message(stage1_parsed, transcript_turns)
+
+    s2_response = call_llm(
+        system_prompt=s2_sys_prompt,
+        developer_message="",
+        user_message=s2_user_msg,
+        model=model,
+    )
+    stage2_tokens = s2_response.prompt_tokens + s2_response.completion_tokens
+
+    # Merge Stage 2 into Stage 1
+    merged, _changelog = merge_stage2_output(stage1_parsed, s2_response.parsed)
+    patched = patch_analysis_output(merged, scoring_only=False)
+
+    # Gate1 validation (full)
+    gate1_result_full = gate1_validate(
+        json.dumps(patched, ensure_ascii=False, indent=2), mode="full"
+    )
+    final = gate1_result_full.corrected_data or patched
+
+    # Extract pattern data (same logic as run_single_analysis)
+    pattern_scores: dict[str, float | None] = {}
+    pattern_opp_counts: dict[str, int | None] = {}
+    pattern_statuses: dict[str, str] = {}
+    pattern_oe_counts: dict[str, int] = defaultdict(int)
+
+    for snap in final.get("pattern_snapshot", []):
+        pid = snap.get("pattern_id")
+        if pid:
+            pattern_scores[pid] = snap.get("score")
+            pattern_opp_counts[pid] = snap.get("opportunity_count")
+            pattern_statuses[pid] = snap.get("evaluable_status", "unknown")
+
+    for oe in final.get("opportunity_events", []):
+        pid = oe.get("pattern_id")
+        if pid and oe.get("count_decision") == "counted":
+            pattern_oe_counts[pid] += 1
+
+    elapsed = time.time() - t0
+    return {
+        "parsed_json": final,
+        "pattern_scores": dict(pattern_scores),
+        "pattern_opp_counts": dict(pattern_opp_counts),
+        "pattern_statuses": dict(pattern_statuses),
+        "pattern_oe_counts": dict(pattern_oe_counts),
+        "gate1_passed": gate1_result_full.passed,
+        "stage1_tokens": stage1_tokens,
+        "stage2_tokens": stage2_tokens,
+        "elapsed_sec": round(elapsed, 1),
+        "error": None,
+    }
+
+
+def run_longitudinal_stability(
+    phase_dirs: list[Path],
+    n_runs: int = 5,
+    persona_filter: list[int] | None = None,
+    meeting_filter: list[int] | None = None,
+    model: str | None = None,
+    detail: bool = False,
+    phase_name: str = "Stability_Scale_01",
+) -> dict[str, Any]:
+    """Run stability analysis across longitudinal eval meetings.
+
+    For each selected meeting, runs the two-stage pipeline n_runs times with
+    empty memory, then computes intra-meeting (repeatability) and cross-meeting
+    (discriminant validity) statistics.
+    """
+    # 1. Enumerate meetings
+    meetings = _enumerate_longitudinal_meetings(phase_dirs, persona_filter, meeting_filter)
+    if not meetings:
+        logger.error("No meetings found in phase dirs: %s", phase_dirs)
+        return {}
+
+    # 2. Load system prompts once
+    scoring_sys_prompt = load_scoring_system_prompt()
+    dev_message = build_developer_message()
+    empty_memory = MemoryBlock()
+
+    # 3. Load all transcripts eagerly
+    transcripts: dict[str, ParsedTranscript] = {}
+    for m in meetings:
+        label = m["meeting_label"]
+        transcripts[label] = _load_longitudinal_transcript(m["meeting_dir"], m["metadata"])
+    logger.info("Loaded %d transcripts", len(transcripts))
+
+    # 4. Build flat task list with crash recovery
+    tasks: list[tuple[dict, int]] = []
+    existing_results: dict[str, dict[int, dict]] = defaultdict(dict)  # label → {run_idx → result}
+
+    for m in meetings:
+        label = m["meeting_label"]
+        stability_dir = m["meeting_dir"] / "stability"
+        stability_dir.mkdir(exist_ok=True)
+
+        for run_idx in range(1, n_runs + 1):
+            run_path = stability_dir / f"run_{run_idx:02d}.json"
+            if run_path.exists():
+                # Crash recovery: load existing run
+                try:
+                    run_data = json.loads(run_path.read_text(encoding="utf-8"))
+                    # Extract pattern scores from saved results
+                    scores: dict[str, float | None] = {}
+                    opp_counts: dict[str, int | None] = {}
+                    statuses: dict[str, str] = {}
+                    oe_counts: dict[str, int] = defaultdict(int)
+                    for snap in run_data.get("pattern_snapshot", []):
+                        pid = snap.get("pattern_id")
+                        if pid:
+                            scores[pid] = snap.get("score")
+                            opp_counts[pid] = snap.get("opportunity_count")
+                            statuses[pid] = snap.get("evaluable_status", "unknown")
+                    for oe in run_data.get("opportunity_events", []):
+                        pid = oe.get("pattern_id")
+                        if pid and oe.get("count_decision") == "counted":
+                            oe_counts[pid] += 1
+
+                    existing_results[label][run_idx] = {
+                        "parsed_json": run_data,
+                        "pattern_scores": scores,
+                        "pattern_opp_counts": opp_counts,
+                        "pattern_statuses": statuses,
+                        "pattern_oe_counts": dict(oe_counts),
+                        "gate1_passed": True,  # assume passed if saved
+                        "error": None,
+                    }
+                    logger.info("Recovered existing run: %s/run_%02d", label, run_idx)
+                except Exception as exc:
+                    logger.warning("Failed to load existing %s: %s", run_path, exc)
+                    tasks.append((m, run_idx))
+            else:
+                tasks.append((m, run_idx))
+
+    logger.info(
+        "Task list: %d new runs needed (%d recovered from prior runs)",
+        len(tasks), sum(len(v) for v in existing_results.values()),
+    )
+
+    # 5. Execute all tasks concurrently
+    max_workers = max(len(tasks), 1)
+    completed_results: dict[str, dict[int, dict]] = defaultdict(dict)
+
+    def _execute_task(meeting_desc: dict, run_idx: int) -> tuple[str, int, dict]:
+        label = meeting_desc["meeting_label"]
+        parsed_transcript = transcripts[label]
+        stability_dir = meeting_desc["meeting_dir"] / "stability"
+
+        # Retry wrapper: retry full two-stage once on failure
+        for attempt in range(2):
+            try:
+                result = _run_two_stage_analysis(
+                    metadata=meeting_desc["metadata"],
+                    parsed_transcript=parsed_transcript,
+                    memory=empty_memory,
+                    model=model,
+                    scoring_sys_prompt=scoring_sys_prompt,
+                    dev_message=dev_message,
+                )
+                # Save result immediately
+                save_json(result["parsed_json"], stability_dir / f"run_{run_idx:02d}.json")
+                return label, run_idx, result
+            except Exception as exc:
+                if attempt == 0:
+                    logger.warning(
+                        "%s run_%02d attempt 1 failed (%s), retrying...",
+                        label, run_idx, exc,
+                    )
+                else:
+                    logger.error(
+                        "%s run_%02d failed after retry: %s", label, run_idx, exc,
+                    )
+                    return label, run_idx, {
+                        "parsed_json": {},
+                        "pattern_scores": {},
+                        "pattern_opp_counts": {},
+                        "pattern_statuses": {},
+                        "pattern_oe_counts": {},
+                        "gate1_passed": False,
+                        "error": str(exc),
+                        "stage1_tokens": 0,
+                        "stage2_tokens": 0,
+                        "elapsed_sec": 0,
+                    }
+        # unreachable, but satisfies type checker
+        raise RuntimeError("unreachable")
+
+    if tasks:
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            futures = {
+                pool.submit(_execute_task, m, ri): (m["meeting_label"], ri)
+                for m, ri in tasks
+            }
+            for future in as_completed(futures):
+                label, run_idx = futures[future]
+                try:
+                    lbl, ri, result = future.result()
+                    completed_results[lbl][ri] = result
+                    status = "OK" if not result.get("error") else f"ERROR: {result['error']}"
+                    logger.info("Completed %s/run_%02d — %s", lbl, ri, status)
+                except Exception as exc:
+                    logger.error("Unexpected failure %s/run_%02d: %s", label, run_idx, exc)
+
+    # 6. Merge existing + new results, compute per-meeting stats
+    all_results: dict[str, dict[int, dict]] = {}
+    for m in meetings:
+        label = m["meeting_label"]
+        merged_runs = {**existing_results.get(label, {}), **completed_results.get(label, {})}
+        all_results[label] = merged_runs
+
+    per_meeting_stats: dict[str, dict] = {}
+    total_tokens = {"stage1": 0, "stage2": 0}
+    total_gate1_passed = 0
+    total_runs = 0
+
+    for m in meetings:
+        label = m["meeting_label"]
+        runs = all_results[label]
+        valid_runs = {ri: r for ri, r in runs.items() if not r.get("error")}
+        n_valid = len(valid_runs)
+        n_total = len(runs)
+
+        # Token tracking
+        for r in runs.values():
+            total_tokens["stage1"] += r.get("stage1_tokens", 0)
+            total_tokens["stage2"] += r.get("stage2_tokens", 0)
+            total_runs += 1
+            if r.get("gate1_passed"):
+                total_gate1_passed += 1
+
+        # Per-pattern stats
+        pattern_results: dict[str, dict] = {}
+        all_run_details: list[list[dict]] = []
+
+        for pid in PATTERN_ORDER:
+            scores = [r["pattern_scores"].get(pid) for r in valid_runs.values()]
+            opp_counts = [r["pattern_opp_counts"].get(pid) for r in valid_runs.values()]
+            oe_counts = [r["pattern_oe_counts"].get(pid, 0) for r in valid_runs.values()]
+
+            pattern_results[pid] = {
+                "score": compute_pattern_stats(scores),
+                "opportunity_count": compute_int_stats(opp_counts),
+                "oe_count": compute_int_stats(oe_counts),
+            }
+
+        # Opportunity details for tier distributions
+        for ri in sorted(valid_runs.keys()):
+            details = extract_opportunity_details(valid_runs[ri]["parsed_json"])
+            all_run_details.append(
+                [item for detail_list in details.values() for item in detail_list]
+            )
+
+        tier_distributions = {}
+        reason_codes_all = []
+        for pid in PATTERN_ORDER:
+            tier_distributions[pid] = compute_tier_distribution(all_run_details, pid)
+            reason_codes_all.extend(collect_reason_codes(all_run_details, label))
+
+        gate1_pass_rate = sum(1 for r in valid_runs.values() if r.get("gate1_passed")) / max(n_valid, 1)
+
+        # Save intra-meeting report
+        stability_dir = m["meeting_dir"] / "stability"
+        intra_report = {
+            "meeting_label": label,
+            "n_runs": n_total,
+            "n_valid": n_valid,
+            "gate1_pass_rate": gate1_pass_rate,
+            "pattern_results": pattern_results,
+            "tier_distributions": tier_distributions,
+        }
+        save_json(intra_report, stability_dir / "intra_report.json")
+
+        # Generate intra-meeting markdown
+        intra_md = format_intra_transcript_report(label, n_valid, gate1_pass_rate, pattern_results)
+        save_report(intra_md, stability_dir / "intra_report.md")
+
+        per_meeting_stats[label] = {
+            "pattern_results": pattern_results,
+            "n_valid": n_valid,
+            "gate1_pass_rate": gate1_pass_rate,
+        }
+
+    # 7. Cross-meeting discriminant validity (SNR)
+    cross_transcript: dict[str, dict] = {}
+    per_transcript_for_report: dict[str, dict] = {}
+
+    for pid in PATTERN_ORDER:
+        # Collect per-meeting means for cross-meeting stats
+        meeting_means: list[float | None] = []
+        intra_iqrs: list[float] = []
+
+        for label in sorted(per_meeting_stats.keys()):
+            pr = per_meeting_stats[label]["pattern_results"].get(pid, {})
+            score_stats = pr.get("score", {})
+            meeting_means.append(score_stats.get("mean"))
+            iqr = score_stats.get("iqr")
+            if iqr is not None:
+                intra_iqrs.append(iqr)
+
+        cross_stats = compute_pattern_stats(meeting_means)
+        mean_intra_iqr = round(sum(intra_iqrs) / len(intra_iqrs), 4) if intra_iqrs else None
+        snr = (
+            round(cross_stats["iqr"] / mean_intra_iqr, 2)
+            if cross_stats["iqr"] is not None and mean_intra_iqr and mean_intra_iqr > 0
+            else None
+        )
+
+        cross_transcript[pid] = {
+            **cross_stats,
+            "mean_intra_iqr": mean_intra_iqr,
+            "snr": snr,
+        }
+
+    # Build per_transcript dict for format_inter_transcript_report
+    for label in sorted(per_meeting_stats.keys()):
+        per_transcript_for_report[label] = {}
+        for pid in PATTERN_ORDER:
+            pr = per_meeting_stats[label]["pattern_results"].get(pid, {})
+            per_transcript_for_report[label][pid] = pr.get("score", {})
+
+    transcript_ids = sorted(per_meeting_stats.keys())
+
+    # 8. Generate aggregate report
+    aggregate_md = format_inter_transcript_report(transcript_ids, per_transcript_for_report, cross_transcript)
+
+    # 9. Save aggregate outputs
+    aggregate_dir = _RESULTS_DIR / phase_name
+    aggregate_dir.mkdir(parents=True, exist_ok=True)
+
+    save_report(aggregate_md, aggregate_dir / "stability_report.md")
+
+    stability_stats = {
+        "phase_name": phase_name,
+        "phase_dirs": [str(d) for d in phase_dirs],
+        "n_meetings": len(meetings),
+        "n_runs_per_meeting": n_runs,
+        "total_runs_executed": total_runs,
+        "total_gate1_passed": total_gate1_passed,
+        "total_tokens": total_tokens,
+        "model": model or OPENAI_MODEL_DEFAULT,
+        "cross_transcript": cross_transcript,
+        "per_meeting": {
+            label: {
+                "n_valid": per_meeting_stats[label]["n_valid"],
+                "gate1_pass_rate": per_meeting_stats[label]["gate1_pass_rate"],
+                "pattern_score_stats": {
+                    pid: per_meeting_stats[label]["pattern_results"].get(pid, {}).get("score", {})
+                    for pid in PATTERN_ORDER
+                },
+            }
+            for label in transcript_ids
+        },
+    }
+    save_json(stability_stats, aggregate_dir / "stability_stats.json")
+
+    manifest = {
+        "phase_name": phase_name,
+        "phase_dirs": [str(d) for d in phase_dirs],
+        "meetings": [
+            {
+                "label": m["meeting_label"],
+                "meeting_dir": str(m["meeting_dir"]),
+                "persona_idx": m["persona_idx"],
+                "meeting_number": m["meeting_number"],
+            }
+            for m in meetings
+        ],
+        "n_runs": n_runs,
+        "model": model or OPENAI_MODEL_DEFAULT,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    save_json(manifest, aggregate_dir / "manifest.json")
+
+    logger.info(
+        "Stability eval complete: %d meetings × %d runs, "
+        "total tokens: stage1=%d stage2=%d",
+        len(meetings), n_runs,
+        total_tokens["stage1"], total_tokens["stage2"],
+    )
+
+    return stability_stats
+
+
 # ── CLI ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -1010,7 +1542,7 @@ examples:
     --model-b-dir path/to/model_b/results
 """,
     )
-    parser.add_argument("--mode", choices=["repeat", "compare", "cross-model"], required=True)
+    parser.add_argument("--mode", choices=["repeat", "compare", "cross-model", "long-stability"], required=True)
     parser.add_argument(
         "--transcript", type=Path,
         help="Path to a raw transcript file (.vtt, .txt, .srt, .docx, .pdf) for repeat mode",
@@ -1050,6 +1582,23 @@ examples:
         "--model-b-label", type=str, default=None,
         help="Display label for Model B (default: inferred from directory name)",
     )
+    # Long-stability mode arguments
+    parser.add_argument(
+        "--phase-dir", type=Path, action="append", default=None,
+        help="Longitudinal phase directory (can be repeated for multiple phase dirs)",
+    )
+    parser.add_argument(
+        "--phase", type=str, default=None,
+        help="Name for the aggregate output directory (e.g., Stability_Scale_01)",
+    )
+    parser.add_argument(
+        "--meetings", type=str, default=None,
+        help="Comma-separated meeting numbers to include (e.g., '1,4,8')",
+    )
+    parser.add_argument(
+        "--personas", type=str, default=None,
+        help="Comma-separated persona indices to include (e.g., '1,2,3')",
+    )
     args = parser.parse_args()
 
     if args.mode == "repeat":
@@ -1082,6 +1631,23 @@ examples:
             model_a_label=args.model_a_label,
             model_b_label=args.model_b_label,
             detail=args.detail,
+        )
+
+    elif args.mode == "long-stability":
+        if not args.phase_dir:
+            parser.error("--phase-dir is required for long-stability mode (can be repeated)")
+        if not args.phase:
+            parser.error("--phase is required for long-stability mode")
+        meeting_filter = [int(x) for x in args.meetings.split(",")] if args.meetings else None
+        persona_filter = [int(x) for x in args.personas.split(",")] if args.personas else None
+        run_longitudinal_stability(
+            phase_dirs=args.phase_dir,
+            n_runs=args.runs,
+            persona_filter=persona_filter,
+            meeting_filter=meeting_filter,
+            model=args.model,
+            detail=args.detail,
+            phase_name=args.phase,
         )
 
 
