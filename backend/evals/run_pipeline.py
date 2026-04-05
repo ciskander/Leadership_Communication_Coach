@@ -492,9 +492,6 @@ def main():
 
     start_time = time.time()
 
-    # Ensure EDITOR_ENABLED=0 for replay (we run editor separately)
-    os.environ["EDITOR_ENABLED"] = "0"
-
     # Step 1: Replay
     if not args.skip_replay:
         step_replay(args.transcripts_dir, phase_dir, args.runs, args.model, args.tpm_limit)

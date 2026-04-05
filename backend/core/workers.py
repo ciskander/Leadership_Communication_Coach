@@ -87,7 +87,7 @@ from .airtable_client import (
     F_RUN_STAGE2_RAW_OUTPUT,
     F_RUN_SCORING_VALID,
 )
-from .config import CONFIG_VERSION, EDITOR_ENABLED
+from .config import CONFIG_VERSION
 from .gate1_validator import validate as gate1_validate
 from .idempotency import (
     check_experiment_event_exists,
@@ -107,7 +107,6 @@ from .transcript_parser import parse_transcript
 # Feature flags
 import os as _os
 _CLEANUP_ENABLED = _os.getenv("QUOTE_CLEANUP_ENABLED", "0") == "1"
-_EDITOR_ENABLED = _os.getenv("EDITOR_ENABLED", "0") == "1"
 
 _VALID_MEETING_TYPES = {
     'exec_staff', 'board', 'all_hands', 'cross_functional', 'project_review',

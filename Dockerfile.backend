@@ -15,7 +15,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./backend/
 COPY system_prompt_baseline_pack_v0_6_0.txt ./system_prompt_baseline_pack_v0_6_0.txt
 COPY clearvoice_pattern_taxonomy_v3.1.txt ./clearvoice_pattern_taxonomy_v3.1.txt
-COPY system_prompt_editor_v1.0.txt ./system_prompt_editor_v1.0.txt
 COPY system_prompt_scoring_v1.0.txt ./system_prompt_scoring_v1.0.txt
 COPY system_prompt_coaching_v1.0.txt ./system_prompt_coaching_v1.0.txt
 COPY system_prompt_next_experiment_v1.0.txt ./system_prompt_next_experiment_v1.0.txt
