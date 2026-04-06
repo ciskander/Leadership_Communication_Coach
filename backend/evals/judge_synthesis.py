@@ -95,25 +95,28 @@ def _derive_meeting_id(judge_file: Path, results_dir: Path) -> str:
     """Derive a meeting ID from a judge file's path within a results directory.
 
     Handles both flat structure (results_dir/meeting_id/judge_*.json)
-    and longitudinal structure (results_dir/Long_Scale_01/persona_01/meeting_01/stability/).
+    and longitudinal structure at any depth:
+      - results_dir=Long_Scale_01, path=persona_01/meeting_01/stability/
+      - results_dir=results, path=Long_Scale_01/persona_01/meeting_01/stability/
     """
     rel = judge_file.parent.relative_to(results_dir)
-    parts = rel.parts
+    # Combine results_dir name with relative path for full context
+    all_parts = (results_dir.name,) + rel.parts
 
-    # Longitudinal structure: Long_Scale_XX/persona_XX/meeting_XX/stability
-    if len(parts) >= 3:
-        phase_match = re.match(r"Long_Scale_(\d+)", parts[0])
-        persona_match = re.match(r"persona_(\d+)", parts[1])
-        meeting_match = re.match(r"meeting_(\d+)", parts[2])
+    # Scan all_parts for the Long_Scale/persona/meeting triple
+    for i in range(len(all_parts) - 2):
+        phase_match = re.match(r"Long_Scale_(\d+)", all_parts[i])
+        persona_match = re.match(r"persona_(\d+)", all_parts[i + 1])
+        meeting_match = re.match(r"meeting_(\d+)", all_parts[i + 2])
         if phase_match and persona_match and meeting_match:
             return f"LS{phase_match.group(1)}-P{int(persona_match.group(1)):02d}-M{int(meeting_match.group(1)):02d}"
 
     # Flat structure: meeting_id/judge_*.json
-    if len(parts) == 1:
-        return parts[0]
+    if len(rel.parts) == 1:
+        return rel.parts[0]
 
     # Fallback: use relative path as meeting_id
-    return str(rel)
+    return "/".join(rel.parts)
 
 
 def load_judge_data(files: list[Path], meeting_id: str | None = None) -> list[dict]:
