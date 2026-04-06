@@ -37,54 +37,92 @@ PATTERN_ORDER = [
 
 # ── Judge file discovery ─────────────────────────────────────────────────────
 
+# Match both old format (3-digit run, 2-3 timestamps) and new format (2-digit run, 1 timestamp)
 _JUDGE_FILENAME_RE = re.compile(
-    r"^judge_(?:stage2_merged_)?run_(\d{3})_(\d{8}T\d{6})_(?:\d{8}T\d{6}_)?(\d{8}T\d{6})\.json$"
+    r"^judge_(?:stage2_merged_)?run_(\d{2,3})_(\d{8}T\d{6})(?:_\d{8}T\d{6})?(?:_(\d{8}T\d{6}))?\.json$"
 )
 
 
-def discover_judge_files(results_dir: Path, latest_batch_only: bool = True) -> dict[str, list[Path]]:
+def discover_judge_files(
+    results_dir: Path,
+    latest_batch_only: bool = True,
+    recursive: bool = False,
+) -> dict[str, list[Path]]:
     """Find judge JSON files grouped by meeting.
 
     Returns {meeting_id: [judge_file_paths]}.
     When latest_batch_only=True, only returns judges from the most recent
     run-timestamp batch per meeting.
+
+    When recursive=True, scans all subdirectories at any depth. Meeting IDs
+    are derived from the path (e.g., Long_Scale_01/persona_01/meeting_01/stability
+    → "LS01-P01-M01"). This supports the longitudinal stability eval structure.
     """
-    meetings: dict[str, list[Path]] = {}
+    meetings: dict[str, list[tuple[str, Path]]] = defaultdict(list)
 
-    for subdir in sorted(results_dir.iterdir()):
-        if not subdir.is_dir():
-            continue
-        meeting_id = subdir.name
-
-        judge_files: list[tuple[str, Path]] = []  # (run_timestamp, path)
-        for f in sorted(subdir.glob("judge_*.json")):
+    if recursive:
+        for f in sorted(results_dir.rglob("judge_*.json")):
             m = _JUDGE_FILENAME_RE.match(f.name)
             if m:
-                judge_files.append((m.group(2), f))
+                meeting_id = _derive_meeting_id(f, results_dir)
+                meetings[meeting_id].append((m.group(2), f))
+    else:
+        for subdir in sorted(results_dir.iterdir()):
+            if not subdir.is_dir():
+                continue
+            meeting_id = subdir.name
+            for f in sorted(subdir.glob("judge_*.json")):
+                m = _JUDGE_FILENAME_RE.match(f.name)
+                if m:
+                    meetings[meeting_id].append((m.group(2), f))
 
+    result: dict[str, list[Path]] = {}
+    for meeting_id, judge_files in sorted(meetings.items()):
         if not judge_files:
             continue
-
         if latest_batch_only:
-            # Group by run_timestamp, take the most recent batch
             latest_ts = max(ts for ts, _ in judge_files)
             selected = [p for ts, p in judge_files if ts == latest_ts]
         else:
             selected = [p for _, p in judge_files]
-
         if selected:
-            meetings[meeting_id] = selected
+            result[meeting_id] = selected
 
-    return meetings
+    return result
 
 
-def load_judge_data(files: list[Path]) -> list[dict]:
+def _derive_meeting_id(judge_file: Path, results_dir: Path) -> str:
+    """Derive a meeting ID from a judge file's path within a results directory.
+
+    Handles both flat structure (results_dir/meeting_id/judge_*.json)
+    and longitudinal structure (results_dir/Long_Scale_01/persona_01/meeting_01/stability/).
+    """
+    rel = judge_file.parent.relative_to(results_dir)
+    parts = rel.parts
+
+    # Longitudinal structure: Long_Scale_XX/persona_XX/meeting_XX/stability
+    if len(parts) >= 3:
+        phase_match = re.match(r"Long_Scale_(\d+)", parts[0])
+        persona_match = re.match(r"persona_(\d+)", parts[1])
+        meeting_match = re.match(r"meeting_(\d+)", parts[2])
+        if phase_match and persona_match and meeting_match:
+            return f"LS{phase_match.group(1)}-P{int(persona_match.group(1)):02d}-M{int(meeting_match.group(1)):02d}"
+
+    # Flat structure: meeting_id/judge_*.json
+    if len(parts) == 1:
+        return parts[0]
+
+    # Fallback: use relative path as meeting_id
+    return str(rel)
+
+
+def load_judge_data(files: list[Path], meeting_id: str | None = None) -> list[dict]:
     """Load and return parsed judge JSON objects."""
     results = []
     for f in files:
         data = json.loads(f.read_text(encoding="utf-8"))
         data["_file"] = f.name
-        data["_meeting"] = f.parent.name
+        data["_meeting"] = meeting_id or f.parent.name
         results.append(data)
     return results
 
@@ -632,9 +670,13 @@ def format_report(synthesis: dict[str, Any], comparison: dict[str, Any] | None =
 
 # ── Main ─────────────────────────────────────────────────────────────────────
 
-def run_synthesis(results_dir: Path, latest_batch_only: bool = True) -> dict[str, Any]:
+def run_synthesis(
+    results_dir: Path,
+    latest_batch_only: bool = True,
+    recursive: bool = False,
+) -> dict[str, Any]:
     """Run full synthesis on judge files in results_dir."""
-    meetings = discover_judge_files(results_dir, latest_batch_only=latest_batch_only)
+    meetings = discover_judge_files(results_dir, latest_batch_only=latest_batch_only, recursive=recursive)
 
     if not meetings:
         logger.error("No judge files found in %s", results_dir)
@@ -643,7 +685,7 @@ def run_synthesis(results_dir: Path, latest_batch_only: bool = True) -> dict[str
     all_data: list[dict] = []
     for meeting_id, files in sorted(meetings.items()):
         logger.info("Loading %d judge files for %s", len(files), meeting_id)
-        all_data.extend(load_judge_data(files))
+        all_data.extend(load_judge_data(files, meeting_id=meeting_id))
 
     logger.info("Total: %d judge files across %d meetings", len(all_data), len(meetings))
 
@@ -677,12 +719,16 @@ def main() -> None:
                         help="Baseline phase results directory for comparison")
     parser.add_argument("--all-judges", action="store_true", default=False,
                         help="Use ALL judge files instead of most-recent-batch only")
+    parser.add_argument("--recursive", action="store_true", default=False,
+                        help="Scan for judge files recursively at any depth")
+    parser.add_argument("--output-dir", type=Path, default=None,
+                        help="Directory for synthesis outputs (defaults to results-dir)")
     args = parser.parse_args()
 
     latest_batch_only = not args.all_judges
 
     # Current synthesis
-    synthesis = run_synthesis(args.results_dir, latest_batch_only=latest_batch_only)
+    synthesis = run_synthesis(args.results_dir, latest_batch_only=latest_batch_only, recursive=args.recursive)
     if not synthesis:
         return
 
@@ -691,15 +737,17 @@ def main() -> None:
     baseline_synthesis = None
     if args.baseline_dir:
         logger.info("Loading baseline from %s", args.baseline_dir)
-        baseline_synthesis = run_synthesis(args.baseline_dir, latest_batch_only=latest_batch_only)
+        baseline_synthesis = run_synthesis(args.baseline_dir, latest_batch_only=latest_batch_only, recursive=args.recursive)
         if baseline_synthesis:
             comparison = compare_phases(synthesis, baseline_synthesis)
             synthesis["comparison"] = comparison
 
     # Save outputs
+    output_dir = args.output_dir or args.results_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
     timestamp = synthesis["timestamp"]
-    out_json = args.results_dir / f"judge_synthesis_{timestamp}.json"
-    out_md = args.results_dir / f"judge_synthesis_{timestamp}.md"
+    out_json = output_dir / f"judge_synthesis_{timestamp}.json"
+    out_md = output_dir / f"judge_synthesis_{timestamp}.md"
 
     save_json(synthesis, out_json)
 

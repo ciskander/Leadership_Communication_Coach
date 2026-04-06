@@ -25,6 +25,7 @@ import logging
 import sys
 import time
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -521,21 +522,46 @@ def main():
         _print_summary(result)
 
     elif args.output_dir and args.all:
-        # Judge all run_*.json files in the directory
+        # Judge all run_*.json files in the directory, skipping already-judged
         output_files = sorted(args.output_dir.glob("run_*.json"))
         if not output_files:
             logger.error("No run_*.json files found in %s", args.output_dir)
             sys.exit(1)
 
+        # Skip runs that already have judge output
+        existing_judges = {f.name for f in args.output_dir.glob("judge_*.json")}
+        to_judge = []
         for output_file in output_files:
-            logger.info("Judging %s ...", output_file.name)
-            parsed_json = json.loads(output_file.read_text(encoding="utf-8"))
-            result = judge_analysis(transcript_data, parsed_json, model=args.model)
+            # Check if any judge file exists for this run stem
+            has_judge = any(j.startswith(f"judge_{output_file.stem}_") for j in existing_judges)
+            if has_judge:
+                logger.info("Skipping %s (already judged)", output_file.name)
+            else:
+                to_judge.append(output_file)
 
-            timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
-            out_path = args.output_dir / f"judge_{output_file.stem}_{timestamp}.json"
-            save_json(result, out_path)
-            _print_summary(result)
+        if not to_judge:
+            logger.info("All %d runs already judged, nothing to do", len(output_files))
+        else:
+            logger.info("Judging %d runs (%d skipped)", len(to_judge), len(output_files) - len(to_judge))
+
+            def _judge_one(output_file: Path) -> tuple[Path, dict]:
+                parsed_json = json.loads(output_file.read_text(encoding="utf-8"))
+                result = judge_analysis(transcript_data, parsed_json, model=args.model)
+                timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+                out_path = args.output_dir / f"judge_{output_file.stem}_{timestamp}.json"
+                save_json(result, out_path)
+                return output_file, result
+
+            with ThreadPoolExecutor(max_workers=len(to_judge)) as pool:
+                futures = {pool.submit(_judge_one, f): f for f in to_judge}
+                for future in as_completed(futures):
+                    output_file = futures[future]
+                    try:
+                        _, result = future.result()
+                        logger.info("Completed %s", output_file.name)
+                        _print_summary(result)
+                    except Exception as exc:
+                        logger.error("Failed %s: %s", output_file.name, exc)
     else:
         parser.error("Provide either --output or --output-dir with --all")
 
