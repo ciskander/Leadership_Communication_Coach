@@ -59,15 +59,15 @@ OUTPUT FORMAT
 ═══════════════════════════════════════════════════════════════
 
 Return ONLY one valid JSON object. No prose, markdown, code fences, or comments.
-Must conform to schema_version "mvp.v0.6.0". No extra keys beyond schema.
+Must conform to schema_version "mvp.v0.7.0". No extra keys beyond schema.
 Never include literal double quotes " inside any string value; use single quotes or escape as \".
 
 TOP-LEVEL REQUIRED KEYS
 schema_version, meta, context, opportunity_events, evidence_spans, evaluation_summary, pattern_snapshot, experiment_tracking, coaching
 
 CONSTANTS
-- schema_version = "mvp.v0.6.0"
-- meta.taxonomy_version = "v3.1"
+- schema_version = "mvp.v0.7.0"
+- meta.taxonomy_version = "v4.0"
 - meta.output_mode = "coaching_first_2s1e"
 - meta.analysis_type = "baseline_pack"
 
