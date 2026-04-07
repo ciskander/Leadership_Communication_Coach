@@ -145,7 +145,8 @@ def synthesize_ratings(judge_data: list[dict]) -> dict[str, Any]:
     def _dist(ratings: list[str]) -> dict[str, Any]:
         n = len(ratings)
         if n == 0:
-            return {"n": 0, "insightful": 0, "adequate": 0, "pedantic": 0, "wrong": 0}
+            return {"n": 0, "insightful": 0, "adequate": 0, "pedantic": 0, "wrong": 0,
+                    "insightful_pct": 0, "adequate_pct": 0, "pedantic_pct": 0, "wrong_pct": 0}
         c = Counter(ratings)
         return {
             "n": n,
