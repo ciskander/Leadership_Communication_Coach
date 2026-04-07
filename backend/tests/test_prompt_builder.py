@@ -441,6 +441,8 @@ EXPECTED_PATTERN_IDS = [
     "assignment_clarity",
     "question_quality",
     "communication_clarity",
+    "active_listening",
+    "recognition",
     "behavioral_integrity",
     "disagreement_navigation",
     "feedback_quality",
@@ -450,7 +452,7 @@ EXPECTED_PATTERN_IDS = [
 class TestTaxonomyParsing:
     """Verify the taxonomy file is correctly parsed for all prompt types."""
 
-    def test_extract_pattern_ids_returns_all_9(self):
+    def test_extract_pattern_ids_returns_all_11(self):
         ids = extract_pattern_ids()
         assert ids == EXPECTED_PATTERN_IDS
 

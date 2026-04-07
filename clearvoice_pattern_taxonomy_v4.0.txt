@@ -1,6 +1,6 @@
 CLEARVOICE PATTERN TAXONOMY v4.0
 Role-conditioned, target-speaker-only, conservative counting.
-9 patterns across 2 axes (Task Effectiveness, Relational Effectiveness). Two scoring types: tiered rubric, multi-element.
+11 patterns across 2 axes (Task Effectiveness, Relational Effectiveness). Two scoring types: tiered rubric, multi-element.
 
 ────────────────────────────────────────────────────────────────
 
@@ -20,7 +20,7 @@ SCORING TYPES
 
 This taxonomy uses two scoring approaches matched to pattern structure:
 
-1. Tiered rubric scoring (Purposeful Framing, Focus Management, Disagreement Navigation, Behavioral Integrity, Resolution & Alignment, Assignment Clarity, Question Quality, Communication Clarity):
+1. Tiered rubric scoring (Purposeful Framing, Focus Management, Disagreement Navigation, Behavioral Integrity, Resolution & Alignment, Assignment Clarity, Question Quality, Communication Clarity, Active Listening, Recognition):
    - Each opportunity scored 0.0, 0.25, 0.5, 0.75, or 1.0 based on rubric level defined per pattern.
    - Score = sum of opportunity scores / opportunity_count, rounded to 4 decimals.
    - Note: Focus Management uses a 3-level subset ({0, 0.5, 1.0}). Question Quality uses a 3-level subset ({0, 0.5, 1.0}). See pattern definitions for rubric details.
@@ -42,11 +42,15 @@ Axis: Task Effectiveness
     6. communication_clarity
 
 Axis: Relational Effectiveness
-    7. behavioral_integrity
-    8. disagreement_navigation
-    9. feedback_quality
+  Receptive / Responsive:
+    7. active_listening
+    8. recognition
+  Proactive / Generative:
+    9. behavioral_integrity
+    10. disagreement_navigation
+    11. feedback_quality
 
-Always output all 9 patterns in this fixed order.
+Always output all 11 patterns in this fixed order.
 
 OPPORTUNITY vs. NON-OPPORTUNITY (applies to all patterns)
 
@@ -447,6 +451,14 @@ Detection notes:
 - When in doubt about whether a question is purposeful or aimless, consider: could you explain why this question was asked at this moment? If yes, it's purposeful. If no, it's aimless.
 - Functional classification: A question's syntactic form does not automatically make it a question_quality opportunity. When the question's primary function in context is NOT inquiry — e.g., it serves to accelerate past a substantive objection (disagreement_navigation), to redirect the conversation (focus_management), or to assert authority (behavioral_integrity) — classify the moment under the pattern that captures its primary function, not under question_quality. The test: if the question were rephrased as a statement, would the moment's coaching significance change? If "What's the timeline?" functions as "Let's move past this design concern and talk about schedule," the moment is a DN or BI opportunity, not a QQ opportunity. Only count questions under question_quality when the speaker's primary purpose is genuinely to elicit information, test assumptions, surface perspectives, or deepen understanding.
 - Behavioral context: A question's surface quality (specific, decision-linked, constraint-testing) does not make it a QQ strength if it primarily serves to redirect past a substantive objection or to confirm a predetermined path. Before scoring a question as purposeful (1.0), consider the conversational sequence: if the question immediately follows the speaker dismissing, overriding, or stepping over a substantive concern, the question likely serves avoidance rather than genuine inquiry. Score based on the full sequence, not the question in isolation. Meeting-level avoidance pattern: When multiple patterns in the same meeting show the speaker avoiding substantive engagement (e.g., FM shows redirecting risk signals, DN shows dismissing pushback), apply heightened scrutiny to QQ. In an avoidance-pattern meeting, the speaker's most consequential question failure is typically not the surface quality of questions asked, but the absence of probing questions about the risks being raised and concerns being dismissed. A QQ coaching_note that praises surface question quality while the speaker systematically avoided asking the hard questions is pedantic — either coach on the questions NOT asked, or set coaching_note to null.
+- Boundary with Active Listening: A follow-up question that
+  references prior input may be scored under both QQ and AL.
+  QQ evaluates the question's purposefulness; AL evaluates
+  whether the question demonstrates absorption of what was said.
+  "You said QA is at capacity — what if we deferred the regression
+  suite?" scores under QQ (constraint-testing) AND AL (following
+  through on prior answer). These are orthogonal dimensions —
+  score each independently.
 
 Experiment guidance:
 - What good looks like: Short, specific questions that target a decision, assumption, risk, or perspective. "What breaks if we ship this two weeks early?" is sharp. "What does everyone think?" is not.
@@ -556,16 +568,735 @@ Experiment guidance:
 
 AXIS: RELATIONAL EFFECTIVENESS
 How the leader makes others feel heard, valued, and safe to contribute —
+actively listening and building on input, recognizing contributions,
 building trust through integrity, navigating disagreement constructively,
 and delivering effective feedback.
+
+Sub-cluster: Receptive / Responsive
+These patterns measure how the leader receives and engages with others'
+contributions — whether they demonstrate genuine absorption of ideas
+(Active Listening) and acknowledgment of the people behind them (Recognition).
+
+Sub-cluster: Proactive / Generative
+These patterns measure the leader's own relational behaviors — consistency
+between words and actions (Behavioral Integrity), handling of conflict
+(Disagreement Navigation), and delivery of feedback (Feedback Quality).
 
 ### END:AXIS_RELATIONAL_EFFECTIVENESS ###
 
 ────────────────────────────────────────────────────────────────
 
+### BEGIN:PATTERN:active_listening ###
+
+PATTERN 7: active_listening
+Axis: Relational Effectiveness
+Scoring type: Tiered rubric
+Empirical grounding: CCQ Decoding dimension (Monge, Bachman,
+Dillard & Eisenberg, 1982); O'Donovan et al. (2020) "active
+listening" observational behavior; Bales IPA categories 3
+(agrees/understands) and 7-9 (asks for orientation/opinion/
+suggestion as responsive behaviors).
+
+What it measures:
+- Whether the target_speaker demonstrates — through their verbal
+  behavior — that they have absorbed, processed, and built upon
+  what other participants said. This is the decoding counterpart
+  to Communication Clarity's encoding function.
+
+Active listening is not about the target_speaker being quiet while
+others talk. It is about what the target_speaker says AFTER others
+talk — whether their subsequent contribution shows evidence that
+they heard, understood, and engaged with the substance of the
+prior input.
+
+Key concepts:
+- Referencing: The target_speaker explicitly refers to something
+  a specific other participant said earlier in the meeting, by
+  name or by content. ("As Marcus pointed out earlier..." /
+  "Going back to the point about QA dependencies...")
+- Paraphrasing: The target_speaker restates an other participant's
+  point in their own words to confirm understanding. ("So what
+  you're saying is..." / "If I understand correctly, your
+  concern is...")
+- Building: The target_speaker extends, develops, or deepens an
+  other participant's contribution — adding value on top of what
+  was said rather than replacing it with their own point.
+  ("Building on Priya's point — if we apply that logic to the
+  enterprise segment too...")
+- Integrating: The target_speaker synthesizes contributions from
+  multiple other participants into a coherent picture. ("So Dana
+  is flagging the timeline risk, and Marcus is saying the scope
+  can't shrink further — those two constraints together mean we
+  need to talk about staffing.")
+- Following through: The target_speaker's contribution connects
+  back to an answer they received from a prior question — showing
+  they heard and used the answer. ("You mentioned the QA team is
+  at capacity — given that, should we defer the regression suite
+  to next sprint?")
+- Clarifying: The target_speaker asks a specific question about
+  an other participant's prior point to deepen their understanding.
+  The question demonstrates they heard the substance and want to
+  engage more precisely. ("When you say the QA team is at
+  capacity, do you mean for this sprint specifically or ongoing?"
+  / "Can you say more about the migration burden — is that a
+  one-time cost or something that compounds with each phase?")
+  Clarifying questions typically score 0.75 — they demonstrate
+  specific engagement with substance but do not yet build on or
+  advance the point.
+
+Denominator (opportunity_count):
+- Substantive turns by the target_speaker that follow a recent
+  substantive contribution from an other participant, where the
+  content or context of the prior contribution is relevant to
+  what the target_speaker is now addressing. The opportunity is
+  the target_speaker's turn. The prior contribution is context
+  that makes this turn a scoreable listening moment.
+
+Counts as opportunity:
+- The target_speaker takes a substantive turn shortly after an
+  other participant has made a substantive point, shared
+  information, answered a question, raised a concern, or offered
+  a recommendation — and the target_speaker's turn addresses the
+  same topic or decision space.
+- The target_speaker takes the floor after a discussion exchange
+  between other participants and responds to or synthesizes the
+  content of that exchange.
+- The target_speaker takes a turn that follows up on an answer
+  to a question they previously asked.
+
+Staleness and relevance:
+- If many other participants have spoken between the contribution
+  and the target_speaker's turn, and the conversation has moved
+  on to a different topic, the original contribution is stale and
+  the target_speaker's turn is not an active_listening opportunity
+  for that contribution. Use judgment about conversational
+  proximity — the contribution should be recent enough and
+  topically connected enough that a listening response from the
+  target_speaker would be natural and expected.
+- If an other participant's contribution has already been
+  substantively acknowledged or engaged with by someone else
+  before the target_speaker speaks, the target_speaker is not
+  obligated to re-acknowledge it. Exclude the moment from the
+  denominator unless the target_speaker's turn specifically
+  revisits or builds on the contribution despite the intervening
+  engagement.
+
+Scoring per opportunity (5-tier rubric):
+- 1.0 — Integrative listening. The target_speaker's response
+  demonstrates deep absorption of prior input AND adds value
+  through one or more of: integrating multiple other
+  participants' contributions, building substantively on a prior
+  point, or following through on a prior answer in a way that
+  advances the conversation. The target_speaker's response could
+  not have been produced without having genuinely absorbed the
+  prior content.
+  Examples:
+  - "Dana flagged the timeline risk and Marcus said scope can't
+    shrink — so the real question is whether we add a person or
+    slip the date. Let's decide that now." (Integrates two
+    inputs, reframes the decision.)
+  - "You said the QA team is at capacity — that changes my
+    thinking on the regression suite. What if we defer that to
+    next sprint and focus the QA bandwidth on the payment flow?"
+    (Follows through on prior answer, builds on it.)
+  - The target_speaker paraphrases a complex point accurately
+    and then extends it: "So your concern is that the phased
+    approach creates a migration burden for existing customers —
+    I hadn't thought about it from that angle. What if we offered
+    a migration path as part of the phase 1 rollout?"
+
+- 0.75 — Engaged acknowledgment with substance. The
+  target_speaker demonstrates that they heard the prior input by
+  explicitly referencing, paraphrasing, clarifying, or
+  acknowledging the specific content — and engages with its
+  substance — but does not build on it, integrate it with other
+  inputs, or use it to advance the conversation. The response is
+  responsive and respectful but stays at the level of the input
+  rather than elevating it.
+  Examples:
+  - "That's a good point about the QA dependency — you're right
+    that it's a risk we need to track." (Acknowledges specific
+    content, engages with substance, but doesn't build or
+    advance.)
+  - "I hear you — the timeline pressure is real and I don't want
+    to dismiss that." (Acknowledges the substance and validates
+    the concern.)
+  - The target_speaker accurately paraphrases the prior point
+    without extending: "So you're saying we can't ship without
+    the regression pass, and the regression pass needs two weeks.
+    Got it."
+  - The target_speaker asks a clarifying question that
+    demonstrates specific absorption: "When you say at capacity,
+    do you mean for this sprint or ongoing?" (Heard the specific
+    point, wants to understand it more precisely.)
+
+- 0.5 — Surface acknowledgment. The target_speaker acknowledges
+  that the prior other participant spoke — and there is some
+  connection to the content — but does not demonstrate specific
+  engagement with the substance of what was said. The response
+  shows awareness but not absorption.
+  Examples:
+  - "Good point. So here's what I think we should do..." (Generic
+    acknowledgment followed by the target_speaker's own
+    pre-existing position — unclear whether the "good point"
+    influenced their thinking.)
+  - "Thanks for raising that. Let me share my perspective..."
+    (Acknowledges the contribution existed but pivots to the
+    target_speaker's own view without engaging with the
+    substance.)
+  - "Right, right. So the thing I was going to say is..." (Token
+    acknowledgment, then continues with the target_speaker's own
+    agenda.)
+
+- 0.25 — Nominal or misaligned response. The target_speaker's
+  response shows minimal evidence of having absorbed the prior
+  input. The response is either loosely related but doesn't
+  address the specific point that was made, or addresses a
+  different aspect of the topic than what the prior other
+  participant raised.
+  Examples:
+  - An other participant raises a concern about customer
+    migration risk; the target_speaker responds about internal
+    engineering capacity. (Topically adjacent but doesn't address
+    the actual point.)
+  - "Yeah, we'll figure that out. Anyway, the thing I wanted to
+    cover is..." (Dismissive transition that doesn't engage.)
+  - The target_speaker responds to part of a multi-part
+    contribution but ignores the most substantive element.
+
+- 0.0 — No listening demonstrated. The target_speaker's response
+  shows no evidence of having absorbed the prior input. This
+  includes:
+  - Ignoring what was said entirely and continuing with a
+    pre-existing agenda or talking point.
+  - Responding to a different question or point than what was
+    raised.
+  - Repeating their own prior position without addressing the
+    counterpoint or new information that was offered.
+  - Asking a question that was already answered by a prior other
+    participant (demonstrating they did not hear the answer).
+  - Talking over or interrupting an other participant and
+    proceeding without returning to their point.
+
+Score = sum of opportunity scores / opportunity_count.
+
+Output fields:
+- opportunity_count
+- score
+
+Excluded from both numerator AND denominator (not an opportunity):
+- Turns where the target_speaker is continuing their own previous
+  thought after a brief interjection from an other participant
+  (the interjection is incidental, not a substantive contribution
+  requiring engagement).
+- Turns where the target_speaker is initiating a new topic or
+  making an unprompted contribution (there is no prior input to
+  listen to — these belong to purposeful_framing or
+  communication_clarity as appropriate).
+- Procedural responses ("Sure, let me share my screen").
+- Brief back-channel acknowledgments ("Mm-hm," "Got it," "OK")
+  that are not substantive response turns.
+- Turns where the prior other participant's contribution was
+  itself procedural or trivial (no substantive content to absorb).
+- Topic transitions that belong to purposeful_framing.
+- Turns where the prior contribution has already been
+  substantively engaged with by other participants and the
+  conversation has moved forward — the target_speaker is not
+  expected to circle back.
+
+Role notes:
+- All roles: Apply consistently. Role affects the volume of
+  response turns (a chair responds to more inputs than a quiet
+  other participant), not the listening standard.
+- Chair/Facilitator: Highest expected denominator. Every input
+  from an other participant that the target_speaker responds to
+  in close proximity is an opportunity.
+- Presenter: Within their segment, responses to audience
+  questions and reactions.
+- Participant: Response turns after other participants'
+  contributions. Smaller denominator by design.
+- 1:1 Manager: All response turns in the conversation. This is a
+  primary context — managers who listen well in 1:1s build
+  stronger relationships.
+- 1:1 Report: All response turns. Same standard applies.
+
+Minimum threshold:
+- 3 response turns required. If fewer than 3 substantive response
+  turns exist for the target_speaker, mark insufficient_signal.
+
+Scope guidance:
+- If more than 10 qualifying response turns exist, score the 10
+  most substantive (by the significance and depth of the prior
+  other participant's contribution, not by the target_speaker's
+  response length). This cap prevents over-counting and ensures
+  focus on the turns with the most signal.
+
+Detection notes:
+- The primary detection signal is explicit verbal evidence of
+  absorption. Look for: named references to other participants
+  or their points, paraphrasing language ("so what you're saying
+  is...," "if I understand correctly..."), building language
+  ("building on that...," "to add to what Marcus said..."),
+  integrating language ("so between Dana's timeline concern and
+  Marcus's scope constraint..."), follow-through on prior
+  answers, and clarifying questions that demonstrate specific
+  engagement ("when you say X, do you mean Y or Z?").
+- The ABSENCE of these signals in a response turn is itself
+  informative. When an other participant raises a substantive
+  point and the target_speaker's response shows no trace of
+  having heard it — no reference, no paraphrase, no engagement
+  with the specific content — that is a listening failure, even
+  if the response is topically related.
+- Do not penalize for disagreement. The target_speaker can listen
+  excellently and still disagree: "I hear your concern about the
+  timeline — you're saying two more weeks is the minimum for a
+  clean ship. I think the market risk of delay is larger, and
+  here's why..." scores 1.0 on Active Listening (demonstrates
+  absorption and builds) even though the target_speaker disagrees
+  with the conclusion. Listening ≠ agreement.
+- Following-through detection requires tracking prior question →
+  answer → follow-up sequences across multiple turns. The
+  target_speaker asked a question earlier, someone answered it,
+  and now the target_speaker is connecting back to that answer.
+  If attribution is uncertain — unclear whether the
+  target_speaker's current response connects to a prior answer
+  vs. is an independent contribution — exclude the moment rather
+  than force a following-through classification.
+- Distinguish from Communication Clarity. CC scores the
+  structural quality of the target_speaker's own output (BLUF,
+  proportionality, concreteness). AL scores whether that output
+  demonstrates engagement with prior input. A turn can be
+  perfectly clear (CC = 1.0) but show no listening (AL = 0.0) —
+  the target_speaker stated their point beautifully but it had
+  nothing to do with what was just said. Conversely, a turn can
+  demonstrate excellent listening (AL = 1.0) while being somewhat
+  disorganized (CC = 0.5).
+- Distinguish from Question Quality. QQ scores the quality of
+  questions the target_speaker asks. AL scores whether the
+  target_speaker's subsequent behavior shows they absorbed the
+  answer. A follow-up question that demonstrates listening (e.g.,
+  "You said QA is at capacity — what if we deferred the
+  regression suite?") is scored under BOTH AL (demonstrates
+  follow-through) and QQ (quality of the follow-up question).
+  These are orthogonal dimensions.
+- Distinguish from Recognition. AL and Recognition share a
+  similar trigger (target_speaker responds after someone else
+  contributes) but measure different things. AL asks: "Did the
+  leader engage with the IDEAS?" Recognition asks: "Did the
+  leader acknowledge the PERSON?" A turn can score high on AL
+  and low on Recognition (the target_speaker brilliantly
+  integrates Dana's analysis but never acknowledges Dana or her
+  effort — she's treated as a data source, not a colleague). Or
+  vice versa (the target_speaker warmly thanks Marcus for raising
+  a concern but then proceeds without engaging with its
+  substance). When a response turn contains both listening and
+  regard behaviors, score each pattern independently.
+- Distinguish from Disagreement Navigation. When the prior input
+  is pushback or disagreement, the target_speaker's response is
+  scored under DN for conflict handling quality and under AL for
+  listening quality. These are orthogonal: the target_speaker can
+  handle disagreement constructively (DN = 1.0) while
+  demonstrating poor listening (AL = 0.25 — they de-escalated
+  without engaging with the substance of the pushback). Or they
+  can demonstrate excellent listening (AL = 1.0 — steel-manned
+  the opposing view) while ultimately handling the disagreement
+  poorly (DN = 0.5 — acknowledged but didn't drive toward
+  resolution). Score each pattern against its own rubric
+  independently.
+
+Experiment guidance:
+- What good looks like: "You mentioned the QA team is at
+  capacity — that changes my thinking. If we can't get a full
+  regression pass in this sprint, what if we scope it to the
+  payment flow only and defer the rest?" (References specific
+  prior input, shows it changed the target_speaker's thinking,
+  builds on it with a concrete proposal.)
+- Common failure mode: "Good point. So here's what I think..."
+  followed by a position that shows no influence from the "good
+  point." Or: repeating the same position after receiving a
+  substantive counterargument, without addressing the
+  counterargument's specific content.
+- Experiment focus: Help the coachee build the habit of explicitly
+  referencing what others said before stating their own position.
+  The simplest intervention: before responding, paraphrase the
+  prior other participant's point in one sentence ("So your
+  concern is X"). This forces absorption and signals to the room
+  that the input was heard. Prioritize whichever listening
+  behavior is weakest: referencing (naming what was said),
+  building (extending the point), or following through (connecting
+  back to answers they received).
+
+### END:PATTERN:active_listening ###
+
+────────────────────────────────────────────────────────────────
+
+### BEGIN:PATTERN:recognition ###
+
+PATTERN 8: recognition
+Axis: Relational Effectiveness
+Scoring type: Tiered rubric
+Empirical grounding: LBDQ-XII Consideration dimension (Stogdill,
+1963; Halpin & Winer, 1957) — "regards the comfort, well being,
+status, and contributions of followers." Also grounded in
+O'Donovan et al. (2020) "supportive behaviours" category and
+Bales IPA positive socio-emotional categories 1-3 (shows
+solidarity, shows tension release, agrees/understands).
+
+What it measures:
+- Whether the target_speaker treats other participants as valued
+  equals — acknowledging their effort, expertise, courage, or
+  contributions as people, not merely processing the content of
+  their input. This captures the warmth and interpersonal regard
+  dimension of leadership communication.
+
+This is distinct from Active Listening, which measures whether the
+target_speaker cognitively engaged with the SUBSTANCE of what was
+said. Recognition measures whether the target_speaker
+acknowledged the PERSON who said it. A leader can demonstrate
+excellent listening (paraphrasing, building, integrating) while
+treating contributors as invisible providers of raw material. A
+leader can also show genuine warmth and acknowledgment toward a
+person without deeply engaging with the substance of their point.
+
+This pattern fires in the spaces between high-stakes moments. A
+target_speaker who handles disagreements brilliantly and closes
+decisions cleanly can still score poorly on Recognition if they
+treat routine interactions as purely transactional — never
+acknowledging effort, never validating contributions, never
+expressing confidence in their team.
+
+Key concepts:
+- Acknowledgment of effort or expertise: The target_speaker
+  recognizes the work, skill, or knowledge a specific other
+  participant brought to bear. Not generic praise ("great job")
+  — recognition that shows the target_speaker noticed what the
+  PERSON did, not just what the content contained.
+- Validation of the act of contributing: The target_speaker
+  affirms that the other participant's act of speaking up,
+  raising a concern, or sharing information was valuable —
+  even when the input doesn't change the decision. "That's an
+  important perspective to have on the table, even though we're
+  going to proceed as planned" is validating. "Moving on" is not.
+- Appreciation: The target_speaker expresses genuine gratitude or
+  positive regard for effort, collaboration, or willingness to
+  take on responsibility. Genuine, not perfunctory.
+- Encouragement: The target_speaker expresses confidence in an
+  other participant's ability or invites them to take on a
+  challenge in a way that signals trust and respect. "I think
+  you're the right person to lead this — you know the customer
+  context better than anyone" is encouragement. "Can you handle
+  this?" is not.
+- Acting on input: The target_speaker visibly incorporates an
+  other participant's suggestion or recommendation into a
+  decision or plan, signaling that the contribution mattered
+  and the contributor's judgment is trusted. (LBDQ item 27:
+  "Puts suggestions made by the group into operation.")
+- Explaining reasoning: When the target_speaker makes or
+  announces a decision, they share the rationale rather than
+  issuing a directive. This treats the room as equals deserving
+  of understanding, not subordinates who just need instructions.
+  (LBDQ item 87, reverse: "Refuses to explain his/her actions.")
+  NOTE: This is distinct from Resolution & Alignment, which
+  measures whether the leader named WHAT was decided and checked
+  for shared understanding. Explaining reasoning measures whether
+  the leader explained WHY — a Recognition behavior about
+  treating people as equals, not a decision closure mechanic.
+
+Denominator (opportunity_count):
+- Substantive turns by the target_speaker that closely follow a
+  substantive contribution from an other participant, where the
+  other participant's contribution involved effort, expertise,
+  risk-taking, or substantive value that a considerate leader
+  would recognize — and where the target_speaker's turn addresses
+  the same topic or responds to the same conversational moment.
+  The opportunity is the target_speaker's turn. Scoring evaluates
+  whether that turn demonstrates regard for the person who made
+  the proximate contribution.
+- Additionally: turns where the target_speaker makes or announces
+  a decision that affects the room, where the question is whether
+  they explained their reasoning.
+
+Counts as opportunity:
+- The target_speaker takes a substantive turn shortly after an
+  other participant has shared substantive information, analysis,
+  or a recommendation that required effort or expertise.
+- The target_speaker takes a turn shortly after an other
+  participant has raised a concern, risk, or dissenting view
+  (the interpersonal courage of speaking up warrants
+  acknowledgment regardless of whether the target_speaker agrees
+  with the substance — the substance is scored by DN, the
+  acknowledgment of the act is scored here).
+- The target_speaker takes a turn shortly after an other
+  participant has reported on completed work or progress.
+- The target_speaker takes a turn shortly after an other
+  participant has volunteered for a task or taken on additional
+  responsibility.
+- The target_speaker makes or announces a decision that affects
+  others — the opportunity is whether they explained their
+  reasoning.
+
+Staleness, redundancy, and exclusion:
+- If the conversation has moved well past the contribution and
+  the target_speaker's turn addresses a different topic, the
+  moment is stale — exclude from the denominator.
+- If an other participant's contribution has already been
+  substantively acknowledged by someone else before the
+  target_speaker speaks, and the conversation has moved on,
+  exclude from the denominator. The target_speaker is not
+  obligated to provide redundant acknowledgment.
+- However, if the target_speaker's turn IS the immediate response
+  to the contribution (no intervening acknowledgment from others),
+  the opportunity is live regardless of other considerations.
+
+Scoring per opportunity (5-tier rubric):
+
+- 1.0 — Genuine, specific regard. The target_speaker acknowledges
+  the person and their specific effort, expertise, or courage in
+  a way that feels authentic and makes the contributor feel seen.
+  Examples:
+  - "Marcus, the fact that you flagged this dependency before we
+    committed saves us from a much harder conversation later.
+    Thank you." (Acknowledges Marcus's ACT of flagging, its
+    impact, and expresses gratitude — the person is the focus,
+    not the content of the dependency.)
+  - "I want to call out the work Priya put into the cohort
+    analysis — that took real effort, and it's the reason we can
+    have this conversation with data instead of guessing."
+    (Public recognition of Priya's EFFORT and its value to the
+    team.)
+  - "I appreciate you raising that, Dana — it takes courage to
+    push back on the timeline when the room is ready to move
+    forward, and I want to make sure we take your concern
+    seriously." (Acknowledges the ACT of dissenting and the
+    courage it required.)
+  - The target_speaker visibly adjusts a decision based on
+    someone's input: "You know what, Raj's point about the
+    customer impact changes this for me — let's go with his
+    approach. Raj, good call." (Acts on the input AND credits
+    the person.)
+
+- 0.75 — Acknowledgment with some specificity toward the person.
+  The target_speaker acknowledges the contributor and shows some
+  awareness of what they brought, but doesn't fully articulate
+  the personal dimension (effort, expertise, courage).
+  Examples:
+  - "Good catch, Marcus — we definitely need to factor that in."
+    (Names the person, acknowledges their specific contribution,
+    but doesn't articulate the broader value of Marcus's
+    vigilance or expertise.)
+  - "Thanks for putting that together, Dana." (Names Dana, names
+    an act — "putting that together" — but doesn't specify what
+    made it valuable or what effort it required.)
+  - "I appreciate you raising that concern." (Acknowledges the
+    act but doesn't name what made it important or courageous.)
+  - The target_speaker explains reasoning when making a decision:
+    "I'm going to go with the phased approach — here's why: the
+    data suggests the risk is lower and it lets us learn faster."
+    (Treats the room as equals deserving of rationale, but
+    doesn't specifically acknowledge any individual.)
+
+- 0.5 — Generic acknowledgment. The target_speaker acknowledges
+  that a contribution occurred but without any specificity about
+  the person or what they did. The acknowledgment is present but
+  could apply to anyone in any context.
+  Examples:
+  - "Good point." (Present but impersonal and generic.)
+  - "Thanks for that." (Acknowledges, but who? For what?)
+  - "Noted." (Minimal acknowledgment — barely registers the
+    person.)
+  - "That's helpful, thanks." (Generic positive that doesn't
+    make the contributor feel specifically seen.)
+
+- 0.25 — Perfunctory, dismissive, or undermined. The
+  target_speaker offers a token acknowledgment that is
+  immediately undercut — pivoting away, dismissing, or using the
+  acknowledgment as a transition device. Or the target_speaker
+  announces a decision without explanation or consultation,
+  treating the room as recipients of directives rather than
+  valued participants.
+  Examples:
+  - "Good point. Anyway, what I was saying is..." (Token
+    acknowledgment used as a pivot — the person's contribution
+    was instrumentally dismissed.)
+  - "Thanks — so moving on..." (Perfunctory, used to close rather
+    than validate the person.)
+  - "Sure, that's one way to look at it." (Faint praise that
+    actually minimizes the contributor.)
+  - "We're doing option B. Next topic." (Decision announced as
+    a directive with no reasoning shared — the room is treated
+    as subordinates, not equals.)
+
+- 0.0 — No regard shown. The target_speaker moves past the
+  contribution as if the person who made it is invisible, or
+  actively diminishes the contributor.
+  Examples:
+  - An other participant shares a detailed analysis they worked
+    on and the target_speaker immediately pivots to their own
+    point without any acknowledgment that a person just spoke.
+  - An other participant raises a concern and the target_speaker
+    proceeds to the next topic — the person is invisible.
+  - An other participant volunteers for a task and the
+    target_speaker assigns it as though it was their idea.
+  - The target_speaker takes credit for an idea that an other
+    participant clearly originated earlier in the meeting.
+
+Score = sum of opportunity scores / opportunity_count.
+
+Output fields:
+- opportunity_count
+- score
+
+Excluded from both numerator AND denominator (not an opportunity):
+- Turns by the target_speaker where the preceding contribution
+  from an other participant was procedural or trivial ("I'll
+  share my screen," "I need to drop at 3") — no acknowledgment
+  warranted.
+- Turns by the target_speaker that are themselves back-channel
+  signals or acknowledgments not constituting a substantive
+  response.
+- Turns where the target_speaker is in the middle of their own
+  contribution and an other participant offers a brief
+  interjection — the target_speaker is not expected to pause
+  their point to acknowledge the interjection.
+- Turns by the target_speaker that respond to contributions from
+  other participants who are in conflict with the target_speaker
+  — the conflict-handling dynamic belongs to Disagreement
+  Navigation, not Recognition. Recognition scores routine,
+  non-adversarial interactions. (Exception: when an other
+  participant raises a dissenting view, the target_speaker's
+  acknowledgment of the PERSON — their effort, expertise,
+  willingness to speak up, or value as a contributor — is
+  scored under Recognition even though the handling of the
+  disagreement substance is scored by DN. If the turn is purely
+  conflict handling with no person-directed acknowledgment, it
+  belongs to DN alone.)
+- Turns where the target_speaker is not present or has no agency
+  to respond.
+- Turns where the prior contribution has already been
+  substantively acknowledged by others and the conversation has
+  moved on.
+
+Role notes:
+- All roles: Apply consistently. Role affects the volume of
+  moments where acknowledgment is contextually appropriate.
+- Chair/Facilitator: Highest expected denominator. The
+  target_speaker in a chair role receives the most inputs and
+  has the most opportunities to acknowledge contributions.
+- Presenter: Within their segment — responses to questions and
+  contributions from other participants.
+- Participant: When the target_speaker responds to or follows
+  other participants' contributions. Smaller denominator.
+- 1:1 Manager: Primary context. How the target_speaker
+  acknowledges their report's contributions, concerns, and
+  efforts significantly shapes the relationship. Expect moderate-
+  to-high denominator.
+- 1:1 Report: How the target_speaker acknowledges the manager's
+  input, guidance, and support. Same standard applies.
+
+Minimum threshold:
+- 3 opportunities required.
+
+Scope guidance:
+- If more than 10 qualifying opportunities exist, score the 10
+  most significant (by the significance of the other
+  participant's contribution in terms of effort, expertise, or
+  interpersonal courage). This cap prevents over-counting
+  on routine acknowledgments and focuses on the moments where
+  regard for the person matters most.
+
+Detection notes:
+- CRITICAL DISTINCTION FROM ACTIVE LISTENING: Recognition and
+  Active Listening share a similar trigger (target_speaker
+  responds after someone else contributes) but measure different
+  things:
+  - AL asks: "Did the leader engage with the IDEAS?" — look for
+    paraphrasing, building, integrating, following through on
+    substance.
+  - Recognition asks: "Did the leader acknowledge the PERSON?"
+    — look for recognition of effort, expertise, courage, or
+    value of the contributor as a person.
+  A turn can score high on AL and low on Recognition: the
+  target_speaker brilliantly integrates Dana's analysis into a
+  decision (AL = 1.0) but never acknowledges Dana or the work
+  she put in (Recognition = 0.0) — she's treated as a source
+  of data, not a valued colleague.
+  A turn can score low on AL and high on Recognition: the
+  target_speaker warmly acknowledges Marcus's expertise and
+  courage in raising a concern (Recognition = 1.0) but then
+  proceeds without engaging with the substance of his concern
+  (AL = 0.25).
+  When a single response turn contains both listening and regard
+  behaviors, score each pattern independently against its own
+  rubric.
+
+- The primary detection signal is the PRESENCE or ABSENCE of
+  person-directed recognition. Look for: named acknowledgment
+  ("Good catch, Marcus"), attribution of effort or expertise
+  ("the work you put into this," "you know this area better
+  than anyone"), gratitude ("thank you for flagging that"),
+  encouragement ("I think you're the right person to lead
+  this"), and credit-giving ("that was Raj's idea").
+- Also look for: explanation of reasoning (treats room as
+  equals) vs. bare directives (treats room as subordinates).
+- Do not require effusiveness. A brief, specific, person-
+  directed acknowledgment ("Good catch, Marcus — we need to
+  factor that in") is 0.75, not lower, because it's brief.
+  Brevity is fine; absence, genericity, or impersonality is
+  the problem.
+- Do not penalize for low Recognition when the meeting is
+  genuinely time-pressured and transactional by design (e.g., a
+  15-minute standup). In these contexts, fewer opportunities
+  should be detected, leading to insufficient_signal rather than
+  a low score.
+- Context matters for what level of regard is warranted. An
+  other participant who presents a major analysis they worked on
+  for days warrants more substantial recognition as a person
+  than one who makes a quick factual clarification. Score the
+  acknowledgment's proportionality to the contributor's effort
+  and risk. "Good point" after a casual observation might be
+  0.75; "Good point" after someone presents a week-long analysis
+  is 0.5 because it fails to recognize the person's effort.
+- Distinguish from Behavioral Integrity. BI scores consistency
+  between words and actions, ownership, and intellectual honesty.
+  Recognition scores warmth and interpersonal regard. A
+  target_speaker can score perfectly on BI (honest, consistent,
+  takes ownership) while scoring poorly on Recognition (never
+  acknowledges other participants' contributions or expresses
+  appreciation). These are independent dimensions.
+
+Experiment guidance:
+- What good looks like: "Marcus, the fact that you spotted this
+  dependency before we committed — that kind of vigilance is
+  exactly what we need. Thank you." (Names the person, names the
+  specific act, names WHY the person's contribution mattered to
+  the team.) Or: "I'm going to go with the phased rollout —
+  here's the reasoning: the data suggests lower risk and it lets
+  us learn faster." (Explains reasoning — treats room as equals
+  who deserve to understand the why.)
+- Common failure mode: Moving directly from an other participant's
+  substantive input to the target_speaker's own response without
+  any acknowledgment of the person. Or: using generic
+  acknowledgment as a transition device ("Good point. So
+  anyway...") rather than genuine recognition. Or: announcing
+  decisions as bare directives without explaining reasoning.
+- Experiment focus: Help the coachee build the habit of
+  acknowledging the PERSON before engaging with the CONTENT.
+  The simplest intervention: before responding to the substance
+  of someone's input, name the person and one specific thing
+  about their contribution that was valuable — their expertise,
+  their effort, their willingness to speak up. This costs
+  5 seconds and fundamentally changes how the room experiences
+  the leader. Secondary intervention: when announcing a
+  decision, share one sentence of reasoning before the
+  conclusion.
+
+### END:PATTERN:recognition ###
+
+────────────────────────────────────────────────────────────────
+
 ### BEGIN:PATTERN:behavioral_integrity ###
 
-PATTERN 7: behavioral_integrity
+PATTERN 9: behavioral_integrity
 Axis: Relational Effectiveness
 Scoring type: Tiered rubric
 Empirical grounding: Simons (2002) behavioral integrity construct;
@@ -583,8 +1314,8 @@ What changed and why:
   management + psychological safety proxy) to BEHAVIORAL
   INTEGRITY specifically. The psychological safety creation
   function is now distributed across the Relational Effectiveness
-  axis as a whole — Active Listening, Consideration, Participation
-  Management, Disagreement Navigation, and Behavioral Integrity
+  axis as a whole — Active Listening, Recognition,
+  Disagreement Navigation, and Behavioral Integrity
   together constitute the observable leader behaviors that the
   research shows create or destroy psychological safety.
 - The narrower scope eliminates overlap with the new Relational
@@ -606,7 +1337,7 @@ This is distinct from:
   dynamics).
 - active_listening (which measures absorption of other
   participants' input).
-- consideration (which measures warmth and acknowledgment).
+- recognition (which measures warmth and acknowledgment).
 - feedback_quality (which measures feedback delivery technique).
 
 Behavioral integrity measures the character signal — does the
@@ -750,7 +1481,7 @@ Excluded from both numerator AND denominator (not an opportunity):
   with no additional integrity dimension beyond the conflict
   handling itself.
 - Turns where the primary dynamic is acknowledgment/warmth
-  (Consideration) or listening (Active Listening) with no
+  (Recognition) or listening (Active Listening) with no
   integrity stakes.
 
 Role notes:
@@ -915,7 +1646,7 @@ Experiment guidance:
 
 ### BEGIN:PATTERN:disagreement_navigation ###
 
-PATTERN 8: disagreement_navigation
+PATTERN 10: disagreement_navigation
 Axis: Relational Effectiveness
 Scoring type: Tiered rubric
 
@@ -986,6 +1717,22 @@ Event boundary rules:
 - Score the target speaker's overall handling of each thematic arc as a single opportunity. Do not fragment a continuous back-and-forth on the same issue into multiple OEs.
 - If the target speaker intervenes mid-disagreement and the same tension resurfaces later on the same issue, the resurfacing is a new OE only if there was a clear topic change between the two episodes. If the tension simply continues or escalates after a failed intervention, it is still part of the original arc.
 - Example: Speaker A pushes back on a scope decision (T4), the target speaker responds (T5), Speaker A escalates (T6), the target speaker bulldozes (T7), Speaker A escalates further (T8), the target speaker dismisses again (T9). This is ONE disagreement arc about the scope decision, scored once on the target speaker's overall handling. It is NOT 4-5 separate events.
+- Boundary with Active Listening: When the target_speaker responds
+  to pushback, the response is scored under DN for conflict-
+  handling quality and under AL for listening quality. The
+  target_speaker can de-escalate effectively (DN = 1.0) while
+  showing poor listening (AL = 0.25 — de-escalated without
+  engaging with the substance). Or demonstrate excellent listening
+  (AL = 1.0) while failing to drive toward resolution (DN = 0.5).
+  Score each pattern independently.
+- Boundary with Recognition: When an other participant raises a
+  dissenting view, DN scores the handling of the disagreement
+  substance. Recognition scores whether the target_speaker
+  acknowledged the PERSON (their effort, expertise, or courage
+  in speaking up). Recognition fires on a conflict turn ONLY when
+  person-directed acknowledgment is present. Purely substantive
+  conflict handling with no person-directed recognition belongs
+  to DN alone.
 
 Experiment guidance:
 - What good looks like: "I see this differently — you're saying we should delay launch because of the QA risk, and that's a real concern. I think the market timing risk of delay is bigger. Can we map out both risk scenarios and decide based on that?"
@@ -998,7 +1745,7 @@ Experiment guidance:
 
 ### BEGIN:PATTERN:feedback_quality ###
 
-PATTERN 9: feedback_quality
+PATTERN 11: feedback_quality
 Axis: Relational Effectiveness
 Scoring type: Multi-element (SBI-RC framework)
 
@@ -1234,5 +1981,78 @@ PERMITTED MULTI-PATTERN (count under both):
   trust"), it is repackaging — set the BI coaching_note to null.
   BI earns a coaching_note only when it names an integrity
   consequence DN misses.
+
+- active_listening + question_quality: A follow-up question that
+  demonstrates listening may be scored under both. active_listening
+  evaluates whether the question shows absorption of prior input
+  (referencing, building on, or following through on what was said).
+  question_quality evaluates the purposefulness of the question
+  itself (decision-linked, assumption-surfacing, constraint-testing,
+  etc.). These are orthogonal: a question can demonstrate excellent
+  listening (AL = 1.0 — builds directly on prior input) while being
+  poorly formed (QQ = 0.0 — aimless despite the good reference), or
+  be sharply purposeful (QQ = 1.0) while showing no evidence of
+  having absorbed prior input (AL = 0.0). Score each pattern
+  independently.
+
+- active_listening + disagreement_navigation: When the
+  target_speaker responds to pushback or disagreement, the response
+  is scored under AL for absorption quality AND under DN for
+  conflict-handling quality. These are orthogonal: the
+  target_speaker can demonstrate excellent absorption of the
+  opposing view (AL = 1.0 — accurately paraphrases and builds on
+  the challenge) while handling the conflict poorly (DN = 0.5 —
+  engages with substance but doesn't drive toward resolution).
+  Conversely, the target_speaker can de-escalate effectively
+  (DN = 1.0) while showing poor listening (AL = 0.25 —
+  de-escalated without engaging with the specific substance of the
+  pushback). Score each pattern independently.
+
+- active_listening + behavioral_integrity: When the
+  target_speaker responds to expert input or a challenge, the
+  response is scored under AL for absorption quality AND under
+  BI for intellectual honesty. These are orthogonal: the
+  target_speaker can demonstrate excellent absorption (AL = 1.0
+  — accurately paraphrases and builds on the challenge) while
+  being intellectually dishonest (BI = 0.25 — engaged with the
+  substance only to dismiss it with a non-substantive excuse).
+  Conversely, the target_speaker can demonstrate genuine honesty
+  (BI = 1.0 — "you've convinced me, I was wrong") while showing
+  poor listening (AL = 0.25 — changed position without
+  demonstrating they actually understood the argument). Score
+  each pattern independently.
+
+- active_listening + recognition: A response turn after another
+  participant's contribution may be scored under both. These
+  patterns share a similar trigger but measure different things:
+  active_listening evaluates whether the target_speaker engaged
+  with the IDEAS (referencing, paraphrasing, building, integrating
+  the substance). recognition evaluates whether the target_speaker
+  acknowledged the PERSON (naming their effort, expertise, courage,
+  or value as a contributor). These are orthogonal: a turn can
+  score high on AL and low on Recognition (the target_speaker
+  brilliantly integrates Dana's analysis into a decision but never
+  acknowledges Dana or the work she put in — she is treated as a
+  data source, not a valued colleague). Or vice versa (the
+  target_speaker warmly thanks Marcus for raising a concern but
+  then proceeds without engaging with the substance of his point).
+  When a single response turn contains both listening and regard
+  behaviors, score each pattern independently against its own
+  rubric.
+
+- recognition + disagreement_navigation: When an other
+  participant raises a dissenting view, the target_speaker's
+  handling of the disagreement substance is scored under DN. The
+  target_speaker's acknowledgment of the PERSON — their effort,
+  expertise, willingness to speak up, or value as a contributor
+  — is scored under Recognition. These are orthogonal: a
+  target_speaker can handle the disagreement well (DN = 1.0) but
+  never acknowledge the person (Recognition = 0.0), or warmly
+  acknowledge the person (Recognition = 1.0) while fumbling
+  the conflict handling (DN = 0.5). Recognition fires on a
+  conflict turn ONLY when the target_speaker includes person-
+  directed acknowledgment. If the turn is purely conflict
+  handling with no person-directed recognition, it belongs to DN
+  alone — it is not a Recognition opportunity.
 
 ### END:GENERAL_DETECTION_GUIDANCE ###

@@ -21,7 +21,7 @@ Coaching quality principles:
 AGGREGATION RULES
 ═══════════════════════════════════════════════════════════════
 
-For each of the 9 patterns, compute the baseline as follows:
+For each of the 11 patterns, compute the baseline as follows:
 
 Score aggregation:
 - For each pattern, collect the scores from meetings where the pattern is evaluable.
@@ -59,14 +59,14 @@ OUTPUT FORMAT
 ═══════════════════════════════════════════════════════════════
 
 Return ONLY one valid JSON object. No prose, markdown, code fences, or comments.
-Must conform to schema_version "mvp.v0.7.0". No extra keys beyond schema.
+Must conform to schema_version "mvp.v0.8.0". No extra keys beyond schema.
 Never include literal double quotes " inside any string value; use single quotes or escape as \".
 
 TOP-LEVEL REQUIRED KEYS
 schema_version, meta, context, opportunity_events, evidence_spans, evaluation_summary, pattern_snapshot, experiment_tracking, coaching
 
 CONSTANTS
-- schema_version = "mvp.v0.7.0"
+- schema_version = "mvp.v0.8.0"
 - meta.taxonomy_version = "v4.0"
 - meta.output_mode = "coaching_first_2s1e"
 - meta.analysis_type = "baseline_pack"
@@ -103,8 +103,8 @@ Must be consistent with pattern_snapshot: every pattern in patterns_evaluated mu
 PATTERN SNAPSHOT
 ═══════════════════════════════════════════════════════════════
 
-PATTERN_ID ENUM (always output all 9 in this exact order):
-purposeful_framing, focus_management, resolution_and_alignment, assignment_clarity, question_quality, communication_clarity, behavioral_integrity, disagreement_navigation, feedback_quality
+PATTERN_ID ENUM (always output all 11 in this exact order):
+purposeful_framing, focus_management, resolution_and_alignment, assignment_clarity, question_quality, communication_clarity, active_listening, recognition, behavioral_integrity, disagreement_navigation, feedback_quality
 
 Each item requires:
 pattern_id, cluster_id, scoring_type, evaluable_status(evaluable|insufficient_signal|not_evaluable), denominator_rule_id, min_required_threshold, evidence_span_ids
@@ -296,7 +296,7 @@ Aggregation checks:
 
 Structural checks:
 13) JSON parses. Required top-level keys present (schema_version, meta, context, opportunity_events, evidence_spans, evaluation_summary, pattern_snapshot, experiment_tracking, coaching). No extra keys. coaching includes executive_summary and coaching_themes.
-14) pattern_snapshot has exactly 9 items in required order. All pattern_id values are valid enum.
+14) pattern_snapshot has exactly 11 items in required order. All pattern_id values are valid enum.
 15) coaching_themes has 1-3 items. micro_experiment has exactly 1 item.
 16) micro_experiment uses related_patterns (array), NOT pattern_id.
 17) turn_start_id / turn_end_id are integers.

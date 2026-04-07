@@ -177,7 +177,7 @@ function buildChartData(
 type ViewMode = 'focus' | 'top5' | 'all' | 'task' | 'relational';
 
 const TASK_PATTERNS = ['purposeful_framing', 'focus_management', 'resolution_and_alignment', 'assignment_clarity', 'question_quality', 'communication_clarity'];
-const RELATIONAL_PATTERNS = ['behavioral_integrity', 'disagreement_navigation', 'feedback_quality'];
+const RELATIONAL_PATTERNS = ['active_listening', 'recognition', 'behavioral_integrity', 'disagreement_navigation', 'feedback_quality'];
 
 function PatternTrendsChart({
   history,

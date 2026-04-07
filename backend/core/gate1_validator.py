@@ -78,6 +78,7 @@ _SCORED_PATTERNS = set(PATTERN_ORDER)
 # ── v3.1 → v4.0 migration maps (LLM may produce old names) ─────────────���────
 _PATTERN_ID_MIGRATION = {
     "trust_and_credibility": "behavioral_integrity",
+    "consideration": "recognition",
 }
 
 _CLUSTER_ID_MIGRATION = {
@@ -95,6 +96,8 @@ _PATTERN_AXIS = {
     "assignment_clarity": "task_effectiveness",
     "question_quality": "task_effectiveness",
     "communication_clarity": "task_effectiveness",
+    "active_listening": "relational_effectiveness",
+    "recognition": "relational_effectiveness",
     "behavioral_integrity": "relational_effectiveness",
     "disagreement_navigation": "relational_effectiveness",
     "feedback_quality": "relational_effectiveness",

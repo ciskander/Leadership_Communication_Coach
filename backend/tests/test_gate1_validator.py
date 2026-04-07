@@ -67,9 +67,9 @@ def test_empty_string_fails():
 # ---------------------------------------------------------------------------
 
 def test_wrong_pattern_count_fails(valid_single_meeting_output):
-    """Removing a pattern should cause failure (must have exactly 9)."""
+    """Removing a pattern should cause failure (must have exactly 11)."""
     bad = copy.deepcopy(valid_single_meeting_output)
-    bad["pattern_snapshot"] = bad["pattern_snapshot"][:8]
+    bad["pattern_snapshot"] = bad["pattern_snapshot"][:10]
     result = validate(json.dumps(bad))
     assert result.passed is False
 
@@ -190,6 +190,58 @@ def test_forbidden_key_confidence_sanitised(valid_single_meeting_output):
 
 
 # ---------------------------------------------------------------------------
+# Pattern ID migration (v3.1 → v4.0 legacy names)
+# ---------------------------------------------------------------------------
+
+def test_consideration_migrated_to_recognition(valid_single_meeting_output):
+    """Sanitiser should migrate deprecated 'consideration' → 'recognition'."""
+    bad = copy.deepcopy(valid_single_meeting_output)
+    # Replace recognition with deprecated name in pattern_snapshot
+    for ps in bad["pattern_snapshot"]:
+        if ps["pattern_id"] == "recognition":
+            ps["pattern_id"] = "consideration"
+            break
+    # Also in OEs
+    for oe in bad["opportunity_events"]:
+        if oe["pattern_id"] == "recognition":
+            oe["pattern_id"] = "consideration"
+    # Also in evaluation_summary
+    evs = bad["evaluation_summary"]["patterns_evaluated"]
+    for i, pid in enumerate(evs):
+        if pid == "recognition":
+            evs[i] = "consideration"
+    result = validate(json.dumps(bad))
+    assert result.passed is True
+    # Verify migration happened in corrected data
+    assert result.corrected_data is not None
+    migrated_ids = [ps["pattern_id"] for ps in result.corrected_data["pattern_snapshot"]]
+    assert "recognition" in migrated_ids
+    assert "consideration" not in migrated_ids
+
+
+def test_trust_and_credibility_migrated_to_behavioral_integrity(valid_single_meeting_output):
+    """Sanitiser should migrate deprecated 'trust_and_credibility' → 'behavioral_integrity'."""
+    bad = copy.deepcopy(valid_single_meeting_output)
+    for ps in bad["pattern_snapshot"]:
+        if ps["pattern_id"] == "behavioral_integrity":
+            ps["pattern_id"] = "trust_and_credibility"
+            break
+    for oe in bad["opportunity_events"]:
+        if oe["pattern_id"] == "behavioral_integrity":
+            oe["pattern_id"] = "trust_and_credibility"
+    evs = bad["evaluation_summary"]["patterns_evaluated"]
+    for i, pid in enumerate(evs):
+        if pid == "behavioral_integrity":
+            evs[i] = "trust_and_credibility"
+    result = validate(json.dumps(bad))
+    assert result.passed is True
+    assert result.corrected_data is not None
+    migrated_ids = [ps["pattern_id"] for ps in result.corrected_data["pattern_snapshot"]]
+    assert "behavioral_integrity" in migrated_ids
+    assert "trust_and_credibility" not in migrated_ids
+
+
+# ---------------------------------------------------------------------------
 # success_evidence_span_ids / rewrite consistency checks (v0.4.0)
 #
 # In v0.4.0: OEs are top-level, rewrite fields are in coaching.pattern_coaching.
@@ -212,9 +264,9 @@ def _make_output_with_oe(valid_single_meeting_output):
             oe["reason_code"] = "generic_open_floor"
             break
 
-    # Update pattern_snapshot[7] (disagreement_navigation) — scoring only
+    # Update pattern_snapshot[9] (disagreement_navigation) — scoring only
     # 3 OEs: OE-005 (1.0) + OE-006 (0.25) + OE-007 (1.0) = 2.25/3 = 0.75
-    pm = out["pattern_snapshot"][7]
+    pm = out["pattern_snapshot"][9]
     pm["score"] = 0.75
     pm["success_evidence_span_ids"] = ["ES-T005", "ES-T031-032"]  # OE-005 (1.0) and OE-007 (1.0) >= 0.75
 
@@ -224,7 +276,7 @@ def _make_output_with_oe(valid_single_meeting_output):
 def test_success_span_missing_auto_corrected(valid_single_meeting_output):
     """A span with OE score 1.0 not in success_evidence_span_ids is auto-corrected by sanitiser."""
     out = _make_output_with_oe(valid_single_meeting_output)
-    pm = out["pattern_snapshot"][7]
+    pm = out["pattern_snapshot"][9]
     # Remove ES-T005 (score 1.0) from success list
     pm["success_evidence_span_ids"] = []
     result = validate(json.dumps(out))
@@ -233,14 +285,14 @@ def test_success_span_missing_auto_corrected(valid_single_meeting_output):
     assert "SUCCESS_SPAN_MISSING" not in codes
     # Verify the corrected data has ES-T005 restored
     assert result.corrected_data is not None
-    corrected_pm = result.corrected_data["pattern_snapshot"][7]
+    corrected_pm = result.corrected_data["pattern_snapshot"][9]
     assert "ES-T005" in corrected_pm["success_evidence_span_ids"]
 
 
 def test_success_span_incorrect_auto_corrected(valid_single_meeting_output):
     """A span with OE score 0.25 in success_evidence_span_ids is auto-corrected by sanitiser."""
     out = _make_output_with_oe(valid_single_meeting_output)
-    pm = out["pattern_snapshot"][7]
+    pm = out["pattern_snapshot"][9]
     # Add ES-T015 (score 0.25) to success list — incorrect for tiered_rubric
     pm["success_evidence_span_ids"] = ["ES-T005", "ES-T015"]
     result = validate(json.dumps(out))
@@ -249,7 +301,7 @@ def test_success_span_incorrect_auto_corrected(valid_single_meeting_output):
     assert "SUCCESS_SPAN_INCORRECT" not in codes
     # Verify the corrected data has ES-T015 removed
     assert result.corrected_data is not None
-    corrected_pm = result.corrected_data["pattern_snapshot"][7]
+    corrected_pm = result.corrected_data["pattern_snapshot"][9]
     assert "ES-T015" not in corrected_pm["success_evidence_span_ids"]
     assert "ES-T005" in corrected_pm["success_evidence_span_ids"]
 

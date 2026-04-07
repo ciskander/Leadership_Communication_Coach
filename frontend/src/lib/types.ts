@@ -8,6 +8,8 @@ export type PatternId =
   | 'assignment_clarity'
   | 'question_quality'
   | 'communication_clarity'
+  | 'active_listening'
+  | 'recognition'
   | 'feedback_quality'
   | 'behavioral_integrity';
 

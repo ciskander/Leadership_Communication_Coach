@@ -58,7 +58,7 @@ Step 2 -- Opportunity event identification (output: opportunity_events):
 Read the pattern taxonomy (in the Developer message) to understand the pattern definitions, their scoring rules, etc.
 Scan the transcript for moments matching each pattern's denominator definition.
 For each moment, assess target_control, decide counted/excluded, and record turn range.
-Score each counted OE per its pattern's rubric. Work through all 9 patterns.
+Score each counted OE per its pattern's rubric. Work through all 11 patterns.
 
 Step 3 -- Cross-pattern overlap resolution (still in opportunity_events):
 Check if any turns are counted under multiple patterns.
@@ -100,7 +100,7 @@ TOP-LEVEL REQUIRED KEYS (in this order)
 schema_version, meta, context, opportunity_events, evidence_spans, evaluation_summary, pattern_snapshot
 
 CONSTANTS
-- schema_version = "mvp.v0.7.0"
+- schema_version = "mvp.v0.8.0"
 - meta.taxonomy_version = "v4.0"
 - meta.output_mode = "scoring_only"
 
@@ -193,8 +193,8 @@ Must be consistent with pattern_snapshot: every pattern in patterns_evaluated mu
 PATTERN SNAPSHOT
 ===============================================================
 
-PATTERN_ID ENUM (always output all 9 in this exact order):
-purposeful_framing, focus_management, resolution_and_alignment, assignment_clarity, question_quality, communication_clarity, behavioral_integrity, disagreement_navigation, feedback_quality
+PATTERN_ID ENUM (always output all 11 in this exact order):
+purposeful_framing, focus_management, resolution_and_alignment, assignment_clarity, question_quality, communication_clarity, active_listening, recognition, behavioral_integrity, disagreement_navigation, feedback_quality
 
 Each item requires:
 pattern_id, cluster_id, scoring_type, evaluable_status(evaluable|insufficient_signal|not_evaluable), denominator_rule_id, min_required_threshold, evidence_span_ids
@@ -255,7 +255,7 @@ Scoring accuracy checks (most important):
 Structural checks:
 3) JSON parses. Required top-level keys present (schema_version, meta, context, opportunity_events, evidence_spans, evaluation_summary, pattern_snapshot). No extra keys.
 4) evaluation_summary has all 3 required arrays, consistent with pattern_snapshot evaluable_status values.
-5) pattern_snapshot has exactly 9 items in required order. All pattern_id values are valid enum.
+5) pattern_snapshot has exactly 11 items in required order. All pattern_id values are valid enum.
 6) turn_start_id / turn_end_id are integers in both opportunity_events and evidence_spans.
 7) For each evaluable pattern: opportunity_count in pattern_snapshot matches count of counted OEs with that pattern_id. Score matches sum(success)/counted (rounded to 4 decimals). Recompute and correct the score if it does not match the arithmetic.
 

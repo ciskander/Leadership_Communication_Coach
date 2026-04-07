@@ -99,6 +99,8 @@ export const STRINGS = {
     assignment_clarity: 'Assignment Clarity',
     question_quality: 'Question Quality',
     communication_clarity: 'Communication Clarity',
+    active_listening: 'Active Listening',
+    recognition: 'Recognition',
     feedback_quality: 'Feedback Quality',
   } as Record<string, string>,
 
@@ -120,6 +122,10 @@ export const STRINGS = {
       'Whether your questions serve a clear purpose — advancing a decision, surfacing assumptions, broadening perspective, or testing constraints — rather than being aimless or leading.',
     communication_clarity:
       'Whether your substantive contributions are clear and structured — leading with your main point, responding to the actual question, and keeping length proportionate to complexity.',
+    active_listening:
+      'Measures whether the leader demonstrates — through verbal behavior — that they absorbed, processed, and built upon what others said. Looks for referencing, paraphrasing, building on, integrating, and following through on prior input.',
+    recognition:
+      'Measures whether the leader treats other participants as valued equals — acknowledging their effort, expertise, courage, or contributions as people, not merely processing the content of their input.',
     feedback_quality:
       'Whether you deliver feedback using a structured approach: grounding it in a specific situation and behavior, naming the impact, offering a recommendation, and checking in with the recipient (SBI-RC).',
   } as Record<string, string>,
@@ -152,6 +158,8 @@ export const STRINGS = {
     meeting_structure_direction: 'Meeting Structure & Direction',
     decisions_accountability: 'Decisions & Accountability',
     communication_quality: 'Communication Quality',
+    receptive_responsive: 'Receptive / Responsive',
+    proactive_generative: 'Proactive / Generative',
   } as Record<string, string>,
 
   // Maps axis -> ordered sub-clusters -> ordered pattern IDs
@@ -163,7 +171,8 @@ export const STRINGS = {
       { subCluster: 'communication_quality', patterns: ['question_quality', 'communication_clarity'] },
     ],
     relational_effectiveness: [
-      { subCluster: null, patterns: ['behavioral_integrity', 'disagreement_navigation', 'feedback_quality'] },
+      { subCluster: 'receptive_responsive', patterns: ['active_listening', 'recognition'] },
+      { subCluster: 'proactive_generative', patterns: ['behavioral_integrity', 'disagreement_navigation', 'feedback_quality'] },
     ],
   } as Record<string, Array<{ subCluster: string | null; patterns: string[] }>>,
 
