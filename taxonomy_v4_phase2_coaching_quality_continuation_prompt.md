@@ -50,7 +50,7 @@ The system praises pattern-level technical competence when the broader meeting d
 
 Add guidance that applies to ALL pattern coaching output. Two parts:
 
-**Part 1 — Coaching relevance (Themes A + B):** Before generating coaching for any pattern, ask whether the observation is worth pointing out to this leader in the context of the meeting as a whole and their broader coaching journey. Trivially true, unremarkably competent, or marginal observations are not worth coaching space. When an observation doesn't clear this bar, connect it to something that DOES matter rather than generating filler.
+**Part 1 — Coaching relevance (Themes A + B):** Before generating coaching for any pattern, ask whether the observation is worth pointing out to this leader in the context of the meeting as a whole and their broader coaching journey. Trivially true, unremarkably competent, or marginal observations are not worth coaching space. When an observation doesn't clear this bar, make it useful — connect it to a larger dynamic, acknowledge the strength briefly, or redirect to where the real coaching lives.
 
 **Part 2 — Behavioral context (Theme C):** When the meeting shows a dominant interpersonal or substance failure (dismissiveness, avoidance, coercion), pattern-level coaching that praises surface mechanics without acknowledging the larger dynamic is tone-deaf. The coaching should either name the real dynamic or connect the pattern observation to it. This generalizes the existing QQ/CC behavioral context notes to all patterns.
 
@@ -60,7 +60,7 @@ Add guidance that applies to ALL pattern coaching output. Two parts:
 
 Currently, some evaluable pattern cards in the UI show a score with no coaching content (both `notes` and `coaching_note` are null). This is a UX bug that needs to be eliminated.
 
-**Rule:** Every evaluable pattern must have at least `notes` or `coaching_note` (or both). When a pattern's observation is secondary to the meeting's main coaching point, the card should still speak:
+**Rule:** Every evaluable pattern must have at least `notes` or `coaching_note` (or both). When a pattern's observation is secondary to the meeting's main coaching point, the card should still speak. Options include (but are not limited to):
 - Brief acknowledgment: "You're consistently strong here; no developmental notes."
 - Cross-reference: "For detailed feedback on the dynamic that affected this pattern, see [theme/pattern]."
 - Contextual framing: "Your [pattern behavior] was technically solid, but in this meeting the more consequential issue was X."
@@ -69,7 +69,7 @@ Currently, some evaluable pattern cards in the UI show a score with no coaching 
 
 **Important:** The LLM should generate genuinely useful content, not boilerplate filler. "No notes for this pattern" repeated across 5 cards is worse than selective nulls.
 
-**Existing guidance to replace:** The coaching prompt and taxonomy currently contain multiple instructions that say "set coaching_note to null" in various situations (e.g., when a theme already covers the insight, when the observation is redundant with another pattern, when the BI repackaging check fails). These instructions need to be replaced — not just supplemented — with guidance that always produces useful content for evaluable, detected patterns. At the end of this session, there should be NO remaining "set coaching_note to null" instructions for patterns that are evaluable and detected. Instead, the guidance should tell the LLM what to write in each situation (brief acknowledgment, cross-reference to relevant theme/pattern, contextual framing, etc.). Read the existing coaching prompt and taxonomy carefully and identify ALL such null instructions before making changes.
+**Existing guidance to replace:** The coaching prompt and taxonomy currently contain multiple instructions that say "set coaching_note to null" in various situations (e.g., when a theme covers the insight, when the observation is redundant, when a repackaging check fails). These must be replaced with guidance that tells the LLM what to write instead. At the end of this session, there should be NO remaining "set coaching_note to null" instructions for evaluable, detected patterns. Read the existing coaching prompt and taxonomy carefully and identify ALL such null instructions before making changes.
 
 ### 3. Pattern-specific tightening
 
@@ -90,7 +90,7 @@ Two patterns had specific judge feedback that points to detection-level issues (
 ## Critical Constraints
 
 - Do NOT change scoring logic or denominators — scoring is validated and stable
-- Do NOT add per-pattern behavioral context notes to all 7 affected patterns — use a general principle
+- Do NOT duplicate the behavioral context principle into each affected pattern — use a general principle
 - The general principle must be concise
 - The "no empty cards" rule must produce genuinely useful content, not boilerplate
 - All changes are prompt text only — no schema, backend, or frontend code changes
@@ -128,8 +128,20 @@ Compare:
 | feedback_quality | 100% | 0% | 0% | 1 |
 | **Aggregate** | **35%** | **52%** | **13%** | **109** |
 
-### Phase O baseline (v3.1, same 3 meetings, 9 patterns):
-Aggregate: 40% insightful, 45% adequate, 15% pedantic, 0% wrong (N=108)
+### Phase O baseline per-pattern (v3.1, same 3 meetings, 9 patterns):
+
+| Pattern | Ins% | Ade% | Ped% | N |
+|---------|------|------|------|---|
+| purposeful_framing | 7% | 87% | 7% | 15 |
+| focus_management | 33% | 67% | 0% | 6 |
+| resolution_and_alignment | 47% | 33% | 20% | 15 |
+| assignment_clarity | 7% | 73% | 20% | 15 |
+| question_quality | 50% | 33% | 17% | 12 |
+| communication_clarity | 7% | 43% | 50% | 14 |
+| trust_and_credibility (now BI) | 71% | 29% | 0% | 14 |
+| disagreement_navigation | 83% | 17% | 0% | 12 |
+| feedback_quality | 100% | 0% | 0% | 5 |
+| **Aggregate** | **40%** | **45%** | **15%** | **108** |
 
 ### Transcripts used:
 - M-000003_contentious_meeting: cross-functional project review, chair role, multiple disagreements (Alex)
