@@ -69,7 +69,7 @@ _TOKENS_PER_AB = 35_000         # S2 only
 
 _RESULTS_DIR = Path(__file__).resolve().parent / "results"
 
-_TAXONOMY_PATH = _PROJECT_ROOT / "clearvoice_pattern_taxonomy_v3.1.txt"
+_TAXONOMY_PATH = _PROJECT_ROOT / "clearvoice_pattern_taxonomy_v4.0.txt"
 
 
 # ── Dataclasses ──────────────────────────────────────────────────────────────

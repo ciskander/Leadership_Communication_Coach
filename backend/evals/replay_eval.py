@@ -76,7 +76,6 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 from backend.core.config import OPENAI_MODEL_DEFAULT, OPENAI_MAX_TOKENS, ANTHROPIC_MAX_TOKENS, PATTERN_ORDER
-from backend.core.editor import build_experiment_context, run_editor, merge_editor_output
 from backend.core.gate1_validator import validate as gate1_validate
 from backend.core.llm_client import call_llm, is_anthropic_model
 from backend.core.models import MemoryBlock, OpenAIResponse, ParsedTranscript
@@ -116,7 +115,6 @@ from backend.evals.report import (
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-_EDITOR_ENABLED = os.getenv("EDITOR_ENABLED", "0") == "1"
 
 _RESULTS_DIR = Path(__file__).parent / "results"
 
@@ -252,51 +250,57 @@ def run_single_analysis(
     )
     elapsed = time.time() - t0
 
-    # Apply shared post-LLM patches (same as production pipeline)
-    patched_output = patch_analysis_output(
+    # ── Stage 1: Scoring post-processing ──
+    stage1_parsed = patch_analysis_output(
         response.parsed,
         prompt_meta=prompt_payload.meta,
         active_experiment=memory.active_experiment if memory else None,
         has_active_experiment=bool(memory and memory.active_experiment),
+        scoring_only=True,
     )
 
-    # Editor pass (optional 2nd LLM call)
-    editor_changes_count = 0
-    editor_prompt_tokens = 0
-    editor_completion_tokens = 0
-    editor_changelog: list[dict] = []
-    editor_raw_output: dict | None = None
-    if _EDITOR_ENABLED:
-        exp_context = build_experiment_context(memory, patched_output)
+    stage1_raw = json.dumps(stage1_parsed, ensure_ascii=False, indent=2)
+    stage1_gate = gate1_validate(stage1_raw, mode="scoring_only")
+    if stage1_gate.corrected_data:
+        stage1_parsed = stage1_gate.corrected_data
+
+    stage1_tokens = response.prompt_tokens + response.completion_tokens
+    stage2_tokens = 0
+
+    # ── Stage 2: Coaching (only if Stage 1 passes) ──
+    if stage1_gate.passed:
         transcript_turns = prompt_payload.transcript_payload["turns"]
-        editor_result, editor_prompt_tokens, editor_completion_tokens = run_editor(
-            patched_output, transcript_turns, exp_context, model=model,
+        stage2_sys_prompt = build_stage2_system_prompt(memory)
+        stage2_user_msg = build_stage2_user_message(stage1_parsed, transcript_turns)
+
+        stage2_response = call_llm(
+            system_prompt=stage2_sys_prompt,
+            developer_message="",
+            user_message=stage2_user_msg,
+            model=model,
+            max_tokens=max_tokens,
         )
-        editor_raw_output = editor_result  # preserve full editor response
-        patched_output, editor_changelog = merge_editor_output(
-            patched_output, editor_result,
-        )
-        editor_changes_count = len(editor_changelog)
-        logger.info(
-            "Editor: %d changes, %d prompt tokens, %d completion tokens",
-            editor_changes_count, editor_prompt_tokens, editor_completion_tokens,
+        stage2_tokens = stage2_response.prompt_tokens + stage2_response.completion_tokens
+
+        # Merge Stage 2 coaching into Stage 1 scoring
+        merged, _changelog = merge_stage2_output(stage1_parsed, stage2_response.parsed)
+        merged = patch_analysis_output(
+            merged,
+            prompt_meta=prompt_payload.meta,
+            active_experiment=memory.active_experiment if memory else None,
+            has_active_experiment=bool(memory and memory.active_experiment),
+            scoring_only=False,
         )
 
-    # Rebuild response with patched output for Gate1
-    patched_raw = json.dumps(patched_output, ensure_ascii=False, indent=2)
-    response = OpenAIResponse(
-        parsed=patched_output,
-        raw_text=patched_raw,
-        model=response.model,
-        prompt_tokens=response.prompt_tokens,
-        completion_tokens=response.completion_tokens,
-        total_tokens=response.total_tokens,
-    )
+        merged_raw = json.dumps(merged, ensure_ascii=False, indent=2)
+        gate1_result = gate1_validate(merged_raw, mode="full")
+        parsed = gate1_result.corrected_data if gate1_result.corrected_data else merged
+    else:
+        # Stage 1 failed — return scoring-only output
+        gate1_result = stage1_gate
+        parsed = stage1_parsed
 
-    gate1_result = gate1_validate(response.raw_text)
-
-    # Use corrected data when gate1 auto-fixed arithmetic errors
-    parsed = gate1_result.corrected_data if gate1_result.corrected_data else response.parsed
+    # ── Extract pattern-level stats ──
     pattern_scores: dict[str, float | None] = {}
     pattern_opp_counts: dict[str, int | None] = {}
     pattern_statuses: dict[str, str] = {}
@@ -315,11 +319,13 @@ def run_single_analysis(
             pattern_oe_counts[pid] += 1
 
     return {
-        "raw_text": response.raw_text,
+        "raw_text": json.dumps(parsed, ensure_ascii=False, indent=2),
         "parsed_json": parsed,
         "model": response.model,
         "prompt_tokens": response.prompt_tokens,
         "completion_tokens": response.completion_tokens,
+        "stage1_tokens": stage1_tokens,
+        "stage2_tokens": stage2_tokens,
         "elapsed_sec": round(elapsed, 1),
         "gate1_passed": gate1_result.passed,
         "gate1_issues": [
@@ -330,12 +336,6 @@ def run_single_analysis(
         "pattern_opp_counts": dict(pattern_opp_counts),
         "pattern_statuses": dict(pattern_statuses),
         "pattern_oe_counts": dict(pattern_oe_counts),
-        "editor_enabled": _EDITOR_ENABLED,
-        "editor_changes_count": editor_changes_count,
-        "editor_prompt_tokens": editor_prompt_tokens,
-        "editor_completion_tokens": editor_completion_tokens,
-        "editor_changelog": editor_changelog,
-        "editor_raw_output": editor_raw_output,
     }
 
 
@@ -372,7 +372,7 @@ def run_repeat(
                 "  Run %d: Gate1=%s | Tokens=%d | Time=%ss",
                 i + 1,
                 "PASS" if result["gate1_passed"] else "FAIL",
-                result["prompt_tokens"] + result["completion_tokens"],
+                result.get("stage1_tokens", 0) + result.get("stage2_tokens", 0),
                 result["elapsed_sec"],
             )
             # Save JSON immediately so results survive crashes
