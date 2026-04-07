@@ -20,7 +20,7 @@ SCORING TYPES
 
 This taxonomy uses two scoring approaches matched to pattern structure:
 
-1. Tiered rubric scoring (Purposeful Framing, Focus Management, Disagreement Navigation, Behavioral Integrity, Resolution & Alignment, Assignment Clarity, Question Quality, Communication Clarity, Active Listening, Recognition):
+1. Tiered rubric scoring (Purposeful Framing, Focus Management, Resolution & Alignment, Assignment Clarity, Question Quality, Communication Clarity, Active Listening, Recognition, Behavioral Integrity, Disagreement Navigation):
    - Each opportunity scored 0.0, 0.25, 0.5, 0.75, or 1.0 based on rubric level defined per pattern.
    - Score = sum of opportunity scores / opportunity_count, rounded to 4 decimals.
    - Note: Focus Management uses a 3-level subset ({0, 0.5, 1.0}). Question Quality uses a 3-level subset ({0, 0.5, 1.0}). See pattern definitions for rubric details.
@@ -479,7 +479,7 @@ What it measures:
 - Whether the target speaker's own substantive contributions are clear, structured, and proportionate — as opposed to meandering, unfocused, or disconnected from the conversation.
 
 Denominator (opportunity_count):
-- Substantive speaking turns by the target speaker that contain 40 or more words of the target speaker's own speech. When a span includes interjections by others, count only the target speaker's words toward this threshold. If more than 8 qualifying turns exist, score the 8 longest (by target-speaker word count). Turns below the 40-word threshold do not provide enough signal to assess clarity.
+- Substantive speaking turns by the target speaker that contain 40 or more words of the target speaker's own speech. When a span includes interjections by others, count only the target speaker's words toward this threshold. Turns below the 40-word threshold do not provide enough signal to assess clarity.
 
 Scoring per opportunity (rubric):
 - 1.0 — Clear, structured, AND advances the conversation. The speaker's contribution (which may span multiple turns if others interject) demonstrates ALL of:
@@ -549,7 +549,7 @@ Detection notes:
 - When in doubt between adjacent tiers, use your best judgment based on the rubric criteria. Do not systematically default to any single tier — score each opportunity based on the strongest matching description.
 - Use the full rubric range. A turn where the speaker talks at length without arriving at a clear point, or responds to a different question than the one asked, should score 0.0. A turn with a deeply buried point obscured by extensive preamble should score 0.25. Do not default to 0.5 merely because the speaker made an attempt.
 - In 1:1 meetings, coaching conversations, and any turn where the speaker's primary communicative goal is acknowledgment, empathy, or feedback delivery: do not penalize for not leading with the task point. Leading with acknowledgment is appropriate structure in these contexts. Evaluate proportionality and relevance, but not BLUF. Apply the full BLUF standard only to task-oriented turns in task-oriented meetings.
-- Scope guidance: Each candidate turn must contain at least 40 words of the target speaker's own speech. Count only the target speaker's words — exclude interjections or brief responses from other participants within the span. If you identify more than 8 qualifying turns, score only the 8 longest by target-speaker word count. This cap prevents over-counting and ensures you focus on the turns with the most signal.
+- Scope guidance: Each candidate turn must contain at least 40 words of the target speaker's own speech. Count only the target speaker's words — exclude interjections or brief responses from other participants within the span.
 - Turn boundary consistency: When the transcript shows rapid back-and-forth interjections between the target speaker's sentences, treat the speaker's complete thought as a single turn rather than splitting at each interjection. This prevents double-counting the same contribution.
 - Behavioral context: Communication clarity evaluates whether the speaker's message was clear, structured, and proportionate. However, clarity deployed in service of an ulterior or counterproductive purpose (e.g., crisply shutting down a valid concern, clearly overriding an objection without engagement, using directness to rush past complexity) should not be praised as a CC strength. If the turn's primary dynamic is the speaker using clarity to bulldoze rather than to communicate, the coaching note should acknowledge the clarity but flag that it was undermined by the interpersonal dynamic. Do not generate a positive-only CC coaching note for turns where the speaker's clarity primarily served an ulterior or counterproductive purpose.
 - Coaching-note redundancy: A CC coaching_note is redundant if it essentially restates the positive observation already in the notes field without adding a specific constructive point that other patterns haven't already covered. Positive reinforcement belongs in the notes field; the coaching_note should only be generated when it identifies a specific clarity problem (jargon, burying the point, disproportionate length) that is distinct from what PF, AC, or RA already coach. If the coaching_note just says "you were clear and structured" — that belongs in notes, not coaching_note.
@@ -824,13 +824,6 @@ Minimum threshold:
 - 3 response turns required. If fewer than 3 substantive response
   turns exist for the target_speaker, mark insufficient_signal.
 
-Scope guidance:
-- If more than 10 qualifying response turns exist, score the 10
-  most substantive (by the significance and depth of the prior
-  other participant's contribution, not by the target_speaker's
-  response length). This cap prevents over-counting and ensures
-  focus on the turns with the most signal.
-
 Detection notes:
 - The primary detection signal is explicit verbal evidence of
   absorption. Look for: named references to other participants
@@ -958,7 +951,7 @@ treating contributors as invisible providers of raw material. A
 leader can also show genuine warmth and acknowledgment toward a
 person without deeply engaging with the substance of their point.
 
-This pattern fires in the spaces between high-stakes moments. A
+This pattern fires in the moments between high-stakes exchanges — the routine interactions where a leader's regard for people is most visible. A
 target_speaker who handles disagreements brilliantly and closes
 decisions cleanly can still score poorly on Recognition if they
 treat routine interactions as purely transactional — never
@@ -1006,7 +999,7 @@ Denominator (opportunity_count):
 - Substantive turns by the target_speaker that closely follow a
   substantive contribution from an other participant, where the
   other participant's contribution involved effort, expertise,
-  risk-taking, or substantive value that a considerate leader
+  risk-taking, or substantive value that a thoughtful leader
   would recognize — and where the target_speaker's turn addresses
   the same topic or responds to the same conversational moment.
   The opportunity is the target_speaker's turn. Scoring evaluates
@@ -1202,14 +1195,6 @@ Role notes:
 
 Minimum threshold:
 - 3 opportunities required.
-
-Scope guidance:
-- If more than 10 qualifying opportunities exist, score the 10
-  most significant (by the significance of the other
-  participant's contribution in terms of effort, expertise, or
-  interpersonal courage). This cap prevents over-counting
-  on routine acknowledgments and focuses on the moments where
-  regard for the person matters most.
 
 Detection notes:
 - CRITICAL DISTINCTION FROM ACTIVE LISTENING: Recognition and
@@ -1875,13 +1860,13 @@ Insufficient signal vs. not_evaluable:
 - not_evaluable: The pattern fundamentally does not apply (e.g., feedback_quality in a standard team meeting, or any pattern requiring speaker attribution when labels are absent).
 
 Axis-level coaching:
-- When generating coaching feedback, consider patterns within the same axis together. Task Effectiveness patterns reinforce each other (proactive meeting steering + reactive focus management + decision closure + work assignment + inquiry + verbal clarity). Relational Effectiveness patterns reinforce each other (behavioral integrity + disagreement handling + feedback delivery together shape interpersonal effectiveness — a leader who navigates disagreements well but erodes integrity through unnamed sourcing or deflection has a coherent axis-level issue). If multiple patterns on the same axis are weak, the axis-level insight is often more actionable than the individual pattern scores.
+- When generating coaching feedback, consider patterns within the same axis together. Task Effectiveness patterns reinforce each other (proactive meeting steering + reactive focus management + decision closure + work assignment + inquiry + verbal clarity). Relational Effectiveness patterns reinforce each other (active listening + recognition + behavioral integrity + disagreement handling + feedback delivery together shape interpersonal effectiveness — a leader who navigates disagreements well but erodes integrity through unnamed sourcing or deflection has a coherent axis-level issue). If multiple patterns on the same axis are weak, the axis-level insight is often more actionable than the individual pattern scores.
 
 Meeting type expectations:
-- Team meetings with a chair: Expect all Task Effectiveness patterns to be evaluable. Relational Effectiveness varies — behavioral_integrity evaluable if integrity-relevant moments occur; disagreement_navigation evaluable if disagreement occurs; feedback_quality typically not_evaluable.
+- Team meetings with a chair: Expect all Task Effectiveness patterns to be evaluable. Relational Effectiveness varies — active_listening and recognition evaluable in most meetings; behavioral_integrity evaluable if integrity-relevant moments occur; disagreement_navigation evaluable if disagreement occurs; feedback_quality typically not_evaluable.
 - Presentations: Task Effectiveness (within segment) primary. Relational Effectiveness limited to Q&A/discussion portion.
-- 1:1 meetings: Task Effectiveness — purposeful_framing, resolution_and_alignment, assignment_clarity apply. Relational Effectiveness — behavioral_integrity evaluable if integrity-relevant moments occur (e.g., citing unnamed sources, owning vs. deflecting); disagreement_navigation evaluable if disagreement occurs; feedback_quality is primary.
-- Retrospectives/debriefs: All patterns across both axes apply. Feedback Quality and Disagreement Navigation are particularly relevant.
+- 1:1 meetings: Task Effectiveness — purposeful_framing, resolution_and_alignment, assignment_clarity apply. Relational Effectiveness — behavioral_integrity evaluable if integrity-relevant moments occur (e.g., citing unnamed sources, owning vs. deflecting); disagreement_navigation evaluable if disagreement occurs; active_listening and recognition are primary in 1:1s; feedback_quality is primary.
+- Retrospectives/debriefs: All patterns across both axes apply. Feedback Quality, Disagreement Navigation, Active Listening, and Recognition are particularly relevant.
 
 PATTERN PRIORITY RULES
 
