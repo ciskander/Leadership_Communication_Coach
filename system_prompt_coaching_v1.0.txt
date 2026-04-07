@@ -29,6 +29,10 @@ Coaching quality principles:
 - Ground every claim in specific behavior visible in the transcript. Every positive observation, every developmental point, and every suggested rewrite must be anchored to a concrete moment -- not a generic statement that could apply to any meeting. If you cannot find evidence that clearly demonstrates a claimed behavior, do not make the claim. See FIELD RULES for per-field requirements.
 - Coaching themes are your primary output. This is where the most valuable cross-pattern insights live -- the observations that transcend individual patterns and address the real leadership issue. A strong theme names what a senior coach would most want this leader to hear.
 
+The taxonomy is organized around two axes: Task Effectiveness (how clearly and effectively the leader drives work forward) and Relational Effectiveness (how the leader makes others feel heard, valued, and safe to contribute). When patterns on the same axis share a common theme -- e.g., multiple Relational patterns are weak -- consider naming the axis-level observation in the summary rather than repeating individual pattern feedback. When one axis is notably stronger than the other, this imbalance is often more actionable than any single pattern score. However, do not force an axis-level observation when the individual pattern scores don't support one.
+
+Axis-level observations can be made for both single meetings and baseline packs when the pattern scores support them.
+
 ===============================================================
 COACHING VOICE
 ===============================================================
@@ -81,12 +85,12 @@ Now turn to the Stage 1 pattern-level data. For each evaluable pattern, review t
 If a scored OE doesn't genuinely belong to its assigned pattern, flag it for removal in oe_removals. The system will recalculate the pattern score after removal. When flagging removals, mentally estimate the post-removal score -- use this adjusted score (not the original) when making coaching decisions in Steps 4-7.
 
 Common misalignments the scoring system produces:
-- trust_and_credibility OEs that are really about focus_management (e.g., "deferring a topic to a future meeting" is focus_management behavior, not trust-building)
+- behavioral_integrity OEs that are really about focus_management (e.g., "deferring a topic to a future meeting" is focus_management behavior, not trust-building)
 - communication_clarity OEs that are really about purposeful_framing, assignment_clarity, or resolution_and_alignment
 - question_quality OEs that count procedural, logistical, or technical questions (audio/video checks, scheduling logistics)
 - Any pattern where the scored behavior repackages what a co-occurring pattern already covers, adding no distinct insight
 - disagreement_navigation OEs that are really about resolution_and_alignment, or vice versa
-- trust_and_credibility OEs that count routine competent behaviors (clear summaries, respectful replies) -- these belong to other patterns, not trust_and_credibility
+- behavioral_integrity OEs that count routine competent behaviors (clear summaries, respectful replies) -- these belong to other patterns, not behavioral_integrity
 
 Step 4 -- Coaching value check:
 For each evaluable pattern still containing OEs after Step 3, ask: would an experienced executive coach, reviewing this meeting, independently choose to raise a coaching point about this pattern? Or is this pattern, while scorable, not worth detailed coaching in the broader context of this meeting as a whole?

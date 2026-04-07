@@ -2,8 +2,8 @@
 test_gate1_validator.py — Tests for Gate1 validation: valid outputs pass,
 mutated/invalid outputs fail with correct error codes.
 
-Updated for v0.4.0 schema: top-level OEs, scoring-only pattern_snapshot,
-unified coaching section.
+Updated for v0.7.0 schema (taxonomy v4.0): top-level OEs, scoring-only pattern_snapshot,
+unified coaching section, task_effectiveness/relational_effectiveness axes.
 """
 from __future__ import annotations
 
@@ -212,9 +212,9 @@ def _make_output_with_oe(valid_single_meeting_output):
             oe["reason_code"] = "generic_open_floor"
             break
 
-    # Update pattern_snapshot[2] (disagreement_navigation) — scoring only
+    # Update pattern_snapshot[7] (disagreement_navigation) — scoring only
     # 3 OEs: OE-005 (1.0) + OE-006 (0.25) + OE-007 (1.0) = 2.25/3 = 0.75
-    pm = out["pattern_snapshot"][2]
+    pm = out["pattern_snapshot"][7]
     pm["score"] = 0.75
     pm["success_evidence_span_ids"] = ["ES-T005", "ES-T031-032"]  # OE-005 (1.0) and OE-007 (1.0) >= 0.75
 
@@ -224,7 +224,7 @@ def _make_output_with_oe(valid_single_meeting_output):
 def test_success_span_missing_auto_corrected(valid_single_meeting_output):
     """A span with OE score 1.0 not in success_evidence_span_ids is auto-corrected by sanitiser."""
     out = _make_output_with_oe(valid_single_meeting_output)
-    pm = out["pattern_snapshot"][2]
+    pm = out["pattern_snapshot"][7]
     # Remove ES-T005 (score 1.0) from success list
     pm["success_evidence_span_ids"] = []
     result = validate(json.dumps(out))
@@ -233,14 +233,14 @@ def test_success_span_missing_auto_corrected(valid_single_meeting_output):
     assert "SUCCESS_SPAN_MISSING" not in codes
     # Verify the corrected data has ES-T005 restored
     assert result.corrected_data is not None
-    corrected_pm = result.corrected_data["pattern_snapshot"][2]
+    corrected_pm = result.corrected_data["pattern_snapshot"][7]
     assert "ES-T005" in corrected_pm["success_evidence_span_ids"]
 
 
 def test_success_span_incorrect_auto_corrected(valid_single_meeting_output):
     """A span with OE score 0.25 in success_evidence_span_ids is auto-corrected by sanitiser."""
     out = _make_output_with_oe(valid_single_meeting_output)
-    pm = out["pattern_snapshot"][2]
+    pm = out["pattern_snapshot"][7]
     # Add ES-T015 (score 0.25) to success list — incorrect for tiered_rubric
     pm["success_evidence_span_ids"] = ["ES-T005", "ES-T015"]
     result = validate(json.dumps(out))
@@ -249,7 +249,7 @@ def test_success_span_incorrect_auto_corrected(valid_single_meeting_output):
     assert "SUCCESS_SPAN_INCORRECT" not in codes
     # Verify the corrected data has ES-T015 removed
     assert result.corrected_data is not None
-    corrected_pm = result.corrected_data["pattern_snapshot"][2]
+    corrected_pm = result.corrected_data["pattern_snapshot"][7]
     assert "ES-T015" not in corrected_pm["success_evidence_span_ids"]
     assert "ES-T005" in corrected_pm["success_evidence_span_ids"]
 
@@ -350,7 +350,7 @@ def test_success_threshold_binary_requires_1_0(valid_single_meeting_output):
     })
 
     # Update question_quality pattern
-    qq = out["pattern_snapshot"][6]
+    qq = out["pattern_snapshot"][4]
     qq["score"] = 0.5  # (1.0 + 0.0) / 2
     qq["opportunity_count"] = 2
     qq["evidence_span_ids"] = ["ES-T025", "ES-T035"]
@@ -360,7 +360,7 @@ def test_success_threshold_binary_requires_1_0(valid_single_meeting_output):
     result = validate(json.dumps(out))
     # Sanitiser auto-corrects: ES-T035 (score 0.0) removed from success list
     assert result.corrected_data is not None
-    corrected_qq = result.corrected_data["pattern_snapshot"][6]
+    corrected_qq = result.corrected_data["pattern_snapshot"][4]
     assert "ES-T035" not in corrected_qq["success_evidence_span_ids"]
     assert "ES-T025" in corrected_qq["success_evidence_span_ids"]
 
@@ -397,8 +397,8 @@ def test_success_threshold_tiered_rubric_ra_requires_0_75(valid_single_meeting_o
         "event_ids": ["OE-013"],
     })
 
-    # Update resolution_and_alignment pattern (index 4: trust_and_credibility is at 3)
-    ra = out["pattern_snapshot"][4]  # resolution_and_alignment
+    # Update resolution_and_alignment pattern (index 2 in v4.0 order)
+    ra = out["pattern_snapshot"][2]  # resolution_and_alignment
     ra["score"] = 0.5  # (0.5 + 0.5) / 2
     ra["opportunity_count"] = 2
     ra["evidence_span_ids"] = ["ES-T020-021", "ES-T038-039"]
@@ -408,7 +408,7 @@ def test_success_threshold_tiered_rubric_ra_requires_0_75(valid_single_meeting_o
     result = validate(json.dumps(out))
     # Sanitiser auto-corrects: ES-T020-021 (score 0.5) removed from success list
     assert result.corrected_data is not None
-    corrected_ra = result.corrected_data["pattern_snapshot"][4]
+    corrected_ra = result.corrected_data["pattern_snapshot"][2]
     assert "ES-T020-021" not in corrected_ra["success_evidence_span_ids"]
 
 

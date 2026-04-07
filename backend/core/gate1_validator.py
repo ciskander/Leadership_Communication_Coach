@@ -75,6 +75,31 @@ _PATTERN_ID_ENUM = set(PATTERN_ORDER)
 
 _SCORED_PATTERNS = set(PATTERN_ORDER)
 
+# ── v3.1 → v4.0 migration maps (LLM may produce old names) ─────────────���────
+_PATTERN_ID_MIGRATION = {
+    "trust_and_credibility": "behavioral_integrity",
+}
+
+_CLUSTER_ID_MIGRATION = {
+    "meeting_structure": "task_effectiveness",
+    "participation_dynamics": "relational_effectiveness",
+    "decisions_accountability": "task_effectiveness",
+    "communication_quality": "task_effectiveness",
+}
+
+# Canonical axis for each pattern (used when LLM produces old cluster_id)
+_PATTERN_AXIS = {
+    "purposeful_framing": "task_effectiveness",
+    "focus_management": "task_effectiveness",
+    "resolution_and_alignment": "task_effectiveness",
+    "assignment_clarity": "task_effectiveness",
+    "question_quality": "task_effectiveness",
+    "communication_clarity": "task_effectiveness",
+    "behavioral_integrity": "relational_effectiveness",
+    "disagreement_navigation": "relational_effectiveness",
+    "feedback_quality": "relational_effectiveness",
+}
+
 
 def _issue(severity: str, code: str, path: str, message: str) -> ValidationIssue:
     return ValidationIssue(severity=severity, issue_code=code, path=path, message=message)
@@ -292,6 +317,46 @@ def _sanitise_output(data: dict) -> int:
     det = (data.get("experiment_tracking") or {}).get("detection_in_this_meeting")
     if isinstance(det, dict):
         fixes += _fix_exp_id(det, "experiment_id", "$.experiment_tracking.detection_in_this_meeting.experiment_id")
+
+    # ── Migrate v3.1 pattern/cluster names to v4.0 ────────────────────────
+    # LLM may still produce old pattern_id or cluster_id values.
+    for i, item in enumerate(data.get("pattern_snapshot", [])):
+        if isinstance(item, dict):
+            pid = item.get("pattern_id")
+            if pid in _PATTERN_ID_MIGRATION:
+                new_pid = _PATTERN_ID_MIGRATION[pid]
+                logger.warning("Sanitiser: migrating pattern_id %r → %r at $.pattern_snapshot[%d]", pid, new_pid, i)
+                item["pattern_id"] = new_pid
+                fixes += 1
+            cid = item.get("cluster_id")
+            if cid in _CLUSTER_ID_MIGRATION:
+                # Use the pattern's canonical axis rather than a naive cluster map
+                resolved_pid = item.get("pattern_id", "")
+                new_cid = _PATTERN_AXIS.get(resolved_pid, _CLUSTER_ID_MIGRATION[cid])
+                logger.warning("Sanitiser: migrating cluster_id %r → %r at $.pattern_snapshot[%d]", cid, new_cid, i)
+                item["cluster_id"] = new_cid
+                fixes += 1
+    for i, event in enumerate(data.get("opportunity_events", [])):
+        if isinstance(event, dict):
+            pid = event.get("pattern_id")
+            if pid in _PATTERN_ID_MIGRATION:
+                new_pid = _PATTERN_ID_MIGRATION[pid]
+                logger.warning("Sanitiser: migrating OE pattern_id %r → %r at $.opportunity_events[%d]", pid, new_pid, i)
+                event["pattern_id"] = new_pid
+                fixes += 1
+    # Migrate pattern_ids in evaluation_summary arrays
+    eval_sum = data.get("evaluation_summary", {})
+    for arr_key in ("patterns_evaluated", "patterns_insufficient_signal", "patterns_not_evaluable"):
+        arr = eval_sum.get(arr_key, [])
+        for j, pid in enumerate(arr):
+            if pid in _PATTERN_ID_MIGRATION:
+                arr[j] = _PATTERN_ID_MIGRATION[pid]
+                fixes += 1
+    # Migrate pattern_ids in coaching.pattern_coaching
+    for pc in (data.get("coaching") or {}).get("pattern_coaching", []):
+        if isinstance(pc, dict) and pc.get("pattern_id") in _PATTERN_ID_MIGRATION:
+            pc["pattern_id"] = _PATTERN_ID_MIGRATION[pc["pattern_id"]]
+            fixes += 1
 
     # ── Coerce evaluable patterns missing score/opp_count to insufficient_signal ──
     ps_list = data.get("pattern_snapshot", [])

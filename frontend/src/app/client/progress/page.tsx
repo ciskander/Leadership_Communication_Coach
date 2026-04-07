@@ -174,7 +174,10 @@ function buildChartData(
 
 // ─── Pattern trends chart ─────────────────────────────────────────────────────
 
-type ViewMode = 'focus' | 'top5' | 'all';
+type ViewMode = 'focus' | 'top5' | 'all' | 'task' | 'relational';
+
+const TASK_PATTERNS = ['purposeful_framing', 'focus_management', 'resolution_and_alignment', 'assignment_clarity', 'question_quality', 'communication_clarity'];
+const RELATIONAL_PATTERNS = ['behavioral_integrity', 'disagreement_navigation', 'feedback_quality'];
 
 function PatternTrendsChart({
   history,
@@ -204,6 +207,8 @@ function PatternTrendsChart({
   const hasExpPattern     = expIds.length > 0 && expIds.some(pid => allPatterns.includes(pid));
   const visiblePatterns   = useMemo(() => {
     if (viewMode === 'focus' && hasExpPattern) return expIds.filter(pid => allPatterns.includes(pid));
+    if (viewMode === 'task') return allPatterns.filter(pid => TASK_PATTERNS.includes(pid));
+    if (viewMode === 'relational') return allPatterns.filter(pid => RELATIONAL_PATTERNS.includes(pid));
     if (viewMode === 'all') return allPatterns;
     if (hasExpPattern) {
       const extra = expIds.filter(pid => allPatterns.includes(pid) && !topPatterns.includes(pid));
@@ -568,6 +573,8 @@ export default function ProgressPage() {
     ...(hasExpPattern ? [{ key: 'focus' as ViewMode, label: STRINGS.progressPage.experimentPatterns }] : []),
     { key: 'top5',  label: STRINGS.progressPage.top5Patterns },
     { key: 'all',   label: STRINGS.progressPage.allPatterns },
+    { key: 'task',  label: STRINGS.clusterLabels.task_effectiveness ?? 'Task' },
+    { key: 'relational', label: STRINGS.clusterLabels.relational_effectiveness ?? 'Relational' },
   ];
 
   return (

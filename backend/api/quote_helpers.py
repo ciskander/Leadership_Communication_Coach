@@ -29,6 +29,23 @@ from .dto import (
 # Feature flag: set QUOTE_CLEANUP_ENABLED=1 to enable post-processing cleanup.
 _CLEANUP_ENABLED = os.getenv("QUOTE_CLEANUP_ENABLED", "0") == "1"
 
+# v3.1 → v4.0: canonical axis for each pattern (used to resolve old cluster_id values)
+_PATTERN_AXIS = {
+    "purposeful_framing": "task_effectiveness",
+    "focus_management": "task_effectiveness",
+    "resolution_and_alignment": "task_effectiveness",
+    "assignment_clarity": "task_effectiveness",
+    "question_quality": "task_effectiveness",
+    "communication_clarity": "task_effectiveness",
+    "behavioral_integrity": "relational_effectiveness",
+    "trust_and_credibility": "relational_effectiveness",  # legacy name
+    "disagreement_navigation": "relational_effectiveness",
+    "feedback_quality": "relational_effectiveness",
+}
+
+# Old cluster_id values that need migration
+_OLD_CLUSTER_IDS = {"meeting_structure", "participation_dynamics", "decisions_accountability", "communication_quality"}
+
 _QUOTE_MAX_CHARS = 2000
 
 # Matches a leading "Speaker_Label: " prefix that the LLM sometimes bakes into
@@ -242,9 +259,16 @@ def resolve_pattern_snapshot(
         ps_quotes = resolve_quotes(
             es_ids, spans_by_id, transcript_id, meeting_id, turn_map, target_speaker_label
         )
+        # Migrate old cluster_id values to axis values for backward compat
+        raw_cluster_id = ps.get("cluster_id")
+        pid = ps.get("pattern_id", "")
+        if raw_cluster_id in _OLD_CLUSTER_IDS:
+            cluster_id = _PATTERN_AXIS.get(pid, raw_cluster_id)
+        else:
+            cluster_id = raw_cluster_id
         snapshot_items.append(PatternSnapshotItem(
             pattern_id=ps.get("pattern_id", ""),
-            cluster_id=ps.get("cluster_id"),
+            cluster_id=cluster_id,
             scoring_type=ps.get("scoring_type"),
             evaluable_status=ps.get("evaluable_status", "not_evaluable"),
             score=ps.get("score"),

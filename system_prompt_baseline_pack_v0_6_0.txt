@@ -104,7 +104,7 @@ PATTERN SNAPSHOT
 ═══════════════════════════════════════════════════════════════
 
 PATTERN_ID ENUM (always output all 9 in this exact order):
-purposeful_framing, focus_management, disagreement_navigation, trust_and_credibility, resolution_and_alignment, assignment_clarity, question_quality, communication_clarity, feedback_quality
+purposeful_framing, focus_management, disagreement_navigation, behavioral_integrity, resolution_and_alignment, assignment_clarity, question_quality, communication_clarity, feedback_quality
 
 Each item requires:
 pattern_id, cluster_id, scoring_type, evaluable_status(evaluable|insufficient_signal|not_evaluable), denominator_rule_id, min_required_threshold, evidence_span_ids

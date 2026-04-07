@@ -29,7 +29,7 @@ Common overcounting patterns to guard against:
 - Assignment clarity: Do not require extreme temporal precision for deadlines ("over the weekend" is specific enough), but do require that deliverables name a verifiable output, not just a process ("sync" alone is not a deliverable; "sync and flag ship-blockers" is).
 - Disagreement navigation: Each thematic arc of disagreement is ONE opportunity event. Do not fragment a continuous back-and-forth into multiple OEs.
 - Focus management: When the target speaker initiates a tangent, score is always 0.0 per taxonomy -- even if someone else eventually redirects. Do not give partial credit for external correction.
-- Trust and credibility: Only count moments where the speaker's behavior meaningfully affects the room's trust. Do not count routine competent behaviors (clear summaries, respectful replies) -- these are other patterns, not T&C. If the T&C observation reads like a restatement of another pattern's observation (e.g., restating focus_management as "trustworthy deferral"), the moment likely belongs to that other pattern, not T&C.
+- Behavioral integrity: Only count moments where the speaker's behavior meaningfully affects the room's trust. Do not count routine competent behaviors (clear summaries, respectful replies) -- these are other patterns, not BI. If the BI observation reads like a restatement of another pattern's observation (e.g., restating focus_management as "trustworthy deferral"), the moment likely belongs to that other pattern, not BI.
 - Resolution and alignment: Do not count as a missed alignment check when the group visibly demonstrated shared understanding without being asked. The pattern measures whether resolution and alignment were ACHIEVED, not whether a specific verbal formula was used.
 - Role conditioning: The target speaker is not always the meeting chair. Apply role-conditioned denominator rules strictly -- a Participant is not responsible for managing drift or disagreements they have no agency over. Only count opportunities the target speaker controlled or had clear agency to manage.
 
@@ -70,7 +70,7 @@ For each counted OE, create evidence span(s) quoting the relevant turns verbatim
 Use turn-anchored IDs: ES-T{start} for single turn, ES-T{start}-{end} for multi-turn.
 Link each span to its source OE(s) via the event_ids field.
 If two patterns share the same turns, create ONE shared span with both event_ids.
-When an OE covers more than approximately 5 turns (common for disagreement_navigation and trust_and_credibility arcs), break the evidence into focused sub-spans instead of one monolithic span. Each sub-span should capture a distinct coaching-relevant moment in the arc (e.g., the opening tension, the pivot or acknowledgment, the resolution). Aim for sub-spans of roughly 2-4 turns each — enough to show context but short enough that a coachee can scan it quickly. Use your judgment on how many sub-spans are needed based on the length and structure of the arc. All sub-spans for the same OE list that OE in their event_ids. List sub-spans in chronological order in pattern_snapshot.evidence_span_ids.
+When an OE covers more than approximately 5 turns (common for disagreement_navigation and behavioral_integrity arcs), break the evidence into focused sub-spans instead of one monolithic span. Each sub-span should capture a distinct coaching-relevant moment in the arc (e.g., the opening tension, the pivot or acknowledgment, the resolution). Aim for sub-spans of roughly 2-4 turns each — enough to show context but short enough that a coachee can scan it quickly. Use your judgment on how many sub-spans are needed based on the length and structure of the arc. All sub-spans for the same OE list that OE in their event_ids. List sub-spans in chronological order in pattern_snapshot.evidence_span_ids.
 
 Step 5 -- Pattern scoring (output: pattern_snapshot):
 For each pattern, compute: score = sum(success for counted OEs) / counted_OE_count.
@@ -194,7 +194,7 @@ PATTERN SNAPSHOT
 ===============================================================
 
 PATTERN_ID ENUM (always output all 9 in this exact order):
-purposeful_framing, focus_management, disagreement_navigation, trust_and_credibility, resolution_and_alignment, assignment_clarity, question_quality, communication_clarity, feedback_quality
+purposeful_framing, focus_management, disagreement_navigation, behavioral_integrity, resolution_and_alignment, assignment_clarity, question_quality, communication_clarity, feedback_quality
 
 Each item requires:
 pattern_id, cluster_id, scoring_type, evaluable_status(evaluable|insufficient_signal|not_evaluable), denominator_rule_id, min_required_threshold, evidence_span_ids

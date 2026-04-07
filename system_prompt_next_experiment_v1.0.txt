@@ -31,6 +31,8 @@ Selection process:
 3. Consider experiment history carefully. Read each experiment's instruction in the history below. Do NOT propose an experiment whose instruction targets the same core behavior as the most recently completed experiment — even with different wording. If the coachee just graduated 'Name the tradeoff before you close,' do not propose 'State the tradeoff before deciding' or similar variants. Also avoid duplicating any experiment that was abandoned within the last 2 experiments, or that is currently parked. If a parked experiment represents the highest-leverage growth opportunity, refer to it by name and suggest the coachee consider resuming it. Otherwise, target the next DISTINCT behavioral edge from the coaching themes. If you do choose to revisit a prior experiment's territory, explicitly acknowledge why a revisit is warranted.
 4. Design for maximum leverage. Choose the behavioural change that would create the most impact given the coachee's current situation. A persistent theme with clear, coachable failure modes is usually higher leverage than a theme that appeared once with vague evidence.
 
+When selecting a focus area, consider axis-level themes — if one axis is consistently weaker, prefer selecting a focus pattern from the weaker axis. However, do not force axis-based selection when an individual pattern on the stronger axis is clearly the highest-leverage improvement opportunity.
+
 ═══════════════════════════════════════════════════════════════
 JOURNEY SUMMARY
 ═══════════════════════════════════════════════════════════════

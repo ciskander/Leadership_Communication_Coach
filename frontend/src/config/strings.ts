@@ -94,7 +94,7 @@ export const STRINGS = {
     purposeful_framing: 'Purposeful Framing',
     focus_management: 'Focus Management',
     disagreement_navigation: 'Disagreement Navigation',
-    trust_and_credibility: 'Trust & Credibility',
+    behavioral_integrity: 'Behavioral Integrity',
     resolution_and_alignment: 'Resolution & Alignment',
     assignment_clarity: 'Assignment Clarity',
     question_quality: 'Question Quality',
@@ -110,8 +110,8 @@ export const STRINGS = {
       'Whether you keep discussion aligned with stated objectives when conversation drifts. Scored on how explicitly you name the departure and redirect or sanction it.',
     disagreement_navigation:
       'How you handle moments of disagreement or pushback. Scored on whether you engage with the substance, acknowledge the opposing view, maintain solution focus, and drive toward resolution.',
-    trust_and_credibility:
-      'Whether your behavior during high-stakes moments builds or erodes trust with the room. Scored on ownership, engagement with expertise, consistency between words and actions, and how you use authority.',
+    behavioral_integrity:
+      'Measures consistency between words and actions — intellectual honesty, ownership vs. deflection, follow-through on commitments, and genuine engagement with expertise and evidence.',
     resolution_and_alignment:
       'Whether you close discussions with a clear statement of what was decided and an explicit check that the group agrees. Scored on two elements: named resolution and alignment confirmation.',
     assignment_clarity:
@@ -129,7 +129,7 @@ export const STRINGS = {
     purposeful_framing: '🎯',
     focus_management: '🧭',
     disagreement_navigation: '🤝',
-    trust_and_credibility: '🛡️',
+    behavioral_integrity: '🛡️',
     resolution_and_alignment: '✅',
     assignment_clarity: '📋',
     question_quality: '❓',
@@ -139,18 +139,33 @@ export const STRINGS = {
 
   // ── Cluster metadata ──────────────────────────────────────────────────────
   clusterLabels: {
-    meeting_structure: 'Meeting Structure & Direction',
-    participation_dynamics: 'Participation & Interpersonal Dynamics',
+    task_effectiveness: 'Task Effectiveness',
+    relational_effectiveness: 'Relational Effectiveness',
+  } as Record<string, string>,
+
+  clusterOrder: [
+    'task_effectiveness',
+    'relational_effectiveness',
+  ] as string[],
+
+  subClusterLabels: {
+    meeting_structure_direction: 'Meeting Structure & Direction',
     decisions_accountability: 'Decisions & Accountability',
     communication_quality: 'Communication Quality',
   } as Record<string, string>,
 
-  clusterOrder: [
-    'meeting_structure',
-    'participation_dynamics',
-    'decisions_accountability',
-    'communication_quality',
-  ] as string[],
+  // Maps axis -> ordered sub-clusters -> ordered pattern IDs
+  // Relational Effectiveness has no sub-clusters in Phase 1 (patterns listed flat)
+  axisPatternGrouping: {
+    task_effectiveness: [
+      { subCluster: 'meeting_structure_direction', patterns: ['purposeful_framing', 'focus_management'] },
+      { subCluster: 'decisions_accountability', patterns: ['resolution_and_alignment', 'assignment_clarity'] },
+      { subCluster: 'communication_quality', patterns: ['question_quality', 'communication_clarity'] },
+    ],
+    relational_effectiveness: [
+      { subCluster: null, patterns: ['behavioral_integrity', 'disagreement_navigation', 'feedback_quality'] },
+    ],
+  } as Record<string, Array<{ subCluster: string | null; patterns: string[] }>>,
 
   // ── Highlight badges (shown on pattern cards in cluster view) ────────────
   highlightBadges: {

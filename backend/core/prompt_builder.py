@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # Taxonomy loading — single source of truth
 # ---------------------------------------------------------------------------
 
-_TAXONOMY_FILE = Path(__file__).resolve().parent.parent.parent / "clearvoice_pattern_taxonomy_v3.1.txt"
+_TAXONOMY_FILE = Path(__file__).resolve().parent.parent.parent / "clearvoice_pattern_taxonomy_v4.0.txt"
 
 _SECTION_BEGIN_RE = re.compile(r"^### BEGIN:(.+?) ###$", re.MULTILINE)
 _SECTION_END_RE_TEMPLATE = "### END:{name} ###"

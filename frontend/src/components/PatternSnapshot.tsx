@@ -183,6 +183,12 @@ const PATTERN_ICONS: Record<string, JSX.Element> = {
       <circle cx="11.5" cy="7" r="1" fill="currentColor" />
     </svg>
   ),
+  behavioral_integrity: (
+    <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
+      <path d="M8 1.5L2 4v4.5c0 3.5 2.5 5.5 6 7 3.5-1.5 6-3.5 6-7V4L8 1.5z" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round" />
+      <path d="M5.5 8l2 2 3-3.5" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
 };
 
 
@@ -664,6 +670,17 @@ function ClusterHeader({ clusterId }: { clusterId: string }) {
   );
 }
 
+function SubClusterHeader({ subClusterId }: { subClusterId: string }) {
+  const label = STRINGS.subClusterLabels[subClusterId] ?? subClusterId;
+  return (
+    <div className="sm:col-span-2 pt-2">
+      <p className="text-2xs font-medium tracking-[0.08em] text-cv-stone-400/80">
+        {label}
+      </p>
+    </div>
+  );
+}
+
 // ─── Grid wrapper ─────────────────────────────────────────────────────────────
 
 interface PatternSnapshotProps {
@@ -729,32 +746,45 @@ export function PatternSnapshot({
     );
   }
 
-  // Group patterns by cluster in defined order
+  // Group patterns by axis with sub-cluster headers
   const clusterOrder = STRINGS.clusterOrder;
-  const byCluster: Record<string, PatternSnapshotItem[]> = {};
-  for (const p of filtered) {
-    const cid = p.cluster_id ?? 'unknown';
-    if (!byCluster[cid]) byCluster[cid] = [];
-    byCluster[cid].push(p);
-  }
+  const axisGrouping = STRINGS.axisPatternGrouping;
+  const filteredIds = new Set(filtered.map((p) => p.pattern_id));
+  const patternById: Record<string, PatternSnapshotItem> = {};
+  for (const p of filtered) patternById[p.pattern_id] = p;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {clusterOrder.map((cid) => {
-        const clusterPatterns = byCluster[cid];
-        if (!clusterPatterns || clusterPatterns.length === 0) return null;
+      {clusterOrder.map((axisId) => {
+        const groups = axisGrouping[axisId];
+        if (!groups) return null;
+        // Check if any patterns in this axis exist in the data
+        const axisHasPatterns = groups.some((g) =>
+          g.patterns.some((pid) => filteredIds.has(pid))
+        );
+        if (!axisHasPatterns) return null;
+
         return [
-          <ClusterHeader key={`header-${cid}`} clusterId={cid} />,
-          ...clusterPatterns.map((p) => (
-            <PatternCard
-              key={p.pattern_id}
-              pattern={p}
-              coaching={coachingByPatternId[p.pattern_id]}
-              targetSpeaker={targetSpeaker ?? null}
-              trend={trendData?.[p.pattern_id]}
-              highlightType={getHighlightType(p.pattern_id)}
-            />
-          )),
+          <ClusterHeader key={`axis-${axisId}`} clusterId={axisId} />,
+          ...groups.flatMap((group) => {
+            const groupPatterns = group.patterns.filter((pid) => filteredIds.has(pid));
+            if (groupPatterns.length === 0) return [];
+            return [
+              ...(group.subCluster != null
+                ? [<SubClusterHeader key={`sub-${group.subCluster}`} subClusterId={group.subCluster} />]
+                : []),
+              ...groupPatterns.map((pid) => (
+                <PatternCard
+                  key={pid}
+                  pattern={patternById[pid]}
+                  coaching={coachingByPatternId[pid]}
+                  targetSpeaker={targetSpeaker ?? null}
+                  trend={trendData?.[pid]}
+                  highlightType={getHighlightType(pid)}
+                />
+              )),
+            ];
+          }),
         ];
       })}
     </div>

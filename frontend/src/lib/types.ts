@@ -8,13 +8,12 @@ export type PatternId =
   | 'assignment_clarity'
   | 'question_quality'
   | 'communication_clarity'
-  | 'feedback_quality';
+  | 'feedback_quality'
+  | 'behavioral_integrity';
 
 export type ClusterId =
-  | 'meeting_structure'
-  | 'participation_dynamics'
-  | 'decisions_accountability'
-  | 'communication_quality';
+  | 'task_effectiveness'
+  | 'relational_effectiveness';
 
 export type ScoringType =
   | 'dual_element'
