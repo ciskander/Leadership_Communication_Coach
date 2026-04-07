@@ -69,7 +69,7 @@ Currently, some evaluable pattern cards in the UI show a score with no coaching 
 
 **Important:** The LLM should generate genuinely useful content, not boilerplate filler. "No notes for this pattern" repeated across 5 cards is worse than selective nulls.
 
-**Tension to resolve:** The existing coaching prompt has guidance like "if a coaching theme already covers a pattern's insight, set the pattern's coaching_note to null." The new no-empty-cards rule needs to work WITH this — when coaching_note is null because a theme covers it, `notes` should still say something meaningful (even a brief acknowledgment or redirect to the relevant theme). Read the existing coaching prompt's pattern_coaching guidance carefully before making changes.
+**Existing guidance to replace:** The coaching prompt and taxonomy currently contain multiple instructions that say "set coaching_note to null" in various situations (e.g., when a theme already covers the insight, when the observation is redundant with another pattern, when the BI repackaging check fails). These instructions need to be replaced — not just supplemented — with guidance that always produces useful content for evaluable, detected patterns. At the end of this session, there should be NO remaining "set coaching_note to null" instructions for patterns that are evaluable and detected. Instead, the guidance should tell the LLM what to write in each situation (brief acknowledgment, cross-reference to relevant theme/pattern, contextual framing, etc.). Read the existing coaching prompt and taxonomy carefully and identify ALL such null instructions before making changes.
 
 ### 3. Pattern-specific tightening
 
