@@ -24,16 +24,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from backend.core.config import PATTERN_ORDER
 from backend.evals.report import save_json, save_report
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
-
-PATTERN_ORDER = [
-    "purposeful_framing", "focus_management",
-    "disagreement_navigation", "trust_and_credibility", "resolution_and_alignment",
-    "assignment_clarity", "question_quality", "communication_clarity", "feedback_quality",
-]
 
 # ── Judge file discovery ─────────────────────────────────────────────────────
 
