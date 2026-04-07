@@ -1094,6 +1094,9 @@ Scoring per opportunity (5-tier rubric):
     data suggests the risk is lower and it lets us learn faster."
     (Treats the room as equals deserving of rationale, but
     doesn't specifically acknowledge any individual.)
+  However, if the acknowledgment functions primarily as a pivot
+  away from the contribution rather than a bridge into engagement
+  with it, score 0.5 or lower.
 
 - 0.5 — Generic acknowledgment. The target_speaker acknowledges
   that a contribution occurred but without any specificity about
@@ -1139,6 +1142,10 @@ Scoring per opportunity (5-tier rubric):
     target_speaker assigns it as though it was their idea.
   - The target_speaker takes credit for an idea that an other
     participant clearly originated earlier in the meeting.
+  - Sarcastic or backhanded acknowledgment — praise language used
+    mockingly or dismissively when the conversational context
+    makes clear the target_speaker does not genuinely regard the
+    contributor or their input.
 
 Score = sum of opportunity scores / opportunity_count.
 
@@ -1263,6 +1270,27 @@ Detection notes:
   takes ownership) while scoring poorly on Recognition (never
   acknowledges other participants' contributions or expresses
   appreciation). These are independent dimensions.
+- Materiality gate: Not every response turn where acknowledgment
+  is possible is a Recognition opportunity worth scoring. Brief,
+  routine conversational acknowledgments ("Good call," "Thanks")
+  are social lubricant, not leadership recognition moments.
+  Recognition opportunities should be moments where the
+  target_speaker's choice to acknowledge or ignore the person
+  carries real weight.
+- Contextual interpretation: Evaluate recognition in the broader
+  context of what is actually happening in the interaction. When
+  warmth appears to substitute for substantive engagement — the
+  target_speaker acknowledges the person but avoids engaging
+  with the real issue — the recognition is less valuable than
+  its surface language suggests. Score it lower (0.5 at most
+  for warmth that leads away from the contribution). When the
+  coaching output is generated, use your judgment about whether
+  Recognition coaching adds genuine value for this leader in
+  this meeting, or whether the real coaching point lives
+  elsewhere. A Recognition coaching_note that praises or
+  critiques surface warmth while missing the more consequential
+  interpersonal dynamic is pedantic — either name the real
+  dynamic or set the coaching_note to null.
 
 Experiment guidance:
 - What good looks like: "Marcus, the fact that you spotted this
