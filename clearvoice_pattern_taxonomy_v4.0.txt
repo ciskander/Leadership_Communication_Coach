@@ -1114,22 +1114,6 @@ Where a single utterance could be classified under more than one pattern,
 apply the following rules:
 
 EXCLUSIVE (count under only one):
-- disagreement_navigation vs. behavioral_integrity: If a moment involves
-  both conflict handling AND integrity impact, determine the PRIMARY dynamic.
-  disagreement_navigation = the primary issue is interpersonal tension,
-  pushback, or conflict handling. behavioral_integrity = the primary
-  issue is the speaker's honesty, reliability, or accountability (e.g.,
-  citing unnamed sources, pulling rank, taking or deflecting ownership).
-  Heuristic: if the moment would still be integrity-relevant even without
-  the conflict element, it belongs to behavioral_integrity. If the integrity
-  impact only exists because of how the conflict was handled, it belongs
-  to disagreement_navigation.
-  Quick test: is the coaching point about how they handled the disagreement
-  (-> DN), or about what their behavior revealed about their reliability
-  or character (-> BI)? "Next time, acknowledge the concern before
-  responding" is DN coaching. "Next time, cite your sources instead of
-  pulling rank" is BI coaching.
-
 - focus_management vs. disagreement_navigation: If a drift episode and
   a disagreement moment co-occur in the same exchange, determine the PRIMARY
   function of the turn. Focus Management is the appropriate
@@ -1222,5 +1206,33 @@ PERMITTED MULTI-PATTERN (count under both):
   speaker's behavior during the decision demonstrated honesty and
   accountability (e.g., making commitments on behalf of absent parties,
   pulling rank vs. engaging with substance before deciding).
+
+- disagreement_navigation + behavioral_integrity: A disagreement
+  moment may be scored under both patterns when the target_speaker's
+  response contains both a conflict-handling dimension AND a distinct
+  integrity dimension. disagreement_navigation evaluates how the
+  target_speaker manages the interpersonal dynamics of the conflict
+  (engagement with substance, de-escalation, resolution-seeking).
+  behavioral_integrity evaluates what the response reveals about
+  the target_speaker's intellectual honesty and reliability
+  (steelmanning, ownership, genuine engagement with evidence,
+  consistency between stated values and actions).
+  These are orthogonal: the target_speaker can handle a disagreement
+  constructively (DN = 1.0) but still erode integrity by
+  misrepresenting what was agreed afterward (BI = 0.25). Conversely,
+  the target_speaker can fumble the interpersonal handling (DN = 0.5)
+  but build integrity by owning the mistake: "I handled that badly —
+  let me try again" (BI = 1.0). Steelmanning an opposing view is a
+  common dual-scored moment: DN scores the quality of engagement
+  with the disagreement, BI scores the intellectual honesty of
+  representing the other position fairly.
+  When both patterns fire on the same moment, each pattern's
+  coaching_note must address its own dimension only. DN coaching
+  should focus on conflict-handling technique; BI coaching should
+  focus on integrity impact. If the BI coaching_note merely restates
+  the DN observation ("handled the disagreement well, which builds
+  trust"), it is repackaging — set the BI coaching_note to null.
+  BI earns a coaching_note only when it names an integrity
+  consequence DN misses.
 
 ### END:GENERAL_DETECTION_GUIDANCE ###
