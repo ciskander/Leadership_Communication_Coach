@@ -447,6 +447,7 @@ Minimum threshold:
 - 3 substantive questions asked by the target speaker required.
 
 Detection notes:
+- OE consistency gate: Before counting a moment as a question_quality opportunity, ask: "Is the primary purpose of this utterance to seek information, test assumptions, surface perspectives, or deepen understanding? Or is the question form incidental — the speaker is really directing, redirecting, asserting, or managing, and the question syntax is just packaging?" If the question would carry the same coaching significance rephrased as a statement, classify it under the pattern that captures its primary function, not question_quality. When in doubt about whether a moment qualifies as a substantive question, exclude it — consistency matters more than completeness.
 - The key distinction is not open vs. closed, but purposeful vs. aimless. An open question with a clear facilitative purpose ("What are we not seeing?") is purposeful. A closed question with no clear stake ("Is everyone OK with this?") may not be.
 - Context matters for determining purpose. "What do you think?" directed at a specific person on a specific topic after a substantive discussion may be purposeful (inviting a perspective). The same question to the room at large with no specific context is aimless.
 - When in doubt about whether a question is purposeful or aimless, consider: could you explain why this question was asked at this moment? If yes, it's purposeful. If no, it's aimless.
@@ -543,6 +544,7 @@ Minimum threshold:
 - 3 qualifying turns of 40+ words required.
 
 Detection notes:
+- OE consistency gate: Before counting a 40+ word turn as a communication_clarity opportunity, ask: "Is there something genuinely assessable about how this person communicated — either notably clear or notably unclear? Would a communication coach watching this moment have something specific to say about the speaker's communication clarity?" If the turn is unremarkable competent speech with nothing noteworthy about its clarity, it is not a CC opportunity even if it exceeds 40 words. When in doubt about whether a moment qualifies, exclude it — consistency matters more than completeness.
 - BLUF (bottom line up front) is the strongest individual signal. If the speaker states their conclusion, recommendation, or position in the first sentence of their turn, that is a strong indicator of clarity.
 - "Responds to the question actually asked" requires comparing the speaker's turn to the prior question or point. If there is no clear prior question (the speaker is introducing a new topic), this dimension does not apply to that turn.
 - Proportionality is context-dependent. A complex strategic question warrants a longer response. A simple factual question does not. Score proportionality relative to the complexity of the point, not against an absolute length standard.
@@ -825,6 +827,18 @@ Minimum threshold:
   turns exist for the target_speaker, mark insufficient_signal.
 
 Detection notes:
+- OE consistency gate: Before counting a moment as an
+  active_listening opportunity, ask: "Is this a moment where the
+  other participant's sense of being heard or ignored would be
+  meaningfully shaped by how the target speaker responds? Does
+  the prior contribution carry enough substance that the target
+  speaker's engagement with it — or failure to engage — matters
+  to the contributor and the conversation?" If the prior
+  contribution was minor, routine, or already substantively
+  addressed by others, and the target speaker's response would
+  not meaningfully register as listening or non-listening, exclude
+  it. When in doubt about whether a moment qualifies, exclude
+  it — consistency matters more than completeness.
 - The primary detection signal is explicit verbal evidence of
   absorption. Look for: named references to other participants
   or their points, paraphrasing language ("so what you're saying
@@ -1208,6 +1222,20 @@ Minimum threshold:
 - 3 opportunities required.
 
 Detection notes:
+- OE consistency gate: Before counting a moment as a recognition
+  opportunity, ask: "Is this a moment where the target speaker's
+  choice to show — or withhold — regard for another person as a
+  valued equal carries real interpersonal weight? Would a
+  thoughtful observer notice the presence or absence of
+  recognition here?" This applies to all recognition behaviors:
+  acknowledging contributions, validating the act of speaking up,
+  expressing appreciation, acting on someone's input, and
+  explaining reasoning behind decisions. Not every turn is worth
+  scoring — the moment should be one where recognition (or its
+  absence) meaningfully affects how people in the room experience
+  the leader's regard for them. When in doubt about whether a
+  moment qualifies, exclude it — consistency matters more than
+  completeness.
 - CRITICAL DISTINCTION FROM ACTIVE LISTENING: Recognition and
   Active Listening share a similar trigger (target_speaker
   responds after someone else contributes) but measure different
