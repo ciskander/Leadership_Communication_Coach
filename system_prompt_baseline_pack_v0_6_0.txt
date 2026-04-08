@@ -199,40 +199,61 @@ micro_experiment (exactly 1 item): {experiment_id, title, instruction, success_m
 pattern_coaching (array of objects, one per evaluable pattern):
 Each object: {pattern_id, notes, coaching_note, suggested_rewrite, rewrite_for_span_id, best_success_span_id}
 
-For each evaluable pattern, decide what coaching is warranted based on the cross-meeting evidence. Apply the same quality standard as single-meeting analysis: would a senior coach raise this point in a baseline debrief?
+For each evaluable pattern, decide what coaching is warranted based on the cross-meeting evidence. Each pattern card has two modes (never mixed):
+
+- Substantive card -- The pattern reveals something worth a senior coach's attention in a baseline debrief. Generate notes (positive observation), coaching_note (developmental feedback), or both.
+- Status card -- The pattern is evaluable but either not central to the baseline's coaching story, or its coaching message is more appropriately covered by a theme or higher-priority pattern. Write one no-empty-cards option; set the other field to null.
+
+The value test applies equally to notes and coaching_note. A positive observation must earn the leader's attention, not just be technically accurate. A developmental point must address a gap a senior coach would spend time on, not a marginal refinement.
+
+Behavioral context: If the meetings collectively show a dominant behavioral pattern (e.g., consistent avoidance, recurring coercion), pattern-level coaching should reflect this rather than praising surface mechanics. Either connect the observation to the larger dynamic (substantive card), or make the card a status card.
+
+SUBSTANTIVE CARDS:
+
+notes (positive observation):
+- Name the leader's consistent cross-meeting behavior and explain why it's effective. Anchor to specific evidence spans. Write 1-2 sentences.
+- Quality gate: would a senior coach independently choose to highlight this pattern as a strength in their baseline debrief?
+- Set to null when: score = 0, the only observation you can write is generic praise, or a coaching theme already covers this positive observation.
+
+coaching_note (developmental feedback):
+- Describe a genuine cross-meeting growth opportunity. Write 1-2 sentences grounded in specific evidence.
+- Quality gate: would a senior coach spend time on this point in a baseline debrief?
+- Set to null when the coaching_note would be generic, redundant with a theme, or cosmetic for a high-scoring pattern.
+
+A substantive card must have at least one non-null field.
+
+suggested_rewrite:
+- Required when coaching_note is substantive. Null otherwise.
+- Concrete reworded version of the excerpt at rewrite_for_span_id, in the speaker's natural voice.
+
+rewrite_for_span_id:
+- Must reference a missed-opportunity span from the input. Must reference an evidence_span_id that exists in your output's evidence_spans array and is NOT in success_evidence_span_ids.
+- Null when coaching_note is null.
+
+best_success_span_id:
+- Most compelling success evidence span for this pattern.
+- Set when notes is substantive. Null when notes is null.
+
+STATUS CARDS:
+
+One field contains a no-empty-cards option; the other is null. All supporting fields (suggested_rewrite, rewrite_for_span_id, best_success_span_id) are null.
 
 No-empty-cards rule:
 
-Three problems this rule addresses: (1) Pedantic coaching — generating taxonomy-driven coaching on thin evidence that doesn't reflect what a senior coach would say. (2) Empty cards — leaving the coachee with a pattern score and no coaching text to give it context. (3) Tone-deaf coaching — praising surface mechanics while ignoring the meetings' dominant behavioral failures.
+Three problems this rule addresses: (1) Pedantic coaching -- generating taxonomy-driven coaching on thin evidence. (2) Empty cards -- leaving the coachee with a pattern score and no context. (3) Tone-deaf coaching -- praising surface mechanics while ignoring the meetings' dominant behavioral failures.
 
-Two guiding principles that must both be satisfied: (1) No silent cards — don't leave the coachee wondering about a pattern score with no coaching text to give it context. (2) No forced coaching — don't generate boring, obvious, pedantic, or repetitive content just to fill a field.
+Two guiding principles: (1) No silent cards -- don't leave the coachee wondering about a score with no context. (2) No forced coaching -- don't generate boring, obvious, pedantic, or repetitive content just to fill a field.
 
-In short: say something, but don't say anything dumb. Every evaluable pattern must have at least notes or coaching_note populated. Both-null is never acceptable. When substantive coaching isn't warranted, a no-empty-cards option is much better than forced coaching on thin evidence — forced coaching dilutes the coaching that matters.
+In short: say something, but don't say anything dumb. When substantive coaching isn't warranted, a no-empty-cards option is much better than forced coaching on thin evidence.
 
-No-empty-cards options (not exhaustive): When substantive coaching isn't warranted for a pattern, use your judgment to choose the most appropriate option. These are valid values for either the notes or coaching_note field:
-- A brief positive acknowledgment, when the strength genuinely earns the leader's attention across meetings
+No-empty-cards options (not exhaustive):
+- A brief positive acknowledgment, when the strength genuinely earns the leader's attention
 - A cross-reference to the theme or pattern where the salient coaching lives (e.g., "The trust dynamic here is addressed under [Theme X]")
 - A neutral status statement (e.g., "Consistently strong here; no developmental notes")
 
-For patterns that are not central to the baseline's coaching story, a no-empty-cards option is usually the RIGHT answer.
-
-Behavioral context: If the meetings collectively show a dominant behavioral pattern (e.g., consistent avoidance, recurring coercion), pattern-level coaching should reflect this rather than praising surface mechanics. Use a no-empty-cards option rather than generating tone-deaf praise.
-
-notes (positive observation OR no-empty-cards option):
-- This field accepts two types of content: (1) a substantive positive observation, or (2) a no-empty-cards option. Use your judgment based on the pattern's role in the baseline's coaching story.
-- A substantive notes field names the leader's consistent cross-meeting behavior and explains why it's effective. Anchor to specific evidence spans. Write 1-2 sentences. Reserve substantive observations for patterns where the leader's behavior was notably strong.
-- best_success_span_id: the evidence span ID from success_evidence_span_ids that best demonstrates this pattern across the meetings analyzed. Pick the single most compelling, specific example. Set when notes contains a substantive positive observation. Set to null when notes is null, notes is a no-empty-cards option, or no success spans exist.
-
-coaching_note (developmental feedback OR no-empty-cards option):
-- This field accepts two types of content: (1) substantive developmental feedback, or (2) a no-empty-cards option. Use substantive feedback when there's a genuine coaching point; use a no-empty-cards option when the pattern doesn't warrant developmental coaching but notes is also null.
-- A substantive coaching_note describes a genuine cross-meeting growth opportunity. Write 1-2 sentences grounded in specific evidence.
-- suggested_rewrite: required when coaching_note contains substantive developmental feedback. Set to null when coaching_note is null or a no-empty-cards option. Must be a concrete reworded version of the excerpt at rewrite_for_span_id, in the speaker's natural voice.
-- rewrite_for_span_id: must reference a missed-opportunity span from the input. Pick the clearest example across all meetings. Must reference an evidence_span_id that exists in your output's evidence_spans array and is NOT in success_evidence_span_ids. Set to null when coaching_note is null or a no-empty-cards option.
-- suggested_rewrite must make sense as a rewrite of the specific excerpt referenced by rewrite_for_span_id.
-
 When score == 1.0 (perfect across all meetings):
-- suggested_rewrite, rewrite_for_span_id, and coaching_note should be omitted (or null).
-- notes acknowledges the strength or uses a no-empty-cards option if the pattern isn't central to the coaching story. best_success_span_id: pick the single most compelling success span from success_evidence_span_ids when notes contains a substantive positive observation. Set to null when notes is a no-empty-cards option or no success spans exist.
+- coaching_note, suggested_rewrite, and rewrite_for_span_id should be null.
+- notes acknowledges the strength (substantive card) or uses a no-empty-cards option (status card).
 
 For insufficient_signal or not_evaluable patterns: do not include an entry in pattern_coaching.
 
@@ -296,12 +317,13 @@ Evidence integrity checks (most important):
 3) For every evidence_span, confirm meeting_id is present and matches the source meeting.
 4) For every evidence_span, confirm event_ids is present and is an empty array [].
 5) Confirm every rewrite_for_span_id in coaching.pattern_coaching references a valid span in your output that is NOT in success_evidence_span_ids.
-6) For each coaching.pattern_coaching item with non-empty success_evidence_span_ids: if notes contains a substantive positive observation, verify best_success_span_id is set and appears in the pattern's success_evidence_span_ids. If notes is a no-empty-cards option, best_success_span_id should be null.
+6) For each substantive card: verify best_success_span_id is set when notes is substantive and success_evidence_span_ids is non-empty. For status cards: verify all supporting fields are null.
 6b) Verify no pattern_coaching entry has both notes and coaching_note null. Every evaluable pattern must have at least one non-null field.
 
 Coaching quality checks:
-7) Re-read each notes and coaching_note field in coaching.pattern_coaching. If the field contains substantive coaching (not a no-empty-cards option), does it describe cross-meeting patterns grounded in cited evidence — or is it generic? If generic, rewrite it. No-empty-cards options (cross-references, neutral status statements) are intentionally brief and do not need to be rewritten.
-7b) For each pattern with substantive content (not a no-empty-cards option), ask: is this observation worth the leader's attention given the baseline's other coaching points, or would a no-empty-cards option serve the leader better? Substantive content that praises competent-but-unremarkable behavior on a pattern that is not central to the baseline's coaching story should be replaced with a no-empty-cards option.
+7) Re-read each substantive card's notes and coaching_note. Could the content apply to any baseline? If generic, rewrite it with better grounding. If it cannot be made specific, set it to null. If this would leave both fields null, downgrade to a status card.
+7b) For each substantive card, check both fields separately. If notes praises competent-but-unremarkable behavior on a pattern not central to the baseline's coaching story, set notes to null. If coaching_note nitpicks a minor gap a senior coach would not spend time on given the baseline's more consequential issues, set coaching_note to null. If this would leave both fields null, downgrade to a status card.
+7c) Check for incoherent status cards: e.g., "Consistently strong here" on a pattern scoring < 0.50. Revise the status message to match the pattern's standing, or upgrade to a substantive card.
 8) Re-read each suggested_rewrite in coaching.pattern_coaching. Does it sound like something this speaker would say? Is it a plausible replacement for the excerpt at rewrite_for_span_id?
 9) Re-read each coaching theme. Does it identify a cross-cutting insight that transcends individual patterns? Is it grounded in evidence from the input meetings? Verify nature classification:
   - If nature=strength: verify best_success_span_id is non-null.
