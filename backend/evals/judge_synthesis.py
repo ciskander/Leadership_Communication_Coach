@@ -145,17 +145,19 @@ def synthesize_ratings(judge_data: list[dict]) -> dict[str, Any]:
     def _dist(ratings: list[str]) -> dict[str, Any]:
         n = len(ratings)
         if n == 0:
-            return {"n": 0, "insightful": 0, "adequate": 0, "pedantic": 0, "wrong": 0,
-                    "insightful_pct": 0, "adequate_pct": 0, "pedantic_pct": 0, "wrong_pct": 0}
+            return {"n": 0, "insightful": 0, "adequate": 0, "appropriate": 0, "pedantic": 0, "wrong": 0,
+                    "insightful_pct": 0, "adequate_pct": 0, "appropriate_pct": 0, "pedantic_pct": 0, "wrong_pct": 0}
         c = Counter(ratings)
         return {
             "n": n,
             "insightful": c.get("insightful", 0),
             "adequate": c.get("adequate", 0),
+            "appropriate": c.get("appropriate", 0),
             "pedantic": c.get("pedantic", 0),
             "wrong": c.get("wrong", 0),
             "insightful_pct": round(100 * c.get("insightful", 0) / n, 1),
             "adequate_pct": round(100 * c.get("adequate", 0) / n, 1),
+            "appropriate_pct": round(100 * c.get("appropriate", 0) / n, 1),
             "pedantic_pct": round(100 * c.get("pedantic", 0) / n, 1),
             "wrong_pct": round(100 * c.get("wrong", 0) / n, 1),
         }
@@ -473,18 +475,18 @@ def format_report(synthesis: dict[str, Any], comparison: dict[str, Any] | None =
     lines.append("\n## Aggregate Judge Metrics\n")
     lines.append(f"| Metric | Count | % |")
     lines.append(f"|--------|------:|---:|")
-    for r in ["insightful", "adequate", "pedantic", "wrong"]:
+    for r in ["insightful", "adequate", "appropriate", "pedantic", "wrong"]:
         lines.append(f"| {r.capitalize()} | {agg[r]} | {agg[f'{r}_pct']}% |")
     lines.append(f"| **Total** | **{agg['n']}** | |")
 
     # Per-pattern
     lines.append("\n## Per-Pattern Breakdown\n")
-    lines.append(f"| Pattern | N | Ins% | Ade% | Ped% | Wrg% |")
-    lines.append(f"|---------|---:|-----:|-----:|-----:|-----:|")
+    lines.append(f"| Pattern | N | Ins% | Ade% | Appr% | Ped% | Wrg% |")
+    lines.append(f"|---------|---:|-----:|-----:|-----:|-----:|-----:|")
     for pid in PATTERN_ORDER:
         pp = synthesis["ratings"]["per_pattern"].get(pid)
         if pp:
-            lines.append(f"| {pid} | {pp['n']} | {pp['insightful_pct']}% | {pp['adequate_pct']}% | {pp['pedantic_pct']}% | {pp['wrong_pct']}% |")
+            lines.append(f"| {pid} | {pp['n']} | {pp['insightful_pct']}% | {pp['adequate_pct']}% | {pp.get('appropriate_pct', 0)}% | {pp['pedantic_pct']}% | {pp['wrong_pct']}% |")
 
     # Per-meeting
     lines.append("\n## Per-Meeting Breakdown\n")
