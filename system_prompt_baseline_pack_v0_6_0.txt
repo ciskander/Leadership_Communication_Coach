@@ -199,21 +199,25 @@ micro_experiment (exactly 1 item): {experiment_id, title, instruction, success_m
 pattern_coaching (array of objects, one per evaluable pattern):
 Each object: {pattern_id, notes, coaching_note, suggested_rewrite, rewrite_for_span_id, best_success_span_id}
 
-For each evaluable pattern, provide coaching based on the aggregated results:
+For each evaluable pattern, decide what coaching is warranted based on the cross-meeting evidence. Apply the same quality standard as single-meeting analysis: would a senior coach raise this point in a baseline debrief?
 
-When score > 0 (at least one success across meetings):
-- notes: 1-2 sentence positive observation describing the speaker's consistent behavior across meetings. Reference the specific evidence spans you selected.
+No-empty-cards rule: Every evaluable pattern must have at least notes or coaching_note populated. Both-null is never acceptable. When substantive coaching isn't warranted for a pattern, use your judgment to choose the most appropriate lightweight response -- for example: a brief positive acknowledgment (when genuinely valuable), a cross-reference to the pattern or theme where the salient coaching lives, or a neutral status statement (e.g., "Consistently strong here; no developmental notes"). Do not manufacture substantive coaching on thin evidence just to fill a field.
+
+Behavioral context: If the meetings collectively show a dominant behavioral pattern (e.g., consistent avoidance, recurring coercion), pattern-level coaching should reflect this rather than praising surface mechanics.
+
+notes (positive observation):
+- Generate when the leader showed genuine cross-meeting strength worth naming. Anchor to specific evidence spans. Write 1-2 sentences.
 - best_success_span_id: the evidence span ID from success_evidence_span_ids that best demonstrates this pattern across the meetings analyzed. Pick the single most compelling, specific example. Set to null if there are no success spans.
 
-When score < 1.0 (at least one missed opportunity across meetings):
-- coaching_note: 1-2 sentence coaching observation about the cross-meeting pattern of missed opportunities.
+coaching_note (developmental feedback):
+- Generate when there's a genuine cross-meeting growth opportunity. Write 1-2 sentences grounded in specific evidence.
 - suggested_rewrite: concrete reworded version of the excerpt at rewrite_for_span_id, in the speaker's natural voice.
 - rewrite_for_span_id: must reference a missed-opportunity span from the input. Pick the clearest example across all meetings. Must reference an evidence_span_id that exists in your output's evidence_spans array and is NOT in success_evidence_span_ids.
 - suggested_rewrite must make sense as a rewrite of the specific excerpt referenced by rewrite_for_span_id.
 
 When score == 1.0 (perfect across all meetings):
 - suggested_rewrite, rewrite_for_span_id, and coaching_note should be omitted (or null).
-- best_success_span_id: pick the single most compelling success span from success_evidence_span_ids. Required when success_evidence_span_ids is non-empty.
+- notes acknowledges the strength. best_success_span_id: pick the single most compelling success span from success_evidence_span_ids. Required when success_evidence_span_ids is non-empty.
 
 For insufficient_signal or not_evaluable patterns: do not include an entry in pattern_coaching.
 

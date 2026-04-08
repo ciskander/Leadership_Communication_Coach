@@ -99,13 +99,15 @@ This is the "stretching to fill" test. Signs of stretching to fill: the evidence
 
 The alignment check and value check are INDEPENDENT. A coaching point can be correctly aligned to its pattern AND still be low-value coaching that should not be generated. Both checks must pass.
 
+Behavioral context check: When the meeting shows a dominant interpersonal or substance failure (dismissiveness, avoidance, coercion, systematic disregard for input), apply heightened scrutiny to any pattern coaching that praises surface mechanics without naming the elephant in the room. A notes or coaching_note that praises surface competence while ignoring the meeting's dominant dynamic is tone-deaf — either connect the observation to the larger dynamic, or redirect to where the real coaching lives.
+
 Step 5 -- Pattern-level coaching prioritization:
 Do not generate pattern-level coaching for patterns Stage 1 marked insufficient_signal or not_evaluable. For the remaining evaluable patterns, rank them by coaching value. For each pattern, decide: does this pattern deserve a coaching_note (developmental feedback), notes (positive observation), both, or neither? Where you're confident the leader would benefit from coaching, forward the pattern to Step 6. For any pattern you're less certain about, it must meet ALL of the following to advance to Step 6:
 (a) It is specific to a moment in this meeting (not generic advice)
 (b) It offers an insight a leader of this seniority wouldn't already know
 (c) It addresses something not already covered by a higher-ranked pattern or coaching theme
 
-If a pattern does not warrant coaching content (Step 6), set notes and coaching_note to null. (You still include a pattern_coaching entry for every evaluable pattern, but with null notes and coaching_note fields)
+If a pattern does not warrant detailed coaching content, use the no-empty-cards options (see PATTERN COACHING field rules) to ensure at least one of notes or coaching_note is non-null. Do not manufacture substantive coaching on thin evidence. (You still include a pattern_coaching entry for every evaluable pattern.)
 
 Step 6 -- Pattern-level Coaching:
 Per-pattern coaching serves a different purpose than themes -- it gives the leader specific moments to revisit and concrete alternative language. Generate it when the observation adds something themes don't: a behavioral example, a rewrite the leader can practice, or a moment-level insight.
@@ -115,7 +117,7 @@ For each evaluable pattern, create a pattern_coaching entry. Evaluate notes and 
 - best_success_span_id: generate when notes is non-null, pointing to the strongest example
 - coaching_note: generate when there's genuine developmental feedback per Step 5
 - suggested_rewrite + rewrite_for_span_id: generate when coaching_note is non-null -- choose the most coachable evidence span for the rewrite
-When neither notes nor coaching_note adds value, include the entry with all fields set to null.
+When a pattern has limited coaching value, use the no-empty-cards options. Every evaluable pattern card must have at least one non-null coaching field (notes or coaching_note).
 
 Step 7 -- Experiment detection and coaching:
 If an active experiment is provided in the experiment context below, evaluate whether the target speaker attempted the experiment behavior in this meeting.
@@ -161,17 +163,17 @@ Quality checks (most important):
 
 (a) Re-read each coaching theme. Does it reflect your Step 2 coaching perspective? Is it specific to THIS leader in THIS meeting -- or could it apply to any meeting? If generic, rewrite it.
 
-(b) Re-read each notes and coaching_note. Could it apply to any meeting? If generic, rewrite it. If it cannot be made specific, set it to null.
+(b) Re-read each notes and coaching_note. Could it apply to any meeting? If generic, rewrite it. If it cannot be made specific, replace with a no-empty-cards option. Do not leave both fields null.
 
 (c) Re-read each suggested_rewrite. For each rewrite_for_span_id, locate the evidence span with that ID and re-read its excerpt. Verify the suggested_rewrite is a plausible alternative to THAT SPECIFIC excerpt -- same topic, same conversational moment, same participants. If the rewrite addresses a different topic or moment, you have a span ID mismatch -- fix it. Does the rewrite sound like this specific speaker?
 
-(d) Verify no pattern coaching_note merely restates a coaching theme. If a theme already covers the insight with its own evidence and rewrite, set the pattern's coaching_note to null (and clear suggested_rewrite and rewrite_for_span_id). Similarly, if a strength theme already acknowledges a pattern's positive behavior, set the pattern's notes to null.
+(d) Verify no pattern coaching_note merely restates a coaching theme. If a theme already covers the insight with its own evidence and rewrite, set the pattern's coaching_note to null (and clear suggested_rewrite and rewrite_for_span_id). Verify notes is non-null; if also null, use a no-empty-cards option. Similarly, if a strength theme already acknowledges a pattern's positive behavior, set the pattern's notes to null -- but verify coaching_note is non-null. Do not leave both fields null.
 
 (e) Check for incoherent states:
-  - If a pattern's Stage 1 score is < 0.70 and you generated notes (positive observation) but no coaching_note: is the positive observation alone an accurate representation? If the low score reflects real gaps, the coaching should acknowledge them -- either generate a coaching_note or set notes to null.
+  - If a pattern's Stage 1 score is < 0.70 and you generated notes (positive observation) but no coaching_note: is the positive observation alone an accurate representation? If the low score reflects real gaps, either add a coaching_note that addresses the gaps, or revise notes to give balanced context (acknowledging what worked while noting where the real coaching lives). Do not leave both null.
   - If a pattern scores >= 0.80: verify any coaching_note addresses a genuinely behavioral gap, not a cosmetic or stylistic one. High-scoring patterns rarely need developmental coaching.
   - If a pattern has an active experiment: coaching_note should be present, not null. The experiment pattern always deserves developmental feedback.
-  - If notes describes behavior that actually belongs to a different pattern: set notes to null rather than generating a misaligned positive observation.
+  - If notes describes behavior that actually belongs to a different pattern: replace with an accurate observation for this pattern, or use a no-empty-cards option. Ensure at least one field is non-null.
 
 (f) Does the overall coaching form a coherent story about this communicator? Are the coaching themes, pattern coaching, and micro-experiment all pointing in a consistent direction?
 
@@ -199,7 +201,7 @@ Structural checks:
   - Verify every CT- span ID referenced by themes has a corresponding evidence span object in evidence_spans.
   - Verify rewrite_for_span_id is not the same span as best_success_span_id (when both are set).
   - Verify the primary theme has nature=developmental or nature=mixed.
-(r) Verify no pattern coaching_note merely restates a coaching theme that already covers the same insight with its own evidence and rewrite. If overlap exists, set the pattern's coaching_note to null. Similarly for notes: if a strength theme already acknowledges the same behavior, set the pattern's notes to null.
+(r) Verify no pattern coaching_note merely restates a coaching theme that already covers the same insight with its own evidence and rewrite. If overlap exists, set the pattern's coaching_note to null -- but verify notes is non-null. Similarly for notes: if a strength theme already acknowledges the same behavior, set the pattern's notes to null -- but verify coaching_note is non-null. If both would be null, use a no-empty-cards option.
 
 (s) If coachee history is provided, compare your executive_summary and coaching_themes against the prior meeting summaries and themes listed above. If you reused any phrases, sentence structures, or strength descriptions from prior coaching, rewrite them using fresh language grounded in THIS meeting's specific evidence. Repeated substance is fine -- repeated phrasing is not.
 
@@ -361,7 +363,9 @@ micro_experiment: exactly 1 item.
 pattern_coaching: array of objects, one per evaluable pattern from Stage 1.
 Include an entry for every evaluable pattern. The notes and coaching_note fields are INDEPENDENT -- evaluate each on its own merits.
 
-Before generating coaching for a pattern, check whether a coaching theme already covers the same insight. If a theme already delivers the developmental point with its own evidence and rewrite for a moment from that pattern, set the pattern's coaching_note to null. Similarly, if a strength theme already acknowledges the same positive behavior, the pattern's notes adds little value -- set it to null unless you have a genuinely distinct observation. Pattern coaching should add something themes don't: a different angle, a different moment, or a point not addressed by any theme.
+No-empty-cards rule: Every evaluable pattern must have at least notes or coaching_note populated. Both-null is never acceptable. When substantive coaching isn't warranted for a pattern, use your judgment to choose the most appropriate lightweight response -- for example: a brief positive acknowledgment (when genuinely valuable), a cross-reference to the pattern or theme where the salient coaching lives, or a neutral status statement (e.g., "Consistently strong here; no developmental notes"). Do not manufacture substantive coaching on thin evidence just to fill a field. When one field is null, verify the other is non-null.
+
+Before generating coaching for a pattern, check whether a coaching theme already covers the same insight. If a theme already delivers the developmental point with its own evidence and rewrite for a moment from that pattern, set the pattern's coaching_note to null -- but verify notes is non-null. Similarly, if a strength theme already acknowledges the same positive behavior, the pattern's notes adds little value -- set it to null unless you have a genuinely distinct observation, but verify coaching_note is non-null. If both would be null, use a no-empty-cards option. Pattern coaching should add something themes don't: a different angle, a different moment, or a point not addressed by any theme.
 
 For each evaluable pattern:
 
