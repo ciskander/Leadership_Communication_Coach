@@ -97,33 +97,8 @@ _JUDGE_USER_PROMPT = """\
 
 ## Your Evaluation
 
-Evaluate the AI coaching output on each dimension below.
-
-### Coaching Insight Quality — Rating Definitions
-
-For each evaluable pattern with coaching content (notes and/or coaching_note), \
-rate the coaching quality using these categories:
-
-- **insightful**: Names a real executive behavior, a non-obvious dynamic, or a \
-moment-level insight that could materially change this leader's approach. The \
-coaching adds something a thoughtful observer would not independently notice.
-- **adequate**: Accurate, grounded in the transcript, and not wrong — but doesn't \
-surprise. A competent observer could reach the same conclusion. Useful but \
-unremarkable.
-- **appropriate**: The pattern card contains a status message rather than \
-substantive coaching — a cross-reference to where the real coaching lives, a \
-neutral status statement like "Consistently strong here; no developmental notes," \
-or a brief acknowledgment. This is the correct output when the pattern is not \
-central to the meeting's coaching story and substantive coaching would be \
-taxonomy-driven. Rate as "appropriate," not "pedantic."
-- **pedantic**: Taxonomy-driven rather than coach-driven. Names something \
-technically accurate but not worth a senior leader's attention in this meeting — \
-trivial competence praised, marginal gaps inflated, or surface mechanics \
-highlighted while a bigger dynamic goes unaddressed.
-- **wrong**: Factually incorrect, contradicted by the transcript, or attributes \
-behavior to the wrong person or moment.
-
-Return a JSON object with the following structure:
+Evaluate the AI coaching output on each dimension below. Return a JSON object \
+with the following structure:
 
 ```json
 {{
@@ -131,7 +106,7 @@ Return a JSON object with the following structure:
     "items": [
       {{
         "pattern_id": "<pattern>",
-        "rating": "insightful|adequate|appropriate|pedantic|wrong",
+        "rating": "insightful|adequate|pedantic|wrong",
         "explanation": "<why this rating>"
       }}
     ],

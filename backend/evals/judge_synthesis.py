@@ -24,11 +24,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from backend.core.config import PATTERN_ORDER
 from backend.evals.report import save_json, save_report
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+
+PATTERN_ORDER = [
+    "purposeful_framing", "focus_management",
+    "disagreement_navigation", "trust_and_credibility", "resolution_and_alignment",
+    "assignment_clarity", "question_quality", "communication_clarity", "feedback_quality",
+]
 
 # ── Judge file discovery ─────────────────────────────────────────────────────
 
@@ -90,28 +95,25 @@ def _derive_meeting_id(judge_file: Path, results_dir: Path) -> str:
     """Derive a meeting ID from a judge file's path within a results directory.
 
     Handles both flat structure (results_dir/meeting_id/judge_*.json)
-    and longitudinal structure at any depth:
-      - results_dir=Long_Scale_01, path=persona_01/meeting_01/stability/
-      - results_dir=results, path=Long_Scale_01/persona_01/meeting_01/stability/
+    and longitudinal structure (results_dir/Long_Scale_01/persona_01/meeting_01/stability/).
     """
     rel = judge_file.parent.relative_to(results_dir)
-    # Combine results_dir name with relative path for full context
-    all_parts = (results_dir.name,) + rel.parts
+    parts = rel.parts
 
-    # Scan all_parts for the Long_Scale/persona/meeting triple
-    for i in range(len(all_parts) - 2):
-        phase_match = re.match(r"Long_Scale_(\d+)", all_parts[i])
-        persona_match = re.match(r"persona_(\d+)", all_parts[i + 1])
-        meeting_match = re.match(r"meeting_(\d+)", all_parts[i + 2])
+    # Longitudinal structure: Long_Scale_XX/persona_XX/meeting_XX/stability
+    if len(parts) >= 3:
+        phase_match = re.match(r"Long_Scale_(\d+)", parts[0])
+        persona_match = re.match(r"persona_(\d+)", parts[1])
+        meeting_match = re.match(r"meeting_(\d+)", parts[2])
         if phase_match and persona_match and meeting_match:
             return f"LS{phase_match.group(1)}-P{int(persona_match.group(1)):02d}-M{int(meeting_match.group(1)):02d}"
 
     # Flat structure: meeting_id/judge_*.json
-    if len(rel.parts) == 1:
-        return rel.parts[0]
+    if len(parts) == 1:
+        return parts[0]
 
     # Fallback: use relative path as meeting_id
-    return "/".join(rel.parts)
+    return str(rel)
 
 
 def load_judge_data(files: list[Path], meeting_id: str | None = None) -> list[dict]:
@@ -145,19 +147,16 @@ def synthesize_ratings(judge_data: list[dict]) -> dict[str, Any]:
     def _dist(ratings: list[str]) -> dict[str, Any]:
         n = len(ratings)
         if n == 0:
-            return {"n": 0, "insightful": 0, "adequate": 0, "appropriate": 0, "pedantic": 0, "wrong": 0,
-                    "insightful_pct": 0, "adequate_pct": 0, "appropriate_pct": 0, "pedantic_pct": 0, "wrong_pct": 0}
+            return {"n": 0, "insightful": 0, "adequate": 0, "pedantic": 0, "wrong": 0}
         c = Counter(ratings)
         return {
             "n": n,
             "insightful": c.get("insightful", 0),
             "adequate": c.get("adequate", 0),
-            "appropriate": c.get("appropriate", 0),
             "pedantic": c.get("pedantic", 0),
             "wrong": c.get("wrong", 0),
             "insightful_pct": round(100 * c.get("insightful", 0) / n, 1),
             "adequate_pct": round(100 * c.get("adequate", 0) / n, 1),
-            "appropriate_pct": round(100 * c.get("appropriate", 0) / n, 1),
             "pedantic_pct": round(100 * c.get("pedantic", 0) / n, 1),
             "wrong_pct": round(100 * c.get("wrong", 0) / n, 1),
         }
@@ -475,18 +474,18 @@ def format_report(synthesis: dict[str, Any], comparison: dict[str, Any] | None =
     lines.append("\n## Aggregate Judge Metrics\n")
     lines.append(f"| Metric | Count | % |")
     lines.append(f"|--------|------:|---:|")
-    for r in ["insightful", "adequate", "appropriate", "pedantic", "wrong"]:
+    for r in ["insightful", "adequate", "pedantic", "wrong"]:
         lines.append(f"| {r.capitalize()} | {agg[r]} | {agg[f'{r}_pct']}% |")
     lines.append(f"| **Total** | **{agg['n']}** | |")
 
     # Per-pattern
     lines.append("\n## Per-Pattern Breakdown\n")
-    lines.append(f"| Pattern | N | Ins% | Ade% | Appr% | Ped% | Wrg% |")
-    lines.append(f"|---------|---:|-----:|-----:|-----:|-----:|-----:|")
+    lines.append(f"| Pattern | N | Ins% | Ade% | Ped% | Wrg% |")
+    lines.append(f"|---------|---:|-----:|-----:|-----:|-----:|")
     for pid in PATTERN_ORDER:
         pp = synthesis["ratings"]["per_pattern"].get(pid)
         if pp:
-            lines.append(f"| {pid} | {pp['n']} | {pp['insightful_pct']}% | {pp['adequate_pct']}% | {pp.get('appropriate_pct', 0)}% | {pp['pedantic_pct']}% | {pp['wrong_pct']}% |")
+            lines.append(f"| {pid} | {pp['n']} | {pp['insightful_pct']}% | {pp['adequate_pct']}% | {pp['pedantic_pct']}% | {pp['wrong_pct']}% |")
 
     # Per-meeting
     lines.append("\n## Per-Meeting Breakdown\n")
