@@ -301,6 +301,7 @@ Evidence integrity checks (most important):
 
 Coaching quality checks:
 7) Re-read each notes and coaching_note field in coaching.pattern_coaching. If the field contains substantive coaching (not a no-empty-cards option), does it describe cross-meeting patterns grounded in cited evidence — or is it generic? If generic, rewrite it. No-empty-cards options (cross-references, neutral status statements) are intentionally brief and do not need to be rewritten.
+7b) For each pattern with substantive content (not a no-empty-cards option), ask: is this observation worth the leader's attention given the baseline's other coaching points, or would a no-empty-cards option serve the leader better? Substantive content that praises competent-but-unremarkable behavior on a pattern that is not central to the baseline's coaching story should be replaced with a no-empty-cards option.
 8) Re-read each suggested_rewrite in coaching.pattern_coaching. Does it sound like something this speaker would say? Is it a plausible replacement for the excerpt at rewrite_for_span_id?
 9) Re-read each coaching theme. Does it identify a cross-cutting insight that transcends individual patterns? Is it grounded in evidence from the input meetings? Verify nature classification:
   - If nature=strength: verify best_success_span_id is non-null.
