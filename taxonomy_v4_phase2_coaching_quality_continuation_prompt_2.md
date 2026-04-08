@@ -69,12 +69,14 @@ Major restructuring of the reasoning sequence:
 
 | Metric | Baseline (v4p2_recognition_fix) | Iter3 (v4p2_coaching_quality_iter3) |
 |--------|--------------------------------|-------------------------------------|
-| Insightful | 34.9% (38 of 109) | 34.1% (46 of 135) |
-| Adequate | 52.3% | 54.1% |
-| Pedantic | 12.8% | 11.9% |
+| Insightful | 34.9% (38 of 109) | 34.8% (47 of 135) |
+| Adequate | 52.3% | 55.6% |
+| Pedantic | 12.8% | 9.6% |
 | N | 109 | 135 |
 
-**The aggregate coaching quality is essentially unchanged.** Insightful rate held steady (absolute count increased from 38 to 46), pedantic rate slightly improved. The N increased from 109 to 135 because more patterns are evaluable per run (9.0 vs 7.3) — the card-mode model keeps status cards visible to the judge, whereas the old prompt would leave both fields null and the judge formatting code would skip them entirely. Empty cards remaining: 6 of 141 total pattern_coaching entries across all runs (4.3%; the 141 count differs from the 135 judge N because the judge skips both-null cards).
+**The aggregate coaching quality is essentially unchanged to slightly improved.** Insightful rate held steady (absolute count increased from 38 to 47), pedantic rate improved from 12.8% to 9.6%. The N increased from 109 to 135 because more patterns are evaluable per run (9.0 vs 7.3) — the card-mode model keeps status cards visible to the judge, whereas the old prompt would leave both fields null and the judge formatting code would skip them entirely. Empty cards remaining: 6 of 141 total pattern_coaching entries across all runs (4.3%; the 141 count differs from the 135 judge N because the judge skips both-null cards).
+
+Note: Judge ratings have inherent variance across runs (the same coaching content can be rated insightful in one judge run and adequate in another). Per-pattern numbers on small N should be interpreted directionally, not precisely.
 
 ### Per-pattern pedantic rates
 
@@ -83,36 +85,36 @@ Major restructuring of the reasoning sequence:
 | purposeful_framing | **15.4%** | **0.0%** |
 | focus_management | 0.0% | 0.0% |
 | resolution_and_alignment | **10.0%** | **7.7%** |
-| assignment_clarity | **20.0%** | **20.0%** |
+| assignment_clarity | **20.0%** | **13.3%** |
 | question_quality | **16.7%** | **15.4%** |
-| communication_clarity | **25.0%** | **53.8%** |
+| communication_clarity | **25.0%** | **38.5%** |
 | active_listening | **20.0%** | **0.0%** |
 | recognition | **10.0%** | **27.3%** |
 | behavioral_integrity | 0.0% | 0.0% |
 | disagreement_navigation | 0.0% | 0.0% |
 | feedback_quality | 0.0% | 0.0% |
 
-PF, AL improved significantly. CC and Recognition worsened. AC, QQ roughly flat.
+PF, AL improved significantly. AC improved. CC and Recognition worsened. QQ roughly flat.
 
 ### Per-pattern insightful rates
 
-Absolute insightful count increased from 38 to 46 (+8). Per-pattern:
+Absolute insightful count increased from 38 to 47 (+9). Per-pattern:
 
 | Pattern | Baseline ins (N) | Iter3 ins (N) | Delta |
 |---------|-----------------|---------------|-------|
-| purposeful_framing | 2 (13) | 1 (15) | -1 |
+| purposeful_framing | 2 (13) | 3 (15) | +1 |
 | focus_management | 2 (5) | 2 (7) | 0 |
 | resolution_and_alignment | 6 (10) | 6 (13) | 0 |
-| assignment_clarity | 0 (15) | 3 (15) | +3 |
-| question_quality | 7 (12) | 4 (13) | -3 |
+| assignment_clarity | 0 (15) | 2 (15) | +2 |
+| question_quality | 7 (12) | 5 (13) | -2 |
 | communication_clarity | 0 (12) | 3 (13) | +3 |
-| active_listening | 2 (10) | 6 (15) | +4 |
+| active_listening | 2 (10) | 5 (15) | +3 |
 | recognition | 1 (10) | 0 (11) | -1 |
 | behavioral_integrity | 6 (6) | 8 (13) | +2 |
 | disagreement_navigation | 6 (9) | 8 (15) | +2 |
 | feedback_quality | 1 (1) | 5 (5) | +4 |
 
-Per-pattern percentage drops (e.g., QQ 58%->31%, BI 100%->62%) are largely denominator effects from more patterns being evaluable. The only genuine absolute drop is QQ (-3), which appears to be judge variance — the LLM writes essentially the same QQ insight across both versions, but the judge rates it insightful in some runs and adequate in others.
+Per-pattern percentage drops (e.g., QQ 58%->38%, BI 100%->62%) are largely denominator effects from more patterns being evaluable. The only genuine absolute drop is QQ (-2), which appears to be judge variance — the LLM writes essentially the same QQ insight across both versions, but the judge rates it insightful in some runs and adequate in others.
 
 ### Remaining Pedantic Problem: CC and Recognition
 
@@ -142,7 +144,7 @@ M-000003:
 
 1. **Run the full 10-transcript eval** with judge to get a larger sample size and confirm the per-pattern trends hold. The 3-transcript comparison has small N per pattern (e.g., CC has only 13 ratings — the 25%->54% pedantic jump could be noise).
 2. **Attempt further CC/Recognition calibration** — could try adding specific examples to Step 4 guidance showing when "real strength" is NOT worth a substantive card (e.g., "clarity in a meeting whose central issue is avoidance is not a strength worth coaching — it's background competence"). Risk: over-fitting to these transcripts. The changelog shows the LLM already understands the principle but makes borderline calls differently.
-3. **Accept the current quality level** — the 11.9% pedantic rate (down from 12.8%) may be close to the floor for prompt engineering. The remaining pedantic cases are judgment calls that reasonable coaches might disagree on.
+3. **Accept the current quality level** — the 9.6% pedantic rate (down from 12.8%) may be close to the floor for prompt engineering. The remaining pedantic cases are judgment calls that reasonable coaches might disagree on.
 4. **Analyze changelogs at scale** — run the eval on all 10 transcripts with 2 runs each (cheap — no judge needed; see Eval commands above), then analyze changelog patterns to see if the CC/Recognition calibration gap is consistent or transcript-specific.
 
 ### Eval results directories
