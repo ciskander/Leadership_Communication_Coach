@@ -142,20 +142,20 @@ Modeled on the existing BI repackaging check precedent, but uses a primary-funct
 
 **Iter2 results (IQR comparison — more robust than range):**
 
-Table shows only the four targeted patterns on the 3 test transcripts. Bold = best result across iterations.
+Table shows only the four targeted patterns on the 3 test transcripts. Bold = strictly better than baseline.
 
 | Pattern | Transcript | Baseline IQR | Iter1 IQR | Iter2 IQR |
 |---|---|---|---|---|
-| AL | M-000001 | 5 | **2** | 4 |
+| AL | M-000001 | 5 | **2** | **4** |
 | AL | M-000002 | 6 | 10 | **4** |
 | AL | M-000004 | 2 | 3 | 3 |
 | QQ | M-000001 | 5 | 5 | **4** |
 | QQ | M-000002 | 0 | 0 | 0 |
 | QQ | M-000004 | 3 | 3 | **0** |
 | CC | M-000001 | 3 | 3 | 3 |
-| CC | M-000002 | 1 | 1 | **1** |
-| CC | M-000004 | 2 | 1 | **0** |
-| Recog | M-000001 | 3 | **0** | 2 |
+| CC | M-000002 | 1 | 1 | 1 |
+| CC | M-000004 | 2 | **1** | **0** |
+| Recog | M-000001 | 3 | **0** | **2** |
 | Recog | M-000002 | 2 | 2 | 2 |
 | Recog | M-000004 | 2 | **1** | 2 |
 
@@ -203,7 +203,9 @@ The Phase Q judge data identified three high-pedantic patterns that need Stage 2
 
 The coaching prompt's Step 4 (card-mode decisions) is where these calibration issues live. Each pattern gets either a "substantive card" (real coaching content) or a "status card" (brief acknowledgment, no coaching). The LLM's threshold for when a pattern deserves a substantive card is lower than the judge's threshold for "not pedantic" — this is the calibration gap.
 
-The prior session's continuation prompt (`taxonomy_v4_phase2_coaching_quality_continuation_prompt_2.md`) has detailed background on the Stage 2 coaching architecture, the card-mode model, and changelog analysis showing the LLM's reasoning on CC and Recognition specifically. That prompt's coaching quality work was not completed — this session pivoted to OE stability instead. The coaching quality data in THIS prompt (Phase Q judge results) supersedes the prior prompt's eval data (which used 3 transcripts x 5 runs on an older taxonomy). Read both prompts for full context: the prior prompt for Stage 2 architecture and coaching prompt details, this prompt for current eval data and priorities.
+**Reading guide for the two continuation prompts:**
+- `taxonomy_v4_phase2_coaching_quality_continuation_prompt_2.md` — read for Stage 2 coaching architecture details (card-mode model, Step 4 decision logic, changelog schema) and CC/Recognition changelog analysis. Its coaching quality *work* was not completed — this session pivoted to OE stability instead. Its *eval data* (3 transcripts x 5 runs, older taxonomy) is superseded by Phase Q.
+- This prompt — read for current eval data (Phase Q/R), OE stability work, and current priorities.
 
 ### Priority 2: OE stability follow-up (if Phase R shows remaining issues)
 
@@ -211,6 +213,10 @@ The taxonomy changes are committed. If Phase R shows patterns where OE stability
 - **NOT-an-opportunity bright lines** (lever #4 from our design discussion) — add explicit categorical exclusions for common false-positive OE types. Complementary to filter questions but addresses a different failure mode.
 - **AL may need further tuning** — the primary-function gate helped M-000002 but results were mixed on M-000001 and M-000004.
 - **Recognition's OE stability was mostly unchanged** by the filter question. If still problematic, may need a different approach.
+
+---
+
+## Reference
 
 ### Design principles established in this session
 
