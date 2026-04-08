@@ -6,7 +6,7 @@ We completed a major round of coaching quality improvements across the taxonomy,
 
 IMPORTANT NOTE FOR THE SESSION: Never make assumptions. If anything is ambiguous, inconsistent, underspecified, or otherwise unclear, always stop and ask questions before proceeding. Precision and correctness are 10x more important than development speed.
 
-## What Was Done (Commits 52f6d23 through 3c7324c)
+## What Was Done (Commits 52f6d23 through 17766aa)
 
 ### Taxonomy Changes (`clearvoice_pattern_taxonomy_v4.0.txt`)
 - Added **behavioral context override** to GENERAL_DETECTION_GUIDANCE — helps Stage 1 recognize when surface-level pattern "successes" primarily served a dominant interpersonal failure (avoidance, coercion, dismissiveness)
@@ -51,7 +51,7 @@ Major restructuring of the reasoning sequence:
 | Pedantic | 12.8% | 11.9% |
 | N | 109 | 135 |
 
-**The aggregate coaching quality is essentially unchanged.** Insightful rate held steady (absolute count increased from 38 to 46), pedantic rate slightly improved. The N increased because more patterns are evaluable per run (9.0 vs 7.3 patterns per run).
+**The aggregate coaching quality is essentially unchanged.** Insightful rate held steady (absolute count increased from 38 to 46), pedantic rate slightly improved. The N increased from 109 to 135 because more patterns are evaluable per run (9.0 vs 7.3) — the card-mode model keeps status cards visible to the judge, whereas the old prompt would leave both fields null and the judge formatting code would skip them entirely. Empty cards remaining: 6 of 141 (4.3%).
 
 ### Per-pattern pedantic rates (old judge, apples-to-apples)
 
@@ -71,6 +71,26 @@ Major restructuring of the reasoning sequence:
 
 PF, AL improved significantly. CC and Recognition worsened. AC, QQ roughly flat.
 
+### Per-pattern insightful rates (old judge, apples-to-apples)
+
+Absolute insightful count increased from 38 to 46 (+8). Per-pattern:
+
+| Pattern | Baseline ins (N) | Iter3 ins (N) | Delta |
+|---------|-----------------|---------------|-------|
+| purposeful_framing | 2 (13) | 1 (15) | -1 |
+| focus_management | 2 (5) | 2 (7) | 0 |
+| resolution_and_alignment | 6 (10) | 6 (13) | 0 |
+| assignment_clarity | 0 (15) | 3 (15) | +3 |
+| question_quality | 7 (12) | 4 (13) | -3 |
+| communication_clarity | 0 (12) | 3 (13) | +3 |
+| active_listening | 2 (10) | 6 (15) | +4 |
+| recognition | 1 (10) | 0 (11) | -1 |
+| behavioral_integrity | 6 (6) | 8 (13) | +2 |
+| disagreement_navigation | 6 (9) | 8 (15) | +2 |
+| feedback_quality | 1 (1) | 5 (5) | +4 |
+
+Per-pattern percentage drops (e.g., QQ 58%->31%, BI 100%->62%) are largely denominator effects from more patterns being evaluable. The only genuine absolute drop is QQ (-3), which appears to be judge variance — the LLM writes essentially the same QQ insight across both versions, but the judge rates it insightful in some runs and adequate in others.
+
 ### Judge Calibration Finding
 
 Running the **new judge** (with "appropriate" category and explicit definitions) on the same iter3 output produced dramatically different numbers:
@@ -80,10 +100,7 @@ Running the **new judge** (with "appropriate" category and explicit definitions)
 
 This is a **calibration artifact**, not a quality change. The new judge definitions made it stricter about "insightful" and caused it to bin many adequate/insightful ratings as "appropriate." The old judge (without definitions) is the correct comparison baseline.
 
-**Decision needed:** The new judge definitions need recalibration before they can be used for future evals. The "appropriate" category concept is sound, but the definitions are too broad — they're absorbing content that should be "adequate" or "insightful." Options:
-1. Tighten the "appropriate" definition to only match true status-card content (very brief, no specific behavioral observations)
-2. Remove the explicit definitions and let the judge use its own calibration (pre-change behavior) while keeping the "appropriate" category
-3. Keep the old judge as the eval baseline and use the new judge only for "appropriate" classification
+**Decision made:** Reverted judge_eval.py and judge_synthesis.py to the pre-definitions version (commit 8bd0701). The old undirected judge is the permanent eval baseline. If an "appropriate" category is revisited in the future, the definitions need to be much tighter — only matching true status-card content (very brief, no specific behavioral observations) — to avoid absorbing adequate/insightful ratings.
 
 ### Remaining Pedantic Problem: CC and Recognition
 
@@ -98,13 +115,29 @@ The LLM understands the framework. It makes thoughtful decisions and even acknow
 
 This is a **calibration gap** between the LLM's quality bar and the judge's quality bar. The prompt guidance is clear; the LLM understands it; it's just making borderline calls differently than the judge would.
 
+### Sample changelog entries (from v4p2_coaching_quality_iter4)
+
+CC on M-000003 (contentious meeting):
+- Run 001: "substantive_card because Alex's summaries and explanations were unusually strong and worth reinforcing"
+- Run 002: "substantive_card because clarity was a defining strength in key opening and closing moments"
+
+CC on M-000004 (avoider):
+- Run 001: "Clear enough to acknowledge as a supporting strength, though not the central coaching issue"
+- Run 002: "substantive_card with notes only; clarity was a real strength, while the bigger issue was not how clearly you spoke but what you did with dissent"
+
+Recognition on M-000003:
+- Run 001: "status_card because recognition was present but not central to the coaching story" (correct)
+- Run 002: "substantive_card because this is the clearest developmental edge and ties directly to the meeting's main coaching message" (judge calls this pedantic)
+
+Note: Run 002 for CC on M-000004 even acknowledges CC isn't the central issue — but still gives it a substantive card. The LLM sees "real strength" and defaults to substantive even when it knows the pattern is peripheral.
+
 ## What Remains
 
 ### Immediate options
-1. **Run the full 10-transcript eval** with the old judge to get a larger sample size and confirm the per-pattern trends hold. The 3-transcript comparison has small N per pattern.
-2. **Attempt further CC/Recognition calibration** — could try adding specific examples to Step 4 guidance showing when "real strength" is NOT worth a substantive card (e.g., "clarity in a meeting whose central issue is avoidance is not a strength worth coaching — it's background competence"). Risk: over-fitting to these transcripts.
+1. **Run the full 10-transcript eval** with the old judge to get a larger sample size and confirm the per-pattern trends hold. The 3-transcript comparison has small N per pattern (e.g., CC has only 13 ratings — the 25%->54% pedantic jump could be noise). Use `--transcripts-dir backend/evals/transcripts` for all 10 transcripts.
+2. **Attempt further CC/Recognition calibration** — could try adding specific examples to Step 4 guidance showing when "real strength" is NOT worth a substantive card (e.g., "clarity in a meeting whose central issue is avoidance is not a strength worth coaching — it's background competence"). Risk: over-fitting to these transcripts. The changelog shows the LLM already understands the principle but makes borderline calls differently.
 3. **Accept the current quality level** — the 11.9% pedantic rate (down from 12.8%) may be close to the floor for prompt engineering. The remaining pedantic cases are judgment calls that reasonable coaches might disagree on.
-4. **Recalibrate the new judge definitions** so future evals have a working "appropriate" category without the insightful drop.
+4. **Analyze changelogs at scale** — run the eval on all 10 transcripts with 2 runs each (cheap — no judge needed), then analyze changelog patterns to see if the CC/Recognition calibration gap is consistent or transcript-specific.
 
 ### Files modified in this session
 | File | Changes |
@@ -112,8 +145,8 @@ This is a **calibration gap** between the LLM's quality bar and the judge's qual
 | `clearvoice_pattern_taxonomy_v4.0.txt` | Behavioral context override, R&A coerced alignment, AL selective hearing, 6 coaching_note cleanups, CC cleanup |
 | `system_prompt_coaching_v1.0.txt` | Steps 4-6 rewrite, card-mode field rules, no-empty-cards rule, self-audit, changelog expansion |
 | `system_prompt_baseline_pack_v0_6_0.txt` | Judgment-based pattern coaching, card-mode model, no-empty-cards rule, self-checks |
-| `backend/evals/judge_eval.py` | "appropriate" category, rating definitions |
-| `backend/evals/judge_synthesis.py` | "appropriate" in _dist and report tables |
+| `backend/evals/judge_eval.py` | "appropriate" category and rating definitions added then **reverted** — net unchanged from pre-session |
+| `backend/evals/judge_synthesis.py` | "appropriate" in _dist and report tables added then **reverted** — net unchanged from pre-session |
 | `backend/evals/replay_eval.py` | Changelog capture and save |
 
 ### Eval results directories
@@ -122,7 +155,7 @@ This is a **calibration gap** between the LLM's quality bar and the judge's qual
 | `v4p2_recognition_fix` | Baseline (3 meetings x 5 runs, old judge) |
 | `v4p2_coaching_quality` | Initial changes (10 meetings x 5 runs, new judge) |
 | `v4p2_coaching_quality_iter1` | Iteration 1 fixes (3 meetings x 5 runs, new judge) |
-| `v4p2_coaching_quality_iter3` | Iteration 3 rewrite (3 meetings x 5 runs, both judges). New-judge files in `judge_new/` subdirs; old-judge files in meeting dirs. |
+| `v4p2_coaching_quality_iter3` | Iteration 3 rewrite (3 meetings x 5 runs, both judges). **File layout:** old-judge files are directly in each meeting dir (the authoritative ones for comparison); new-judge files are in `judge_new/` subdirs (kept for reference only). |
 | `v4p2_coaching_quality_iter4` | Iteration 4 with changelog (3 meetings x 2 runs, no judge) |
 
 ### Test transcripts
