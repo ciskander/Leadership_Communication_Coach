@@ -51,7 +51,7 @@ Major restructuring of the reasoning sequence:
 | Pedantic | 12.8% | 11.9% |
 | N | 109 | 135 |
 
-**The aggregate coaching quality is essentially unchanged.** Insightful rate held steady (absolute count increased from 38 to 46), pedantic rate slightly improved. The N increased from 109 to 135 because more patterns are evaluable per run (9.0 vs 7.3) — the card-mode model keeps status cards visible to the judge, whereas the old prompt would leave both fields null and the judge formatting code would skip them entirely. Empty cards remaining: 6 of 141 (4.3%).
+**The aggregate coaching quality is essentially unchanged.** Insightful rate held steady (absolute count increased from 38 to 46), pedantic rate slightly improved. The N increased from 109 to 135 because more patterns are evaluable per run (9.0 vs 7.3) — the card-mode model keeps status cards visible to the judge, whereas the old prompt would leave both fields null and the judge formatting code would skip them entirely. Empty cards remaining: 6 of 141 total pattern_coaching entries across all runs (4.3%; the 141 count differs from the 135 judge N because the judge skips both-null cards).
 
 ### Per-pattern pedantic rates (old judge, apples-to-apples)
 
@@ -104,32 +104,25 @@ This is a **calibration artifact**, not a quality change. The new judge definiti
 
 ### Remaining Pedantic Problem: CC and Recognition
 
-The LLM's changelog reveals the root cause. For CC on M-000003 (contentious meeting):
-- "substantive_card because Alex's summaries and explanations were unusually strong and worth reinforcing"
-- "substantive_card because clarity was a defining strength in key opening and closing moments"
+CC and Recognition are the only patterns where pedantic rates worsened. The Stage 2 changelog (from v4p2_coaching_quality_iter4) reveals the root cause — a **calibration gap** between the LLM's quality bar and the judge's quality bar. The LLM understands the framework and makes thoughtful decisions, but its threshold for "worth a substantive card" is lower than the judge's threshold for "not pedantic."
 
-For CC on M-000004 (avoider):
-- "substantive_card with notes only; clarity was a real strength, while the bigger issue was not how clearly you spoke but what you did with dissent"
+**CC changelog examples:**
 
-The LLM understands the framework. It makes thoughtful decisions and even acknowledges when CC isn't the central issue. But its threshold for "worth a substantive card" is lower than the judge's threshold for "not pedantic." When the LLM says "real strength worth reinforcing," the judge says "true but obvious, not coaching-rich."
-
-This is a **calibration gap** between the LLM's quality bar and the judge's quality bar. The prompt guidance is clear; the LLM understands it; it's just making borderline calls differently than the judge would.
-
-### Sample changelog entries (from v4p2_coaching_quality_iter4)
-
-CC on M-000003 (contentious meeting):
+M-000003 (contentious meeting):
 - Run 001: "substantive_card because Alex's summaries and explanations were unusually strong and worth reinforcing"
 - Run 002: "substantive_card because clarity was a defining strength in key opening and closing moments"
 
-CC on M-000004 (avoider):
+M-000004 (avoider):
 - Run 001: "Clear enough to acknowledge as a supporting strength, though not the central coaching issue"
 - Run 002: "substantive_card with notes only; clarity was a real strength, while the bigger issue was not how clearly you spoke but what you did with dissent"
 
-Recognition on M-000003:
-- Run 001: "status_card because recognition was present but not central to the coaching story" (correct)
-- Run 002: "substantive_card because this is the clearest developmental edge and ties directly to the meeting's main coaching message" (judge calls this pedantic)
+Note: Run 002 on M-000004 even acknowledges CC isn't the central issue — but still gives it a substantive card. The LLM sees "real strength" and defaults to substantive even when it knows the pattern is peripheral. The judge calls this pedantic: "clarity is not the issue in this meeting."
 
-Note: Run 002 for CC on M-000004 even acknowledges CC isn't the central issue — but still gives it a substantive card. The LLM sees "real strength" and defaults to substantive even when it knows the pattern is peripheral.
+**Recognition changelog examples:**
+
+M-000003:
+- Run 001: "status_card because recognition was present but not central to the coaching story" (correct — judge would agree)
+- Run 002: "substantive_card because this is the clearest developmental edge and ties directly to the meeting's main coaching message" (judge calls this pedantic — recognition is not the developmental edge in this meeting)
 
 ## What Remains
 
@@ -159,10 +152,13 @@ Note: Run 002 for CC on M-000004 even acknowledges CC isn't the central issue �
 | `v4p2_coaching_quality_iter4` | Iteration 4 with changelog (3 meetings x 2 runs, no judge) |
 
 ### Test transcripts
-Located at `backend/evals/transcripts_v4_test/`:
-- M-000003_contentious_meeting.txt (+ .meta.json)
-- M-000004_avoider.txt (+ .meta.json)
-- M-000005_weak_feedback.txt (+ .meta.json)
+Located at `backend/evals/transcripts_v4_test/` (subset of `backend/evals/transcripts/`):
+- **M-000003_contentious_meeting** — Cross-functional project review, Alex as chair, multiple substantive disagreements about release scope, QA, and design. Alex is generally strong but over-commits.
+- **M-000004_avoider** — Project review, Alex as chair, leader dismisses substantive pushback from experts (Jamie on design, Taylor on QA certification). The central coaching issue is avoidance/coercion.
+- **M-000005_weak_feedback** — 1:1 manager meeting, Jordan giving developmental feedback to Avery with vague unnamed sourcing, hedging, and no concrete examples. The central coaching issue is feedback quality.
 
-### Active branch
-- `claude/lucid-ellis` — current feature branch (worktree at `.claude/worktrees/lucid-ellis`)
+### Baseline pack note
+The baseline pack prompt changes (judgment-based pattern coaching, card-mode model) have NOT been eval-tested. All eval results in this document are for single-meeting coaching (Stage 2). Baseline pack validation is a separate task.
+
+### Branch state
+All changes are merged to `main`. The worktree branch `claude/lucid-ellis` is behind main and can be cleaned up.
