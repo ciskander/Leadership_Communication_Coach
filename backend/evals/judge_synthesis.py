@@ -31,8 +31,10 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(messag
 
 PATTERN_ORDER = [
     "purposeful_framing", "focus_management",
-    "disagreement_navigation", "trust_and_credibility", "resolution_and_alignment",
-    "assignment_clarity", "question_quality", "communication_clarity", "feedback_quality",
+    "resolution_and_alignment", "assignment_clarity",
+    "question_quality", "communication_clarity",
+    "active_listening", "recognition",
+    "behavioral_integrity", "disagreement_navigation", "feedback_quality",
 ]
 
 # ── Judge file discovery ─────────────────────────────────────────────────────
