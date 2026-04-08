@@ -78,21 +78,21 @@ Ran 10 transcripts x 10 runs = 98 outputs (2 transient failures) on the current 
 
 **Phase Q coaching quality results** (judge eval, N=791):
 
-| Pattern | N | Ins% | Ade% | Ped% |
-|---|---|---|---|---|
-| feedback_quality | 44 | 81.8% | 18.2% | 0.0% |
-| resolution_and_alignment | 85 | 65.9% | 28.2% | 5.9% |
-| behavioral_integrity | 62 | 64.5% | 19.4% | 16.1% |
-| disagreement_navigation | 60 | 60.0% | 36.7% | 3.3% |
-| question_quality | 72 | 45.8% | 44.4% | 9.7% |
-| assignment_clarity | 87 | 35.6% | 62.1% | 2.3% |
-| focus_management | 27 | 33.3% | 63.0% | 0.0% |
-| active_listening | 88 | 29.5% | 67.0% | 3.4% |
-| communication_clarity | 85 | 22.4% | 60.0% | 17.6% |
-| purposeful_framing | 89 | 16.9% | 73.0% | 10.1% |
-| recognition | 80 | 12.5% | 51.2% | 36.2% |
+| Pattern | N | Ins% | Ade% | Ped% | Wrg% |
+|---|---|---|---|---|---|
+| feedback_quality | 44 | 81.8% | 18.2% | 0.0% | 0.0% |
+| resolution_and_alignment | 85 | 65.9% | 28.2% | 5.9% | 0.0% |
+| behavioral_integrity | 62 | 64.5% | 19.4% | 16.1% | 0.0% |
+| disagreement_navigation | 60 | 60.0% | 36.7% | 3.3% | 0.0% |
+| question_quality | 72 | 45.8% | 44.4% | 9.7% | 0.0% |
+| assignment_clarity | 87 | 35.6% | 62.1% | 2.3% | 0.0% |
+| focus_management | 27 | 33.3% | 63.0% | 0.0% | 3.7% |
+| active_listening | 88 | 29.5% | 67.0% | 3.4% | 0.0% |
+| communication_clarity | 85 | 22.4% | 60.0% | 17.6% | 0.0% |
+| purposeful_framing | 89 | 16.9% | 73.0% | 10.1% | 0.0% |
+| recognition | 80 | 12.5% | 51.2% | 36.2% | 0.0% |
 
-**Aggregate:** 40.2% insightful, 49.3% adequate, 10.4% pedantic
+**Aggregate:** 40.2% insightful, 49.3% adequate, 10.4% pedantic, 0.1% wrong
 
 Note: The judge synthesis report initially excluded AL and Recognition because `judge_synthesis.py` had a stale PATTERN_ORDER. This was fixed (commit `45f18f9`) and synthesis re-run. The judge eval itself always evaluated all patterns present in the output.
 
@@ -142,16 +142,22 @@ Modeled on the existing BI repackaging check precedent, but uses a primary-funct
 
 **Iter2 results (IQR comparison — more robust than range):**
 
+Table shows only the four targeted patterns on the 3 test transcripts. Bold = best result across iterations.
+
 | Pattern | Transcript | Baseline IQR | Iter1 IQR | Iter2 IQR |
 |---|---|---|---|---|
 | AL | M-000001 | 5 | **2** | 4 |
 | AL | M-000002 | 6 | 10 | **4** |
 | AL | M-000004 | 2 | 3 | 3 |
 | QQ | M-000001 | 5 | 5 | **4** |
+| QQ | M-000002 | 0 | 0 | 0 |
 | QQ | M-000004 | 3 | 3 | **0** |
 | CC | M-000001 | 3 | 3 | 3 |
-| CC | M-000002 | 1 | 1 | 1 |
+| CC | M-000002 | 1 | 1 | **1** |
 | CC | M-000004 | 2 | 1 | **0** |
+| Recog | M-000001 | 3 | **0** | 2 |
+| Recog | M-000002 | 2 | 2 | 2 |
+| Recog | M-000004 | 2 | **1** | 2 |
 
 Key finding: remaining OE count variance is dominated by **LLM sampling noise** (individual outlier runs that apply all filters more or less aggressively across all patterns simultaneously), not taxonomy ambiguity. This is inherent to the model and cannot be further reduced by prompt engineering.
 
@@ -174,7 +180,7 @@ Key finding: remaining OE count variance is dominated by **LLM sampling noise** 
 
 ### Immediate: Phase R analysis
 
-When Phase R completes, run judge eval and compare against Phase Q:
+Phase R replay is complete (98 outputs). Run judge eval and compare against Phase Q:
 ```
 python -m backend.evals.run_pipeline --phase Phase_R --transcripts-dir backend/evals/transcripts --skip-replay --judge
 ```
@@ -195,7 +201,9 @@ The Phase Q judge data identified three high-pedantic patterns that need Stage 2
 
 **Behavioral Integrity: 16.1% pedantic** — concentrated in specific meetings (3/7 on M-000003, 3/5 on M-000055, 2/4 on M-000009). BI coaching becomes pedantic when the system praises basic professional integrity as if it were noteworthy.
 
-The coaching prompt's Step 4 (card-mode decisions) is where these calibration issues live. Each pattern gets either a "substantive card" (real coaching content) or a "status card" (brief acknowledgment, no coaching). The LLM's threshold for when a pattern deserves a substantive card is lower than the judge's threshold for "not pedantic" — this is the calibration gap. The prior session's continuation prompt (`taxonomy_v4_phase2_coaching_quality_continuation_prompt_2.md`) has detailed analysis with Stage 2 changelog examples showing the LLM's reasoning.
+The coaching prompt's Step 4 (card-mode decisions) is where these calibration issues live. Each pattern gets either a "substantive card" (real coaching content) or a "status card" (brief acknowledgment, no coaching). The LLM's threshold for when a pattern deserves a substantive card is lower than the judge's threshold for "not pedantic" — this is the calibration gap.
+
+The prior session's continuation prompt (`taxonomy_v4_phase2_coaching_quality_continuation_prompt_2.md`) has detailed background on the Stage 2 coaching architecture, the card-mode model, and changelog analysis showing the LLM's reasoning on CC and Recognition specifically. That prompt's coaching quality work was not completed — this session pivoted to OE stability instead. The coaching quality data in THIS prompt (Phase Q judge results) supersedes the prior prompt's eval data (which used 3 transcripts x 5 runs on an older taxonomy). Read both prompts for full context: the prior prompt for Stage 2 architecture and coaching prompt details, this prompt for current eval data and priorities.
 
 ### Priority 2: OE stability follow-up (if Phase R shows remaining issues)
 
@@ -228,7 +236,7 @@ These were discussed at length and deliberately not implemented. Do not re-propo
 - **Saturation / stop-counting rules** — temporal bias risk. If the leader improves (or worsens) as the meeting progresses, stop-counting misses the shift.
 - **Turn proximity rules for AL** (e.g., "within N turns") — too mechanistic. Meeting pace varies; a hard number can't capture conversational proximity across different meeting styles.
 - **Denominator restatement** — risk of over-simplifying the intended definition and backfiring. The compression inherent in a restatement can lose nuance the LLM needs.
-- **Pattern-specific "when in doubt, exclude" echoes** — skipped because the general rule already exists in two places (CORE_RULES line 64 and GENERAL_DETECTION_GUIDANCE line 1856). The filter questions are a stronger intervention for the same purpose.
+- **Pattern-specific "when in doubt, exclude" echoes** — skipped because the general rule already exists in two places (CORE_RULES and GENERAL_DETECTION_GUIDANCE sections of the taxonomy). The filter questions are a stronger intervention for the same purpose.
 - **Boundary examples without principles** — over-anchoring risk. The LLM may match surface features of examples rather than the underlying principle. If examples are used in the future, always pair with the "why."
 - **Two-pass OE detection** (identify candidates, then filter) — too large a structural change to the prompt architecture for uncertain benefit.
 
