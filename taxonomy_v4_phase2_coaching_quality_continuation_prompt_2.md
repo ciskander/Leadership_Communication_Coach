@@ -119,17 +119,6 @@ Absolute insightful count increased from 38 to 46 (+8). Per-pattern:
 
 Per-pattern percentage drops (e.g., QQ 58%->31%, BI 100%->62%) are largely denominator effects from more patterns being evaluable. The only genuine absolute drop is QQ (-3), which appears to be judge variance — the LLM writes essentially the same QQ insight across both versions, but the judge rates it insightful in some runs and adequate in others.
 
-### Judge Calibration Finding
-
-Running the **new judge** (with "appropriate" category and explicit definitions) on the same iter3 output produced dramatically different numbers:
-- Insightful dropped from 34.1% to 17.0%
-- Appropriate appeared at 24.4%
-- Pedantic dropped from 11.9% to 8.9%
-
-This is a **calibration artifact**, not a quality change. The new judge definitions made it stricter about "insightful" and caused it to bin many adequate/insightful ratings as "appropriate." The old judge (without definitions) is the correct comparison baseline.
-
-**Decision made:** Reverted judge_eval.py and judge_synthesis.py to the pre-definitions version (commit 8bd0701). The old undirected judge is the permanent eval baseline. If an "appropriate" category is revisited in the future, the definitions need to be much tighter — only matching true status-card content (very brief, no specific behavioral observations) — to avoid absorbing adequate/insightful ratings.
-
 ### Remaining Pedantic Problem: CC and Recognition
 
 CC and Recognition are the only patterns where pedantic rates worsened. The Stage 2 changelog (from v4p2_coaching_quality_iter4) reveals the root cause — a **calibration gap** between the LLM's quality bar and the judge's quality bar. The LLM understands the framework and makes thoughtful decisions, but its threshold for "worth a substantive card" is lower than the judge's threshold for "not pedantic."
@@ -156,20 +145,10 @@ M-000003:
 
 ### Immediate options
 
-1. **Run the full 10-transcript eval** with the old judge to get a larger sample size and confirm the per-pattern trends hold. The 3-transcript comparison has small N per pattern (e.g., CC has only 13 ratings — the 25%->54% pedantic jump could be noise). Use `--transcripts-dir backend/evals/transcripts` for all 10 transcripts.
+1. **Run the full 10-transcript eval** with judge to get a larger sample size and confirm the per-pattern trends hold. The 3-transcript comparison has small N per pattern (e.g., CC has only 13 ratings — the 25%->54% pedantic jump could be noise).
 2. **Attempt further CC/Recognition calibration** — could try adding specific examples to Step 4 guidance showing when "real strength" is NOT worth a substantive card (e.g., "clarity in a meeting whose central issue is avoidance is not a strength worth coaching — it's background competence"). Risk: over-fitting to these transcripts. The changelog shows the LLM already understands the principle but makes borderline calls differently.
 3. **Accept the current quality level** — the 11.9% pedantic rate (down from 12.8%) may be close to the floor for prompt engineering. The remaining pedantic cases are judgment calls that reasonable coaches might disagree on.
 4. **Analyze changelogs at scale** — run the eval on all 10 transcripts with 2 runs each (cheap — no judge needed; see Eval commands above), then analyze changelog patterns to see if the CC/Recognition calibration gap is consistent or transcript-specific.
-
-### Files modified in this session
-| File | Changes |
-|------|---------|
-| `clearvoice_pattern_taxonomy_v4.0.txt` | Behavioral context override, R&A coerced alignment, AL selective hearing, 6 coaching_note cleanups, CC cleanup |
-| `system_prompt_coaching_v1.0.txt` | Steps 4-6 rewrite, card-mode field rules, no-empty-cards rule, self-audit, changelog expansion |
-| `system_prompt_baseline_pack_v0_6_0.txt` | Judgment-based pattern coaching, card-mode model, no-empty-cards rule, self-checks |
-| `backend/evals/judge_eval.py` | "appropriate" category and rating definitions added then **reverted** — net unchanged from pre-session |
-| `backend/evals/judge_synthesis.py` | "appropriate" in _dist and report tables added then **reverted** — net unchanged from pre-session |
-| `backend/evals/replay_eval.py` | Changelog capture and save |
 
 ### Eval results directories
 | Phase | Contents |
