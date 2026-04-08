@@ -127,6 +127,9 @@ M-000003:
 ## What Remains
 
 ### Immediate options
+
+All eval commands should be run from the main branch root directory.
+
 1. **Run the full 10-transcript eval** with the old judge to get a larger sample size and confirm the per-pattern trends hold. The 3-transcript comparison has small N per pattern (e.g., CC has only 13 ratings — the 25%->54% pedantic jump could be noise). Use `--transcripts-dir backend/evals/transcripts` for all 10 transcripts.
 2. **Attempt further CC/Recognition calibration** — could try adding specific examples to Step 4 guidance showing when "real strength" is NOT worth a substantive card (e.g., "clarity in a meeting whose central issue is avoidance is not a strength worth coaching — it's background competence"). Risk: over-fitting to these transcripts. The changelog shows the LLM already understands the principle but makes borderline calls differently.
 3. **Accept the current quality level** — the 11.9% pedantic rate (down from 12.8%) may be close to the floor for prompt engineering. The remaining pedantic cases are judgment calls that reasonable coaches might disagree on.
