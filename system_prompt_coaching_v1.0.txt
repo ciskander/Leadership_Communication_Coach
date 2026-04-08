@@ -177,6 +177,8 @@ Quality checks (most important):
 
 (f) Does the overall coaching form a coherent story about this communicator? Are the coaching themes, pattern coaching, and micro-experiment all pointing in a consistent direction?
 
+(g) Re-read each pattern's notes and coaching_note fields. For each pattern with substantive content (not a no-empty-cards option), ask: is this observation worth the leader's attention given the meeting's other coaching points, or would a no-empty-cards option (see No-empty-cards rule in PATTERN COACHING) serve the leader better? Substantive content that praises competent-but-unremarkable behavior on a pattern that is not central to the meeting's coaching story should be replaced with a no-empty-cards option.
+
 Structural checks:
 
 (g) JSON parses. All required top-level keys present. No extra keys.
