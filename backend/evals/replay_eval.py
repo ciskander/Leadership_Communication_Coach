@@ -266,6 +266,7 @@ def run_single_analysis(
 
     stage1_tokens = response.prompt_tokens + response.completion_tokens
     stage2_tokens = 0
+    changelog: list[dict] = []
 
     # ── Stage 2: Coaching (only if Stage 1 passes) ──
     if stage1_gate.passed:
@@ -283,7 +284,7 @@ def run_single_analysis(
         stage2_tokens = stage2_response.prompt_tokens + stage2_response.completion_tokens
 
         # Merge Stage 2 coaching into Stage 1 scoring
-        merged, _changelog = merge_stage2_output(stage1_parsed, stage2_response.parsed)
+        merged, changelog = merge_stage2_output(stage1_parsed, stage2_response.parsed)
         merged = patch_analysis_output(
             merged,
             prompt_meta=prompt_payload.meta,
@@ -336,6 +337,7 @@ def run_single_analysis(
         "pattern_opp_counts": dict(pattern_opp_counts),
         "pattern_statuses": dict(pattern_statuses),
         "pattern_oe_counts": dict(pattern_oe_counts),
+        "changelog": changelog,
     }
 
 
@@ -378,6 +380,9 @@ def run_repeat(
             # Save JSON immediately so results survive crashes
             if "parsed_json" in result:
                 save_json(result["parsed_json"], results_dir / f"run_{i+1:03d}_{timestamp}.json")
+            # Save Stage 2 changelog if present
+            if result.get("changelog"):
+                save_json(result["changelog"], results_dir / f"changelog_{i+1:03d}_{timestamp}.json")
             # Save editor output if present
             if result.get("editor_raw_output"):
                 save_json(
