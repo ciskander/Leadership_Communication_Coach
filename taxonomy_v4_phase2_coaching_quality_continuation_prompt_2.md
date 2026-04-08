@@ -18,7 +18,6 @@ This means: taxonomy changes affect Stage 1 scoring only (indirect effect on coa
 
 - **Card-mode model**: Each pattern_coaching entry is either a "substantive card" (one or both of notes/coaching_note contain real coaching, other can be null) or a "status card" (one field contains a no-empty-cards option, other is null, all supporting fields null). Modes are never mixed on the same card.
 - **No-empty-cards options**: Valid status-card content — a brief positive acknowledgment, a cross-reference to where the real coaching lives, or a neutral status statement like "Consistently strong here; no developmental notes."
-- **Old judge**: The eval judge (`backend/evals/judge_eval.py`) without explicit rating definitions — rates as insightful/adequate/pedantic/wrong using its own calibration. This is the current active version and the permanent eval baseline.
 - **Stage 2 changelog**: The `changes` array in Stage 2 output, saved as `changelog_NNN_timestamp.json` by the eval pipeline. Logs Step 4 card-mode decisions, notes null decisions, and self-audit downgrades.
 
 ### Eval commands
@@ -60,17 +59,13 @@ Major restructuring of the reasoning sequence:
 - Same card-mode model, no-empty-cards rule, and behavioral context override as coaching prompt
 - Updated self-checks to match card-mode model
 
-### Judge Eval Changes (`backend/evals/judge_eval.py`, `judge_synthesis.py`)
-- Attempted adding **"appropriate" rating category** and explicit definitions for all categories. **REVERTED** — the explicit definitions shifted judge calibration significantly, making results non-comparable to baseline evals. Both files reverted to pre-definitions version (commit 8bd0701) to maintain apples-to-apples comparability across all eval phases.
-- The "appropriate" category concept is documented below for potential future use with better calibration.
-
 ### Eval Pipeline Changes (`backend/evals/replay_eval.py`)
 - Stage 2 changelog now captured and saved as `changelog_NNN_timestamp.json` alongside each run output file
 - Previously the changelog was discarded (`_changelog`); now it's available for analysis
 
 ## Eval Results Summary
 
-### Apples-to-apples comparison (old judge on both baseline and iter3 output)
+### Aggregate comparison (baseline vs iter3, same 3 meetings x 5 runs)
 
 | Metric | Baseline (v4p2_recognition_fix) | Iter3 (v4p2_coaching_quality_iter3) |
 |--------|--------------------------------|-------------------------------------|
@@ -81,7 +76,7 @@ Major restructuring of the reasoning sequence:
 
 **The aggregate coaching quality is essentially unchanged.** Insightful rate held steady (absolute count increased from 38 to 46), pedantic rate slightly improved. The N increased from 109 to 135 because more patterns are evaluable per run (9.0 vs 7.3) — the card-mode model keeps status cards visible to the judge, whereas the old prompt would leave both fields null and the judge formatting code would skip them entirely. Empty cards remaining: 6 of 141 total pattern_coaching entries across all runs (4.3%; the 141 count differs from the 135 judge N because the judge skips both-null cards).
 
-### Per-pattern pedantic rates (old judge, apples-to-apples)
+### Per-pattern pedantic rates
 
 | Pattern | Baseline Ped% | Iter3 Ped% |
 |---------|--------------|------------|
@@ -99,7 +94,7 @@ Major restructuring of the reasoning sequence:
 
 PF, AL improved significantly. CC and Recognition worsened. AC, QQ roughly flat.
 
-### Per-pattern insightful rates (old judge, apples-to-apples)
+### Per-pattern insightful rates
 
 Absolute insightful count increased from 38 to 46 (+8). Per-pattern:
 
@@ -153,10 +148,10 @@ M-000003:
 ### Eval results directories
 | Phase | Contents |
 |-------|----------|
-| `v4p2_recognition_fix` | Baseline (3 meetings x 5 runs, old judge). **Use this as the comparison baseline.** |
-| `v4p2_coaching_quality` | Initial changes (10 meetings x 5 runs). Judge results used the now-reverted "new judge" with explicit definitions — **not directly comparable** to baseline. Run output is still valid. |
-| `v4p2_coaching_quality_iter1` | Iteration 1 fixes (3 meetings x 5 runs). Same caveat — judge results used the reverted new judge. |
-| `v4p2_coaching_quality_iter3` | Iteration 3 rewrite (3 meetings x 5 runs). **Old-judge files in each meeting dir are the authoritative comparison.** New-judge files in `judge_new/` subdirs are reference only. |
+| `v4p2_recognition_fix` | Baseline (3 meetings x 5 runs, with judge). **Use this as the comparison baseline.** |
+| `v4p2_coaching_quality` | Initial changes (10 meetings x 5 runs, run output only — no judge files). |
+| `v4p2_coaching_quality_iter1` | Iteration 1 fixes (3 meetings x 5 runs, run output only — no judge files). |
+| `v4p2_coaching_quality_iter3` | Iteration 3 rewrite (3 meetings x 5 runs, with judge). **This is the primary comparison to baseline.** |
 | `v4p2_coaching_quality_iter4` | Iteration 4 with changelog (3 meetings x 2 runs, no judge). Use for changelog analysis. |
 
 ### Test transcripts
