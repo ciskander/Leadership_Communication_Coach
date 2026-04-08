@@ -380,6 +380,15 @@ def run_repeat(
             # Save JSON immediately so results survive crashes
             if "parsed_json" in result:
                 save_json(result["parsed_json"], results_dir / f"run_{i+1:03d}_{timestamp}.json")
+            # Save Gate1 validation issues if any
+            if result.get("gate1_issues"):
+                save_json(
+                    {
+                        "gate1_passed": result["gate1_passed"],
+                        "issues": result["gate1_issues"],
+                    },
+                    results_dir / f"validation_issues_{i+1:03d}_{timestamp}.json",
+                )
             # Save Stage 2 changelog if present
             if result.get("changelog"):
                 save_json(result["changelog"], results_dir / f"changelog_{i+1:03d}_{timestamp}.json")
