@@ -6,14 +6,42 @@ We completed a major round of coaching quality improvements across the taxonomy,
 
 IMPORTANT NOTE FOR THE SESSION: Never make assumptions. If anything is ambiguous, inconsistent, underspecified, or otherwise unclear, always stop and ask questions before proceeding. Precision and correctness are 10x more important than development speed.
 
-## What Was Done (Commits 52f6d23 through 17766aa)
+### Stage architecture (read this first)
+
+- **Stage 1** (scoring): System prompt is `system_prompt_scoring_v1.0.txt`. Developer message is the **full taxonomy** (`clearvoice_pattern_taxonomy_v4.0.txt`). Generates scores, OEs, evidence spans. Does NOT generate coaching fields (`notes`, `coaching_note`).
+- **Stage 2** (coaching): System prompt is `system_prompt_coaching_v1.0.txt` with `__PATTERN_DEFINITIONS__` replaced by a **condensed extraction** from the taxonomy (only "What it measures", "NOT this pattern", "Disambiguation", "Coaching materiality" — see `extract_stage2_pattern_definitions()` in `backend/core/prompt_builder.py`). Stage 2 does NOT see GENERAL_DETECTION_GUIDANCE, full detection notes, or taxonomy coaching instructions.
+- **Baseline pack**: System prompt is `system_prompt_baseline_pack_v0_6_0.txt`. Generates both scoring and coaching in one pass.
+
+This means: taxonomy changes affect Stage 1 scoring only (indirect effect on coaching via better scores). Coaching prompt changes directly affect Stage 2 coaching output.
+
+### Key terms
+
+- **Card-mode model**: Each pattern_coaching entry is either a "substantive card" (one or both of notes/coaching_note contain real coaching, other can be null) or a "status card" (one field contains a no-empty-cards option, other is null, all supporting fields null). Modes are never mixed on the same card.
+- **No-empty-cards options**: Valid status-card content — a brief positive acknowledgment, a cross-reference to where the real coaching lives, or a neutral status statement like "Consistently strong here; no developmental notes."
+- **Old judge**: The eval judge (`backend/evals/judge_eval.py`) without explicit rating definitions — rates as insightful/adequate/pedantic/wrong using its own calibration. This is the current active version and the permanent eval baseline.
+- **Stage 2 changelog**: The `changes` array in Stage 2 output, saved as `changelog_NNN_timestamp.json` by the eval pipeline. Logs Step 4 card-mode decisions, notes null decisions, and self-audit downgrades.
+
+### Eval commands
+
+Run from the main branch root directory:
+```
+# Full eval with judge (3 target transcripts):
+python -m backend.evals.run_pipeline --phase <phase_name> --transcripts-dir backend/evals/transcripts_v4_test --runs 5 --judge
+
+# Full eval with judge (all 10 transcripts):
+python -m backend.evals.run_pipeline --phase <phase_name> --transcripts-dir backend/evals/transcripts --runs 5 --judge
+
+# Changelog-only (no judge, cheaper):
+python -m backend.evals.run_pipeline --phase <phase_name> --transcripts-dir backend/evals/transcripts --runs 2
+```
+
+## What Was Done
 
 ### Taxonomy Changes (`clearvoice_pattern_taxonomy_v4.0.txt`)
 - Added **behavioral context override** to GENERAL_DETECTION_GUIDANCE — helps Stage 1 recognize when surface-level pattern "successes" primarily served a dominant interpersonal failure (avoidance, coercion, dismissiveness)
 - Added **R&A coerced alignment** detection note — procedural closure via authority override scores low on alignment confirmation
 - Added **AL selective hearing** detection note — performative acknowledgment followed by ignoring substance scores 0.25 at best
-- **Cleaned up 6 coaching_note instructions** that Stage 1 cannot act on (AC, QQ, CC, Recognition, BI, BI+DN) — removed coaching directives, kept detection/scoring guidance
-- Note: Stage 2 does NOT see the full taxonomy — it gets a condensed extraction via `extract_stage2_pattern_definitions()` in `prompt_builder.py`. Taxonomy coaching instructions were vestigial for Stage 2.
+- **Cleaned up 6 coaching_note instructions** that Stage 1 cannot act on (AC, QQ, CC, Recognition, BI, BI+DN) — removed coaching directives, kept detection/scoring guidance. These were vestigial — see Stage architecture above.
 
 ### Coaching Prompt Changes (`system_prompt_coaching_v1.0.txt`)
 Major restructuring of the reasoning sequence:
@@ -25,7 +53,7 @@ Major restructuring of the reasoning sequence:
 - **No-empty-cards rule** — three problems (pedantic, empty, tone-deaf), two guiding principles (no silent cards, no forced coaching), three example options (not exhaustive)
 - **Card-mode model** — substantive and status content never mixed on the same card. Substantive: one or both fields have real coaching, other can be null. Status: one field has a no-empty-cards option, other is null, all supporting fields null.
 - **Tightened Step 8 self-audit** — merged overlapping checks, added incoherent status card check, removed active experiment coaching_note requirement (experiments now link to 0..N patterns)
-- **Expanded `changes` field** — now logs Step 4 card-mode decisions with reasons, notes null decisions, and self-audit downgrades
+- **Expanded `changes` field** — now logs Step 4 card-mode decisions with reasons, notes null decisions, and self-audit downgrades. Schema: `{"field": "pattern_coaching.<pattern_id>", "action": "substantive_card|status_card|downgraded_to_status|noted", "reason": "<why>"}`
 
 ### Baseline Pack Changes (`system_prompt_baseline_pack_v0_6_0.txt`)
 - Replaced mechanical score-based pattern coaching (score > 0 = notes, score < 1.0 = coaching_note) with judgment-based quality guidance matching the single-meeting philosophy
@@ -128,12 +156,10 @@ M-000003:
 
 ### Immediate options
 
-All eval commands should be run from the main branch root directory.
-
 1. **Run the full 10-transcript eval** with the old judge to get a larger sample size and confirm the per-pattern trends hold. The 3-transcript comparison has small N per pattern (e.g., CC has only 13 ratings — the 25%->54% pedantic jump could be noise). Use `--transcripts-dir backend/evals/transcripts` for all 10 transcripts.
 2. **Attempt further CC/Recognition calibration** — could try adding specific examples to Step 4 guidance showing when "real strength" is NOT worth a substantive card (e.g., "clarity in a meeting whose central issue is avoidance is not a strength worth coaching — it's background competence"). Risk: over-fitting to these transcripts. The changelog shows the LLM already understands the principle but makes borderline calls differently.
 3. **Accept the current quality level** — the 11.9% pedantic rate (down from 12.8%) may be close to the floor for prompt engineering. The remaining pedantic cases are judgment calls that reasonable coaches might disagree on.
-4. **Analyze changelogs at scale** — run the eval on all 10 transcripts with 2 runs each (cheap — no judge needed), then analyze changelog patterns to see if the CC/Recognition calibration gap is consistent or transcript-specific.
+4. **Analyze changelogs at scale** — run the eval on all 10 transcripts with 2 runs each (cheap — no judge needed; see Eval commands above), then analyze changelog patterns to see if the CC/Recognition calibration gap is consistent or transcript-specific.
 
 ### Files modified in this session
 | File | Changes |
@@ -148,11 +174,11 @@ All eval commands should be run from the main branch root directory.
 ### Eval results directories
 | Phase | Contents |
 |-------|----------|
-| `v4p2_recognition_fix` | Baseline (3 meetings x 5 runs, old judge) |
-| `v4p2_coaching_quality` | Initial changes (10 meetings x 5 runs, new judge) |
-| `v4p2_coaching_quality_iter1` | Iteration 1 fixes (3 meetings x 5 runs, new judge) |
-| `v4p2_coaching_quality_iter3` | Iteration 3 rewrite (3 meetings x 5 runs, both judges). **File layout:** old-judge files are directly in each meeting dir (the authoritative ones for comparison); new-judge files are in `judge_new/` subdirs (kept for reference only). |
-| `v4p2_coaching_quality_iter4` | Iteration 4 with changelog (3 meetings x 2 runs, no judge) |
+| `v4p2_recognition_fix` | Baseline (3 meetings x 5 runs, old judge). **Use this as the comparison baseline.** |
+| `v4p2_coaching_quality` | Initial changes (10 meetings x 5 runs). Judge results used the now-reverted "new judge" with explicit definitions — **not directly comparable** to baseline. Run output is still valid. |
+| `v4p2_coaching_quality_iter1` | Iteration 1 fixes (3 meetings x 5 runs). Same caveat — judge results used the reverted new judge. |
+| `v4p2_coaching_quality_iter3` | Iteration 3 rewrite (3 meetings x 5 runs). **Old-judge files in each meeting dir are the authoritative comparison.** New-judge files in `judge_new/` subdirs are reference only. |
+| `v4p2_coaching_quality_iter4` | Iteration 4 with changelog (3 meetings x 2 runs, no judge). Use for changelog analysis. |
 
 ### Test transcripts
 Located at `backend/evals/transcripts_v4_test/` (subset of `backend/evals/transcripts/`):
