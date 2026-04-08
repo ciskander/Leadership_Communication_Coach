@@ -475,8 +475,12 @@ oe_removals: array, may be empty.
 
 --- CHANGES ---
 
-changes: array documenting notable editorial decisions.
-- Include entries for: patterns where coaching was set to null and why, coaching themes revised from your Step 2 draft and why, and any other notable editorial choices. Do not duplicate OE removal entries -- those are documented in oe_removals.
-- This is your audit trail -- document every significant non-OE-removal decision.
+changes: array documenting editorial decisions. This is your audit trail. Do not duplicate OE removal entries -- those are documented in oe_removals. Include:
+
+- Step 4 card-mode decisions: For each evaluable pattern, log the card mode and reason. {"field": "pattern_coaching.<pattern_id>", "action": "substantive_card" | "status_card", "reason": "<why>"}
+- Substantive card field decisions: When a substantive card has notes or coaching_note set to null, log why. No entry needed when a field is populated with substantive content.
+- Self-audit downgrades: When a self-audit check downgrades a card from substantive to status, log it. {"field": "pattern_coaching.<pattern_id>", "action": "downgraded_to_status", "reason": "<which check fired and why>"}
+- Theme revisions: When coaching themes are revised from your Step 2 draft, log what changed and why.
+- Other notable editorial choices.
 
 __EXPERIMENT_CONTEXT__
