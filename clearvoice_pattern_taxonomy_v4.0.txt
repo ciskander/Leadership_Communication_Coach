@@ -805,6 +805,10 @@ Excluded from both numerator AND denominator (not an opportunity):
   substantively engaged with by other participants and the
   conversation has moved forward — the target_speaker is not
   expected to circle back.
+- Moments where the primary coaching story belongs to another
+  pattern (DN, R&A, FM, BI) and AL would merely echo the same
+  observation from a listening angle. See the active_listening
+  primary-function gate in Pattern Priority Rules.
 
 Role notes:
 - All roles: Apply consistently. Role affects the volume of
@@ -1906,8 +1910,11 @@ Meeting type expectations:
 
 PATTERN PRIORITY RULES
 
-Where a single utterance could be classified under more than one pattern,
-apply the following rules:
+First, consider the meeting's dominant coaching themes. Where a single
+utterance could be classified under more than one pattern, use the
+dominant coaching themes to inform which pattern captures the most
+coaching-relevant dimension of the moment as you apply the following
+rules:
 
 EXCLUSIVE (count under only one):
 - focus_management vs. disagreement_navigation: If a drift episode and
@@ -2029,6 +2036,17 @@ PERMITTED MULTI-PATTERN (count under both):
   well, which builds trust"), it is repackaging — classify the
   moment under DN, not BI. BI earns distinct credit only when it
   names an integrity consequence DN misses.
+
+- active_listening primary-function gate: When an active_listening
+  moment co-occurs with another pattern (DN, R&A, FM, BI), ask: is
+  the listening dimension the primary coaching story of this moment,
+  or is another pattern's dimension more salient? Count under AL when
+  the most coaching-relevant observation is about absorption of prior
+  input. If the primary story is conflict handling (DN), decision
+  closure (R&A), topic management (FM), or integrity (BI), and AL
+  would merely echo the same failure from a listening angle, classify
+  under the other pattern only — unless AL captures a distinct
+  absorption behavior that the other pattern's score does not reflect.
 
 - active_listening + question_quality: A follow-up question that
   demonstrates listening may be scored under both. active_listening
