@@ -33,10 +33,8 @@ Major restructuring of the reasoning sequence:
 - Updated self-checks to match card-mode model
 
 ### Judge Eval Changes (`backend/evals/judge_eval.py`, `judge_synthesis.py`)
-- Added **"appropriate" rating category** for status-card-style output — cross-references, neutral status statements, brief acknowledgments
-- Added **explicit definitions** for all 5 categories (insightful, adequate, appropriate, pedantic, wrong) grounded in judge's own language from prior eval data
-- Updated synthesis code to count and display "appropriate" in aggregate and per-pattern tables
-- **IMPORTANT FINDING:** The new judge definitions shifted calibration significantly. See "Judge Calibration" section below.
+- Attempted adding **"appropriate" rating category** and explicit definitions for all categories. **REVERTED** — the explicit definitions shifted judge calibration significantly, making results non-comparable to baseline evals. Both files reverted to pre-definitions version (commit 8bd0701) to maintain apples-to-apples comparability across all eval phases.
+- The "appropriate" category concept is documented below for potential future use with better calibration.
 
 ### Eval Pipeline Changes (`backend/evals/replay_eval.py`)
 - Stage 2 changelog now captured and saved as `changelog_NNN_timestamp.json` alongside each run output file
