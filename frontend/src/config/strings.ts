@@ -52,7 +52,7 @@ export const STRINGS = {
     referringToExampleAbove: 'Referring to the example above',
     nextTimeTry: 'Next time, try something like',
     whatYouDidWell: 'What You Did Well',
-    whereYouCanImprove: 'Where you can improve',
+    whereYouCanImprove: 'Where You Can Improve',
     observation: 'Observation',
     cancel: 'Cancel',
     delete: 'Delete',
