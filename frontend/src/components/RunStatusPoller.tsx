@@ -115,14 +115,12 @@ function DevelopmentalThemeCard({
             </div>
           )}
 
-          {/* Mode B heading, or Mode A coaching_note continuation */}
+          {/* Mode A: "Where you can improve" heading; Mode B: "What worked and what was missing" heading */}
           {theme.coaching_note && (
             <div>
-              {!modeA && (
-                <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                  {STRINGS.runStatusPoller.whatWorkedMissing}
-                </p>
-              )}
+              <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                {modeA ? STRINGS.common.whereYouCanImprove : STRINGS.runStatusPoller.whatWorkedMissing}
+              </p>
               <p className="text-sm text-cv-stone-700 leading-relaxed">{theme.coaching_note}</p>
             </div>
           )}
