@@ -51,7 +51,7 @@ export const STRINGS = {
     forExampleYouSaid: 'For example, in this meeting you said',
     referringToExampleAbove: 'Referring to the example above',
     nextTimeTry: 'Next time, try something like',
-    whatYouDidWell: 'What you did well',
+    whatYouDidWell: 'What You Did Well',
     whereYouCanImprove: 'Where you can improve',
     observation: 'Observation',
     cancel: 'Cancel',
@@ -228,10 +228,10 @@ export const STRINGS = {
 
   // ── Coaching card ───────────────────────────────────────────────────────────
   coachingCard: {
-    strengthsHeading: 'What you do well',
-    focusHeading: 'Area to focus on',
-    experimentHeading: 'Your experiment',
-    coachingThemesHeading: 'Key coaching themes',
+    strengthsHeading: 'What You Did Well',
+    focusHeading: 'Area to Focus On',
+    experimentHeading: 'Your Experiment',
+    coachingThemesHeading: 'Key Coaching Themes',
   },
 
   // ── Transcript upload ───────────────────────────────────────────────────────
@@ -259,7 +259,7 @@ export const STRINGS = {
   runStatusPoller: {
     analysing: 'Analyzing your meeting',
     stillWorking: 'Still working…',
-    usuallyTakes: 'This usually takes 30–60 seconds',
+    usuallyTakes: 'This may take 2 - 3 minutes',
     timeoutTitle: 'Taking longer than expected',
     timeoutDesc: 'The analysis is still running in the background.',
     checkAgain: 'Check again',
@@ -277,7 +277,7 @@ export const STRINGS = {
     secondaryThemeLabel: 'Secondary',
     experimentSectionHeading: 'Experiment',
     patternSnapshot: 'Detailed Feedback',
-    otherPatterns: 'Coaching output for other patterns',
+    otherPatterns: 'Coaching Output for Other Patterns',
     showDetails: 'Show details',
     hideDetails: 'Hide details',
     // Experiment tracking
@@ -286,7 +286,7 @@ export const STRINGS = {
     experimentReady: 'Your experiment is ready',
     fromTranscript: 'From the transcript',
     whatYouSaid: 'What you said',
-    whatYouDidWell: 'What you did well',
+    whatYouDidWell: 'What You Did Well',
     whatWorkedMissing: 'What worked and what was missing',
     coachsNote: "Coach's note",
     currentExperiment: 'Current Experiment',
@@ -311,8 +311,8 @@ export const STRINGS = {
     partialAttemptDesc: (count: number | null) =>
       `You made a partial attempt at your experiment${count ? ` — ${count} instance${count !== 1 ? 's' : ''} noted` : ''}. You're on the right track.`,
     // Graduation / parking recommendations
-    graduationRecommendationTitle: 'Ready to graduate',
-    parkRecommendationTitle: 'Consider parking this experiment',
+    graduationRecommendationTitle: 'Ready to Graduate',
+    parkRecommendationTitle: 'Consider Parking This Experiment',
   },
 
   // ── Experiment tracker ──────────────────────────────────────────────────────
@@ -452,10 +452,10 @@ export const STRINGS = {
     completeTitle: 'Baseline analysis complete',
     completeSubtitle: 'Your communication patterns have been mapped across three meetings',
     yourBaseline: 'Your communication baseline',
-    otherPatterns: 'Coaching output for other patterns',
-    meetingsInBaseline: 'Meetings in this baseline',
-    coachingOutput: 'Coaching output',
-    patternScores: 'Pattern scores',
+    otherPatterns: 'Coaching Output for Other Patterns',
+    meetingsInBaseline: 'Meetings in This Baseline',
+    coachingOutput: 'Coaching Output',
+    patternScores: 'Pattern Scores',
     expand: '▼ Expand',
     collapse: '▲ Collapse',
     noAnalysisData: 'Analysis data is not available for this meeting.',
@@ -508,6 +508,7 @@ export const STRINGS = {
     loading: 'Loading your progress…',
     errorFallback: 'Failed to load progress data.',
     patternTrends: 'Pattern Trends',
+
     experimentPatterns: 'Experiment Patterns',
     top5Patterns: 'Top 5 Patterns',
     allPatterns: 'All Patterns',
@@ -519,6 +520,7 @@ export const STRINGS = {
     score: 'Score',
     pastExperiments: 'Past Experiments',
     noPastExperiments: 'No completed, parked, or abandoned experiments yet.',
+
     pattern: 'Pattern',
     dateRange: 'Date range',
     attempts: 'Attempts',

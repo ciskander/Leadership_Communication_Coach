@@ -65,7 +65,7 @@ export default function AdminPage() {
                   <span className={[
                     'text-2xs px-2 py-0.5 rounded-full capitalize font-semibold',
                     u.role === 'admin'   ? 'bg-cv-red-100 text-cv-red-700'
-                    : u.role === 'coach' ? 'bg-cv-teal-100 text-cv-teal-700'
+                    : u.role === 'coach' ? 'bg-cv-teal-50 text-cv-teal-700'
                     : 'bg-cv-warm-100 text-cv-stone-600',
                   ].join(' ')}>
                     {u.role}

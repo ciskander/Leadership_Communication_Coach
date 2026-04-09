@@ -32,20 +32,9 @@ function StrengthThemeCard({
 
   return (
     <div className="px-5 py-4">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-stone-800 mb-1">{theme.theme}</p>
-          <p className="text-sm text-stone-600 leading-relaxed">{theme.explanation}</p>
-        </div>
-        {hasDetail && (
-          <button
-            type="button"
-            onClick={() => setExpanded(!expanded)}
-            className="text-xs text-cv-teal-600 hover:text-cv-teal-800 whitespace-nowrap shrink-0 mt-0.5"
-          >
-            {expanded ? STRINGS.runStatusPoller.hideDetails : STRINGS.runStatusPoller.showDetails}
-          </button>
-        )}
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-stone-800 mb-1">{theme.theme}</p>
+        <p className="text-sm text-stone-600 leading-relaxed">{theme.explanation}</p>
       </div>
       {expanded && successQuotes.length > 0 && (
         <div className="mt-3">
@@ -53,6 +42,17 @@ function StrengthThemeCard({
             {STRINGS.runStatusPoller.whatYouDidWell}
           </p>
           <EvidenceQuoteList quotes={successQuotes} targetSpeaker={targetSpeaker} />
+        </div>
+      )}
+      {hasDetail && (
+        <div className="flex justify-end mt-2">
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            className="text-xs text-cv-teal-600 hover:text-cv-teal-800 whitespace-nowrap"
+          >
+            {expanded ? STRINGS.runStatusPoller.hideDetails : STRINGS.runStatusPoller.showDetails}
+          </button>
         </div>
       )}
     </div>
@@ -85,33 +85,22 @@ function DevelopmentalThemeCard({
 
   return (
     <div className="px-5 py-4">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          {showPriorityBadge && (
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                theme.priority === 'primary'
-                  ? 'bg-cv-rose-100 text-cv-rose-800'
-                  : 'bg-stone-100 text-stone-600'
-              }`}>
-                {theme.priority === 'primary'
-                  ? STRINGS.runStatusPoller.primaryThemeLabel
-                  : STRINGS.runStatusPoller.secondaryThemeLabel}
-              </span>
-            </div>
-          )}
-          <p className="text-sm font-medium text-stone-800 mb-1">{theme.theme}</p>
-          <p className="text-sm text-stone-600 leading-relaxed">{theme.explanation}</p>
-        </div>
-        {hasDetail && (
-          <button
-            type="button"
-            onClick={() => setExpanded(!expanded)}
-            className="text-xs text-cv-rose-600 hover:text-cv-rose-800 whitespace-nowrap shrink-0 mt-0.5"
-          >
-            {expanded ? STRINGS.runStatusPoller.hideDetails : STRINGS.runStatusPoller.showDetails}
-          </button>
+      <div className="min-w-0">
+        {showPriorityBadge && (
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+              theme.priority === 'primary'
+                ? 'bg-cv-rose-100 text-cv-rose-800 border border-cv-rose-800'
+                : 'bg-cv-amber-50 text-cv-amber-700 border border-cv-amber-700'
+            }`}>
+              {theme.priority === 'primary'
+                ? STRINGS.runStatusPoller.primaryThemeLabel
+                : STRINGS.runStatusPoller.secondaryThemeLabel}
+            </span>
+          </div>
         )}
+        <p className="text-sm font-medium text-stone-800 mb-1">{theme.theme}</p>
+        <p className="text-sm text-stone-600 leading-relaxed">{theme.explanation}</p>
       </div>
 
       {expanded && hasDetail && (
@@ -161,6 +150,17 @@ function DevelopmentalThemeCard({
               </blockquote>
             </div>
           )}
+        </div>
+      )}
+      {hasDetail && (
+        <div className="flex justify-end mt-2">
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            className="text-xs text-cv-rose-600 hover:text-cv-rose-800 whitespace-nowrap"
+          >
+            {expanded ? STRINGS.runStatusPoller.hideDetails : STRINGS.runStatusPoller.showDetails}
+          </button>
         </div>
       )}
     </div>
@@ -754,9 +754,9 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
           {/* Graduation / parking recommendation banner */}
           {graduationRec && graduationRec.recommendation === 'graduate' && (
             <div className="rounded border border-cv-teal-300 bg-cv-teal-50 overflow-hidden">
-              <div className="flex items-center gap-2.5 px-5 py-3 border-b border-cv-teal-200 bg-cv-teal-100">
-                <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0 text-cv-teal-700" aria-hidden="true">
-                  <path d="M8 1l2.5 5 5.5.8-4 3.9.9 5.3L8 13.3 3.1 16l.9-5.3-4-3.9L5.5 6z" stroke="currentColor" strokeWidth={1.2} strokeLinejoin="round"/>
+              <div className="flex items-center gap-2.5 px-5 py-3 border-b border-cv-teal-200 bg-cv-teal-50">
+                <svg viewBox="0 0 37 32" fill="currentColor" className="w-4 h-4 shrink-0 text-cv-teal-700" aria-hidden="true">
+                  <path d="M36.078,7.173L19.876,0.346c-0.865-0.365-1.858-0.365-2.728,0L0.922,7.183C0.362,7.42,0.009,7.944,0,8.554c-0.009,0.607,0.329,1.143,0.881,1.394L2.59,10.73C2.538,10.809,2.5,10.898,2.5,11v9c0,0.005,0.003,0.01,0.003,0.016c-1.172,0.207-2.066,1.226-2.066,2.456c0,1.111,0.733,2.043,1.736,2.368l-1.798,4.164c-0.271,0.629-0.206,1.326,0.18,1.912C1.002,31.595,1.787,32,2.656,32l0.289-0.014c0.813-0.066,1.539-0.481,1.941-1.111c0.344-0.537,0.418-1.182,0.203-1.767L3.541,24.89c1.086-0.272,1.896-1.248,1.896-2.418c0-1.188-0.833-2.18-1.945-2.433C3.493,20.025,3.5,20.014,3.5,20v-8.853l4,1.833V20h0.01c0.103,2.257,5.827,3.439,11.49,3.439S30.387,22.257,30.49,20h0.01v-7.551l5.607-2.507C36.664,9.694,37.006,9.16,37,8.549C36.993,7.938,36.641,7.41,36.078,7.173z M4.045,30.336c-0.235,0.368-0.677,0.613-1.186,0.654L2.656,31c-0.531,0-1.005-0.236-1.266-0.634c-0.2-0.304-0.234-0.647-0.097-0.966l1.533-3.552l1.323,3.604C4.259,29.746,4.221,30.061,4.045,30.336z M4.438,22.472c0,0.827-0.673,1.5-1.5,1.5s-1.5-0.673-1.5-1.5s0.673-1.5,1.5-1.5S4.438,21.645,4.438,22.472z M29.5,18.419c-1.898-1.305-6.219-1.98-10.5-1.98s-8.602,0.675-10.5,1.98v-7.278c0-1.097,3.185-2.641,10.266-2.641c7.004,0,10.734,1.57,10.734,2.703V18.419z M19,22.439c-6.409,0-10.5-1.48-10.5-2.5s4.091-2.5,10.5-2.5s10.5,1.48,10.5,2.5S25.409,22.439,19,22.439z M35.699,9.03L30.5,11.354v-0.151c0-2.181-4.825-3.703-11.734-3.703C11.922,7.5,7.5,8.929,7.5,11.141v0.741L1.297,9.038C1.017,8.911,0.999,8.646,1,8.567s0.027-0.343,0.311-0.463l16.227-6.837c0.619-0.263,1.331-0.261,1.95,0l16.202,6.827c0.285,0.12,0.31,0.386,0.311,0.464C36.001,8.638,35.981,8.903,35.699,9.03z"/>
                 </svg>
                 <h4 className="text-sm font-semibold text-cv-teal-800">{STRINGS.runStatusPoller.graduationRecommendationTitle}</h4>
               </div>
@@ -824,7 +824,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
             <div className="flex gap-2 flex-wrap pt-1">
               <Link
                 href="/client/analyze"
-                className="flex items-center gap-2 px-4 py-2.5 bg-cv-navy-600 text-white rounded text-sm font-medium hover:bg-cv-navy-700 transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-cv-navy-600 text-white rounded text-sm font-medium hover:bg-cv-navy-700 transition-colors"
               >
                 <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M9 3L10.5 7.5L15 9L10.5 10.5L9 15L7.5 10.5L3 9L7.5 7.5L9 3Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/><path d="M19 13L19.75 15.25L22 16L19.75 16.75L19 19L18.25 16.75L16 16L18.25 15.25L19 13Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/></svg>
                 {STRINGS.experimentTracker.analyzeMeeting}
@@ -845,7 +845,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                     });
                   }
                 }}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white border border-cv-warm-300 text-cv-stone-600 rounded text-sm font-medium hover:bg-cv-warm-50 transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-cv-warm-100 border border-cv-stone-400 text-cv-stone-600 rounded text-sm font-medium hover:bg-cv-warm-200 transition-colors"
               >
                 <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><rect x="3.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/><rect x="9.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/></svg>
                 {STRINGS.experimentTracker.parkForNow}
@@ -886,21 +886,13 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
 
   return (
     <div className="space-y-6">
-      {/* Status banner */}
-      {run.gate1_pass === false ? (
+      {/* Quality check failed banner (success banner removed) */}
+      {run.gate1_pass === false && (
         <div className="bg-cv-amber-50 border border-cv-amber-200 rounded px-5 py-4 flex items-start gap-3">
           <svg viewBox="0 0 16 16" fill="none" className="w-5 h-5 shrink-0 text-cv-amber-600 mt-0.5" aria-hidden="true"><path d="M8 1L1 14h14L8 1z" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round"/><path d="M8 6v4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/><circle cx="8" cy="12" r="0.5" fill="currentColor"/></svg>
           <div>
             <p className="text-sm font-semibold text-cv-amber-800">{STRINGS.runStatusPoller.qualityCheckFailed}</p>
             <p className="text-sm text-cv-amber-600 font-light mt-0.5">{STRINGS.runStatusPoller.qualityCheckDesc}</p>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-cv-teal-50 border border-cv-teal-700 rounded px-5 py-4 flex items-center gap-3">
-          <svg viewBox="0 0 16 16" fill="none" className="w-5 h-5 shrink-0 text-cv-teal-600" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth={1.4}/><path d="M5 8l2 2 4-4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <div>
-            <p className="text-sm font-semibold text-cv-teal-800">{STRINGS.runStatusPoller.analysisComplete}</p>
-            <p className="text-sm text-cv-teal-400 font-light mt-0.5">{STRINGS.runStatusPoller.analysisFeedback}</p>
           </div>
         </div>
       )}
@@ -941,8 +933,8 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
       {strengthThemes.length > 0 && (
         <section className="bg-white rounded border border-cv-teal-700 overflow-hidden">
           <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-teal-700">
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-teal-50 shrink-0" aria-hidden="true">
-              <path fillRule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clipRule="evenodd" />
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-cv-teal-50 shrink-0" aria-hidden="true">
+              <path d="M22,3H19V2a1,1,0,0,0-1-1H6A1,1,0,0,0,5,2V3H2A1,1,0,0,0,1,4V6a4.994,4.994,0,0,0,4.276,4.927A7.009,7.009,0,0,0,11,15.92V18H7a1,1,0,0,0-.949.684l-1,3A1,1,0,0,0,6,23H18a1,1,0,0,0,.948-1.316l-1-3A1,1,0,0,0,17,18H13V15.92a7.009,7.009,0,0,0,5.724-4.993A4.994,4.994,0,0,0,23,6V4A1,1,0,0,0,22,3ZM5,8.829A3.006,3.006,0,0,1,3,6V5H5ZM16.279,20l.333,1H7.387l.334-1ZM17,9A5,5,0,0,1,7,9V3H17Zm4-3a3.006,3.006,0,0,1-2,2.829V5h2ZM10.667,8.667,9,7.292,11,7l1-2,1,2,2,.292L13.333,8.667,13.854,11,12,9.667,10.146,11Z"/>
             </svg>
             <h3 className="text-sm font-semibold text-cv-teal-50">{STRINGS.coachingCard.strengthsHeading}</h3>
           </div>
