@@ -24,7 +24,7 @@ from .errors import invalid_input, transcript_parse_fail
 
 router = APIRouter()
 
-_ALLOWED_EXTENSIONS = {".txt", ".vtt", ".srt", ".docx", ".pdf"}
+_ALLOWED_EXTENSIONS = {".txt", ".vtt", ".srt", ".docx", ".pdf", ".csv", ".json", ".md", ".markdown"}
 _MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 
 # Date patterns to try detecting from raw transcript text
@@ -133,6 +133,16 @@ async def upload_transcript(
         )
     except Exception as exc:
         return transcript_parse_fail(f"Transcript parse error: {exc}")
+
+    # Reject transcripts without real speaker labels
+    real_labels = [s for s in (parsed.speaker_labels or []) if s.lower() != "unknown"]
+    if not real_labels:
+        return transcript_parse_fail(
+            "This transcript does not contain speaker labels, which are required "
+            "for coaching analysis. Most transcription tools (Zoom, Microsoft Teams, "
+            "Otter.ai, Google Meet) can include speaker names \u2014 try re-exporting "
+            "with speaker identification enabled."
+        )
 
     # Auto-detect date from raw text if not provided
     detected_date: Optional[str] = None

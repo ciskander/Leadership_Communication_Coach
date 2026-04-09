@@ -236,11 +236,15 @@ export const STRINGS = {
 
   // ── Transcript upload ───────────────────────────────────────────────────────
   transcriptUpload: {
-    clickToUpload: 'Click to upload transcript (.vtt, .srt, .txt, .docx, .pdf)',
-    clickToSelect: 'Click to select transcript (.vtt, .srt, .txt, .docx, .pdf)',
+    clickToUpload: 'Click to upload transcript (.vtt, .srt, .txt, .docx, .pdf, .csv, .json, .md)',
+    clickToSelect: 'Click to select transcript (.vtt, .srt, .txt, .docx, .pdf, .csv, .json, .md)',
     fileUploaded: '✓ File uploaded',
     fileUploadedSuccess: 'File uploaded successfully',
     uploadTranscript: 'Upload transcript',
+    noSpeakerLabels:
+      'This transcript does not contain speaker labels, which are required for coaching analysis. '
+      + 'Most transcription tools (Zoom, Microsoft Teams, Otter.ai, Google Meet) can include speaker '
+      + 'names \u2014 try re-exporting with speaker identification enabled.',
     meetingTitle: 'Meeting title',
     meetingTitlePlaceholder: 'e.g. Q1 Planning Session',
     meetingType: 'Meeting type',

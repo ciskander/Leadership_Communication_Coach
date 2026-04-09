@@ -375,3 +375,590 @@ def test_turn_ids_always_start_at_1():
     ]:
         result = parse_transcript(content.encode("utf-8"), fname, "test")
         assert result.turns[0].turn_id == 1, f"Failed for {fname}"
+
+
+# ---------------------------------------------------------------------------
+# Platform-Specific: Zoom
+# ---------------------------------------------------------------------------
+
+ZOOM_VTT_NO_SPEAKERS = """\
+WEBVTT
+
+00:00:01.000 --> 00:00:05.000
+Welcome everyone to today's quarterly review meeting.
+
+00:00:06.000 --> 00:00:10.000
+Thank you for joining, let's get started with the agenda.
+
+00:00:11.000 --> 00:00:18.000
+First item is the budget review for this quarter and next quarter projections.
+"""
+
+ZOOM_VTT_GENERIC_SPEAKERS = """\
+WEBVTT
+
+00:00:01.000 --> 00:00:06.000
+<v Speaker 1>Welcome everyone to today's quarterly review meeting.
+
+00:00:07.000 --> 00:00:12.000
+<v Speaker 2>Thank you for having us, glad to be here today.
+
+00:00:13.000 --> 00:00:18.000
+<v Speaker 1>Let's start with the budget review for the quarter.
+"""
+
+
+def test_zoom_vtt_no_speakers():
+    """Zoom VTT without speaker attribution — all turns should be Unknown."""
+    result = parse_transcript(ZOOM_VTT_NO_SPEAKERS.encode("utf-8"), "meeting.vtt", "test")
+    assert result.metadata.original_format == "vtt"
+    assert all(t.speaker_label == "Unknown" for t in result.turns)
+    assert len(result.turns) >= 1
+    # Timestamps should still be extracted
+    assert result.turns[0].start_time_sec is not None
+    assert result.turns[0].start_time_sec == pytest.approx(1.0)
+
+
+def test_zoom_vtt_generic_speakers():
+    """Zoom VTT with generic 'Speaker 1', 'Speaker 2' labels."""
+    result = parse_transcript(ZOOM_VTT_GENERIC_SPEAKERS.encode("utf-8"), "meeting.vtt", "test")
+    assert "Speaker 1" in result.speaker_labels
+    assert "Speaker 2" in result.speaker_labels
+    assert len(result.turns) == 3
+    assert result.turns[0].speaker_label == "Speaker 1"
+    assert result.turns[1].speaker_label == "Speaker 2"
+
+
+# ---------------------------------------------------------------------------
+# Platform-Specific: Microsoft Teams
+# ---------------------------------------------------------------------------
+
+TEAMS_VTT_CLOSING_TAGS = """\
+WEBVTT
+
+00:00:03.663 --> 00:00:07.903
+<v Alice Johnson>Good morning everyone, welcome to the standup.</v>
+
+00:00:08.063 --> 00:00:12.103
+<v Bob Smith>Morning Alice, I have an update on the backend work.</v>
+
+00:00:13.000 --> 00:00:18.000
+<v Alice Johnson>Great, go ahead Bob and then Carol can share next.</v>
+"""
+
+
+def test_teams_vtt_closing_v_tags():
+    """MS Teams VTT with closing </v> tags — no tag residue in text."""
+    result = parse_transcript(TEAMS_VTT_CLOSING_TAGS.encode("utf-8"), "meeting.vtt", "test")
+    assert "Alice Johnson" in result.speaker_labels
+    assert "Bob Smith" in result.speaker_labels
+    assert len(result.turns) == 3
+    for t in result.turns:
+        assert "</v>" not in t.text
+        assert "<v" not in t.text
+
+
+# ---------------------------------------------------------------------------
+# Platform-Specific: Otter.ai
+# ---------------------------------------------------------------------------
+
+OTTER_SRT = """\
+1
+00:00:05,000 --> 00:00:10,000
+Alice Chen: Hello everyone, welcome to this meeting and thanks for joining.
+
+2
+00:00:10,500 --> 00:00:15,000
+Bob Park: Thanks for being here today, glad we could all make it.
+
+3
+00:00:16,000 --> 00:00:22,000
+Alice Chen: Let's review the action items from last week's session.
+
+4
+00:00:23,000 --> 00:00:28,000
+Carol Davis: I finished the report draft and sent it to the team yesterday.
+"""
+
+OTTER_TXT_FORMAT_B = """\
+Alice Chen  0:01
+Hello everyone, welcome to this meeting today.
+
+Bob Park  0:05
+Thanks for being here today, glad we made it.
+
+Alice Chen  0:10
+Let's review the action items from last week.
+
+Carol Davis  0:16
+I finished the report and sent it yesterday morning.
+"""
+
+
+def test_otter_srt():
+    """Otter.ai SRT export with 'Speaker: text' in cue bodies."""
+    result = parse_transcript(OTTER_SRT.encode("utf-8"), "meeting.srt", "test")
+    assert result.metadata.original_format == "srt"
+    assert "Alice Chen" in result.speaker_labels
+    assert "Bob Park" in result.speaker_labels
+    assert "Carol Davis" in result.speaker_labels
+    assert len(result.turns) == 4
+    assert result.turns[0].start_time_sec == pytest.approx(5.0)
+
+
+def test_otter_txt_format_b():
+    """Otter.ai TXT export with 'Speaker  HH:MM' blocks."""
+    result = parse_transcript(OTTER_TXT_FORMAT_B.encode("utf-8"), "transcript.txt", "test")
+    assert result.metadata.original_format == "txt"
+    labels_lower = [s.lower() for s in result.speaker_labels]
+    assert "alice chen" in labels_lower
+    assert "bob park" in labels_lower
+    assert len(result.turns) >= 3  # consecutive Alice turns may merge
+
+
+# ---------------------------------------------------------------------------
+# Platform-Specific: Google Meet
+# ---------------------------------------------------------------------------
+
+GMEET_TXT_SINGLE_SPACE = """\
+Sarah Miller 0:00:01
+Good morning everyone, thanks for joining this call today.
+
+James Wilson 0:00:15
+Morning Sarah, I wanted to share an update on the project status.
+
+Sarah Miller 0:00:30
+Great, please go ahead James, we are all ears for the update.
+
+Emily Brown 0:00:45
+I also have some notes to add after James finishes his update.
+"""
+
+
+def test_gmeet_txt_single_space_hhmmss():
+    """Google Meet TXT with single space + HH:MM:SS timestamps."""
+    result = parse_transcript(GMEET_TXT_SINGLE_SPACE.encode("utf-8"), "transcript.txt", "test")
+    labels_lower = [s.lower() for s in result.speaker_labels]
+    assert "sarah miller" in labels_lower
+    assert "james wilson" in labels_lower
+    assert "emily brown" in labels_lower
+    assert len(result.turns) >= 3
+    # Check timestamps are parsed
+    assert result.turns[0].start_time_sec is not None
+    assert result.turns[0].start_time_sec == pytest.approx(1.0)
+
+
+# ---------------------------------------------------------------------------
+# Platform-Specific: Rev.com CSV
+# ---------------------------------------------------------------------------
+
+REV_CSV_WITH_HEADER = """\
+Speaker,Text,Timestamp
+Alice Chen,"Good morning everyone, welcome to our quarterly review.",0:00:01
+Bob Park,"Thank you Alice, let's jump right into the numbers.",0:00:08
+Alice Chen,"Revenue is up fifteen percent from last quarter overall.",0:00:15
+Carol Davis,"The marketing campaign drove most of that growth for us.",0:00:22
+"""
+
+REV_CSV_NO_HEADER = """\
+Alice Chen,"Good morning everyone, welcome to this meeting today.",0:00:01
+Bob Park,"Thank you Alice for the warm welcome and introduction.",0:00:08
+Carol Davis,"I have the quarterly numbers ready for the group.",0:00:15
+"""
+
+
+def test_rev_csv_with_header():
+    """Rev.com CSV with header row — columns detected by name."""
+    result = parse_transcript(REV_CSV_WITH_HEADER.encode("utf-8"), "transcript.csv", "test")
+    assert result.metadata.original_format == "csv"
+    assert "Alice Chen" in result.speaker_labels
+    assert "Bob Park" in result.speaker_labels
+    assert "Carol Davis" in result.speaker_labels
+    assert len(result.turns) == 4
+    assert result.turns[0].start_time_sec == pytest.approx(1.0)
+
+
+def test_rev_csv_no_header():
+    """Rev.com CSV without header — positional column fallback."""
+    result = parse_transcript(REV_CSV_NO_HEADER.encode("utf-8"), "transcript.csv", "test")
+    assert result.metadata.original_format == "csv"
+    assert "Alice Chen" in result.speaker_labels
+    assert len(result.turns) == 3
+
+
+# ---------------------------------------------------------------------------
+# Platform-Specific: Fireflies.ai JSON
+# ---------------------------------------------------------------------------
+
+FIREFLIES_JSON_SEGMENTS = """\
+{
+  "title": "Weekly Standup",
+  "segments": [
+    {"speaker": "Alice Chen", "text": "Good morning everyone, let's start the standup meeting.", "start": 1.0, "end": 5.0},
+    {"speaker": "Bob Park", "text": "I worked on the API integration yesterday and made good progress.", "start": 6.0, "end": 10.0},
+    {"speaker": "Carol Davis", "text": "I reviewed the pull requests and left feedback on each one.", "start": 11.0, "end": 15.0},
+    {"speaker": "Alice Chen", "text": "Great work team, let's sync again tomorrow morning at nine.", "start": 16.0, "end": 20.0}
+  ]
+}
+"""
+
+FIREFLIES_JSON_UTTERANCES = """\
+{
+  "meeting_id": "abc123",
+  "utterances": [
+    {"speaker_name": "Alice Chen", "content": "Hello everyone, thanks for joining this morning.", "start_time": 0.5},
+    {"speaker_name": "Bob Park", "content": "Hi Alice, glad to be here for the sync today.", "start_time": 4.2},
+    {"speaker_name": "Carol Davis", "content": "I have updates on the frontend and design work.", "start_time": 8.0}
+  ]
+}
+"""
+
+FIREFLIES_JSON_WORDS = """\
+{
+  "segments": [
+    {
+      "speaker": "Alice",
+      "words": [
+        {"word": "Good", "start": 0.0},
+        {"word": "morning", "start": 0.2},
+        {"word": "everyone,", "start": 0.4},
+        {"word": "welcome", "start": 0.6},
+        {"word": "to", "start": 0.8},
+        {"word": "the", "start": 0.9},
+        {"word": "meeting.", "start": 1.0}
+      ]
+    },
+    {
+      "speaker": "Bob",
+      "words": [
+        {"word": "Thanks", "start": 2.0},
+        {"word": "Alice,", "start": 2.2},
+        {"word": "glad", "start": 2.4},
+        {"word": "to", "start": 2.5},
+        {"word": "be", "start": 2.6},
+        {"word": "here", "start": 2.7},
+        {"word": "today.", "start": 2.8}
+      ]
+    }
+  ]
+}
+"""
+
+
+def test_fireflies_json_segments():
+    """Fireflies JSON with 'segments' array."""
+    result = parse_transcript(FIREFLIES_JSON_SEGMENTS.encode("utf-8"), "meeting.json", "test")
+    assert result.metadata.original_format == "json"
+    assert "Alice Chen" in result.speaker_labels
+    assert "Bob Park" in result.speaker_labels
+    assert "Carol Davis" in result.speaker_labels
+    assert len(result.turns) == 4
+    assert result.turns[0].start_time_sec == pytest.approx(1.0)
+
+
+def test_fireflies_json_utterances():
+    """Fireflies JSON with 'utterances' key and alternative field names."""
+    result = parse_transcript(FIREFLIES_JSON_UTTERANCES.encode("utf-8"), "meeting.json", "test")
+    assert result.metadata.original_format == "json"
+    assert "Alice Chen" in result.speaker_labels
+    assert "Bob Park" in result.speaker_labels
+    assert len(result.turns) == 3
+    assert result.turns[0].start_time_sec == pytest.approx(0.5)
+
+
+def test_fireflies_json_words_array():
+    """JSON with words arrays instead of text strings."""
+    result = parse_transcript(FIREFLIES_JSON_WORDS.encode("utf-8"), "meeting.json", "test")
+    assert result.metadata.original_format == "json"
+    assert "Alice" in result.speaker_labels
+    assert "Bob" in result.speaker_labels
+    assert len(result.turns) == 2
+    assert "Good morning everyone," in result.turns[0].text
+
+
+# ---------------------------------------------------------------------------
+# Platform-Specific: Fireflies.ai Markdown
+# ---------------------------------------------------------------------------
+
+FIREFLIES_MARKDOWN = """\
+# Weekly Standup - March 15, 2026
+
+## Participants
+- Alice Chen
+- Bob Park
+- Carol Davis
+
+---
+
+**Alice Chen** 0:01
+Good morning everyone, let's start the standup meeting today.
+
+**Bob Park** 0:08
+I worked on the API integration and made progress yesterday afternoon.
+
+**Alice Chen** 0:15
+Great work Bob, that sounds like a solid update for the team.
+
+**Carol Davis** 0:22
+I reviewed the pull requests and left detailed feedback on each one.
+"""
+
+
+def test_fireflies_markdown():
+    """Fireflies markdown export with **bold** speakers and timestamps."""
+    result = parse_transcript(FIREFLIES_MARKDOWN.encode("utf-8"), "transcript.md", "test")
+    assert result.metadata.original_format == "md"
+    labels_lower = [s.lower() for s in result.speaker_labels]
+    assert "alice chen" in labels_lower
+    assert "bob park" in labels_lower
+    assert "carol davis" in labels_lower
+    assert len(result.turns) >= 3
+
+
+# ---------------------------------------------------------------------------
+# SRT Bracketed Speakers
+# ---------------------------------------------------------------------------
+
+SRT_BRACKETED = """\
+1
+00:00:00,000 --> 00:00:04,000
+[Alice Chen] Good morning everyone, let's get this meeting started today.
+
+2
+00:00:05,000 --> 00:00:09,000
+[Bob Park] Thanks Alice, I have an update on the backend integration work.
+
+3
+00:00:10,000 --> 00:00:14,000
+[Alice Chen] Great Bob, please go ahead and share your update with us.
+"""
+
+
+def test_srt_bracketed_speakers():
+    """SRT with [Speaker Name] text pattern."""
+    result = parse_transcript(SRT_BRACKETED.encode("utf-8"), "meeting.srt", "test")
+    assert result.metadata.original_format == "srt"
+    assert "Alice Chen" in result.speaker_labels
+    assert "Bob Park" in result.speaker_labels
+    assert len(result.turns) == 3
+    assert result.turns[0].speaker_label == "Alice Chen"
+
+
+# ---------------------------------------------------------------------------
+# Edge Cases: CSV
+# ---------------------------------------------------------------------------
+
+CSV_EXTRA_COLUMNS = """\
+Speaker,Text,Timestamp,Duration,Confidence
+Alice,"Good morning everyone, let us start with the agenda.",0:00:01,4.5,0.95
+Bob,"Thanks Alice, ready to discuss the quarterly review.",0:00:06,3.2,0.92
+Carol,"I have the updated numbers from our finance team.",0:00:10,5.1,0.98
+"""
+
+CSV_QUOTED_COMMAS = """\
+Speaker,Text,Timestamp
+Alice,"Hello, everyone, welcome to our meeting today.",0:00:01
+Bob,"Thanks, Alice, for the warm welcome and introduction.",0:00:05
+Carol,"I have updates on items one, two, and three.",0:00:10
+"""
+
+
+def test_csv_extra_columns():
+    """CSV with extra columns (duration, confidence) should be ignored."""
+    result = parse_transcript(CSV_EXTRA_COLUMNS.encode("utf-8"), "transcript.csv", "test")
+    assert len(result.turns) == 3
+    assert "Alice" in result.speaker_labels
+
+
+def test_csv_quoted_commas():
+    """CSV with commas inside quoted fields should parse correctly."""
+    result = parse_transcript(CSV_QUOTED_COMMAS.encode("utf-8"), "transcript.csv", "test")
+    assert len(result.turns) == 3
+    assert "everyone, welcome" in result.turns[0].text
+
+
+# ---------------------------------------------------------------------------
+# Edge Cases: JSON
+# ---------------------------------------------------------------------------
+
+JSON_NESTED = """\
+{
+  "data": {
+    "results": {
+      "segments": [
+        {"speaker": "Alice", "text": "Nested segments should still be found by the parser.", "start": 1.0},
+        {"speaker": "Bob", "text": "Yes the parser searches two levels deep for segment arrays.", "start": 5.0}
+      ]
+    }
+  }
+}
+"""
+
+JSON_NUMERIC_SPEAKER = """\
+{
+  "segments": [
+    {"speaker": 0, "text": "Channel zero speaker says hello everyone this morning.", "start": 0.0},
+    {"speaker": 1, "text": "Channel one speaker responds with a greeting for all.", "start": 3.0}
+  ]
+}
+"""
+
+JSON_MALFORMED = """\
+{this is not valid json at all and should not crash the parser}
+"""
+
+
+def test_json_nested_segments():
+    """JSON with segments nested under data.results.segments."""
+    result = parse_transcript(JSON_NESTED.encode("utf-8"), "meeting.json", "test")
+    assert result.metadata.original_format == "json"
+    assert "Alice" in result.speaker_labels
+    assert len(result.turns) == 2
+
+
+def test_json_numeric_speaker():
+    """JSON with numeric speaker IDs (channel numbers)."""
+    result = parse_transcript(JSON_NUMERIC_SPEAKER.encode("utf-8"), "meeting.json", "test")
+    assert len(result.turns) == 2
+    # Numeric speakers should be converted to strings
+    assert result.turns[0].speaker_label in ("0", "Unknown")
+
+
+def test_json_malformed():
+    """Malformed JSON should not crash — falls back gracefully."""
+    result = parse_transcript(JSON_MALFORMED.encode("utf-8"), "meeting.json", "test")
+    # Should produce at least a fallback turn (the raw text)
+    assert len(result.turns) >= 1
+
+
+# ---------------------------------------------------------------------------
+# Edge Cases: Markdown
+# ---------------------------------------------------------------------------
+
+MD_INLINE_TEXT = """\
+**Alice** 0:01 Good morning everyone, welcome to this meeting today.
+**Bob** 0:05 Thanks Alice, I have updates from the engineering team.
+**Carol** 0:10 I also have notes to share from the design review meeting.
+"""
+
+MD_NO_TIMESTAMPS = """\
+**Alice**
+Good morning everyone, welcome to this meeting today.
+
+**Bob**
+Thanks Alice, I have updates from the engineering team.
+
+**Carol**
+I also have notes to share from the design review meeting.
+"""
+
+
+def test_md_inline_text():
+    """Markdown with text on the same line as **bold speaker** and timestamp."""
+    result = parse_transcript(MD_INLINE_TEXT.encode("utf-8"), "transcript.md", "test")
+    assert result.metadata.original_format == "md"
+    labels_lower = [s.lower() for s in result.speaker_labels]
+    assert "alice" in labels_lower
+    assert "bob" in labels_lower
+    assert len(result.turns) >= 2
+
+
+def test_md_no_timestamps():
+    """Markdown with bold speakers but no timestamps — Format D fallback."""
+    result = parse_transcript(MD_NO_TIMESTAMPS.encode("utf-8"), "transcript.md", "test")
+    assert result.metadata.original_format == "md"
+    labels_lower = [s.lower() for s in result.speaker_labels]
+    assert "alice" in labels_lower
+    assert "bob" in labels_lower
+    assert len(result.turns) >= 2
+
+
+# ---------------------------------------------------------------------------
+# Cross-Format Consistency
+# ---------------------------------------------------------------------------
+
+# Same 3-turn conversation encoded in every supported format
+_CROSS_VTT = """\
+WEBVTT
+
+00:00:01.000 --> 00:00:05.000
+<v Alice>Good morning everyone, welcome to this meeting today.
+
+00:00:06.000 --> 00:00:10.000
+<v Bob>Thanks Alice for the welcome and the introduction today.
+
+00:00:11.000 --> 00:00:15.000
+<v Carol>I have the quarterly numbers ready for the group.
+"""
+
+_CROSS_SRT = """\
+1
+00:00:01,000 --> 00:00:05,000
+Alice: Good morning everyone, welcome to this meeting today.
+
+2
+00:00:06,000 --> 00:00:10,000
+Bob: Thanks Alice for the welcome and the introduction today.
+
+3
+00:00:11,000 --> 00:00:15,000
+Carol: I have the quarterly numbers ready for the group.
+"""
+
+_CROSS_TXT = """\
+Alice: Good morning everyone, welcome to this meeting today.
+Bob: Thanks Alice for the welcome and the introduction today.
+Carol: I have the quarterly numbers ready for the group.
+"""
+
+_CROSS_CSV = """\
+Speaker,Text,Timestamp
+Alice,"Good morning everyone, welcome to this meeting today.",0:00:01
+Bob,"Thanks Alice for the welcome and the introduction today.",0:00:06
+Carol,"I have the quarterly numbers ready for the group.",0:00:11
+"""
+
+_CROSS_JSON = """\
+{
+  "segments": [
+    {"speaker": "Alice", "text": "Good morning everyone, welcome to this meeting today.", "start": 1.0},
+    {"speaker": "Bob", "text": "Thanks Alice for the welcome and the introduction today.", "start": 6.0},
+    {"speaker": "Carol", "text": "I have the quarterly numbers ready for the group.", "start": 11.0}
+  ]
+}
+"""
+
+_CROSS_MD = """\
+**Alice** 0:01
+Good morning everyone, welcome to this meeting today.
+
+**Bob** 0:06
+Thanks Alice for the welcome and the introduction today.
+
+**Carol** 0:11
+I have the quarterly numbers ready for the group.
+"""
+
+
+def test_same_content_all_formats():
+    """Same conversation in VTT, SRT, TXT, CSV, JSON, MD should produce
+    matching speaker labels and turn counts."""
+    cases = [
+        (_CROSS_VTT, "test.vtt"),
+        (_CROSS_SRT, "test.srt"),
+        (_CROSS_TXT, "test.txt"),
+        (_CROSS_CSV, "test.csv"),
+        (_CROSS_JSON, "test.json"),
+        (_CROSS_MD, "test.md"),
+    ]
+    results = []
+    for content, fname in cases:
+        r = parse_transcript(content.encode("utf-8"), fname, "test")
+        results.append((fname, r))
+
+    for fname, r in results:
+        assert len(r.turns) == 3, f"{fname}: expected 3 turns, got {len(r.turns)}"
+        labels = sorted(s.lower() for s in r.speaker_labels)
+        assert labels == ["alice", "bob", "carol"], f"{fname}: speakers = {r.speaker_labels}"
+        assert r.turns[0].turn_id == 1, f"{fname}: first turn_id != 1"
+        assert r.metadata.word_count > 0, f"{fname}: word count = 0"

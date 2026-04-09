@@ -22,6 +22,7 @@ def error_response(
             "message": message,
         },
         "status": "error",
+        "detail": message,
     }
     if details:
         body["error"]["details"] = details
