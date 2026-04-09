@@ -149,11 +149,14 @@ export default function RunResultsPage() {
                 {meta.meeting_date && (
                   <MetaPill>{fmtDate(meta.meeting_date)}</MetaPill>
                 )}
+                {meta.target_speaker_label && (
+                  <MetaPill>Speaker: {meta.target_speaker_label}</MetaPill>
+                )}
                 {meta.meeting_type && (
-                  <MetaPill>{meta.meeting_type}</MetaPill>
+                  <MetaPill>Type: {meta.meeting_type}</MetaPill>
                 )}
                 {meta.target_role && (
-                  <MetaPill>{ROLE_LABELS[meta.target_role] ?? meta.target_role}</MetaPill>
+                  <MetaPill>Role: {ROLE_LABELS[meta.target_role] ?? meta.target_role}</MetaPill>
                 )}
               </div>
             </div>

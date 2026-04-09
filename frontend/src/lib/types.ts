@@ -279,6 +279,7 @@ export interface RunMeta {
   meeting_date: string | null;
   meeting_type: string | null;
   target_role: string | null;
+  target_speaker_label: string | null;
 }
 
 export type TargetRole =

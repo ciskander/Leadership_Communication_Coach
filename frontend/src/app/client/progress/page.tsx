@@ -174,7 +174,7 @@ function buildChartData(
 
 // ─── Pattern trends chart ─────────────────────────────────────────────────────
 
-type ViewMode = 'focus' | 'top5' | 'all' | 'task' | 'relational';
+type ViewMode = 'focus' | 'all' | 'task' | 'relational';
 
 const TASK_PATTERNS = ['purposeful_framing', 'focus_management', 'resolution_and_alignment', 'assignment_clarity', 'question_quality', 'communication_clarity'];
 const RELATIONAL_PATTERNS = ['active_listening', 'recognition', 'behavioral_integrity', 'disagreement_navigation', 'feedback_quality'];
@@ -183,24 +183,25 @@ function PatternTrendsChart({
   history,
   experimentPatternIds,
   viewMode,
+  experimentStartDate,
 }: {
   history: RunHistoryPoint[];
   experimentPatternIds?: string[];
   viewMode: ViewMode;
+  experimentStartDate?: string | null;
 }) {
   const hasBaseline       = history.some((r) => r.is_baseline);
   const postBaselineCount = history.filter((r) => !r.is_baseline).length;
   const showLineChart     = hasBaseline && postBaselineCount >= 3;
 
-  const { allPatterns, topPatterns } = useMemo(() => {
+  const allPatterns = useMemo(() => {
     const oppCounts: Record<string, number> = {};
     for (const run of history) {
       for (const p of run.patterns) {
         oppCounts[p.pattern_id] = (oppCounts[p.pattern_id] ?? 0) + p.opportunity_count;
       }
     }
-    const all = Object.keys(oppCounts).sort((a, b) => oppCounts[b] - oppCounts[a]);
-    return { allPatterns: all, topPatterns: all.slice(0, 5) };
+    return Object.keys(oppCounts).sort((a, b) => oppCounts[b] - oppCounts[a]);
   }, [history]);
 
   const expIds = experimentPatternIds ?? [];
@@ -209,20 +210,8 @@ function PatternTrendsChart({
     if (viewMode === 'focus' && hasExpPattern) return expIds.filter(pid => allPatterns.includes(pid));
     if (viewMode === 'task') return allPatterns.filter(pid => TASK_PATTERNS.includes(pid));
     if (viewMode === 'relational') return allPatterns.filter(pid => RELATIONAL_PATTERNS.includes(pid));
-    if (viewMode === 'all') return allPatterns;
-    if (hasExpPattern) {
-      const extra = expIds.filter(pid => allPatterns.includes(pid) && !topPatterns.includes(pid));
-      if (extra.length === 0) return topPatterns;
-      // Swap experiment patterns in, dropping lowest-ranked top-5 entries to stay at 5
-      const combined = [...topPatterns];
-      for (const pid of extra) {
-        if (combined.length >= 5) combined.pop();
-        combined.push(pid);
-      }
-      return combined;
-    }
-    return topPatterns;
-  }, [viewMode, hasExpPattern, expIds, allPatterns, topPatterns]);
+    return allPatterns;
+  }, [viewMode, hasExpPattern, expIds, allPatterns]);
 
   const patternColor = useCallback(
     (pid: string) => LINE_COLORS[allPatterns.indexOf(pid) % LINE_COLORS.length],
@@ -307,6 +296,17 @@ function PatternTrendsChart({
                 label={{ value: STRINGS.progressPage.baseline, position: 'insideTopRight', fontSize: 10, fill: '#78716C' }} /* cv-stone-500 */
               />
             )}
+            {viewMode === 'focus' && experimentStartDate && (() => {
+              const expPoint = chartData.find(p => p.date >= experimentStartDate);
+              return expPoint ? (
+                <ReferenceLine
+                  x={expPoint.label}
+                  stroke={S.chartTeal}
+                  strokeDasharray="3 3"
+                  label={{ value: 'Experiment started', position: 'insideTopLeft', fontSize: 10, fill: S.chartTeal }}
+                />
+              ) : null;
+            })()}
           </LineChart>
         </ResponsiveContainer>
       ) : (
@@ -399,7 +399,7 @@ function PatternTrendsChart({
                 />
                 {STRINGS.patternLabels[pid] ?? pid}
                 {isExp && (
-                  <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide bg-cv-teal-100 text-cv-teal-700 border border-cv-teal-700 px-1.5 py-0.5 rounded-full leading-none">
+                  <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide bg-cv-teal-50 text-cv-teal-700 border border-cv-teal-700 px-1.5 py-0.5 rounded-full leading-none">
                     {STRINGS.progressPage.experimentBadge}
                   </span>
                 )}
@@ -425,7 +425,7 @@ function PastExperimentCard({
   const [open, setOpen] = useState(false);
 
   const statusCls =
-    exp.status === 'completed' ? 'bg-cv-teal-100 text-cv-teal-700 border-cv-teal-700'
+    exp.status === 'completed' ? 'bg-cv-teal-50 text-cv-teal-700 border-cv-teal-700'
     : exp.status === 'parked'  ? 'bg-cv-amber-100 text-cv-amber-700 border-cv-amber-700'
     : 'bg-cv-red-100 text-cv-red-700 border-cv-red-700';
 
@@ -449,8 +449,7 @@ function PastExperimentCard({
     return run.patterns.some((p) => pids.includes(p.pattern_id));
   });
 
-  const color     = LINE_COLORS[0]; // teal-600 for past-exp mini-charts
-  const chartData = expHistory.length > 0 && primaryPid ? buildChartData(expHistory, [primaryPid], 1) : [];
+  const chartData = expHistory.length > 0 && pids.length > 0 ? buildChartData(expHistory, pids, 1) : [];
 
   const axisStyle = { fontSize: 10, fill: S.chartAxisFill };
 
@@ -485,7 +484,7 @@ function PastExperimentCard({
               <span className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400">{STRINGS.progressPage.pattern}</span>
               <p className="font-medium text-cv-stone-800 mt-0.5 flex items-center">
                 {pids.map(p => STRINGS.patternLabels[p] ?? p).join(', ')}
-                {primaryPid && <InfoPopover patternId={primaryPid} hoverColor={color} />}
+                {primaryPid && <InfoPopover patternId={primaryPid} hoverColor={LINE_COLORS[0]} />}
               </p>
             </div>
             {dateRange && (
@@ -509,36 +508,64 @@ function PastExperimentCard({
           </div>
 
           {/* Mini trend chart */}
-          {chartData.length >= 2 && primaryPid ? (
+          {chartData.length >= 2 && pids.length > 0 ? (
             <div>
               <p className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400 mb-2">
-                {STRINGS.progressPage.duringExperiment(STRINGS.patternLabels[primaryPid] ?? primaryPid)}
+                {STRINGS.progressPage.duringExperiment(pids.map(p => STRINGS.patternLabels[p] ?? p).join(', '))}
               </p>
               <ResponsiveContainer width="100%" height={160}>
                 <LineChart data={chartData} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={S.chartGrid} />
                   <XAxis dataKey="label" tick={axisStyle} tickLine={false} />
                   <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={axisStyle} tickLine={false} axisLine={false} />
-                  <Tooltip formatter={(v: any) => [v != null ? `${v}%` : '—', STRINGS.patternLabels[primaryPid] ?? primaryPid]} labelStyle={{ fontSize: 11 }} />
-                  <Line type="monotone" dataKey={rawKey(primaryPid)} stroke="none"
-                    dot={{ r: 2, fill: color, opacity: 0.3 }} activeDot={false}
-                    connectNulls={false} legendType="none" isAnimationActive={false}
+                  <Tooltip
+                    labelStyle={{ fontSize: 11 }}
+                    formatter={(v: any, name: any) => {
+                      const n = String(name ?? '');
+                      if (n.endsWith('_raw')) return [null, null];
+                      return [v != null ? `${v}%` : '—', STRINGS.patternLabels[n] ?? n];
+                    }}
                   />
-                  <Line type="monotone" dataKey={primaryPid} stroke={color} strokeWidth={2}
-                    dot={false} activeDot={{ r: 4, fill: color }} connectNulls
-                  />
+                  {pids.map((pid, i) => {
+                    const lineColor = LINE_COLORS[i % LINE_COLORS.length];
+                    return [
+                      <Line key={`${pid}_raw`} type="monotone" dataKey={rawKey(pid)} stroke="none"
+                        dot={{ r: 2, fill: lineColor, opacity: 0.3 }} activeDot={false}
+                        connectNulls={false} legendType="none" isAnimationActive={false}
+                      />,
+                      <Line key={pid} type="monotone" dataKey={pid} stroke={lineColor} strokeWidth={2}
+                        dot={false} activeDot={{ r: 4, fill: lineColor }} connectNulls
+                        isAnimationActive={false}
+                      />,
+                    ];
+                  })}
                 </LineChart>
               </ResponsiveContainer>
+              {pids.length > 1 && (
+                <div className="flex flex-wrap gap-3 mt-2">
+                  {pids.map((pid, i) => (
+                    <span key={pid} className="flex items-center text-xs text-cv-stone-600">
+                      <span className="inline-block w-2.5 h-2.5 rounded-full mr-1 shrink-0"
+                        style={{ background: LINE_COLORS[i % LINE_COLORS.length] }}
+                      />
+                      {STRINGS.patternLabels[pid] ?? pid}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-          ) : chartData.length === 1 && primaryPid ? (
+          ) : chartData.length === 1 && pids.length > 0 ? (
             <div>
               <p className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400 mb-1">
-                {STRINGS.progressPage.duringExperiment(STRINGS.patternLabels[primaryPid] ?? primaryPid)}
+                {STRINGS.progressPage.duringExperiment(pids.map(p => STRINGS.patternLabels[p] ?? p).join(', '))}
               </p>
-              <p className="text-sm font-medium text-cv-stone-800">
-                {chartData[0][primaryPid] != null ? `${chartData[0][primaryPid]}%` : '—'}
-                <span className="text-cv-stone-400 font-normal ml-1">{STRINGS.progressPage.oneMeeting}</span>
-              </p>
+              {pids.map((pid, i) => (
+                <p key={pid} className="text-sm font-medium text-cv-stone-800">
+                  <span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ background: LINE_COLORS[i % LINE_COLORS.length] }} />
+                  {STRINGS.patternLabels[pid] ?? pid}: {chartData[0][pid] != null ? `${chartData[0][pid]}%` : '—'}
+                  {i === 0 && <span className="text-cv-stone-400 font-normal ml-1">{STRINGS.progressPage.oneMeeting}</span>}
+                </p>
+              ))}
             </div>
           ) : null}
         </div>
@@ -553,12 +580,13 @@ export default function ProgressPage() {
   const [data, setData]     = useState<ClientProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]   = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('top5');
+  const [viewMode, setViewMode] = useState<ViewMode>('all');
   const { data: activeExp } = useActiveExperiment();
 
   const experimentPatternIds = activeExp?.experiment?.related_patterns
     ?? (activeExp?.experiment?.pattern_id ? [activeExp.experiment.pattern_id] : []);
   const hasExpPattern       = experimentPatternIds.length > 0;
+  const experimentStartDate = activeExp?.experiment?.started_at ?? null;
 
   useEffect(() => {
     api.getClientProgress()
@@ -567,11 +595,10 @@ export default function ProgressPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const effectiveViewMode = viewMode === 'focus' && !hasExpPattern ? 'top5' : viewMode;
+  const effectiveViewMode = viewMode === 'focus' && !hasExpPattern ? 'all' : viewMode;
 
   const viewOptions: { key: ViewMode; label: string; disabled?: boolean }[] = [
     ...(hasExpPattern ? [{ key: 'focus' as ViewMode, label: STRINGS.progressPage.experimentPatterns }] : []),
-    { key: 'top5',  label: STRINGS.progressPage.top5Patterns },
     { key: 'all',   label: STRINGS.progressPage.allPatterns },
     { key: 'task',  label: STRINGS.clusterLabels.task_effectiveness ?? 'Task' },
     { key: 'relational', label: STRINGS.clusterLabels.relational_effectiveness ?? 'Relational' },
@@ -640,6 +667,7 @@ export default function ProgressPage() {
               history={data.pattern_history}
               experimentPatternIds={experimentPatternIds}
               viewMode={effectiveViewMode}
+              experimentStartDate={experimentStartDate}
             />
           </section>
 

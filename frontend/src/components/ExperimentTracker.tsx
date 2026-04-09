@@ -46,7 +46,7 @@ const HUMAN_PILL_CONFIG: Record<string, { label: string; color: string; border: 
 
 const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string; border: string }> = {
   proposed:  { bg: 'bg-cv-warm-100',   text: 'text-cv-stone-600',  label: STRINGS.experimentStatus.proposed,  border: 'border-cv-stone-600'  },
-  active:    { bg: 'bg-cv-teal-100',   text: 'text-cv-teal-700',   label: STRINGS.experimentStatus.active,    border: 'border-cv-teal-700'   },
+  active:    { bg: 'bg-cv-teal-50',    text: 'text-cv-teal-700',   label: STRINGS.experimentStatus.active,    border: 'border-cv-teal-700'   },
   completed: { bg: 'bg-cv-warm-200',   text: 'text-cv-stone-600',  label: STRINGS.experimentStatus.completed, border: 'border-cv-stone-600'  },
   parked:    { bg: 'bg-cv-amber-100',  text: 'text-cv-amber-700',  label: STRINGS.experimentStatus.parked,    border: 'border-cv-amber-700'  },
   abandoned: { bg: 'bg-cv-red-100',    text: 'text-cv-red-700',    label: STRINGS.experimentStatus.abandoned, border: 'border-cv-red-700'    },
@@ -250,7 +250,7 @@ export function ExperimentTracker({
               <div className="flex gap-2 flex-wrap">
                 <Link
                   href="/client/analyze"
-                  className="flex items-center gap-2 px-4 py-2.5 bg-cv-navy-600 text-white rounded text-sm font-medium hover:bg-cv-navy-700 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-cv-navy-600 text-white rounded text-sm font-medium hover:bg-cv-navy-700 transition-colors"
                 >
                   <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M9 3L10.5 7.5L15 9L10.5 10.5L9 15L7.5 10.5L3 9L7.5 7.5L9 3Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/><path d="M19 13L19.75 15.25L22 16L19.75 16.75L19 19L18.25 16.75L16 16L18.25 15.25L19 13Z" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"/></svg>
                   {STRINGS.experimentTracker.analyzeMeeting}
@@ -265,7 +265,7 @@ export function ExperimentTracker({
                 <button
                   onClick={() => setActionState('confirm-park')}
                   disabled={actionState === 'loading'}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-cv-warm-300 text-cv-stone-600 rounded text-sm font-medium hover:bg-cv-warm-50 disabled:opacity-50 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-cv-warm-100 border border-cv-stone-400 text-cv-stone-600 rounded text-sm font-medium hover:bg-cv-warm-200 disabled:opacity-50 transition-colors"
                 >
                   <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><rect x="3.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/><rect x="9.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/></svg>
                   {STRINGS.experimentTracker.parkForNow}

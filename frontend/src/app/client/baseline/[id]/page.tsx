@@ -63,8 +63,8 @@ function CoachingThemesSection({ themes }: { themes: CoachingTheme[] }) {
             <div className="flex items-center gap-2 mb-1.5">
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                 theme.priority === 'primary'
-                  ? 'bg-cv-rose-100 text-cv-rose-800'
-                  : 'bg-stone-100 text-stone-600'
+                  ? 'bg-cv-rose-100 text-cv-rose-800 border border-cv-rose-800'
+                  : 'bg-cv-amber-50 text-cv-amber-700 border border-cv-amber-700'
               }`}>
                 {theme.priority === 'primary'
                   ? STRINGS.runStatusPoller.primaryThemeLabel
@@ -474,23 +474,6 @@ export default function BaselineDetailPage() {
       {/* ── Ready state ────────────────────────────────────────────────────── */}
       {isReady && (
         <>
-          {/* Success banner */}
-          <div className="bg-cv-teal-50 border border-cv-teal-700 rounded px-5 py-4 flex items-center gap-3">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0 text-cv-teal-700" aria-hidden="true">
-              <path d="M12 2L3 7L12 12L21 7L12 2Z" />
-              <path d="M3 12L12 17L21 12" />
-              <path d="M3 17L12 22L21 17" />
-            </svg>
-            <div>
-              <p className="text-sm font-semibold text-cv-teal-800">
-                {STRINGS.baselineDetail.completeTitle}
-              </p>
-              <p className="text-sm text-cv-teal-400 font-light mt-0.5">
-                {STRINGS.baselineDetail.completeSubtitle}
-              </p>
-            </div>
-          </div>
-
           {/* Executive summary */}
           {pack.executive_summary && (
             <section className="bg-white rounded border border-cv-navy-600 overflow-hidden">

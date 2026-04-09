@@ -56,10 +56,10 @@ function RelatedPatternsLabel({ relatedPatterns, patternId }: { relatedPatterns?
 function BaselineBadge({ status }: { status: string }) {
   const colorMap: Record<string, string> = {
     none:           'bg-cv-warm-100 text-cv-stone-500',
-    intake:         'bg-cv-teal-100 text-cv-teal-700',
+    intake:         'bg-cv-teal-50 text-cv-teal-700',
     building:       'bg-cv-amber-100 text-cv-amber-700',
-    baseline_ready: 'bg-cv-teal-100 text-cv-teal-700',
-    completed:      'bg-cv-teal-100 text-cv-teal-700',
+    baseline_ready: 'bg-cv-teal-50 text-cv-teal-700',
+    completed:      'bg-cv-teal-50 text-cv-teal-700',
     error:          'bg-cv-red-100 text-cv-red-700',
   };
   const color = colorMap[status] ?? colorMap.none;

@@ -1397,7 +1397,8 @@ async def get_run_meta(
             "transcript_id": None,
             "meeting_date": None,
             "meeting_type": None,
-            "target_role": None,
+            "target_role": rf.get("Target Speaker Role"),
+            "target_speaker_label": rf.get("Target Speaker Label"),
         }
 
         transcript_links = rf.get("Transcript ID", [])
@@ -1410,7 +1411,7 @@ async def get_run_meta(
                     "transcript_id": trf.get("Transcript ID"),
                     "meeting_date": trf.get("Meeting Date"),
                     "meeting_type": trf.get("Meeting Type"),
-                    "target_role": trf.get("Target Role"),
+                    "target_role": transcript_meta["target_role"] or trf.get("Target Role"),
                 })
             except Exception as te:
                 logger.warning("get_run_meta: could not fetch transcript for run %s: %s", run_id, te)

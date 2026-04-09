@@ -69,9 +69,9 @@ function getDaysAgo(dateStr: string | undefined): number | null {
 
 // ─── Avatar color cycle — all cv-warm based ───────────────────────────────────
 const AVATAR_COLORS = [
-  'bg-cv-teal-100 text-cv-teal-700',
+  'bg-cv-teal-50 text-cv-teal-700',
   'bg-cv-amber-100 text-cv-amber-700',
-  'bg-cv-teal-100 text-cv-navy-600',
+  'bg-cv-teal-50 text-cv-navy-600',
   'bg-cv-warm-200 text-cv-stone-700',
   'bg-cv-stone-200 text-cv-stone-700',
   'bg-cv-red-100 text-cv-red-700',
