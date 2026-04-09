@@ -1,11 +1,13 @@
 """
 transcript_parser.py — Multi-format transcript parser.
 
-Supported: .vtt, .srt, .txt, .docx, .pdf
+Supported: .vtt, .srt, .txt, .docx, .pdf, .csv, .json, .md
 """
 from __future__ import annotations
 
+import csv
 import io
+import json as json_mod
 import logging
 import re
 import unicodedata
@@ -42,6 +44,8 @@ _VTT_BLOCK_SKIP_RE = re.compile(r"^(STYLE|NOTE|REGION)\b", re.IGNORECASE)
 
 # SRT index lines (digit-only lines)
 _SRT_INDEX_RE = re.compile(r"^\d+$")
+# SRT bracketed speaker: "[Speaker Name] text"
+_SRT_BRACKET_SPEAKER_RE = re.compile(r"^\[([^\]]{1,60})\]\s*(.*)")
 # SRT/VTT timecode
 _TIMECODE_RE = re.compile(
     r"\d{2}:\d{2}:\d{2}[.,]\d{3}\s*-->\s*\d{2}:\d{2}:\d{2}[.,]\d{3}"
@@ -321,6 +325,14 @@ def _parse_srt(text: str) -> list[Turn]:
                 clean = _strip_html(pl)
                 if not clean:
                     continue
+                # Bracketed speaker: [Speaker Name] text
+                bracket_m = _SRT_BRACKET_SPEAKER_RE.match(clean)
+                if bracket_m:
+                    speaker = _clean_speaker(bracket_m.group(1))
+                    text = bracket_m.group(2).strip()
+                    if speaker and text:
+                        raw_turns.append((speaker, text, cue_start))
+                        continue
                 if ": " in clean:
                     parts = clean.split(": ", 1)
                     raw_turns.append((_clean_speaker(parts[0]), parts[1].strip(), cue_start))
@@ -346,7 +358,7 @@ def _match_rate(lines: list[str], pattern: re.Pattern) -> float:
 
 # Sub-format patterns
 _FMT_A_RE = re.compile(r"^([A-Za-z][^:]{0,60}):\s+\S")  # "Speaker: text"
-_FMT_B_SPEAKER_TS_RE = re.compile(r"^([A-Za-z][^:]{0,60})\s{2,}\d{1,2}:\d{2}")  # "Speaker  HH:MM"
+_FMT_B_SPEAKER_TS_RE = re.compile(r"^([A-Za-z][^:]{0,60})\s+(\d{1,2}:\d{2}(?::\d{2})?)\s*$")  # "Speaker HH:MM" or "Speaker HH:MM:SS"
 _FMT_C_RE = re.compile(                                    # "[HH:MM:SS] speaker: text"
     r"^\[\d{1,2}:\d{2}(?::\d{2})?\]\s*([^:]{1,60}):\s*(.*)"
 )
@@ -463,7 +475,7 @@ def _parse_txt_format_a(lines: list[str]) -> list[Turn]:
     return _to_turn_objects(raw)
 
 
-_FMT_B_TS_RE = re.compile(r"\s{2,}(\d{1,2}:\d{2}(?::\d{2})?)")
+_FMT_B_TS_RE = re.compile(r"\s+(\d{1,2}:\d{2}(?::\d{2})?)\s*$")
 
 
 def _parse_txt_format_b(lines: list[str]) -> list[Turn]:
@@ -561,6 +573,237 @@ def _parse_txt_format_e(lines: list[str]) -> list[Turn]:
     return _to_turn_objects(raw)
 
 
+# ── Markdown Parser ──────────────────────────────────────────────────────────
+
+_MD_HEADING_RE = re.compile(r"^#{1,6}\s+")
+_MD_HR_RE = re.compile(r"^(-{3,}|\*{3,}|_{3,})\s*$")
+_MD_BOLD_SPEAKER_TS_RE = re.compile(
+    r"^\*\*([^*]+)\*\*\s+(\d{1,2}:\d{2}(?::\d{2})?)\s*(.*)"
+)
+_MD_BOLD_SPEAKER_RE = re.compile(r"^\*\*([^*]+)\*\*\s*(.*)")
+_MD_BOLD_RE = re.compile(r"\*\*([^*]+)\*\*")
+_MD_ITALIC_RE = re.compile(r"\*([^*]+)\*")
+_MD_BULLET_RE = re.compile(r"^[-*+]\s+")
+
+
+def _strip_markdown(text: str) -> str:
+    """Strip markdown formatting, converting bold speakers to Format B style."""
+    out_lines: list[str] = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        # Skip headings and horizontal rules
+        if _MD_HEADING_RE.match(stripped) or _MD_HR_RE.match(stripped):
+            continue
+        # Convert **Speaker** HH:MM [optional inline text] to Format B
+        m = _MD_BOLD_SPEAKER_TS_RE.match(stripped)
+        if m:
+            speaker = m.group(1).strip()
+            ts = m.group(2)
+            inline_text = m.group(3).strip()
+            out_lines.append(f"{speaker}  {ts}")
+            if inline_text:
+                # Strip remaining bold/italic from inline text
+                inline_text = _MD_BOLD_RE.sub(r"\1", inline_text)
+                inline_text = _MD_ITALIC_RE.sub(r"\1", inline_text)
+                out_lines.append(inline_text)
+            continue
+        # Convert **Speaker** (no timestamp) to speaker line for Format D
+        m = _MD_BOLD_SPEAKER_RE.match(stripped)
+        if m and not m.group(2).strip():
+            out_lines.append(m.group(1).strip())
+            continue
+        # Strip bullet prefixes
+        stripped = _MD_BULLET_RE.sub("", stripped)
+        # Strip remaining bold/italic markers
+        stripped = _MD_BOLD_RE.sub(r"\1", stripped)
+        stripped = _MD_ITALIC_RE.sub(r"\1", stripped)
+        out_lines.append(stripped)
+    return "\n".join(out_lines)
+
+
+def _parse_markdown(text: str) -> list[Turn]:
+    """Parse markdown transcript by stripping formatting and delegating to TXT."""
+    cleaned = _strip_markdown(text)
+    return _parse_txt(cleaned)
+
+
+# ── CSV Parser ───────────────────────────────────────────────────────────────
+
+_CSV_SPEAKER_NAMES = {"speaker", "speaker_name", "name", "participant"}
+_CSV_TEXT_NAMES = {"text", "content", "transcript", "utterance", "body"}
+_CSV_TIME_NAMES = {"start", "start_time", "timestamp", "time"}
+
+
+def _parse_csv(text: str) -> list[Turn]:
+    """Parse CSV transcript with auto-detected or positional columns."""
+    reader = csv.reader(io.StringIO(text))
+    rows = list(reader)
+    if not rows:
+        return []
+
+    # Try to detect header row
+    header = [h.strip().lower() for h in rows[0]]
+    speaker_col: Optional[int] = None
+    text_col: Optional[int] = None
+    time_col: Optional[int] = None
+
+    for i, h in enumerate(header):
+        if h in _CSV_SPEAKER_NAMES and speaker_col is None:
+            speaker_col = i
+        elif h in _CSV_TEXT_NAMES and text_col is None:
+            text_col = i
+        elif h in _CSV_TIME_NAMES and time_col is None:
+            time_col = i
+
+    data_start = 0
+    if speaker_col is not None or text_col is not None:
+        # Header detected
+        data_start = 1
+    else:
+        # Positional fallback: col0=speaker, col1=text, col2=timestamp
+        if len(header) >= 2:
+            speaker_col = 0
+            text_col = 1
+            if len(header) >= 3:
+                time_col = 2
+
+    if text_col is None:
+        return []
+
+    raw: list[RawTurn] = []
+    for row in rows[data_start:]:
+        if len(row) <= max(c for c in (speaker_col, text_col, time_col) if c is not None):
+            continue
+        speaker = row[speaker_col].strip() if speaker_col is not None else "Unknown"
+        text = row[text_col].strip() if text_col is not None else ""
+        ts: Optional[float] = None
+        if time_col is not None and time_col < len(row) and row[time_col].strip():
+            try:
+                ts = _parse_timecode(row[time_col].strip())
+            except (ValueError, IndexError):
+                # Try as float seconds
+                try:
+                    ts = float(row[time_col].strip())
+                except ValueError:
+                    pass
+        if not text:
+            continue
+        if not speaker:
+            speaker = "Unknown"
+        raw.append((speaker, text, ts))
+
+    raw = _normalize_speaker_map(raw)
+    raw = _merge_consecutive(raw)
+    return _to_turn_objects(raw)
+
+
+# ── JSON Parser ──────────────────────────────────────────────────────────────
+
+_JSON_SEGMENT_KEYS = {"segments", "results", "utterances", "transcript", "items"}
+_JSON_SPEAKER_KEYS = {"speaker", "speaker_name", "speaker_label", "name", "participant", "channel"}
+_JSON_TEXT_KEYS = {"text", "content", "transcript", "utterance", "body", "punctuated_word"}
+_JSON_TIME_KEYS = {"start", "start_time", "timestamp", "time", "start_ts"}
+_JSON_WORDS_KEYS = {"words", "tokens"}
+
+
+def _find_segments(data: object, depth: int = 0) -> Optional[list[dict]]:
+    """Search for an array of segment dicts up to 2 levels deep."""
+    if depth > 2:
+        return None
+    if isinstance(data, list) and data and isinstance(data[0], dict):
+        return data
+    if isinstance(data, dict):
+        # Check known keys first
+        for key in _JSON_SEGMENT_KEYS:
+            if key in data:
+                val = data[key]
+                if isinstance(val, list) and val and isinstance(val[0], dict):
+                    return val
+        # Search all values
+        for val in data.values():
+            result = _find_segments(val, depth + 1)
+            if result:
+                return result
+    return None
+
+
+def _extract_text_from_segment(seg: dict) -> str:
+    """Extract text from a segment, handling words arrays."""
+    # Direct text field
+    for key in _JSON_TEXT_KEYS:
+        if key in seg and isinstance(seg[key], str) and seg[key].strip():
+            return seg[key].strip()
+    # Words array
+    for key in _JSON_WORDS_KEYS:
+        if key in seg and isinstance(seg[key], list):
+            words = seg[key]
+            parts = []
+            for w in words:
+                if isinstance(w, dict):
+                    for tk in ("word", "text", "punctuated_word", "value"):
+                        if tk in w and isinstance(w[tk], str):
+                            parts.append(w[tk])
+                            break
+                elif isinstance(w, str):
+                    parts.append(w)
+            if parts:
+                return " ".join(parts)
+    return ""
+
+
+def _extract_speaker_from_segment(seg: dict) -> str:
+    """Extract speaker label from a segment dict."""
+    for key in _JSON_SPEAKER_KEYS:
+        if key in seg and seg[key] is not None:
+            return str(seg[key]).strip()
+    return "Unknown"
+
+
+def _extract_time_from_segment(seg: dict) -> Optional[float]:
+    """Extract start time from a segment dict."""
+    for key in _JSON_TIME_KEYS:
+        if key in seg and seg[key] is not None:
+            val = seg[key]
+            if isinstance(val, (int, float)):
+                return float(val)
+            if isinstance(val, str):
+                try:
+                    return _parse_timecode(val)
+                except (ValueError, IndexError):
+                    try:
+                        return float(val)
+                    except ValueError:
+                        pass
+    return None
+
+
+def _parse_json(text: str) -> list[Turn]:
+    """Parse JSON transcript with auto-detected segment structure."""
+    try:
+        data = json_mod.loads(text)
+    except (json_mod.JSONDecodeError, ValueError):
+        return []
+
+    segments = _find_segments(data)
+    if not segments:
+        return []
+
+    raw: list[RawTurn] = []
+    for seg in segments:
+        if not isinstance(seg, dict):
+            continue
+        text_content = _extract_text_from_segment(seg)
+        if not text_content:
+            continue
+        speaker = _extract_speaker_from_segment(seg)
+        ts = _extract_time_from_segment(seg)
+        raw.append((speaker, text_content, ts))
+
+    raw = _normalize_speaker_map(raw)
+    raw = _merge_consecutive(raw)
+    return _to_turn_objects(raw)
+
+
 # ── DOCX / PDF extraction ─────────────────────────────────────────────────────
 
 def _extract_docx_text(data: bytes) -> str:
@@ -644,6 +887,15 @@ def parse_transcript(
     ):
         turns = _parse_srt(raw_text)
         detected_format = "srt"
+    elif suffix == ".json" or first_non_blank[:1] in ("{", "["):
+        turns = _parse_json(raw_text)
+        detected_format = "json"
+    elif suffix == ".csv":
+        turns = _parse_csv(raw_text)
+        detected_format = "csv"
+    elif suffix in (".md", ".markdown"):
+        turns = _parse_markdown(raw_text)
+        detected_format = "md"
     elif detected_format in ("docx", "pdf"):
         turns = _parse_txt(raw_text)
     else:
