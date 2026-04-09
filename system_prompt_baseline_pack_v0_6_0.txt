@@ -254,7 +254,7 @@ Three problems this rule addresses: (1) Pedantic coaching -- generating taxonomy
 
 Two guiding principles: (1) No silent cards -- don't leave the coachee wondering about a score with no context. (2) No forced coaching -- don't generate boring, obvious, pedantic, or repetitive content just to fill a field.
 
-In short: say something, but don't say anything dumb. When substantive coaching isn't warranted, a no-empty-cards option is much better than forced coaching on thin evidence.
+In short: say something, but don't say anything trite or pedantic. When substantive coaching isn't warranted, a no-empty-cards option is much better than forced coaching on thin evidence.
 
 No-empty-cards options (not exhaustive):
 - A brief positive acknowledgment, when the strength genuinely earns the leader's attention
