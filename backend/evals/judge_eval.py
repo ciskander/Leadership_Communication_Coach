@@ -98,7 +98,20 @@ _JUDGE_USER_PROMPT = """\
 ## Your Evaluation
 
 Evaluate the AI coaching output on each dimension below. Return a JSON object \
-with the following structure:
+with the following structure.
+
+IMPORTANT — Status cards vs substantive cards:
+Patterns marked [STATUS CARD] are intentional brief acknowledgments. The system \
+deliberately chose not to give substantive coaching on these patterns because \
+they are not central to the meeting's coaching story. Rate status cards \
+differently from substantive cards:
+- Substantive cards (no [STATUS CARD] label): set card_type to "substantive" \
+and rate as "insightful", "adequate", "pedantic", or "wrong" based on coaching \
+quality.
+- Status cards (marked [STATUS CARD]): set card_type to "status" and rate as \
+"appropriate" (accurate, doesn't mislead), "over_coaching" (contains coaching \
+advice better suited to a substantive card), or "misleading" (misrepresents \
+performance).
 
 ```json
 {{
@@ -106,11 +119,12 @@ with the following structure:
     "items": [
       {{
         "pattern_id": "<pattern>",
-        "rating": "insightful|adequate|pedantic|wrong",
+        "card_type": "substantive|status",
+        "rating": "<see rating rules below>",
         "explanation": "<why this rating>"
       }}
     ],
-    "pedantic_count": <number of items rated 'pedantic' in the items array above>,
+    "pedantic_count": <number of SUBSTANTIVE items rated 'pedantic' in the items array above — do NOT count status cards>,
     "total_patterns_judged": <total number of items in the items array above>,
     "overall_notes": "<summary>"
   }},
@@ -307,7 +321,17 @@ def _format_pattern_coaching(coaching: dict, evidence_spans: list, pattern_snaps
         if not pc.get("notes") and not pc.get("coaching_note"):
             continue
 
-        lines = [f"#### {pid}"]
+        # Detect status cards: exactly one content field, no supporting fields.
+        # Status cards are intentional brief acknowledgments, not substantive coaching.
+        has_notes = bool(pc.get("notes"))
+        has_cn = bool(pc.get("coaching_note"))
+        has_supporting = bool(pc.get("best_success_span_id")) or bool(pc.get("suggested_rewrite")) or bool(pc.get("rewrite_for_span_id"))
+        is_status_card = (has_notes != has_cn) and not has_supporting
+
+        if is_status_card:
+            lines = [f"#### {pid} [STATUS CARD]"]
+        else:
+            lines = [f"#### {pid}"]
 
         if pc.get("notes"):
             lines.append(f"**Notes**: {pc['notes']}")

@@ -87,4 +87,8 @@ def merge_stage2_output(
         if added:
             logger.info("  Appended %d experiment detection spans from Stage 2", added)
 
+    # 5. Preserve changelog in merged output for debugging
+    if changelog:
+        merged["changes"] = changelog
+
     return merged, changelog

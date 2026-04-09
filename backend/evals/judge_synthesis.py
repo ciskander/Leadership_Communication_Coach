@@ -132,9 +132,16 @@ def load_judge_data(files: list[Path], meeting_id: str | None = None) -> list[di
 # ── Synthesis functions ──────────────────────────────────────────────────────
 
 def synthesize_ratings(judge_data: list[dict]) -> dict[str, Any]:
-    """Compute aggregate and per-pattern rating distributions."""
+    """Compute aggregate and per-pattern rating distributions.
+
+    Separates substantive card ratings (insightful/adequate/pedantic/wrong)
+    from status card ratings (appropriate/over_coaching/misleading).
+    """
     all_ratings: dict[str, list[str]] = defaultdict(list)
     per_meeting: dict[str, dict[str, list[str]]] = defaultdict(lambda: defaultdict(list))
+    # Status card tracking
+    all_status_ratings: dict[str, list[str]] = defaultdict(list)
+    per_meeting_status: dict[str, dict[str, list[str]]] = defaultdict(lambda: defaultdict(list))
 
     for d in judge_data:
         meeting = d["_meeting"]
@@ -142,9 +149,14 @@ def synthesize_ratings(judge_data: list[dict]) -> dict[str, Any]:
         for item in items:
             pid = item.get("pattern_id", "")
             rating = item.get("rating", "")
+            card_type = item.get("card_type", "substantive")
             if pid and rating:
-                all_ratings[pid].append(rating)
-                per_meeting[meeting][pid].append(rating)
+                if card_type == "status":
+                    all_status_ratings[pid].append(rating)
+                    per_meeting_status[meeting][pid].append(rating)
+                else:
+                    all_ratings[pid].append(rating)
+                    per_meeting[meeting][pid].append(rating)
 
     def _dist(ratings: list[str]) -> dict[str, Any]:
         n = len(ratings)
@@ -197,12 +209,38 @@ def synthesize_ratings(judge_data: list[dict]) -> dict[str, Any]:
         pedantic_heat[pid] = ped_row
         insightful_heat[pid] = ins_row
 
+    # Status card summary
+    def _status_dist(ratings: list[str]) -> dict[str, Any]:
+        n = len(ratings)
+        if n == 0:
+            return {"n": 0, "appropriate": 0, "over_coaching": 0, "misleading": 0}
+        c = Counter(ratings)
+        return {
+            "n": n,
+            "appropriate": c.get("appropriate", 0),
+            "over_coaching": c.get("over_coaching", 0),
+            "misleading": c.get("misleading", 0),
+            "appropriate_pct": round(100 * c.get("appropriate", 0) / n, 1),
+            "over_coaching_pct": round(100 * c.get("over_coaching", 0) / n, 1),
+            "misleading_pct": round(100 * c.get("misleading", 0) / n, 1),
+        }
+
+    all_status_flat = [r for ratings in all_status_ratings.values() for r in ratings]
+    status_aggregate = _status_dist(all_status_flat)
+
+    status_per_pattern = {}
+    for pid in PATTERN_ORDER:
+        if pid in all_status_ratings:
+            status_per_pattern[pid] = _status_dist(all_status_ratings[pid])
+
     return {
         "aggregate": aggregate,
         "per_pattern": per_pattern,
         "per_meeting": per_meeting_agg,
         "pedantic_heatmap": pedantic_heat,
         "insightful_heatmap": insightful_heat,
+        "status_card_aggregate": status_aggregate,
+        "status_card_per_pattern": status_per_pattern,
     }
 
 
@@ -488,6 +526,26 @@ def format_report(synthesis: dict[str, Any], comparison: dict[str, Any] | None =
         pp = synthesis["ratings"]["per_pattern"].get(pid)
         if pp:
             lines.append(f"| {pid} | {pp['n']} | {pp['insightful_pct']}% | {pp['adequate_pct']}% | {pp['pedantic_pct']}% | {pp['wrong_pct']}% |")
+
+    # Status card ratings (if any)
+    status_agg = synthesis["ratings"].get("status_card_aggregate", {})
+    status_pp = synthesis["ratings"].get("status_card_per_pattern", {})
+    if status_agg.get("n", 0) > 0:
+        lines.append("\n## Status Card Ratings\n")
+        lines.append(f"| Metric | Count | % |")
+        lines.append(f"|--------|------:|---:|")
+        for r in ["appropriate", "over_coaching", "misleading"]:
+            lines.append(f"| {r.replace('_', ' ').capitalize()} | {status_agg.get(r, 0)} | {status_agg.get(f'{r}_pct', 0)}% |")
+        lines.append(f"| **Total** | **{status_agg['n']}** | |")
+
+        if status_pp:
+            lines.append("\n### Status Cards Per Pattern\n")
+            lines.append(f"| Pattern | N | Appr% | Over% | Misl% |")
+            lines.append(f"|---------|---:|------:|------:|------:|")
+            for pid in PATTERN_ORDER:
+                sp = status_pp.get(pid)
+                if sp:
+                    lines.append(f"| {pid} | {sp['n']} | {sp['appropriate_pct']}% | {sp['over_coaching_pct']}% | {sp['misleading_pct']}% |")
 
     # Per-meeting
     lines.append("\n## Per-Meeting Breakdown\n")

@@ -121,6 +121,11 @@ Tiebreaker for uncertain cases -- If you're unsure whether a pattern earns subst
 (c) It addresses something not more appropriately covered by a theme or higher-priority pattern
 If it fails any of these, make it a status card.
 
+Background competence check -- After applying the value test and tiebreaker, ask one final question for each pattern that survived as substantive: would removing this pattern's substantive card make the overall coaching package noticeably weaker for this leader? If the answer is no -- if the remaining themes and higher-priority patterns already deliver the coaching this leader needs -- downgrade to a status card. This check exists because some patterns are prone to generating technically correct but low-value coaching:
+- recognition: When the leader's recognition behavior is adequate but unremarkable, coaching about recognition adds nothing. Recognition coaching earns substantive coaching only when recognition is itself a distinctive strength worth naming OR a clear developmental gap that is not better captured by a coaching theme.
+- communication_clarity: When the leader communicates competently, praising their clarity is not coaching. CC earns substantive coaching only when clarity is a genuine distinguishing strength OR a real barrier to the leader's effectiveness.
+- behavioral_integrity: When the leader demonstrates normal professional follow-through, that is not a coaching insight. BI coaching earns substantive coaching only when integrity behavior is a genuine distinguishing strength OR a clear developmental gap.
+
 Every evaluable pattern must have a pattern_coaching entry. Both-null is never acceptable.
 
 Step 5 -- Pattern-level coaching generation:
@@ -184,7 +189,7 @@ Quality checks (most important):
 
 (b) Re-read each substantive card's notes and coaching_note. Could the content apply to any meeting? If generic, rewrite it with better grounding. If it cannot be made specific, set it to null. If this would leave both fields null, downgrade the card to a status card (write a no-empty-cards option).
 
-(c) For each substantive card, check both fields separately. If notes praises competent-but-unremarkable behavior on a pattern not central to the meeting's coaching story, set notes to null. If coaching_note nitpicks a minor gap a senior coach would not spend time on given the meeting's more consequential issues, set coaching_note to null (and clear suggested_rewrite and rewrite_for_span_id). If this would leave both fields null, downgrade the card to a status card (write a no-empty-cards option).
+(c) For each substantive card, check both fields separately. Apply the background competence check from Step 4 again. If notes praises competent-but-unremarkable behavior on a pattern not central to the meeting's coaching story, set notes to null (and clear best_success_span_id). If coaching_note nitpicks a minor gap a senior coach would not spend time on given the meeting's more consequential issues, set coaching_note to null (and clear suggested_rewrite and rewrite_for_span_id). If this would leave both fields null, downgrade the card to a status card (write a no-empty-cards option).
 
 (d) Re-read each suggested_rewrite. For each rewrite_for_span_id, locate the evidence span and re-read its excerpt. Verify the rewrite is a plausible alternative to THAT SPECIFIC excerpt -- same topic, same moment, same participants. Does it sound like this speaker?
 

@@ -210,7 +210,7 @@ def step_judge(
 
         transcript_data = load_transcript_for_judge(transcript_path)
 
-        for rf in sorted(meeting_dir.glob("run_*.json")):
+        for rf in sorted(list(meeting_dir.glob("run_*.json")) + list(meeting_dir.glob("stage2_merged_run_*.json"))):
             # Skip if already judged
             existing = list(meeting_dir.glob(f"judge_{rf.stem}_*.json"))
             if not existing:
@@ -231,7 +231,7 @@ def step_judge(
                 logger.error("  Judge FAILED %s: %s", name, e)
 
     # Count results
-    total = sum(len(list(d.glob("judge_run_*.json"))) for d in meeting_dirs)
+    total = sum(len(list(d.glob("judge_run_*.json")) + list(d.glob("judge_stage2_merged_run_*.json"))) for d in meeting_dirs)
     logger.info("Judge complete: %d judge files", total)
 
 
