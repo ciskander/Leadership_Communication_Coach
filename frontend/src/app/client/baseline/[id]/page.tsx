@@ -63,7 +63,7 @@ function CoachingThemesSection({ themes }: { themes: CoachingTheme[] }) {
             <div className="flex items-center gap-2 mb-1.5">
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                 theme.priority === 'primary'
-                  ? 'bg-cv-rose-100 text-cv-rose-800 border border-cv-rose-800'
+                  ? 'bg-cv-rose-100 text-cv-rose-700 border border-cv-rose-700'
                   : 'bg-cv-amber-50 text-cv-amber-700 border border-cv-amber-700'
               }`}>
                 {theme.priority === 'primary'
