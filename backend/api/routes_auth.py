@@ -65,11 +65,13 @@ oauth.register(
     name="microsoft",
     client_id=os.environ.get("MS_OAUTH_CLIENT_ID", ""),
     client_secret=os.environ.get("MS_OAUTH_CLIENT_SECRET", ""),
-    server_metadata_url="https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration",
+    # Use explicit URLs instead of server_metadata_url to avoid OIDC id_token
+    # issuer validation, which fails with the multi-tenant "common" endpoint
+    # (metadata has {tenantid} placeholder that doesn't match real tenant ID).
+    authorize_url="https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+    access_token_url="https://login.microsoftonline.com/common/oauth2/v2.0/token",
+    userinfo_endpoint="https://graph.microsoft.com/oidc/userinfo",
     client_kwargs={"scope": "openid email profile"},
-    # The "common" endpoint returns issuer with a placeholder {tenantid} in metadata,
-    # but the actual id_token contains the real tenant ID — disable iss validation.
-    claims_options={"iss": {"essential": False}},
 )
 
 _GOOGLE_REDIRECT_URL = os.environ.get("OAUTH_REDIRECT_URL", "http://localhost:8000/api/auth/callback")
@@ -341,9 +343,10 @@ async def callback_google(request: Request):
 async def callback_microsoft(request: Request):
     """Handle Microsoft OAuth callback."""
     token = await oauth.microsoft.authorize_access_token(request)
-    user_info = token.get("userinfo", {})
+    # Fetch userinfo from Microsoft Graph (not from id_token to avoid issuer validation)
+    user_info = await oauth.microsoft.userinfo(token=token)
 
-    # Microsoft returns 'oid' or 'sub' as unique identifier
+    # Microsoft returns 'sub' or 'oid' as unique identifier
     sub = user_info.get("sub") or user_info.get("oid", "")
     email = (user_info.get("email") or user_info.get("preferred_username") or "").lower()
     display_name = user_info.get("name")
