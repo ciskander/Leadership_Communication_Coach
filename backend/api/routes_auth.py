@@ -67,6 +67,9 @@ oauth.register(
     client_secret=os.environ.get("MS_OAUTH_CLIENT_SECRET", ""),
     server_metadata_url="https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration",
     client_kwargs={"scope": "openid email profile"},
+    # The "common" endpoint returns issuer with a placeholder {tenantid} in metadata,
+    # but the actual id_token contains the real tenant ID — disable iss validation.
+    claims_options={"iss": {"essential": False}},
 )
 
 _GOOGLE_REDIRECT_URL = os.environ.get("OAUTH_REDIRECT_URL", "http://localhost:8000/api/auth/callback")
