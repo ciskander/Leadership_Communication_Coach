@@ -14,8 +14,8 @@ class UserAuth:
     id: str
     email: str
     role: str                           # admin | coach | coachee
-    oauth_provider: str
-    oauth_sub: str
+    oauth_provider: Optional[str] = None
+    oauth_sub: Optional[str] = None
     display_name: Optional[str] = None
     coach_id: Optional[str] = None
     airtable_user_record_id: Optional[str] = None
@@ -29,14 +29,37 @@ class UserAuth:
             id=row["id"],
             email=row["email"],
             role=row["role"],
-            oauth_provider=row["oauth_provider"],
-            oauth_sub=row["oauth_sub"],
+            oauth_provider=row.get("oauth_provider"),
+            oauth_sub=row.get("oauth_sub"),
             display_name=row["display_name"],
             coach_id=row["coach_id"],
             airtable_user_record_id=row["airtable_user_record_id"],
             profile_photo_url=row.get("profile_photo_url"),
             created_at=row["created_at"],
             last_login=row["last_login"],
+        )
+
+
+@dataclass
+class UserCredential:
+    id: str
+    user_id: str
+    provider: str                       # "google" | "microsoft" | "email"
+    provider_sub: Optional[str] = None  # OAuth subject ID (null for email)
+    password_hash: Optional[str] = None # bcrypt hash (null for OAuth)
+    email_verified: bool = False
+    created_at: Optional[datetime] = None
+
+    @classmethod
+    def from_row(cls, row) -> "UserCredential":
+        return cls(
+            id=row["id"],
+            user_id=row["user_id"],
+            provider=row["provider"],
+            provider_sub=row.get("provider_sub"),
+            password_hash=row.get("password_hash"),
+            email_verified=row.get("email_verified", False),
+            created_at=row.get("created_at"),
         )
 
 

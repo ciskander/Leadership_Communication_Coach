@@ -73,6 +73,36 @@ export const api = {
   logout(): Promise<void> {
     return request('/api/auth/logout', { method: 'POST' });
   },
+  loginEmail(email: string, password: string): Promise<{ status: string; user: User }> {
+    return request('/api/auth/login/email', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  },
+  register(data: { email: string; password: string; display_name?: string; invite_token?: string }): Promise<{ status: string; message: string }> {
+    return request('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  verifyEmail(token: string): Promise<{ status: string; message: string }> {
+    return request('/api/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  },
+  forgotPassword(email: string): Promise<{ status: string; message: string }> {
+    return request('/api/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
+  resetPassword(token: string, newPassword: string): Promise<{ status: string; message: string }> {
+    return request('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, new_password: newPassword }),
+    });
+  },
 
   // Client summary
   clientSummary(): Promise<ClientSummary> {

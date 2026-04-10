@@ -11,7 +11,7 @@ from typing import Optional
 
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
-from ..auth.models import Session, UserAuth
+from ..auth.models import Session, UserAuth, UserCredential
 from ..auth.sqlite_db import get_conn
 
 SESSION_COOKIE_NAME = "sid"
@@ -122,8 +122,8 @@ def create_user(
     email: str,
     display_name: Optional[str],
     role: str,
-    oauth_provider: str,
-    oauth_sub: str,
+    oauth_provider: Optional[str] = None,
+    oauth_sub: Optional[str] = None,
     coach_id: Optional[str] = None,
     airtable_user_record_id: Optional[str] = None,
     profile_photo_url: Optional[str] = None,
@@ -220,6 +220,75 @@ ROLE_LANDING: dict[str, str] = {
 
 def landing_url_for(role: str) -> str:
     return ROLE_LANDING.get(role, "/")
+
+
+# ── Credential helpers ────────────────────────────────────────────────────────
+
+def get_credential(provider: str, provider_sub: str) -> Optional[UserCredential]:
+    """Look up a credential by provider + subject ID."""
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT * FROM user_credentials WHERE provider = %s AND provider_sub = %s",
+                (provider, provider_sub),
+            )
+            row = cur.fetchone()
+    return UserCredential.from_row(row) if row else None
+
+
+def get_credential_by_user(user_id: str, provider: str) -> Optional[UserCredential]:
+    """Look up a credential for a specific user + provider."""
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT * FROM user_credentials WHERE user_id = %s AND provider = %s",
+                (user_id, provider),
+            )
+            row = cur.fetchone()
+    return UserCredential.from_row(row) if row else None
+
+
+def create_credential(
+    *,
+    user_id: str,
+    provider: str,
+    provider_sub: Optional[str] = None,
+    password_hash: Optional[str] = None,
+    email_verified: bool = False,
+) -> UserCredential:
+    cred_id = str(uuid.uuid4())
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO user_credentials
+                  (id, user_id, provider, provider_sub, password_hash, email_verified)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                """,
+                (cred_id, user_id, provider, provider_sub, password_hash, email_verified),
+            )
+        conn.commit()
+    return get_credential_by_user(user_id, provider)  # type: ignore[return-value]
+
+
+def set_email_verified(credential_id: str) -> None:
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE user_credentials SET email_verified = TRUE WHERE id = %s",
+                (credential_id,),
+            )
+        conn.commit()
+
+
+def update_password_hash(credential_id: str, new_hash: str) -> None:
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE user_credentials SET password_hash = %s WHERE id = %s",
+                (new_hash, credential_id),
+            )
+        conn.commit()
 
 
 # ── Private helpers ───────────────────────────────────────────────────────────
