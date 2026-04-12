@@ -696,6 +696,45 @@ export const STRINGS = {
     getStarted: 'Get started',
     skip: 'Skip intro',
 
+    // "What you'll see" accordion
+    whatYoullSeeHeading: 'What you\u2019ll see',
+    whatYoullSeeIntro:
+      'Here\u2019s a quick look at the features you\u2019ll encounter as you use ClearVoice.',
+
+    previewExecSummaryTitle: 'Executive Summary',
+    previewExecSummaryDesc:
+      'Each analysis starts with a narrative overview of how the meeting went — written in plain prose with no scores or metrics. It gives you a quick sense of what worked and what to focus on.',
+    previewCoachingThemesTitle: 'Key Coaching Themes',
+    previewCoachingThemesDesc:
+      'Your analysis highlights strengths under \u201CWhat You Did Well\u201D and developmental areas under \u201CKey Coaching Themes.\u201D Each theme includes a priority badge, an explanation, and expandable details with evidence quotes and coaching notes.',
+    previewPatternsTitle: 'Communication Patterns',
+    previewPatternsDesc:
+      'Your communication is evaluated across 11 patterns in two clusters: Task Effectiveness (e.g. purposeful framing, focus management, assignment clarity) and Relational Effectiveness (e.g. active listening, recognition, feedback quality).',
+    previewScoringTitle: 'Scoring',
+    previewScoringDesc:
+      'Each pattern receives a score from 0 to 100 percent. Scores are color-coded: teal for strong (75%+), amber for developing (50\u201374%), and red for areas needing attention (below 50%).',
+    previewTrendlinesTitle: 'Trendlines',
+    previewTrendlinesDesc:
+      'After three or more analyzed meetings, your pattern scores are plotted on a line chart over time. Your baseline is marked, and delta arrows show improvement or decline since you started.',
+    previewPatternCoachingTitle: 'Pattern-level Coaching',
+    previewPatternCoachingDesc:
+      'Each pattern card expands to reveal what you did well (with transcript quotes), where you can improve, and concrete \u201Cnext time, try something like\u201D rewrites.',
+    previewEvidenceQuotesTitle: 'Evidence Quotes',
+    previewEvidenceQuotesDesc:
+      'All coaching is grounded in what was actually said. Transcript excerpts include speaker labels and timestamps, and are color-coded by speaker so you can see the full context.',
+    previewSuggestedRewritesTitle: 'Suggested Rewrites',
+    previewSuggestedRewritesDesc:
+      'For specific things you said, the AI suggests alternative phrasings you could try next time. These are concrete and actionable, not abstract advice.',
+    previewExperimentWorkflowTitle: 'Experiment Workflow',
+    previewExperimentWorkflowDesc:
+      'After each analysis, you receive ranked micro-experiment proposals. Accept one, and the system tracks whether you attempt it in subsequent meetings \u2014 with options to park, resume, or graduate experiments over time.',
+    previewProgressTrackingTitle: 'Progress Tracking',
+    previewProgressTrackingDesc:
+      'A trends chart shows your pattern scores over time with view modes for all patterns, task patterns, relational patterns, or experiment-related patterns. Past experiments are listed with mini-charts and attempt summaries.',
+    previewBaselinePackTitle: 'Baseline Pack',
+    previewBaselinePackDesc:
+      'Your baseline analysis produces an aggregate view across all three meetings, plus individual breakdowns for each one. This becomes the reference point for all future comparisons.',
+
     // Contextual tips
     tipDismissLabel: 'Dismiss',
     tipBaselineNew:
