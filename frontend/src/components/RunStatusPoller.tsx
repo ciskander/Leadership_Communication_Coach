@@ -665,11 +665,11 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                         </div>
                       )}
 
-                      {/* What worked and what was missing — coaching note */}
+                      {/* Where you can improve — coaching note */}
                       {run?.experiment_coaching?.coaching_note && (
                         <div>
                           <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                            {STRINGS.runStatusPoller.whatWorkedMissing}
+                            {successQuotes.length > 0 ? STRINGS.common.whereYouCanImprove : STRINGS.runStatusPoller.whatWorkedMissing}
                           </p>
                           <p className="text-sm text-cv-stone-700 leading-relaxed">
                             {run?.experiment_coaching?.coaching_note}
