@@ -65,6 +65,8 @@ export interface ExperimentDetection {
   attempt: 'yes' | 'partial' | 'no';
   count_attempts: number;
   quotes: QuoteObject[];
+  success_span_ids: string[];
+  best_success_span_id?: string | null;
   coaching_note: string | null;
   suggested_rewrite: string | null;
   rewrite_for_span_id: string | null;

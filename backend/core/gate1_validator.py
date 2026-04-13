@@ -1170,6 +1170,43 @@ def _business_rules(data: dict, *, scoring_only: bool = False) -> list[Validatio
                                 "experiment_tracking.detection_in_this_meeting.evidence_span_ids",
                                 "attempt_detected requires non-empty evidence_span_ids.",
                             ))
+
+                        # Validate success_evidence_span_ids subset relationship
+                        es_ids_set = set(es_ids)
+                        success_es_ids = detection.get("success_evidence_span_ids", [])
+                        success_es_set = set(success_es_ids)
+
+                        if not success_es_set.issubset(es_ids_set):
+                            issues.append(_err(
+                                "DETECTION_SUCCESS_NOT_SUBSET",
+                                "experiment_tracking.detection_in_this_meeting.success_evidence_span_ids",
+                                "success_evidence_span_ids must be a subset of evidence_span_ids.",
+                            ))
+
+                        # attempt=yes: all spans must be successes
+                        if attempt == "yes" and es_ids and success_es_set != es_ids_set:
+                            issues.append(_warn(
+                                "DETECTION_YES_NOT_ALL_SUCCESS",
+                                "experiment_tracking.detection_in_this_meeting",
+                                "attempt=yes but not all evidence_span_ids are in success_evidence_span_ids.",
+                            ))
+
+                        # attempt=partial: not all spans should be successes
+                        if attempt == "partial" and es_ids and success_es_set == es_ids_set:
+                            issues.append(_warn(
+                                "DETECTION_PARTIAL_ALL_SUCCESS",
+                                "experiment_tracking.detection_in_this_meeting",
+                                "attempt=partial but all evidence_span_ids are in success_evidence_span_ids; should be attempt=yes.",
+                            ))
+
+                        # best_success_span_id validation
+                        best_success_id = detection.get("best_success_span_id")
+                        if best_success_id and best_success_id not in success_es_set:
+                            issues.append(_warn(
+                                "DETECTION_BEST_SUCCESS_NOT_IN_SUCCESS",
+                                "experiment_tracking.detection_in_this_meeting.best_success_span_id",
+                                "best_success_span_id must be in success_evidence_span_ids.",
+                            ))
             elif status in ("none", "completed", "abandoned") or status is None:
                 if detection is not None:
                     issues.append(_warn(
@@ -1214,6 +1251,33 @@ def _business_rules(data: dict, *, scoring_only: bool = False) -> list[Validatio
                         "experiment_tracking.graduation_recommendation",
                         "graduation_recommendation should be null when no active experiment.",
                     ))
+
+        # ── 3f3. Experiment coaching span references ──────────────────────
+        exp_coaching = (data.get("coaching") or {}).get("experiment_coaching")
+        if isinstance(exp_coaching, dict) and isinstance(detection, dict):
+            rewrite_id = exp_coaching.get("rewrite_for_span_id")
+            det_es_set = set(detection.get("evidence_span_ids", []))
+            det_success_set = set(detection.get("success_evidence_span_ids", []))
+            det_best_success = detection.get("best_success_span_id")
+
+            if rewrite_id and rewrite_id in det_success_set:
+                issues.append(_warn(
+                    "EXP_REWRITE_IS_SUCCESS",
+                    "experiment_coaching.rewrite_for_span_id",
+                    "rewrite_for_span_id should not be in success_evidence_span_ids.",
+                ))
+            if rewrite_id and rewrite_id not in det_es_set:
+                issues.append(_err(
+                    "EXP_REWRITE_NOT_IN_EVIDENCE",
+                    "experiment_coaching.rewrite_for_span_id",
+                    "rewrite_for_span_id must be in detection's evidence_span_ids.",
+                ))
+            if det_best_success and rewrite_id and det_best_success == rewrite_id:
+                issues.append(_err(
+                    "EXP_BEST_SUCCESS_IS_REWRITE",
+                    "experiment_tracking.detection_in_this_meeting.best_success_span_id",
+                    "best_success_span_id must not be the same as rewrite_for_span_id.",
+                ))
 
     # ── 3g. ID format validation ──────────────────────────────────────────────
     _check_id_format(data, "meta.analysis_id", data.get("meta", {}).get("analysis_id"), "analysis_id", issues)

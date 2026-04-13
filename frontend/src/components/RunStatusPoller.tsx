@@ -620,56 +620,72 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
             {/* Collapsible evidence details */}
             {detailOpen && (
               <>
-                {/* Evidence quotes — full attempts: simple list with span separators */}
-                {attempt === 'yes' && detectionQuotes.length > 0 && (
-                  <div className="space-y-3 pt-2">
-                    <div>
-                      <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                        {STRINGS.runStatusPoller.fromTranscript}
-                      </p>
-                      <EvidenceQuoteList quotes={detectionQuotes} targetSpeaker={targetSpeaker} />
-                    </div>
-
-                    {run?.experiment_coaching?.coaching_note && (
-                      <div>
-                        <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                          {STRINGS.runStatusPoller.coachsNote}
-                        </p>
-                        <p className="text-sm text-cv-stone-700 leading-relaxed">
-                          {run?.experiment_coaching?.coaching_note}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Evidence quotes — partial attempts: split by rewrite_for_span_id */}
-                {attempt === 'partial' && detectionQuotes.length > 0 && (() => {
-                  const rewriteSpanId = run?.experiment_coaching?.rewrite_for_span_id;
-                  const successQuotes = rewriteSpanId
-                    ? detectionQuotes.filter(q => q.span_id !== rewriteSpanId)
-                    : detectionQuotes;
-                  const rewriteGroupQuotes = rewriteSpanId
-                    ? detectionQuotes.filter(q => q.span_id === rewriteSpanId)
+                {/* Evidence quotes — full attempts: best success quote only */}
+                {attempt === 'yes' && detectionQuotes.length > 0 && (() => {
+                  const bestSuccessSpanId = detection?.best_success_span_id;
+                  const bestSuccessQuotes = bestSuccessSpanId
+                    ? detectionQuotes.filter(q => q.span_id === bestSuccessSpanId)
                     : [];
 
                   return (
                     <div className="space-y-3 pt-2">
-                      {/* What you did well — quotes not linked to the rewrite */}
-                      {successQuotes.length > 0 && (
+                      {bestSuccessQuotes.length > 0 && (
                         <div>
                           <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                            {STRINGS.runStatusPoller.whatYouDidWell}
+                            {STRINGS.common.whatYouDidWell}
                           </p>
-                          <EvidenceQuoteList quotes={successQuotes} targetSpeaker={targetSpeaker} />
+                          <EvidenceQuoteList quotes={bestSuccessQuotes} targetSpeaker={targetSpeaker} />
                         </div>
                       )}
 
-                      {/* Where you can improve — coaching note */}
                       {run?.experiment_coaching?.coaching_note && (
                         <div>
                           <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                            {successQuotes.length > 0 ? STRINGS.common.whereYouCanImprove : STRINGS.runStatusPoller.whatWorkedMissing}
+                            {STRINGS.runStatusPoller.coachsNote}
+                          </p>
+                          <p className="text-sm text-cv-stone-700 leading-relaxed">
+                            {run?.experiment_coaching?.coaching_note}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Evidence quotes — partial attempts: split by best_success_span_id */}
+                {attempt === 'partial' && detectionQuotes.length > 0 && (() => {
+                  const bestSuccessSpanId = detection?.best_success_span_id;
+                  const rewriteSpanId = run?.experiment_coaching?.rewrite_for_span_id;
+
+                  const bestSuccessQuotes = bestSuccessSpanId
+                    ? detectionQuotes.filter(q => q.span_id === bestSuccessSpanId)
+                    : [];
+
+                  const rewriteGroupQuotes = rewriteSpanId
+                    ? detectionQuotes.filter(q => q.span_id === rewriteSpanId)
+                    : [];
+
+                  // Split vs combined — mirrors DevelopmentalThemeCard modeA:
+                  // modeA = !!best_success_span_id && !!coaching_note
+                  const hasSplit = bestSuccessQuotes.length > 0 && !!run?.experiment_coaching?.coaching_note;
+
+                  return (
+                    <div className="space-y-3 pt-2">
+                      {/* Best success quote (only when split) */}
+                      {hasSplit && (
+                        <div>
+                          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                            {STRINGS.common.whatYouDidWell}
+                          </p>
+                          <EvidenceQuoteList quotes={bestSuccessQuotes} targetSpeaker={targetSpeaker} />
+                        </div>
+                      )}
+
+                      {/* Coaching note — heading depends on split vs combined */}
+                      {run?.experiment_coaching?.coaching_note && (
+                        <div>
+                          <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                            {hasSplit ? STRINGS.common.whereYouCanImprove : STRINGS.runStatusPoller.whatWorkedMissing}
                           </p>
                           <p className="text-sm text-cv-stone-700 leading-relaxed">
                             {run?.experiment_coaching?.coaching_note}
@@ -677,7 +693,7 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                         </div>
                       )}
 
-                      {/* For example, you said — the full rewrite evidence span */}
+                      {/* Rewrite target quote */}
                       {rewriteGroupQuotes.length > 0 && (
                         <div>
                           <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
@@ -687,20 +703,19 @@ export function RunStatusPoller({ runId, onComplete }: RunStatusPollerProps) {
                         </div>
                       )}
 
-                      {/* Next time, try something like — suggested rewrite */}
+                      {/* Suggested rewrite — matches PatternSnapshot SuggestedRewrite styling */}
                       {run?.experiment_coaching?.suggested_rewrite && (
                         <div>
                           <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
                             {STRINGS.common.nextTimeTry}
                           </p>
-                          <blockquote className="border-l-[2px] border-cv-teal-700 pl-4 py-1 my-2 bg-cv-teal-50 rounded-r-md">
-                            <p className="text-sm text-cv-stone-700 italic">
-                              &ldquo;{run?.experiment_coaching?.suggested_rewrite}&rdquo;
+                          <blockquote className="border-l-[2px] border-cv-teal-700 pl-4 pr-3 py-2.5 bg-cv-teal-50 rounded-r my-2">
+                            <p className="text-sm text-cv-stone-700 italic leading-relaxed">
+                              &ldquo;{run.experiment_coaching.suggested_rewrite}&rdquo;
                             </p>
                           </blockquote>
                         </div>
                       )}
-
                     </div>
                   );
                 })()}

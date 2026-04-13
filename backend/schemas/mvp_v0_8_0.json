@@ -596,7 +596,7 @@
     "ExperimentDetection": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["experiment_id", "attempt", "count_attempts", "evidence_span_ids"],
+      "required": ["experiment_id", "attempt", "count_attempts", "evidence_span_ids", "success_evidence_span_ids"],
       "properties": {
         "experiment_id": { "type": "string", "pattern": "^EXP-[0-9]{6}$" },
         "attempt": { "type": "string", "enum": ["no", "partial", "yes"] },
@@ -608,7 +608,16 @@
             "pattern": "^(ES|EXD|CT)-T[0-9]+(-[0-9]+)?$"
           },
           "uniqueItems": true
-        }
+        },
+        "success_evidence_span_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(ES|EXD|CT)-T[0-9]+(-[0-9]+)?$"
+          },
+          "uniqueItems": true
+        },
+        "best_success_span_id": { "type": ["string", "null"], "pattern": "^(ES|EXD|CT)-T[0-9]+(-[0-9]+)?$" }
       }
     },
     "GraduationRecommendation": {

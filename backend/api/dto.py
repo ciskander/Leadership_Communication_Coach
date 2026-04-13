@@ -76,6 +76,8 @@ class ExperimentDetectionWithQuotes(BaseModel):
     attempt: str                         # yes | partial | no
     count_attempts: int = 0
     quotes: list[QuoteObject] = Field(default_factory=list)
+    success_span_ids: list[str] = Field(default_factory=list)
+    best_success_span_id: Optional[str] = None
     coaching_note: Optional[str] = None
     suggested_rewrite: Optional[str] = None
     rewrite_for_span_id: Optional[str] = None

@@ -151,12 +151,22 @@ If an active experiment is provided in the experiment context below, evaluate wh
 Search the transcript for moments where the coachee attempted the experiment behavior described in the experiment's instruction and success_marker. These experiment-attempt moments are SEPARATE from Stage 1's pattern OEs -- they represent instances of the experiment behavior, which may or may not overlap with pattern-scored moments.
 
 For each attempt moment found:
-- Create an evidence span object in your output's evidence_spans array (using ID format EXD-T{turn}[-{seq}], e.g. EXD-T42, EXD-T42-1). Include turn_start_id, turn_end_id, excerpt (verbatim quote), and event_ids (empty array).
+- Create an evidence span object in your output's evidence_spans array. Use the turn-anchored ID format: EXD-T{start} for a single turn, EXD-T{start}-{end} for multi-turn spans (e.g., EXD-T42, EXD-T51-53). Include turn_start_id, turn_end_id, excerpt (verbatim quote), and event_ids (empty array).
 - Reference these span IDs in experiment_tracking.detection_in_this_meeting.evidence_span_ids
-- Classify: attempt=yes (clear evidence), attempt=partial (attempted but incomplete), attempt=no (no evidence)
-- Count distinct attempt instances
+- Classify each span: if the attempt moment clearly demonstrates the experiment behavior as described by the success_marker, include the span ID in success_evidence_span_ids. If the attempt is incomplete or falls short of the success_marker, do NOT include it in success_evidence_span_ids. success_evidence_span_ids is a subset of evidence_span_ids.
+- Count distinct attempt instances (both successful and incomplete)
 
-Generate experiment_coaching for partial attempts: coaching_note explaining what was done well and what was missing, suggested_rewrite offering a concrete alternative, rewrite_for_span_id pointing to the most coachable experiment detection span (must be an EXD- span ID from your evidence_spans).
+Determine the meeting-level attempt classification:
+- attempt=yes: ALL evidence spans are in success_evidence_span_ids (every detected attempt was successful)
+- attempt=partial: at least one evidence span exists, but NOT all are in success_evidence_span_ids (some attempts were incomplete or mixed)
+- attempt=no: no evidence of attempting the experiment behavior. evidence_span_ids = [], success_evidence_span_ids = [].
+
+Set best_success_span_id on detection_in_this_meeting: the clearest success from success_evidence_span_ids, or null if success_evidence_span_ids is empty. This is always set on the detection object (not on experiment_coaching).
+
+Generate experiment_coaching for partial attempts:
+- coaching_note (1-3 sentences: what was done well and what was missing)
+- suggested_rewrite: concrete reworded version of what the speaker said, in the speaker's natural voice, 1-3 sentences. Not a textbook example -- a plausible alternative utterance that sounds like this specific speaker, in this specific meeting, talking to these specific people. Must directly address the excerpt in rewrite_for_span_id -- same topic, same conversational moment, same participants.
+- rewrite_for_span_id: the most coachable non-success experiment detection span. Must be an EXD- span ID from evidence_span_ids that is NOT in success_evidence_span_ids.
 
 Step 6b -- Graduation evaluation:
 After detecting the experiment attempt in this meeting, step back and consider the experiment's trajectory. You have the attempt history from prior meetings and the current meeting's detection. Use both to assess where this experiment stands.
@@ -215,6 +225,11 @@ Structural checks:
 (m) Every evaluable pattern from Stage 1's evaluation_summary.patterns_evaluated has an entry in pattern_coaching.
 (n) Experiment tracking is consistent: if active experiment with status=active, detection_in_this_meeting must not be null. If no active experiment or status=none, detection_in_this_meeting must be null.
 (o) Every evidence_span_id in detection_in_this_meeting.evidence_span_ids has a corresponding evidence span object in your evidence_spans array. evidence_spans must contain exactly the spans you created: experiment detection spans (EXD- prefix) and coaching theme spans (CT- prefix). Do not include Stage 1's pattern spans (ES-) -- only your new spans. If you created no spans, evidence_spans must be an empty array.
+(o2) success_evidence_span_ids is a subset of evidence_span_ids. Every span in success_evidence_span_ids must also appear in evidence_span_ids.
+(o3) Attempt classification consistency: if attempt=yes, success_evidence_span_ids must equal evidence_span_ids (every attempt was successful). If attempt=partial, evidence_span_ids must be non-empty and success_evidence_span_ids must be a strict subset (at least one span is not a success). If attempt=no, both arrays must be empty.
+(o4) best_success_span_id must be in success_evidence_span_ids (or null if success_evidence_span_ids is empty). best_success_span_id must not be the same as experiment_coaching.rewrite_for_span_id (when both are set).
+(o5) Experiment coaching span references: rewrite_for_span_id must be in evidence_span_ids and NOT in success_evidence_span_ids.
+(o6) Re-read the suggested_rewrite for the experiment. Locate the evidence span for rewrite_for_span_id and re-read its excerpt. Verify the rewrite is a plausible alternative to THAT SPECIFIC excerpt -- same topic, same moment, same participants. Does it sound like this speaker?
 (p) Graduation recommendation consistency:
   - If graduation_recommendation.recommendation is "graduate": verify experiment_coaching is non-null with a graduation message in coaching_note.
   - If graduation_recommendation.recommendation is "park": verify experiment_coaching is non-null with a parking message in coaching_note; verify park_reason is "pivot" or "stale".
@@ -289,7 +304,9 @@ Never include literal double quotes " inside any string value; use single quotes
       "experiment_id": "<id>",
       "attempt": "<no|partial|yes>",
       "count_attempts": <integer>,
-      "evidence_span_ids": ["<span IDs>"]
+      "evidence_span_ids": ["<span IDs>"],
+      "success_evidence_span_ids": ["<subset of evidence_span_ids>"],
+      "best_success_span_id": "<clearest success span ID, or null>"
     },
     "graduation_recommendation": null | {
       "recommendation": "<graduate|continue|park>",
@@ -300,7 +317,7 @@ Never include literal double quotes " inside any string value; use single quotes
 
   "evidence_spans": [
     {
-      "evidence_span_id": "<EXD-T{turn}[-{seq}]>",
+      "evidence_span_id": "<EXD-T{start}[-{end}]>",
       "turn_start_id": <integer>,
       "turn_end_id": <integer>,
       "excerpt": "<verbatim transcript quote>",
@@ -346,7 +363,7 @@ priority: "primary" or "secondary"
 - Strength themes are always secondary.
 - Within the developmental/mixed themes, the primary theme is the one a senior coach would most want this leader to hear.
 
-Evidence grounding -- for each theme, create CT- evidence spans in your evidence_spans array (using ID format CT-T{turn}[-{seq}]). Include turn_start_id, turn_end_id, excerpt (verbatim quote), and event_ids (empty array). Choose excerpts that best demonstrate the theme's coaching point. Then independently evaluate:
+Evidence grounding -- for each theme, create CT- evidence spans in your evidence_spans array. Use the turn-anchored ID format: CT-T{start} for a single turn, CT-T{start}-{end} for multi-turn spans. Include turn_start_id, turn_end_id, excerpt (verbatim quote), and event_ids (empty array). Choose excerpts that best demonstrate the theme's coaching point. Then independently evaluate:
 
 best_success_span_id: A CT- evidence span showing the leader doing this well.
 - Set when the theme has a positive observation component.
@@ -446,13 +463,15 @@ active_experiment: {experiment_id, status}
 - If an active experiment is provided in the experiment context: echo its experiment_id and status.
 - If no active experiment: experiment_id = null, status = "none".
 
-detection_in_this_meeting: null OR {experiment_id, attempt, count_attempts, evidence_span_ids}
+detection_in_this_meeting: null OR {experiment_id, attempt, count_attempts, evidence_span_ids, success_evidence_span_ids, best_success_span_id}
 - If active experiment with status=active: MUST evaluate whether the target speaker attempted the experiment. Set detection_in_this_meeting with the results.
-  - attempt=yes: clear evidence of the experiment behavior. count_attempts = number of distinct instances.
-  - attempt=partial: behavior attempted but incomplete. count_attempts >= 1.
-  - attempt=no: no evidence. count_attempts = 0, evidence_span_ids = [].
+  - attempt=yes: ALL evidence spans are in success_evidence_span_ids. count_attempts = number of distinct instances.
+  - attempt=partial: at least one evidence span exists but not all are in success_evidence_span_ids. count_attempts >= 1.
+  - attempt=no: no evidence. count_attempts = 0, evidence_span_ids = [], success_evidence_span_ids = [].
+  - success_evidence_span_ids: subset of evidence_span_ids. Contains span IDs of attempt moments that clearly demonstrate the experiment behavior per the success_marker.
+  - best_success_span_id: the clearest success from success_evidence_span_ids, or null if success_evidence_span_ids is empty.
 - If no active experiment or status=none: detection_in_this_meeting MUST be null.
-- Evidence spans for experiment detection are SEPARATE from Stage 1's pattern OEs. Create new evidence spans (using ES-T format) for experiment-attempt moments if they don't already exist in Stage 1's evidence_spans array.
+- Evidence spans for experiment detection are SEPARATE from Stage 1's pattern OEs. Always create new EXD- evidence spans for experiment-attempt moments, even if the same turn was scored as a pattern OE in Stage 1.
 
 graduation_recommendation: null OR {recommendation, rationale, park_reason}
 - If active experiment with status=active and experiment context includes attempt history or this is not the first meeting: evaluate per Step 6b and set recommendation, rationale, and park_reason.
@@ -465,7 +484,7 @@ graduation_recommendation: null OR {recommendation, rationale, park_reason}
 experiment_coaching: null OR {coaching_note, suggested_rewrite, rewrite_for_span_id}
 MUST be null (not an empty object or array) when not applicable.
 
-- If attempt=partial: coaching_note (1-3 sentences: what was done well and what was missing), suggested_rewrite (concrete reworded version in speaker's voice), rewrite_for_span_id (must appear in detection's evidence_span_ids).
+- If attempt=partial: coaching_note (1-3 sentences: what was done well and what was missing), suggested_rewrite (concrete reworded version in speaker's voice; must directly address the excerpt in rewrite_for_span_id), rewrite_for_span_id (must appear in detection's evidence_span_ids and NOT in success_evidence_span_ids).
 - If attempt=yes AND graduation_recommendation.recommendation = "graduate": experiment_coaching non-null. coaching_note = graduation message (congratulatory, explains evidence of integration). suggested_rewrite = null. rewrite_for_span_id = null.
 - If attempt=yes AND graduation_recommendation.recommendation != "graduate": experiment_coaching = null.
 - If attempt=no AND graduation_recommendation.recommendation = "park": experiment_coaching non-null. coaching_note = parking message (explains why this experiment may not be the right fit or why a different focus is more important). suggested_rewrite = null. rewrite_for_span_id = null.

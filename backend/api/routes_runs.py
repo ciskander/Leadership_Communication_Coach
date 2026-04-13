@@ -260,6 +260,8 @@ async def _build_run_response(run_record: dict, at_client: Optional[AirtableClie
                 attempt=detection.get("attempt", "no"),
                 count_attempts=detection.get("count_attempts", 0),
                 quotes=det_quotes,
+                success_span_ids=detection.get("success_evidence_span_ids", []),
+                best_success_span_id=detection.get("best_success_span_id"),
                 coaching_note=exp_coaching.get("coaching_note") if isinstance(exp_coaching, dict) else None,
                 suggested_rewrite=exp_coaching.get("suggested_rewrite") if isinstance(exp_coaching, dict) else None,
                 rewrite_for_span_id=exp_coaching.get("rewrite_for_span_id") if isinstance(exp_coaching, dict) else None,
