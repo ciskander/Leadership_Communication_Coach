@@ -561,6 +561,7 @@ export const STRINGS = {
     attempts: 'Attempts',
     id: 'ID',
     duringExperiment: (label: string) => `${label} during experiment`,
+    duringExperimentHeading: 'During experiment',
     oneMeeting: '(1 meeting)',
     attemptsAcross: (attempts: number, meetings: number) =>
       `${attempts}${meetings > 0 ? ` across ${meetings} meeting${meetings !== 1 ? 's' : ''}` : ''}`,

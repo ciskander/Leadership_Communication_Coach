@@ -18,6 +18,7 @@ import {
 } from 'recharts';
 import { STRINGS } from '@/config/strings';
 import { S, CHART_COLORS } from '@/config/styles';
+import { PATTERN_ICONS } from '@/components/PatternSnapshot';
 import { OnboardingTip } from '@/components/OnboardingTip';
 
 // ─── Chart color palette — cv-aligned ────────────────────────────────────────
@@ -479,14 +480,7 @@ function PastExperimentCard({
       {/* Expanded */}
       {open && (
         <div className="px-5 py-4 bg-cv-warm-50 border-t border-cv-warm-300 space-y-4">
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <span className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400">{STRINGS.progressPage.pattern}</span>
-              <p className="font-medium text-cv-stone-800 mt-0.5 flex items-center">
-                {pids.map(p => STRINGS.patternLabels[p] ?? p).join(', ')}
-                {primaryPid && <InfoPopover patternId={primaryPid} hoverColor={LINE_COLORS[0]} />}
-              </p>
-            </div>
+          <div className="grid grid-cols-3 gap-3 text-sm">
             {dateRange && (
               <div>
                 <span className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400">{STRINGS.progressPage.dateRange}</span>
@@ -511,7 +505,7 @@ function PastExperimentCard({
           {chartData.length >= 2 && pids.length > 0 ? (
             <div>
               <p className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400 mb-2">
-                {STRINGS.progressPage.duringExperiment(pids.map(p => STRINGS.patternLabels[p] ?? p).join(', '))}
+                {STRINGS.progressPage.duringExperimentHeading}
               </p>
               <ResponsiveContainer width="100%" height={160}>
                 <LineChart data={chartData} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
@@ -541,29 +535,39 @@ function PastExperimentCard({
                   })}
                 </LineChart>
               </ResponsiveContainer>
-              {pids.length > 1 && (
-                <div className="flex flex-wrap gap-3 mt-2">
-                  {pids.map((pid, i) => (
-                    <span key={pid} className="flex items-center text-xs text-cv-stone-600">
-                      <span className="inline-block w-2.5 h-2.5 rounded-full mr-1 shrink-0"
-                        style={{ background: LINE_COLORS[i % LINE_COLORS.length] }}
-                      />
-                      {STRINGS.patternLabels[pid] ?? pid}
-                    </span>
-                  ))}
-                </div>
-              )}
+              <div className="flex flex-wrap gap-3 mt-2">
+                {pids.map((pid, i) => (
+                  <span key={pid} className="flex items-center text-xs text-cv-stone-600">
+                    {PATTERN_ICONS[pid] && (
+                      <span className="text-cv-stone-400 inline-flex items-center mr-1 shrink-0">
+                        {PATTERN_ICONS[pid]}
+                      </span>
+                    )}
+                    <span className="inline-block w-2.5 h-2.5 rounded-full mr-1 shrink-0"
+                      style={{ background: LINE_COLORS[i % LINE_COLORS.length] }}
+                    />
+                    {STRINGS.patternLabels[pid] ?? pid}
+                    <InfoPopover patternId={pid} hoverColor={LINE_COLORS[i % LINE_COLORS.length]} />
+                  </span>
+                ))}
+              </div>
             </div>
           ) : chartData.length === 1 && pids.length > 0 ? (
             <div>
               <p className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400 mb-1">
-                {STRINGS.progressPage.duringExperiment(pids.map(p => STRINGS.patternLabels[p] ?? p).join(', '))}
+                {STRINGS.progressPage.duringExperimentHeading}
               </p>
               {pids.map((pid, i) => (
-                <p key={pid} className="text-sm font-medium text-cv-stone-800">
-                  <span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ background: LINE_COLORS[i % LINE_COLORS.length] }} />
+                <p key={pid} className="text-sm font-medium text-cv-stone-800 flex items-center">
+                  {PATTERN_ICONS[pid] && (
+                    <span className="text-cv-stone-400 inline-flex items-center mr-1 shrink-0">
+                      {PATTERN_ICONS[pid]}
+                    </span>
+                  )}
+                  <span className="inline-block w-2 h-2 rounded-full mr-1.5 shrink-0" style={{ background: LINE_COLORS[i % LINE_COLORS.length] }} />
                   {STRINGS.patternLabels[pid] ?? pid}: {chartData[0][pid] != null ? `${chartData[0][pid]}%` : '—'}
                   {i === 0 && <span className="text-cv-stone-400 font-normal ml-1">{STRINGS.progressPage.oneMeeting}</span>}
+                  <InfoPopover patternId={pid} hoverColor={LINE_COLORS[i % LINE_COLORS.length]} />
                 </p>
               ))}
             </div>

@@ -121,7 +121,7 @@ export function buildTrendData(
 
 // ─── Pattern icons (inline SVG — replaces STRINGS.patternIcons emoji) ─────────
 
-const PATTERN_ICONS: Record<string, JSX.Element> = {
+export const PATTERN_ICONS: Record<string, JSX.Element> = {
   purposeful_framing: (
     <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
       <rect x="1.5" y="1.5" width="13" height="13" rx="1.5" stroke="currentColor" strokeWidth={1.4} />
