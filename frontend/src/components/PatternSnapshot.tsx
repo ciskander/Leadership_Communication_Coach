@@ -504,17 +504,9 @@ export function PatternCard({
   // Determine if we should show sparkline for this pattern
   const showSparkline = !!trend && trend.points.length >= 2;
 
-  const highlightBorder = highlightType === 'strength'
-    ? 'border border-cv-teal-700'
-    : highlightType === 'focus'
-      ? 'border border-cv-rose-700'
-      : 'border border-cv-stone-400';
+  const highlightBorder = 'border border-cv-stone-400';
 
-  const highlightBg = highlightType === 'strength'
-    ? 'bg-cv-teal-50 hover:bg-cv-teal-100'
-    : highlightType === 'focus'
-      ? 'bg-cv-rose-50 hover:bg-cv-rose-100'
-      : '';
+  const highlightBg = '';
 
   return (
     <div className={`bg-cv-warm-50 rounded overflow-hidden${expanded ? ' sm:col-span-2' : ''} ${highlightBorder}`}>
@@ -539,12 +531,12 @@ export function PatternCard({
             {STRINGS.patternLabels[pattern.pattern_id] ?? pattern.pattern_id}
             <InfoPopover patternId={pattern.pattern_id} />
             {highlightType === 'strength' && (
-              <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-medium bg-white text-cv-teal-700 border border-cv-teal-700">
+              <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-medium bg-cv-teal-50 text-cv-teal-700 border border-cv-teal-700">
                 {STRINGS.highlightBadges.strength}
               </span>
             )}
             {highlightType === 'focus' && (
-              <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-medium bg-white text-cv-rose-700 border border-cv-rose-700">
+              <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-medium bg-cv-rose-50 text-cv-rose-700 border border-cv-rose-700">
                 {STRINGS.highlightBadges.focus}
               </span>
             )}
