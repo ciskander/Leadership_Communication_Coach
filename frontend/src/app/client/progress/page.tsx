@@ -457,11 +457,11 @@ function PastExperimentCard({
   const axisStyle = { fontSize: 10, fill: S.chartAxisFill };
 
   return (
-    <div className="border border-cv-warm-300 rounded overflow-hidden">
+    <div className="border border-cv-warm-300 rounded">
       {/* Row */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-cv-warm-50 transition-colors text-left"
+        className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-cv-warm-50 transition-colors text-left rounded-t"
         type="button"
       >
         <div className="flex items-center gap-3 min-w-0">
@@ -481,7 +481,7 @@ function PastExperimentCard({
 
       {/* Expanded */}
       {open && (
-        <div className="px-5 py-4 bg-cv-warm-50 border-t border-cv-warm-300 space-y-4">
+        <div className="px-5 py-4 bg-cv-warm-50 border-t border-cv-warm-300 rounded-b space-y-4">
           <div className="grid grid-cols-3 gap-3 text-sm">
             {dateRange && (
               <div>
