@@ -443,10 +443,12 @@ function PastExperimentCard({
   const pids = exp.related_patterns?.length ? exp.related_patterns : (exp.pattern_id ? [exp.pattern_id] : []);
   const primaryPid = pids[0] ?? '';
 
+  const toDateOnly = (s: string) => s.slice(0, 10);
   const expHistory = patternHistory.filter((run) => {
     if (!run.meeting_date) return false;
-    if (exp.started_at && run.meeting_date < exp.started_at) return false;
-    if (exp.ended_at && run.meeting_date > exp.ended_at)     return false;
+    const md = toDateOnly(run.meeting_date);
+    if (exp.started_at && md < toDateOnly(exp.started_at)) return false;
+    if (exp.ended_at && md > toDateOnly(exp.ended_at))     return false;
     return run.patterns.some((p) => pids.includes(p.pattern_id));
   });
 
@@ -538,14 +540,14 @@ function PastExperimentCard({
               <div className="flex flex-wrap gap-3 mt-2">
                 {pids.map((pid, i) => (
                   <span key={pid} className="flex items-center text-xs text-cv-stone-600">
+                    <span className="inline-block w-2.5 h-2.5 rounded-full mr-1 shrink-0"
+                      style={{ background: LINE_COLORS[i % LINE_COLORS.length] }}
+                    />
                     {PATTERN_ICONS[pid] && (
                       <span className="text-cv-stone-400 inline-flex items-center mr-1 shrink-0">
                         {PATTERN_ICONS[pid]}
                       </span>
                     )}
-                    <span className="inline-block w-2.5 h-2.5 rounded-full mr-1 shrink-0"
-                      style={{ background: LINE_COLORS[i % LINE_COLORS.length] }}
-                    />
                     {STRINGS.patternLabels[pid] ?? pid}
                     <InfoPopover patternId={pid} hoverColor={LINE_COLORS[i % LINE_COLORS.length]} />
                   </span>
@@ -559,12 +561,12 @@ function PastExperimentCard({
               </p>
               {pids.map((pid, i) => (
                 <p key={pid} className="text-sm font-medium text-cv-stone-800 flex items-center">
+                  <span className="inline-block w-2 h-2 rounded-full mr-1.5 shrink-0" style={{ background: LINE_COLORS[i % LINE_COLORS.length] }} />
                   {PATTERN_ICONS[pid] && (
                     <span className="text-cv-stone-400 inline-flex items-center mr-1 shrink-0">
                       {PATTERN_ICONS[pid]}
                     </span>
                   )}
-                  <span className="inline-block w-2 h-2 rounded-full mr-1.5 shrink-0" style={{ background: LINE_COLORS[i % LINE_COLORS.length] }} />
                   {STRINGS.patternLabels[pid] ?? pid}: {chartData[0][pid] != null ? `${chartData[0][pid]}%` : '—'}
                   {i === 0 && <span className="text-cv-stone-400 font-normal ml-1">{STRINGS.progressPage.oneMeeting}</span>}
                   <InfoPopover patternId={pid} hoverColor={LINE_COLORS[i % LINE_COLORS.length]} />
