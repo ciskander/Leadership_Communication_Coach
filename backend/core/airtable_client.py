@@ -562,12 +562,12 @@ class AirtableClient:
         records = self.search_records(AT_TABLE_EXPERIMENT_EVENTS, formula, max_records=1)
         return records[0] if records else None
 
-    def count_experiment_attempts_and_meetings(self, experiment_record_id: str) -> tuple[int, int]:
+    def count_experiment_attempts_and_meetings(self, experiment_display_id: str) -> tuple[int, int]:
         """Count attempts (yes/partial) and distinct meetings from experiment events.
 
         Returns (attempt_count, meeting_count).
         """
-        formula = f"FIND('{experiment_record_id}', ARRAYJOIN({{{F_EE_EXPERIMENT}}}))"
+        formula = f"FIND('{experiment_display_id}', ARRAYJOIN({{{F_EE_EXPERIMENT}}}))"
         records = self.search_records(AT_TABLE_EXPERIMENT_EVENTS, formula, max_records=200)
         attempt_count = 0
         transcript_ids: set[str] = set()
