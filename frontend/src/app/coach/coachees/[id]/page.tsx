@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import type { CoacheeSummary, Experiment, ClientProgress, RunStatus, RunHistoryPoint } from '@/lib/types';
+import type { CoacheeSummary, Experiment, ClientProgress, RunStatus, RunHistoryPoint, BaselinePack, BaselinePackMeeting, CoachingItem, PatternSnapshotItem, CoachingTheme } from '@/lib/types';
 import { ExperimentTracker } from '@/components/ExperimentTracker';
 import { CoachingCard } from '@/components/CoachingCard';
 import { PatternSnapshot, buildTrendData } from '@/components/PatternSnapshot';
@@ -377,6 +377,169 @@ function PastExperimentRow({ exp }: { exp: Record<string, unknown> }) {
   );
 }
 
+// ─── Baseline meeting components ──────────────────────────────────────────────
+
+function BaselineCoachingThemesSection({ themes }: { themes: CoachingTheme[] }) {
+  if (!themes || themes.length === 0) return null;
+  return (
+    <section className="bg-white rounded border border-cv-rose-700 overflow-hidden">
+      <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-rose-700">
+        <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-rose-50 shrink-0" aria-hidden="true">
+          <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+          <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+        </svg>
+        <h3 className="text-sm font-semibold text-cv-rose-50">{STRINGS.coachingCard.coachingThemesHeading}</h3>
+      </div>
+      <div className="divide-y divide-cv-warm-300">
+        {themes.map((theme, idx) => (
+          <div key={idx} className="px-5 py-4">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                theme.priority === 'primary'
+                  ? 'bg-cv-rose-100 text-cv-rose-700 border border-cv-rose-700'
+                  : 'bg-cv-amber-50 text-cv-amber-700 border border-cv-amber-700'
+              }`}>
+                {theme.priority === 'primary'
+                  ? STRINGS.runStatusPoller.primaryThemeLabel
+                  : STRINGS.runStatusPoller.secondaryThemeLabel}
+              </span>
+            </div>
+            <p className="text-sm font-medium text-stone-800 mb-1">{theme.theme}</p>
+            <p className="text-sm text-stone-600 leading-relaxed">{theme.explanation}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function BaselineMeetingCard({
+  meeting,
+  index,
+  open,
+  onToggle,
+  targetSpeaker,
+}: {
+  meeting: BaselinePackMeeting;
+  index: number;
+  open: boolean;
+  onToggle: () => void;
+  targetSpeaker?: string | null;
+}) {
+  const title = meeting.title || 'Untitled meeting';
+  const date = fmtDate(meeting.meeting_date);
+  const role = meeting.target_role
+    ? (STRINGS.roles[meeting.target_role] ?? meeting.target_role)
+    : null;
+  const meta = [date, meeting.meeting_type, role].filter(Boolean).join(' · ');
+
+  const hasSubRunData = !!(
+    meeting.sub_run_executive_summary ||
+    meeting.sub_run_focus ||
+    meeting.sub_run_pattern_snapshot?.length
+  );
+
+  return (
+    <div className={`bg-white border rounded overflow-hidden transition-colors ${
+      open ? 'border-cv-stone-100' : 'border-cv-warm-300'
+    }`}>
+      <button
+        onClick={onToggle}
+        className="w-full flex items-start justify-between gap-3 px-5 py-4 text-left hover:bg-cv-warm-100 transition-colors"
+      >
+        <div className="flex items-start gap-3 min-w-0">
+          <div className="w-6 h-6 rounded-full bg-cv-warm-200 text-cv-stone-600 flex items-center justify-center text-2xs font-semibold flex-shrink-0 mt-0.5">
+            {index + 1}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-cv-stone-900 truncate">{title}</p>
+            {meta && (
+              <p className="text-xs text-cv-stone-400 font-light mt-0.5">{meta}</p>
+            )}
+          </div>
+        </div>
+        <svg
+          viewBox="0 0 16 16"
+          fill="none"
+          className={`w-4 h-4 text-cv-stone-400 flex-shrink-0 mt-0.5 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          aria-hidden="true"
+        >
+          <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="border-t border-cv-warm-300 px-5 pb-6 pt-5 space-y-6">
+          {meeting.run_id && hasSubRunData ? (
+            <>
+              {meeting.sub_run_executive_summary && (
+                <section className="bg-white rounded border border-cv-navy-600 overflow-hidden">
+                  <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-navy-600">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-blue-50 shrink-0" aria-hidden="true">
+                      <path fillRule="evenodd" d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5V7.621a1.5 1.5 0 00-.44-1.06l-4.12-4.122A1.5 1.5 0 0011.378 2H4.5zm2.25 8.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zm0 3a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clipRule="evenodd" />
+                    </svg>
+                    <h3 className="text-sm font-semibold text-cv-blue-50">{STRINGS.runStatusPoller.summaryHeading}</h3>
+                  </div>
+                  <div className="px-5 py-4">
+                    <p className="text-sm text-cv-stone-700 leading-relaxed">{meeting.sub_run_executive_summary}</p>
+                  </div>
+                </section>
+              )}
+
+              {meeting.sub_run_focus && (
+                <CoachingCard
+                  focus={(meeting.sub_run_focus ?? null) as CoachingItem | null}
+                  microExperiment={null}
+                  targetSpeaker={targetSpeaker}
+                  patternSnapshot={meeting.sub_run_pattern_snapshot as unknown as PatternSnapshotItem[]}
+                  patternCoaching={meeting.sub_run_pattern_coaching}
+                />
+              )}
+
+              <BaselineCoachingThemesSection themes={meeting.sub_run_coaching_themes ?? []} />
+
+              {meeting.sub_run_pattern_snapshot &&
+                meeting.sub_run_pattern_snapshot.length > 0 && (
+                <section className="bg-white rounded border border-cv-stone-700 overflow-hidden">
+                  <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-stone-700">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-stone-50 shrink-0" aria-hidden="true">
+                      <rect x="2" y="2.35" width="1.8" height="1.8" />
+                      <rect x="7" y="2.35" width="11" height="1.8" />
+                      <rect x="2" y="6.85" width="1.8" height="1.8" />
+                      <rect x="7" y="6.85" width="11" height="1.8" />
+                      <rect x="2" y="11.35" width="1.8" height="1.8" />
+                      <rect x="7" y="11.35" width="11" height="1.8" />
+                      <rect x="2" y="15.85" width="1.8" height="1.8" />
+                      <rect x="7" y="15.85" width="11" height="1.8" />
+                    </svg>
+                    <h3 className="text-sm font-semibold text-cv-stone-50">{STRINGS.runStatusPoller.patternSnapshot}</h3>
+                  </div>
+                  <div className="px-5 py-4">
+                    <PatternSnapshot
+                      patterns={meeting.sub_run_pattern_snapshot as unknown as PatternSnapshotItem[]}
+                      patternCoaching={meeting.sub_run_pattern_coaching}
+                      targetSpeaker={targetSpeaker}
+                      groupByCluster
+                      strengthPatternIds={(meeting.sub_run_coaching_themes ?? []).filter((t: CoachingTheme) => t.nature === 'strength').flatMap((t: CoachingTheme) => t.related_patterns)}
+                      growthAreaPatternIds={[]}
+                    />
+                  </div>
+                </section>
+              )}
+            </>
+          ) : (
+            <p className="text-xs text-cv-stone-400 font-light">
+              {meeting.run_id
+                ? STRINGS.baselineDetail.noAnalysisData
+                : STRINGS.baselineDetail.notAnalysedYet}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Recent run row ───────────────────────────────────────────────────────────
 
 function RunRow({ run, patternHistory }: { run: Record<string, unknown>; patternHistory?: RunHistoryPoint[] }) {
@@ -725,6 +888,8 @@ export default function CoacheeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [data, setData]                     = useState<CoacheeSummary | null>(null);
   const [progress, setProgress]             = useState<ClientProgress | null>(null);
+  const [baselinePack, setBaselinePack]     = useState<BaselinePack | null>(null);
+  const [openMeetingIdx, setOpenMeetingIdx] = useState<number | null>(null);
   const [loading, setLoading]               = useState(true);
   const [progressLoading, setProgressLoading] = useState(true);
 
@@ -732,6 +897,17 @@ export default function CoacheeDetailPage() {
     api.getCoacheeSummary(id).then(setData).finally(() => setLoading(false));
     api.getCoacheeProgress(id).then(setProgress).catch(() => {}).finally(() => setProgressLoading(false));
   }, [id]);
+
+  // Fetch baseline pack detail once summary is loaded
+  useEffect(() => {
+    if (!data?.active_baseline_pack) return;
+    const bp = data.active_baseline_pack as Record<string, unknown>;
+    const bpId = bp.record_id as string | undefined;
+    const status = bp.status as string | undefined;
+    if (bpId && (status === 'completed' || status === 'baseline_ready')) {
+      api.getBaselinePack(bpId).then(setBaselinePack).catch(() => {});
+    }
+  }, [data]);
 
   if (loading) {
     return (
@@ -824,7 +1000,7 @@ export default function CoacheeDetailPage() {
       {data.active_baseline_pack && (
         <section className={cardCls}>
           <SectionHeading text={STRINGS.coacheeDetail.baselinePack} />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-3">
             {(() => {
               const status = (data.active_baseline_pack as Record<string, unknown>).status as string;
               const statusCls =
@@ -842,6 +1018,20 @@ export default function CoacheeDetailPage() {
               );
             })()}
           </div>
+          {baselinePack?.meetings && baselinePack.meetings.length > 0 && (
+            <div className="space-y-2">
+              {baselinePack.meetings.map((meeting, i) => (
+                <BaselineMeetingCard
+                  key={meeting.run_id ?? i}
+                  meeting={meeting}
+                  index={i}
+                  open={openMeetingIdx === i}
+                  onToggle={() => setOpenMeetingIdx(openMeetingIdx === i ? null : i)}
+                  targetSpeaker={baselinePack.target_speaker_label}
+                />
+              ))}
+            </div>
+          )}
         </section>
       )}
 
