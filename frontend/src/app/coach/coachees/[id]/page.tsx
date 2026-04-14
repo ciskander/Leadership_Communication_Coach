@@ -540,6 +540,80 @@ function BaselineMeetingCard({
   );
 }
 
+// ─── Attempt history (for coach's experiment section) ─────────────────────────
+
+function CoachAttemptHistory({
+  events,
+  summaryText,
+}: {
+  events: { event_id?: string; id?: string; attempt?: string; meeting_date?: string; created_at?: string; human_confirmed?: string }[];
+  summaryText: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const ATTEMPT_STYLES: Record<string, { color: string; dot: string; bg: string; label: string; dateColor?: string }> = {
+    yes:     { color: 'text-cv-teal-700',  dot: 'bg-cv-teal-500',  bg: 'bg-cv-teal-50',  label: STRINGS.attemptLabels.yes     },
+    partial: { color: 'text-cv-amber-800', dot: 'bg-cv-amber-600', bg: 'bg-cv-amber-50', label: STRINGS.attemptLabels.partial, dateColor: 'text-cv-amber-800' },
+    no:      { color: 'text-cv-stone-500', dot: 'bg-cv-stone-300', bg: 'bg-cv-warm-100', label: STRINGS.attemptLabels.no      },
+  };
+  const HUMAN_STYLES: Record<string, { label: string; color: string; border: string }> = {
+    confirmed_attempt:    { label: STRINGS.humanConfirmation.confirmed_attempt,    color: 'text-cv-teal-700',  border: 'border-cv-teal-300'  },
+    confirmed_no_attempt: { label: STRINGS.humanConfirmation.confirmed_no_attempt, color: 'text-cv-stone-500', border: 'border-cv-stone-300' },
+  };
+
+  return (
+    <div>
+      <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-amber-800 mb-1.5">
+        {STRINGS.experimentTracker.attemptHistory}
+      </p>
+      {events.length > 0 ? (
+        <>
+          <button
+            onClick={() => setOpen(!open)}
+            className="w-full flex items-center justify-between gap-2 text-sm text-cv-stone-600 leading-relaxed hover:text-cv-stone-800 transition-colors"
+          >
+            <span>{summaryText}</span>
+            <svg
+              viewBox="0 0 16 16" fill="none"
+              className={`w-3.5 h-3.5 shrink-0 text-cv-stone-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+              aria-hidden="true"
+            >
+              <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          {open && (
+            <ul className="space-y-1.5 mt-2">
+              {events.map((ev, i) => {
+                const cfg = ATTEMPT_STYLES[ev.attempt ?? 'no'] ?? ATTEMPT_STYLES.no;
+                const humanCfg = ev.human_confirmed ? HUMAN_STYLES[ev.human_confirmed] : undefined;
+                const displayDate = ev.meeting_date || ev.created_at;
+                return (
+                  <li key={ev.event_id ?? ev.id ?? i} className={`flex items-center gap-2 rounded px-3 py-2 ${cfg.bg}`}>
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot}`} />
+                    <span className={`text-xs font-semibold ${cfg.color}`}>{cfg.label}</span>
+                    {humanCfg && (
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full bg-white border ${humanCfg.border} ${humanCfg.color}`} title={STRINGS.humanConfirmation.tooltip}>
+                        {humanCfg.label}
+                      </span>
+                    )}
+                    {displayDate && (
+                      <span className={`text-xs ml-auto shrink-0 tabular-nums ${cfg.dateColor ?? 'text-cv-stone-400'}`}>
+                        {new Date(displayDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </>
+      ) : (
+        <p className="text-sm text-cv-stone-600 leading-relaxed">{summaryText}</p>
+      )}
+    </div>
+  );
+}
+
 /** Strip rewrite fields from coaching items for baseline aggregate view
  *  (mirrors backend logic in routes_coachee.py lines 294-301). */
 function baselineCoaching(items: PatternCoachingItem[]): PatternCoachingItem[] {
@@ -715,16 +789,16 @@ function RunRow({ run, patternHistory }: { run: Record<string, unknown>; pattern
                 </section>
               )}
 
-              {/* Experiment detection */}
-              {runDetail.experiment_detection && (() => {
-                const detection = runDetail.experiment_detection!;
-                const attempt = detection.attempt;
-                const countAttempts = detection.count_attempts;
-                const detectionQuotes = detection.quotes ?? [];
+              {/* Experiment section */}
+              {(runDetail.experiment_detection || runDetail.active_experiment_detail) && (() => {
+                const detection = runDetail.experiment_detection;
+                const attempt = detection?.attempt ?? null;
+                const countAttempts = detection?.count_attempts ?? null;
+                const detectionQuotes = detection?.quotes ?? [];
                 const expCoaching = runDetail.experiment_coaching;
 
-                const attemptConfig =
-                  attempt === 'yes'
+                const attemptConfig = detection
+                  ? attempt === 'yes'
                     ? {
                         icon: <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0 text-cv-teal-600" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth={1.4}/><path d="M5 8l2 2 4-4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"/></svg>,
                         bgColor: 'bg-cv-teal-50',
@@ -746,12 +820,13 @@ function RunRow({ run, patternHistory }: { run: Record<string, unknown>; pattern
                         labelColor: 'text-cv-stone-700',
                         label: STRINGS.runStatusPoller.noAttemptDetected,
                         desc: null,
-                      };
+                      }
+                  : null;
 
                 const hasDetails =
                   (attempt === 'yes' || attempt === 'partial') && detectionQuotes.length > 0;
 
-                const bestSuccessSpanId = detection.best_success_span_id;
+                const bestSuccessSpanId = detection?.best_success_span_id;
                 const bestSuccessQuotes = bestSuccessSpanId
                   ? detectionQuotes.filter(q => q.span_id === bestSuccessSpanId)
                   : [];
@@ -760,6 +835,24 @@ function RunRow({ run, patternHistory }: { run: Record<string, unknown>; pattern
                   ? detectionQuotes.filter(q => q.span_id === rewriteSpanId)
                   : [];
                 const hasSplit = bestSuccessQuotes.length > 0 && !!expCoaching?.coaching_note;
+
+                // Attempt history data
+                const expEvents = runDetail.active_experiment_events as { event_id?: string; id?: string; attempt?: string; meeting_date?: string; created_at?: string; human_confirmed?: string }[];
+                const sortedEvents = [...(expEvents || [])]
+                  .sort((a, b) => {
+                    const da = a.meeting_date || a.created_at || '';
+                    const db = b.meeting_date || b.created_at || '';
+                    return db.localeCompare(da);
+                  })
+                  .slice(0, 10);
+                const successCount = sortedEvents.filter((e) => e.attempt === 'yes').length;
+                const partialCount = sortedEvents.filter((e) => e.attempt === 'partial').length;
+                const totalAttempted = successCount + partialCount;
+                const historySummary = sortedEvents.length === 0
+                  ? STRINGS.experimentTracker.analyzeToStart
+                  : totalAttempted === 0
+                    ? STRINGS.experimentTracker.noAttemptsYet(sortedEvents.length)
+                    : STRINGS.experimentTracker.attemptsDetected(totalAttempted, sortedEvents.length);
 
                 return (
                   <section className="bg-white rounded border border-cv-amber-800 overflow-hidden">
@@ -770,76 +863,98 @@ function RunRow({ run, patternHistory }: { run: Record<string, unknown>; pattern
                       <h3 className="text-sm font-semibold text-cv-amber-50">{STRINGS.runStatusPoller.experimentSectionHeading}</h3>
                     </div>
 
-                    <div className="px-4 py-4 space-y-3">
-                      {/* Detection banner */}
-                      <div className="rounded border border-cv-stone-400 overflow-hidden">
-                        <div className={`flex items-center gap-2.5 px-4 py-3 ${attemptConfig.bgColor}`}>
-                          {attemptConfig.icon}
-                          <span className={`text-sm font-semibold ${attemptConfig.labelColor}`}>
-                            {attemptConfig.label}
-                          </span>
+                    <div className="px-4 py-4 space-y-4">
+                      {/* 1. Current experiment */}
+                      {runDetail.active_experiment_detail && (
+                        <div>
+                          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-amber-800 mb-1.5">
+                            {STRINGS.runStatusPoller.currentExperiment}
+                          </p>
+                          <ExperimentTracker
+                            experiment={runDetail.active_experiment_detail}
+                            events={runDetail.active_experiment_events}
+                            slim
+                          />
                         </div>
+                      )}
 
-                        <div className="px-4 py-3 space-y-2">
-                          {attempt !== 'no' && attemptConfig.desc && (
-                            <p className="text-sm text-cv-stone-700 leading-relaxed">{attemptConfig.desc}</p>
-                          )}
+                      {/* 2. In this meeting */}
+                      {detection && attemptConfig && (
+                        <div>
+                          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-amber-800 mb-1.5">
+                            {STRINGS.runStatusPoller.inThisMeeting}
+                          </p>
+                          <div className="rounded border border-cv-stone-400 overflow-hidden">
+                            <div className={`flex items-center gap-2.5 px-4 py-3 ${attemptConfig.bgColor}`}>
+                              {attemptConfig.icon}
+                              <span className={`text-sm font-semibold ${attemptConfig.labelColor}`}>
+                                {attemptConfig.label}
+                              </span>
+                            </div>
 
-                          {hasDetails && (
-                            <div className="space-y-3 pt-1">
-                              {/* Best success quote */}
-                              {bestSuccessQuotes.length > 0 && (attempt === 'yes' || hasSplit) && (
-                                <div>
-                                  <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                                    {STRINGS.common.whatYouDidWell}
-                                  </p>
-                                  <EvidenceQuoteList quotes={bestSuccessQuotes} targetSpeaker={targetSpeaker} />
-                                </div>
+                            <div className="px-4 py-3 space-y-2">
+                              {attempt !== 'no' && attemptConfig.desc && (
+                                <p className="text-sm text-cv-stone-700 leading-relaxed">{attemptConfig.desc}</p>
                               )}
 
-                              {/* Coaching note */}
-                              {expCoaching?.coaching_note && (
-                                <div>
-                                  <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                                    {attempt === 'yes'
-                                      ? STRINGS.runStatusPoller.coachsNote
-                                      : hasSplit
-                                        ? STRINGS.common.whereYouCanImprove
-                                        : STRINGS.runStatusPoller.whatWorkedMissing}
-                                  </p>
-                                  <p className="text-sm text-cv-stone-700 leading-relaxed">
-                                    {expCoaching.coaching_note}
-                                  </p>
-                                </div>
-                              )}
+                              {hasDetails && (
+                                <div className="space-y-3 pt-1">
+                                  {bestSuccessQuotes.length > 0 && (attempt === 'yes' || hasSplit) && (
+                                    <div>
+                                      <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                                        {STRINGS.common.whatYouDidWell}
+                                      </p>
+                                      <EvidenceQuoteList quotes={bestSuccessQuotes} targetSpeaker={targetSpeaker} />
+                                    </div>
+                                  )}
 
-                              {/* Rewrite target quote (partial only) */}
-                              {attempt === 'partial' && rewriteGroupQuotes.length > 0 && (
-                                <div>
-                                  <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                                    {STRINGS.common.forExampleYouSaid}
-                                  </p>
-                                  <EvidenceQuoteList quotes={rewriteGroupQuotes} targetSpeaker={targetSpeaker} />
-                                </div>
-                              )}
+                                  {expCoaching?.coaching_note && (
+                                    <div>
+                                      <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                                        {attempt === 'yes'
+                                          ? STRINGS.runStatusPoller.coachsNote
+                                          : hasSplit
+                                            ? STRINGS.common.whereYouCanImprove
+                                            : STRINGS.runStatusPoller.whatWorkedMissing}
+                                      </p>
+                                      <p className="text-sm text-cv-stone-700 leading-relaxed">
+                                        {expCoaching.coaching_note}
+                                      </p>
+                                    </div>
+                                  )}
 
-                              {/* Suggested rewrite */}
-                              {expCoaching?.suggested_rewrite && (
-                                <div>
-                                  <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
-                                    {STRINGS.common.nextTimeTry}
-                                  </p>
-                                  <blockquote className="border-l-[2px] border-cv-teal-700 pl-4 pr-3 py-2.5 bg-cv-teal-50 rounded-r my-2">
-                                    <p className="text-sm text-cv-stone-700 italic leading-relaxed">
-                                      &ldquo;{expCoaching.suggested_rewrite}&rdquo;
-                                    </p>
-                                  </blockquote>
+                                  {attempt === 'partial' && rewriteGroupQuotes.length > 0 && (
+                                    <div>
+                                      <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                                        {STRINGS.common.forExampleYouSaid}
+                                      </p>
+                                      <EvidenceQuoteList quotes={rewriteGroupQuotes} targetSpeaker={targetSpeaker} />
+                                    </div>
+                                  )}
+
+                                  {expCoaching?.suggested_rewrite && (
+                                    <div>
+                                      <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                                        {STRINGS.common.nextTimeTry}
+                                      </p>
+                                      <blockquote className="border-l-[2px] border-cv-teal-700 pl-4 pr-3 py-2.5 bg-cv-teal-50 rounded-r my-2">
+                                        <p className="text-sm text-cv-stone-700 italic leading-relaxed">
+                                          &ldquo;{expCoaching.suggested_rewrite}&rdquo;
+                                        </p>
+                                      </blockquote>
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
-                          )}
+                          </div>
                         </div>
-                      </div>
+                      )}
+
+                      {/* 3. Attempt history */}
+                      {runDetail.active_experiment_detail && (
+                        <CoachAttemptHistory events={sortedEvents} summaryText={historySummary} />
+                      )}
                     </div>
                   </section>
                 );
