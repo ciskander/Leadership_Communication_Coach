@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import type { CoacheeSummary, Experiment, ClientProgress, RunStatus, RunHistoryPoint, BaselinePack, BaselinePackMeeting, CoachingItem, PatternSnapshotItem, CoachingTheme } from '@/lib/types';
+import type { CoacheeSummary, Experiment, ClientProgress, RunStatus, RunHistoryPoint, BaselinePack, BaselinePackMeeting, CoachingItem, PatternSnapshotItem, PatternCoachingItem, CoachingTheme } from '@/lib/types';
 import { ExperimentTracker } from '@/components/ExperimentTracker';
 import { CoachingCard } from '@/components/CoachingCard';
 import { PatternSnapshot, buildTrendData } from '@/components/PatternSnapshot';
