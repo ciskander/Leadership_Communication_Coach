@@ -16,7 +16,7 @@ import { STRINGS } from '@/config/strings';
 // ─── Theme card sub-components ──────────────────────────────────────────────
 
 /** Renders a single strength-nature coaching theme (teal section). */
-function StrengthThemeCard({
+export function StrengthThemeCard({
   theme,
   targetSpeaker,
 }: {
@@ -60,7 +60,7 @@ function StrengthThemeCard({
 }
 
 /** Renders a single developmental/mixed coaching theme (rose section). */
-function DevelopmentalThemeCard({
+export function DevelopmentalThemeCard({
   theme,
   showPriorityBadge,
   targetSpeaker,

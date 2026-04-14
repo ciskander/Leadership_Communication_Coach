@@ -7,6 +7,10 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import type { CoacheeSummary, Experiment, ClientProgress, RunStatus, RunHistoryPoint } from '@/lib/types';
 import { ExperimentTracker } from '@/components/ExperimentTracker';
+import { CoachingCard } from '@/components/CoachingCard';
+import { PatternSnapshot, buildTrendData } from '@/components/PatternSnapshot';
+import type { PatternTrendData } from '@/components/PatternSnapshot';
+import { StrengthThemeCard, DevelopmentalThemeCard } from '@/components/RunStatusPoller';
 import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip,
@@ -333,35 +337,6 @@ function ProposedExperimentRow({ experiment }: { experiment: Experiment }) {
   );
 }
 
-// ─── Pattern snapshot bar ─────────────────────────────────────────────────────
-
-function PatternSnapshotBar({ item }: { item: { pattern_id: string; score?: number | null; evaluable_status?: string } }) {
-  const score = item.score;
-  const pct   = score != null ? Math.round(score) : null;
-  const label = STRINGS.patternLabels[item.pattern_id] ?? item.pattern_id.replace(/_/g, ' ');
-
-  if (pct === null) {
-    return (
-      <div className="flex items-center justify-between text-xs py-0.5">
-        <span className="text-cv-stone-500">{label}</span>
-        <span className="text-cv-stone-300">{STRINGS.evaluableStatus[item.evaluable_status ?? ''] ?? '—'}</span>
-      </div>
-    );
-  }
-
-  const barColor = pct >= 70 ? 'bg-cv-teal-400' : pct >= 40 ? 'bg-cv-amber-400' : 'bg-cv-red-400';
-
-  return (
-    <div className="flex items-center gap-2 py-0.5">
-      <span className="text-xs text-cv-stone-600 w-40 truncate shrink-0">{label}</span>
-      <div className="flex-1 h-1.5 bg-cv-warm-200 rounded-full overflow-hidden">
-        <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
-      </div>
-      <span className="text-xs text-cv-stone-500 w-8 text-right tabular-nums">{pct}%</span>
-    </div>
-  );
-}
-
 // ─── Past experiment row ──────────────────────────────────────────────────────
 
 function PastExperimentRow({ exp }: { exp: Record<string, unknown> }) {
@@ -403,7 +378,7 @@ function PastExperimentRow({ exp }: { exp: Record<string, unknown> }) {
 
 // ─── Recent run row ───────────────────────────────────────────────────────────
 
-function RunRow({ run }: { run: Record<string, unknown> }) {
+function RunRow({ run, patternHistory }: { run: Record<string, unknown>; patternHistory?: RunHistoryPoint[] }) {
   const [expanded, setExpanded]       = useState(false);
   const [runDetail, setRunDetail]     = useState<RunStatus | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
@@ -429,6 +404,31 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
     }
     setExpanded((v) => !v);
   };
+
+  // Build trend data when run detail is loaded
+  const trendData = useMemo<Record<string, PatternTrendData> | undefined>(() => {
+    if (!runDetail || !patternHistory || patternHistory.length === 0) return undefined;
+    const trends = buildTrendData(patternHistory, 1, runId);
+    return Object.keys(trends).length > 0 ? trends : undefined;
+  }, [runDetail, patternHistory, runId]);
+
+  // Derive coaching theme data
+  const targetSpeaker = runDetail?.target_speaker_label ?? null;
+  const strengthThemes = runDetail?.coaching_themes?.filter((t) => t.nature === 'strength') ?? [];
+  const developmentalThemes = runDetail?.coaching_themes?.filter(
+    (t) => t.nature === 'developmental' || t.nature === 'mixed'
+  ) ?? [];
+
+  const patternScores: Record<string, number> = {};
+  for (const ps of runDetail?.pattern_snapshot ?? []) {
+    if (ps.score != null) patternScores[ps.pattern_id] = ps.score;
+  }
+  const strengthThemePatternIds = strengthThemes
+    .flatMap((t) => t.related_patterns)
+    .filter((pid) => (patternScores[pid] ?? 0) >= 0.70);
+  const growthAreaPatternIds = developmentalThemes
+    .flatMap((t) => t.related_patterns)
+    .filter((pid) => (runDetail?.pattern_coaching ?? []).some((pc) => pc.pattern_id === pid && pc.suggested_rewrite));
 
   return (
     <div className="border border-cv-warm-300 rounded overflow-hidden">
@@ -470,69 +470,77 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
 
       {/* Expanded detail */}
       {expanded && (
-        <div className="px-4 py-4 bg-cv-warm-50 border-t border-cv-warm-300 space-y-4">
+        <div className="border-t border-cv-warm-300 bg-cv-warm-50">
           {loadingDetail && (
-            <div className="flex items-center gap-2 text-cv-stone-400 text-sm py-4 justify-center">
+            <div className="flex items-center gap-2 text-cv-stone-400 text-sm py-8 justify-center">
               <span className="w-4 h-4 border-2 border-cv-teal-500 border-t-transparent rounded-full animate-spin" />
               {STRINGS.common.loading}
             </div>
           )}
 
           {runDetail && runDetail.status === 'complete' && gate1Pass !== false && (
-            <>
-              {runDetail.pattern_snapshot && runDetail.pattern_snapshot.length > 0 && (
-                <div>
-                  <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-stone-400 mb-2">
-                    {STRINGS.runStatusPoller.patternSnapshot}
-                  </p>
-                  <div className="space-y-1">
-                    {runDetail.pattern_snapshot.map((item) => (
-                      <PatternSnapshotBar key={item.pattern_id} item={item} />
+            <div className="p-4 space-y-4">
+              {/* Executive summary */}
+              {runDetail.executive_summary && (
+                <section className="bg-white rounded border border-cv-navy-600 overflow-hidden">
+                  <div className="flex items-center gap-2.5 px-4 py-3 border-b border-cv-warm-300 bg-cv-navy-600">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-blue-50 shrink-0" aria-hidden="true">
+                      <path fillRule="evenodd" d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5V7.621a1.5 1.5 0 00-.44-1.06l-4.12-4.122A1.5 1.5 0 0011.378 2H4.5zm2.25 8.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zm0 3a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clipRule="evenodd" />
+                    </svg>
+                    <h3 className="text-sm font-semibold text-cv-blue-50">{STRINGS.runStatusPoller.summaryHeading}</h3>
+                  </div>
+                  <div className="px-4 py-3">
+                    <p className="text-sm text-cv-stone-700 leading-relaxed">{runDetail.executive_summary}</p>
+                  </div>
+                </section>
+              )}
+
+              {/* Coaching card (focus + micro-experiment) */}
+              <CoachingCard
+                focus={runDetail.focus}
+                targetSpeaker={targetSpeaker}
+                microExperiment={null}
+                patternSnapshot={runDetail.pattern_snapshot}
+                patternCoaching={runDetail.pattern_coaching}
+                trendData={trendData}
+              />
+
+              {/* Strength themes */}
+              {strengthThemes.length > 0 && (
+                <section className="bg-white rounded border border-cv-teal-700 overflow-hidden">
+                  <div className="flex items-center gap-2.5 px-4 py-3 border-b border-cv-warm-300 bg-cv-teal-700">
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-cv-teal-50 shrink-0" aria-hidden="true">
+                      <path d="M22,3H19V2a1,1,0,0,0-1-1H6A1,1,0,0,0,5,2V3H2A1,1,0,0,0,1,4V6a4.994,4.994,0,0,0,4.276,4.927A7.009,7.009,0,0,0,11,15.92V18H7a1,1,0,0,0-.949.684l-1,3A1,1,0,0,0,6,23H18a1,1,0,0,0,.948-1.316l-1-3A1,1,0,0,0,17,18H13V15.92a7.009,7.009,0,0,0,5.724-4.993A4.994,4.994,0,0,0,23,6V4A1,1,0,0,0,22,3ZM5,8.829A3.006,3.006,0,0,1,3,6V5H5ZM16.279,20l.333,1H7.387l.334-1ZM17,9A5,5,0,0,1,7,9V3H17Zm4-3a3.006,3.006,0,0,1-2,2.829V5h2ZM10.667,8.667,9,7.292,11,7l1-2,1,2,2,.292L13.333,8.667,13.854,11,12,9.667,10.146,11Z"/>
+                    </svg>
+                    <h3 className="text-sm font-semibold text-cv-teal-50">{STRINGS.coachingCard.strengthsHeading}</h3>
+                  </div>
+                  <div className="divide-y divide-cv-warm-300">
+                    {strengthThemes.map((theme, idx) => (
+                      <StrengthThemeCard key={idx} theme={theme} targetSpeaker={targetSpeaker} />
                     ))}
                   </div>
-                </div>
+                </section>
               )}
 
-              {/* Coaching themes — strength nature */}
-              {runDetail.coaching_themes?.filter((t: { nature: string }) => t.nature === 'strength').length > 0 && (
-                <div>
-                  <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-teal-50 bg-cv-teal-800 inline-block px-2 py-0.5 rounded mb-1.5">
-                    {STRINGS.coachingCard.strengthsHeading}
-                  </p>
-                  {runDetail.coaching_themes.filter((t: { nature: string }) => t.nature === 'strength').map((t: { theme: string; explanation: string }, i: number) => (
-                    <div key={i} className="mb-2">
-                      <p className="text-xs text-cv-stone-500 font-medium">
-                        {t.theme}
-                      </p>
-                      <p className="text-sm text-cv-stone-700">{t.explanation}</p>
-                    </div>
-                  ))}
-                </div>
+              {/* Developmental/mixed themes */}
+              {developmentalThemes.length > 0 && (
+                <section className="bg-white rounded border border-cv-rose-700 overflow-hidden">
+                  <div className="flex items-center gap-2.5 px-4 py-3 border-b border-cv-warm-300 bg-cv-rose-700">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-rose-50 shrink-0" aria-hidden="true">
+                      <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+                      <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                    </svg>
+                    <h3 className="text-sm font-semibold text-cv-rose-50">{STRINGS.coachingCard.coachingThemesHeading}</h3>
+                  </div>
+                  <div className="divide-y divide-cv-warm-300">
+                    {developmentalThemes.map((theme, idx) => (
+                      <DevelopmentalThemeCard key={idx} theme={theme} showPriorityBadge={developmentalThemes.length >= 2} targetSpeaker={targetSpeaker} />
+                    ))}
+                  </div>
+                </section>
               )}
 
-              {runDetail.focus && (
-                <div>
-                  <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-cv-amber-50 bg-cv-amber-800 inline-block px-2 py-0.5 rounded mb-1.5">
-                    {STRINGS.coachingCard.focusHeading}
-                  </p>
-                  <p className="text-xs text-cv-amber-800 font-medium">
-                    {STRINGS.patternLabels[runDetail.focus.pattern_id] ?? runDetail.focus.pattern_id}
-                  </p>
-                  <p className="text-sm text-cv-stone-700">{runDetail.focus.message}</p>
-                  {(() => {
-                    const rewrite = runDetail.pattern_coaching?.find(
-                      (pc) => pc.pattern_id === runDetail.focus!.pattern_id
-                    )?.suggested_rewrite;
-                    return rewrite ? (
-                      <div className="mt-1.5 bg-cv-teal-50 border border-cv-teal-100 rounded px-3 py-2">
-                        <p className="text-2xs font-semibold text-cv-teal-600 mb-0.5">{STRINGS.common.nextTimeTry}</p>
-                        <p className="text-sm text-cv-teal-800 italic">{rewrite}</p>
-                      </div>
-                    ) : null;
-                  })()}
-                </div>
-              )}
-
+              {/* Experiment detection */}
               {runDetail.experiment_detection && (
                 <div className="bg-cv-warm-100 border border-cv-warm-300 rounded px-3 py-2">
                   <p className="text-2xs font-semibold text-cv-stone-600 mb-0.5">
@@ -547,14 +555,48 @@ function RunRow({ run }: { run: Record<string, unknown> }) {
                   )}
                 </div>
               )}
-            </>
+
+              {/* Pattern snapshot */}
+              {runDetail.pattern_snapshot && runDetail.pattern_snapshot.length > 0 && (
+                <section className="bg-white rounded border border-cv-stone-700 overflow-hidden">
+                  <div className="flex items-center gap-2.5 px-4 py-3 border-b border-cv-warm-300 bg-cv-stone-700">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cv-stone-50 shrink-0" aria-hidden="true">
+                      <rect x="2" y="2.35" width="1.8" height="1.8" />
+                      <rect x="7" y="2.35" width="11" height="1.8" />
+                      <rect x="2" y="6.85" width="1.8" height="1.8" />
+                      <rect x="7" y="6.85" width="11" height="1.8" />
+                      <rect x="2" y="11.35" width="1.8" height="1.8" />
+                      <rect x="7" y="11.35" width="11" height="1.8" />
+                      <rect x="2" y="15.85" width="1.8" height="1.8" />
+                      <rect x="7" y="15.85" width="11" height="1.8" />
+                    </svg>
+                    <h3 className="text-sm font-semibold text-cv-stone-50">{STRINGS.runStatusPoller.patternSnapshot}</h3>
+                  </div>
+                  <div className="px-4 py-3">
+                    <PatternSnapshot
+                      patterns={runDetail.pattern_snapshot}
+                      patternCoaching={runDetail.pattern_coaching}
+                      targetSpeaker={targetSpeaker}
+                      trendData={trendData}
+                      groupByCluster
+                      strengthPatternIds={strengthThemePatternIds}
+                      growthAreaPatternIds={growthAreaPatternIds}
+                    />
+                  </div>
+                </section>
+              )}
+            </div>
           )}
 
           {runDetail && runDetail.status === 'complete' && gate1Pass === false && (
-            <p className="text-sm text-cv-amber-600">{STRINGS.runStatusPoller.qualityCheckDesc}</p>
+            <div className="p-4">
+              <p className="text-sm text-cv-amber-600">{STRINGS.runStatusPoller.qualityCheckDesc}</p>
+            </div>
           )}
           {runDetail && runDetail.status === 'error' && (
-            <p className="text-sm text-cv-red-600">{STRINGS.runStatusPoller.errorFallback}</p>
+            <div className="p-4">
+              <p className="text-sm text-cv-red-600">{STRINGS.runStatusPoller.errorFallback}</p>
+            </div>
           )}
         </div>
       )}
@@ -694,7 +736,7 @@ export default function CoacheeDetailPage() {
         {data.recent_runs.length > 0 ? (
           <div className="space-y-2">
             {data.recent_runs.map((run: Record<string, unknown>, i) => (
-              <RunRow key={(run.run_id as string) ?? i} run={run} />
+              <RunRow key={(run.run_id as string) ?? i} run={run} patternHistory={progress?.pattern_history} />
             ))}
           </div>
         ) : (
