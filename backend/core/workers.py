@@ -1121,6 +1121,8 @@ def process_baseline_pack_build(
     _exp_track = _parsed_output.get("experiment_tracking", {})
     if not isinstance(_exp_track.get("detection_in_this_meeting"), dict):
         _exp_track["detection_in_this_meeting"] = None
+    # Default graduation_recommendation to null — baseline packs are pre-experiment
+    _exp_track.setdefault("graduation_recommendation", None)
 
     # Apply output patches before stripping so patching can normalise
     # malformed structures (e.g. missing fields) before we iterate them.

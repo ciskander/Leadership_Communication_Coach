@@ -220,7 +220,7 @@ Structural checks:
 (h) JSON parses. All required top-level keys present. No extra keys.
 (i) coaching_themes has 1-3 items. micro_experiment has exactly 1 item.
 (j) Every rewrite_for_span_id references a valid evidence span ID from the pattern's evidence_span_ids in Stage 1, and is NOT in that pattern's success_evidence_span_ids. suggested_rewrite and rewrite_for_span_id are non-null only for substantive coaching_note content.
-(k) Every best_success_span_id references a valid span from the pattern's success_evidence_span_ids in Stage 1. best_success_span_id is non-null only for substantive notes content.
+(k) For each pattern_coaching entry: if notes is substantive, verify best_success_span_id is non-null and references a valid span from the pattern's success_evidence_span_ids in Stage 1. Choose the span that most clearly demonstrates the strength described in notes. If notes is null, verify best_success_span_id is null.
 (l) micro_experiment.evidence_span_ids contains at least one span ID.
 (m) Every evaluable pattern from Stage 1's evaluation_summary.patterns_evaluated has an entry in pattern_coaching.
 (n) Experiment tracking is consistent: if active experiment with status=active, detection_in_this_meeting must not be null. If no active experiment or status=none, detection_in_this_meeting must be null.
