@@ -540,6 +540,11 @@ function BaselineMeetingCard({
   );
 }
 
+/** Strip suggested_rewrite from pattern coaching items (used for baseline pack runs). */
+function stripRewrites(items: { pattern_id: string; [k: string]: unknown }[]) {
+  return items.map(({ suggested_rewrite, rewrite_for_span_id, ...rest }) => rest);
+}
+
 // ─── Recent run row ───────────────────────────────────────────────────────────
 
 function RunRow({ run, patternHistory }: { run: Record<string, unknown>; patternHistory?: RunHistoryPoint[] }) {
@@ -665,7 +670,7 @@ function RunRow({ run, patternHistory }: { run: Record<string, unknown>; pattern
                 targetSpeaker={targetSpeaker}
                 microExperiment={null}
                 patternSnapshot={runDetail.pattern_snapshot}
-                patternCoaching={isBaseline ? [] : runDetail.pattern_coaching}
+                patternCoaching={isBaseline ? stripRewrites(runDetail.pattern_coaching) : runDetail.pattern_coaching}
                 trendData={trendData}
               />
 
@@ -853,7 +858,7 @@ function RunRow({ run, patternHistory }: { run: Record<string, unknown>; pattern
                   <div className="px-4 py-3">
                     <PatternSnapshot
                       patterns={runDetail.pattern_snapshot}
-                      patternCoaching={isBaseline ? [] : runDetail.pattern_coaching}
+                      patternCoaching={isBaseline ? stripRewrites(runDetail.pattern_coaching) : runDetail.pattern_coaching}
                       targetSpeaker={targetSpeaker}
                       trendData={trendData}
                       groupByCluster
