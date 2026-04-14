@@ -590,7 +590,7 @@ function RunRow({ run, patternHistory }: { run: Record<string, unknown>; pattern
   const strengthThemePatternIds = strengthThemes
     .flatMap((t) => t.related_patterns)
     .filter((pid) => (patternScores[pid] ?? 0) >= 0.70);
-  const growthAreaPatternIds = developmentalThemes
+  const growthAreaPatternIds = isBaseline ? [] : developmentalThemes
     .flatMap((t) => t.related_patterns)
     .filter((pid) => (runDetail?.pattern_coaching ?? []).some((pc) => pc.pattern_id === pid && pc.suggested_rewrite));
 
@@ -665,7 +665,7 @@ function RunRow({ run, patternHistory }: { run: Record<string, unknown>; pattern
                 targetSpeaker={targetSpeaker}
                 microExperiment={null}
                 patternSnapshot={runDetail.pattern_snapshot}
-                patternCoaching={runDetail.pattern_coaching}
+                patternCoaching={isBaseline ? [] : runDetail.pattern_coaching}
                 trendData={trendData}
               />
 
@@ -853,7 +853,7 @@ function RunRow({ run, patternHistory }: { run: Record<string, unknown>; pattern
                   <div className="px-4 py-3">
                     <PatternSnapshot
                       patterns={runDetail.pattern_snapshot}
-                      patternCoaching={runDetail.pattern_coaching}
+                      patternCoaching={isBaseline ? [] : runDetail.pattern_coaching}
                       targetSpeaker={targetSpeaker}
                       trendData={trendData}
                       groupByCluster
