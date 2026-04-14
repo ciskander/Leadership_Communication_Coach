@@ -11,6 +11,7 @@ import { CoachingCard } from '@/components/CoachingCard';
 import { PatternSnapshot, buildTrendData } from '@/components/PatternSnapshot';
 import type { PatternTrendData } from '@/components/PatternSnapshot';
 import { StrengthThemeCard, DevelopmentalThemeCard } from '@/components/RunStatusPoller';
+import { EvidenceQuoteList } from '@/components/EvidenceQuote';
 import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip,
@@ -541,20 +542,134 @@ function RunRow({ run, patternHistory }: { run: Record<string, unknown>; pattern
               )}
 
               {/* Experiment detection */}
-              {runDetail.experiment_detection && (
-                <div className="bg-cv-warm-100 border border-cv-warm-300 rounded px-3 py-2">
-                  <p className="text-2xs font-semibold text-cv-stone-600 mb-0.5">
-                    {runDetail.experiment_detection.attempt === 'yes'
-                      ? STRINGS.runStatusPoller.nicelyDone
-                      : runDetail.experiment_detection.attempt === 'partial'
-                        ? STRINGS.runStatusPoller.partialAttemptDetected
-                        : STRINGS.runStatusPoller.noAttemptDetected}
-                  </p>
-                  {runDetail.experiment_detection.coaching_note && (
-                    <p className="text-sm text-cv-stone-700">{runDetail.experiment_detection.coaching_note}</p>
-                  )}
-                </div>
-              )}
+              {runDetail.experiment_detection && (() => {
+                const detection = runDetail.experiment_detection!;
+                const attempt = detection.attempt;
+                const countAttempts = detection.count_attempts;
+                const detectionQuotes = detection.quotes ?? [];
+                const expCoaching = runDetail.experiment_coaching;
+
+                const attemptConfig =
+                  attempt === 'yes'
+                    ? {
+                        icon: <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0 text-cv-teal-600" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth={1.4}/><path d="M5 8l2 2 4-4" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"/></svg>,
+                        bgColor: 'bg-cv-teal-50',
+                        labelColor: 'text-cv-teal-800',
+                        label: STRINGS.runStatusPoller.nicelyDone,
+                        desc: STRINGS.runStatusPoller.clearAttempts(countAttempts ?? 'multiple'),
+                      }
+                    : attempt === 'partial'
+                    ? {
+                        icon: <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0 text-cv-amber-600" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth={1.4}/><path d="M5 8h6" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg>,
+                        bgColor: 'bg-cv-amber-50',
+                        labelColor: 'text-cv-amber-800',
+                        label: STRINGS.runStatusPoller.partialAttemptDetected,
+                        desc: STRINGS.runStatusPoller.partialAttemptDesc(countAttempts),
+                      }
+                    : {
+                        icon: <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0 text-cv-stone-400" aria-hidden="true"><path d="M6 1v5L2 14h12L10 6V1" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round"/><path d="M4.5 1h7" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg>,
+                        bgColor: 'bg-cv-warm-50',
+                        labelColor: 'text-cv-stone-700',
+                        label: STRINGS.runStatusPoller.noAttemptDetected,
+                        desc: null,
+                      };
+
+                const hasDetails =
+                  (attempt === 'yes' || attempt === 'partial') && detectionQuotes.length > 0;
+
+                const bestSuccessSpanId = detection.best_success_span_id;
+                const bestSuccessQuotes = bestSuccessSpanId
+                  ? detectionQuotes.filter(q => q.span_id === bestSuccessSpanId)
+                  : [];
+                const rewriteSpanId = expCoaching?.rewrite_for_span_id;
+                const rewriteGroupQuotes = rewriteSpanId
+                  ? detectionQuotes.filter(q => q.span_id === rewriteSpanId)
+                  : [];
+                const hasSplit = bestSuccessQuotes.length > 0 && !!expCoaching?.coaching_note;
+
+                return (
+                  <section className="bg-white rounded border border-cv-amber-800 overflow-hidden">
+                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-cv-warm-300 bg-cv-amber-800">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-cv-amber-50 shrink-0" aria-hidden="true">
+                        <path d="M9 3H15" /><path d="M9 3V9L4 18H20L15 9V3" /><path d="M7.5 14H16.5" />
+                      </svg>
+                      <h3 className="text-sm font-semibold text-cv-amber-50">{STRINGS.runStatusPoller.experimentSectionHeading}</h3>
+                    </div>
+
+                    <div className="px-4 py-4 space-y-3">
+                      {/* Detection banner */}
+                      <div className="rounded border border-cv-stone-400 overflow-hidden">
+                        <div className={`flex items-center gap-2.5 px-4 py-3 ${attemptConfig.bgColor}`}>
+                          {attemptConfig.icon}
+                          <span className={`text-sm font-semibold ${attemptConfig.labelColor}`}>
+                            {attemptConfig.label}
+                          </span>
+                        </div>
+
+                        <div className="px-4 py-3 space-y-2">
+                          {attempt !== 'no' && attemptConfig.desc && (
+                            <p className="text-sm text-cv-stone-700 leading-relaxed">{attemptConfig.desc}</p>
+                          )}
+
+                          {hasDetails && (
+                            <div className="space-y-3 pt-1">
+                              {/* Best success quote */}
+                              {bestSuccessQuotes.length > 0 && (attempt === 'yes' || hasSplit) && (
+                                <div>
+                                  <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                                    {STRINGS.common.whatYouDidWell}
+                                  </p>
+                                  <EvidenceQuoteList quotes={bestSuccessQuotes} targetSpeaker={targetSpeaker} />
+                                </div>
+                              )}
+
+                              {/* Coaching note */}
+                              {expCoaching?.coaching_note && (
+                                <div>
+                                  <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                                    {attempt === 'yes'
+                                      ? STRINGS.runStatusPoller.coachsNote
+                                      : hasSplit
+                                        ? STRINGS.common.whereYouCanImprove
+                                        : STRINGS.runStatusPoller.whatWorkedMissing}
+                                  </p>
+                                  <p className="text-sm text-cv-stone-700 leading-relaxed">
+                                    {expCoaching.coaching_note}
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* Rewrite target quote (partial only) */}
+                              {attempt === 'partial' && rewriteGroupQuotes.length > 0 && (
+                                <div>
+                                  <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                                    {STRINGS.common.forExampleYouSaid}
+                                  </p>
+                                  <EvidenceQuoteList quotes={rewriteGroupQuotes} targetSpeaker={targetSpeaker} />
+                                </div>
+                              )}
+
+                              {/* Suggested rewrite */}
+                              {expCoaching?.suggested_rewrite && (
+                                <div>
+                                  <p className="text-2xs font-medium text-cv-stone-400 uppercase tracking-widest mb-1.5">
+                                    {STRINGS.common.nextTimeTry}
+                                  </p>
+                                  <blockquote className="border-l-[2px] border-cv-teal-700 pl-4 pr-3 py-2.5 bg-cv-teal-50 rounded-r my-2">
+                                    <p className="text-sm text-cv-stone-700 italic leading-relaxed">
+                                      &ldquo;{expCoaching.suggested_rewrite}&rdquo;
+                                    </p>
+                                  </blockquote>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                );
+              })()}
 
               {/* Pattern snapshot */}
               {runDetail.pattern_snapshot && runDetail.pattern_snapshot.length > 0 && (
