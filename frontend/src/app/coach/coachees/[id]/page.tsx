@@ -540,9 +540,15 @@ function BaselineMeetingCard({
   );
 }
 
-/** Strip suggested_rewrite from pattern coaching items (used for baseline pack runs). */
-function stripRewrites(items: { pattern_id: string; [k: string]: unknown }[]) {
-  return items.map(({ suggested_rewrite, rewrite_for_span_id, ...rest }) => rest);
+/** Strip rewrite fields from coaching items for baseline aggregate view
+ *  (mirrors backend logic in routes_coachee.py lines 294-301). */
+function baselineCoaching(items: PatternCoachingItem[]): PatternCoachingItem[] {
+  return items.map((item) => ({ ...item, suggested_rewrite: null, rewrite_for_span_id: null }));
+}
+/** Strip quotes from pattern snapshot items for baseline aggregate view
+ *  (mirrors backend logic in routes_coachee.py lines 288-289). */
+function baselinePatterns(items: PatternSnapshotItem[]): PatternSnapshotItem[] {
+  return items.map((item) => ({ ...item, quotes: [], success_span_ids: [] }));
 }
 
 // ─── Recent run row ───────────────────────────────────────────────────────────
@@ -669,8 +675,8 @@ function RunRow({ run, patternHistory }: { run: Record<string, unknown>; pattern
                 focus={runDetail.focus}
                 targetSpeaker={targetSpeaker}
                 microExperiment={null}
-                patternSnapshot={runDetail.pattern_snapshot}
-                patternCoaching={isBaseline ? stripRewrites(runDetail.pattern_coaching) : runDetail.pattern_coaching}
+                patternSnapshot={isBaseline ? baselinePatterns(runDetail.pattern_snapshot ?? []) : runDetail.pattern_snapshot}
+                patternCoaching={isBaseline ? baselineCoaching(runDetail.pattern_coaching) : runDetail.pattern_coaching}
                 trendData={trendData}
               />
 
@@ -857,8 +863,8 @@ function RunRow({ run, patternHistory }: { run: Record<string, unknown>; pattern
                   </div>
                   <div className="px-4 py-3">
                     <PatternSnapshot
-                      patterns={runDetail.pattern_snapshot}
-                      patternCoaching={isBaseline ? stripRewrites(runDetail.pattern_coaching) : runDetail.pattern_coaching}
+                      patterns={isBaseline ? baselinePatterns(runDetail.pattern_snapshot ?? []) : runDetail.pattern_snapshot}
+                      patternCoaching={isBaseline ? baselineCoaching(runDetail.pattern_coaching) : runDetail.pattern_coaching}
                       targetSpeaker={targetSpeaker}
                       trendData={trendData}
                       groupByCluster
