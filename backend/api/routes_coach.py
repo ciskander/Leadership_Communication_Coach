@@ -470,12 +470,26 @@ async def coachee_progress(
 
         for exp_rec in exp_records:
             ef = exp_rec.get("fields", {})
-            attempt_count, meeting_count = at_client.count_experiment_attempts_and_meetings(exp_rec["id"])
+            exp_display_id = ef.get("Experiment ID", "")
+            attempt_count, meeting_count = at_client.count_experiment_attempts_and_meetings(exp_display_id)
+            # Parse related_patterns from JSON; fall back to legacy Pattern ID
+            related_patterns_raw = ef.get("Related Patterns") or ""
+            related_patterns: list[str] = []
+            if related_patterns_raw:
+                try:
+                    related_patterns = json.loads(related_patterns_raw)
+                except (json.JSONDecodeError, TypeError):
+                    related_patterns = []
+            if not related_patterns:
+                legacy_pid = ef.get("Pattern ID")
+                if legacy_pid:
+                    related_patterns = [legacy_pid]
             past_experiments.append({
                 "experiment_record_id": exp_rec["id"],
-                "experiment_id": ef.get("Experiment ID", ""),
+                "experiment_id": exp_display_id,
                 "title": ef.get("Title", ""),
                 "pattern_id": ef.get("Pattern ID", ""),
+                "related_patterns": related_patterns,
                 "status": ef.get("Status", ""),
                 "started_at": ef.get("Started At"),
                 "ended_at": ef.get("Ended At"),
