@@ -16,6 +16,7 @@ import type {
 import { CoachingCard } from '@/components/CoachingCard';
 import { PatternSnapshot } from '@/components/PatternSnapshot';
 import { ExperimentTracker } from '@/components/ExperimentTracker';
+import { StrengthThemeCard } from '@/components/RunStatusPoller';
 import { STRINGS } from '@/config/strings';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -311,8 +312,25 @@ function MeetingAccordionCard({
                 />
               )}
 
-              {/* Coaching themes */}
-              <CoachingThemesSection themes={meeting.sub_run_coaching_themes ?? []} />
+              {/* Strength themes */}
+              {(meeting.sub_run_coaching_themes ?? []).filter((t) => t.nature === 'strength').length > 0 && (
+                <section className="bg-white rounded border border-cv-teal-700 overflow-hidden">
+                  <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-teal-700">
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-cv-teal-50 shrink-0" aria-hidden="true">
+                      <path d="M22,3H19V2a1,1,0,0,0-1-1H6A1,1,0,0,0,5,2V3H2A1,1,0,0,0,1,4V6a4.994,4.994,0,0,0,4.276,4.927A7.009,7.009,0,0,0,11,15.92V18H7a1,1,0,0,0-.949.684l-1,3A1,1,0,0,0,6,23H18a1,1,0,0,0,.948-1.316l-1-3A1,1,0,0,0,17,18H13V15.92a7.009,7.009,0,0,0,5.724-4.993A4.994,4.994,0,0,0,23,6V4A1,1,0,0,0,22,3ZM5,8.829A3.006,3.006,0,0,1,3,6V5H5ZM16.279,20l.333,1H7.387l.334-1ZM17,9A5,5,0,0,1,7,9V3H17Zm4-3a3.006,3.006,0,0,1-2,2.829V5h2ZM10.667,8.667,9,7.292,11,7l1-2,1,2,2,.292L13.333,8.667,13.854,11,12,9.667,10.146,11Z"/>
+                    </svg>
+                    <h3 className="text-sm font-semibold text-cv-teal-50">{STRINGS.coachingCard.strengthsHeading}</h3>
+                  </div>
+                  <div className="divide-y divide-cv-warm-300">
+                    {(meeting.sub_run_coaching_themes ?? []).filter((t) => t.nature === 'strength').map((theme, idx) => (
+                      <StrengthThemeCard key={idx} theme={theme} targetSpeaker={targetSpeaker ?? null} />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Developmental/mixed themes */}
+              <CoachingThemesSection themes={(meeting.sub_run_coaching_themes ?? []).filter((t) => t.nature === 'developmental' || t.nature === 'mixed')} />
 
               {/* Detailed Feedback — pattern snapshot grouped by cluster */}
               {meeting.sub_run_pattern_snapshot &&
@@ -498,8 +516,25 @@ export default function BaselineDetailPage() {
             patternCoaching={pack.pattern_coaching}
           />
 
-          {/* Coaching themes */}
-          <CoachingThemesSection themes={pack.coaching_themes ?? []} />
+          {/* Strength themes */}
+          {(pack.coaching_themes ?? []).filter((t) => t.nature === 'strength').length > 0 && (
+            <section className="bg-white rounded border border-cv-teal-700 overflow-hidden">
+              <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-cv-warm-300 bg-cv-teal-700">
+                <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-cv-teal-50 shrink-0" aria-hidden="true">
+                  <path d="M22,3H19V2a1,1,0,0,0-1-1H6A1,1,0,0,0,5,2V3H2A1,1,0,0,0,1,4V6a4.994,4.994,0,0,0,4.276,4.927A7.009,7.009,0,0,0,11,15.92V18H7a1,1,0,0,0-.949.684l-1,3A1,1,0,0,0,6,23H18a1,1,0,0,0,.948-1.316l-1-3A1,1,0,0,0,17,18H13V15.92a7.009,7.009,0,0,0,5.724-4.993A4.994,4.994,0,0,0,23,6V4A1,1,0,0,0,22,3ZM5,8.829A3.006,3.006,0,0,1,3,6V5H5ZM16.279,20l.333,1H7.387l.334-1ZM17,9A5,5,0,0,1,7,9V3H17Zm4-3a3.006,3.006,0,0,1-2,2.829V5h2ZM10.667,8.667,9,7.292,11,7l1-2,1,2,2,.292L13.333,8.667,13.854,11,12,9.667,10.146,11Z"/>
+                </svg>
+                <h3 className="text-sm font-semibold text-cv-teal-50">{STRINGS.coachingCard.strengthsHeading}</h3>
+              </div>
+              <div className="divide-y divide-cv-warm-300">
+                {(pack.coaching_themes ?? []).filter((t) => t.nature === 'strength').map((theme, idx) => (
+                  <StrengthThemeCard key={idx} theme={theme} targetSpeaker={pack.target_speaker_label ?? null} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Developmental/mixed themes */}
+          <CoachingThemesSection themes={(pack.coaching_themes ?? []).filter((t) => t.nature === 'developmental' || t.nature === 'mixed')} />
 
           {/* Hint to check individual meeting sections */}
           {meetings.length > 0 && (
