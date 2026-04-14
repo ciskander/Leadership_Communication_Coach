@@ -1,14 +1,15 @@
 'use client';
 
 import { STRINGS } from '@/config/strings';
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import type { CoacheeSummary, Experiment, ClientProgress, RunStatus, RunHistoryPoint, BaselinePack, BaselinePackMeeting, CoachingItem, PatternSnapshotItem, PatternCoachingItem, CoachingTheme } from '@/lib/types';
+import type { CoacheeSummary, Experiment, ClientProgress, RunStatus, RunHistoryPoint, PastExperiment, BaselinePack, BaselinePackMeeting, CoachingItem, PatternSnapshotItem, PatternCoachingItem, CoachingTheme } from '@/lib/types';
+import { S, CHART_COLORS } from '@/config/styles';
 import { ExperimentTracker } from '@/components/ExperimentTracker';
 import { CoachingCard } from '@/components/CoachingCard';
-import { PatternSnapshot, buildTrendData } from '@/components/PatternSnapshot';
+import { PatternSnapshot, buildTrendData, PATTERN_ICONS } from '@/components/PatternSnapshot';
 import type { PatternTrendData } from '@/components/PatternSnapshot';
 import { StrengthThemeCard, DevelopmentalThemeCard } from '@/components/RunStatusPoller';
 import { EvidenceQuoteList } from '@/components/EvidenceQuote';
@@ -32,6 +33,79 @@ const LINE_COLORS = [
   '#6b7280',
   '#16a34a',
 ];
+
+// ─── Info popover ─────────────────────────────────────────────────────────────
+
+const HOVER_DELAY_MS = 400;
+
+function InfoPopover({ patternId, hoverColor }: { patternId: string; hoverColor?: string }) {
+  const [open, setOpen] = useState(false);
+  const [pinned, setPinned] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+        setPinned(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const handleMouseEnter = () => {
+    setHovered(true);
+    if (leaveTimer.current) { clearTimeout(leaveTimer.current); leaveTimer.current = null; }
+    hoverTimer.current = setTimeout(() => setOpen(true), HOVER_DELAY_MS);
+  };
+
+  const handleMouseLeave = () => {
+    setHovered(false);
+    if (hoverTimer.current) { clearTimeout(hoverTimer.current); hoverTimer.current = null; }
+    if (!pinned) {
+      leaveTimer.current = setTimeout(() => setOpen(false), 200);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimer.current) clearTimeout(hoverTimer.current);
+      if (leaveTimer.current) clearTimeout(leaveTimer.current);
+    };
+  }, []);
+
+  return (
+    <span className="relative inline-block" ref={ref}>
+      <button
+        onClick={() => { setPinned((v) => !v); setOpen((v) => !v); }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className="ml-1 text-cv-stone-400 transition-colors align-middle leading-none"
+        style={hovered && hoverColor ? { color: hoverColor } : undefined}
+        aria-label="Pattern explanation"
+        type="button"
+      >
+        <svg className="w-3.5 h-3.5 inline" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+        </svg>
+      </button>
+      {open && (
+        <div
+          className="absolute z-50 left-5 top-0 w-64 bg-white border border-cv-warm-300 rounded shadow-lg p-3 text-sm text-cv-stone-700 leading-snug"
+          onMouseEnter={() => { if (leaveTimer.current) { clearTimeout(leaveTimer.current); leaveTimer.current = null; } }}
+          onMouseLeave={() => { if (!pinned) { leaveTimer.current = setTimeout(() => setOpen(false), 200); } }}
+        >
+          {STRINGS.patternExplanations[patternId] ?? STRINGS.common.noExplanationAvailable}
+        </div>
+      )}
+    </span>
+  );
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -123,33 +197,43 @@ function SectionHeading({ text }: { text: string }) {
 
 // ─── Pattern trends (compact) ─────────────────────────────────────────────────
 
+type ViewMode = 'focus' | 'all' | 'task' | 'relational';
+const TASK_PATTERNS = ['purposeful_framing', 'focus_management', 'resolution_and_alignment', 'assignment_clarity', 'question_quality', 'communication_clarity'];
+const RELATIONAL_PATTERNS = ['active_listening', 'recognition', 'behavioral_integrity', 'disagreement_navigation', 'feedback_quality'];
+
 function PatternTrendsCompact({
   history,
   experimentPatternIds,
+  viewMode = 'all',
+  experimentStartDate,
 }: {
   history: RunHistoryPoint[];
   experimentPatternIds?: string[];
+  viewMode?: ViewMode;
+  experimentStartDate?: string | null;
 }) {
   const hasBaseline       = history.some((r) => r.is_baseline);
   const postBaselineCount = history.filter((r) => !r.is_baseline).length;
   const showLineChart     = hasBaseline && postBaselineCount >= 3;
 
-  const { allPatterns, topPatterns } = useMemo(() => {
+  const allPatterns = useMemo(() => {
     const oppCounts: Record<string, number> = {};
     for (const run of history) {
       for (const p of run.patterns) {
         oppCounts[p.pattern_id] = (oppCounts[p.pattern_id] ?? 0) + p.opportunity_count;
       }
     }
-    const all = Object.keys(oppCounts).sort((a, b) => oppCounts[b] - oppCounts[a]);
-    return { allPatterns: all, topPatterns: all.slice(0, 5) };
+    return Object.keys(oppCounts).sort((a, b) => oppCounts[b] - oppCounts[a]);
   }, [history]);
 
   const expIds = experimentPatternIds ?? [];
+  const hasExpPattern = expIds.length > 0 && expIds.some(pid => allPatterns.includes(pid));
   const visiblePatterns = useMemo(() => {
-    const extra = expIds.filter(pid => allPatterns.includes(pid) && !topPatterns.includes(pid));
-    return extra.length > 0 ? [...topPatterns, ...extra] : topPatterns;
-  }, [expIds, allPatterns, topPatterns]);
+    if (viewMode === 'focus' && hasExpPattern) return expIds.filter(pid => allPatterns.includes(pid));
+    if (viewMode === 'task') return allPatterns.filter(pid => TASK_PATTERNS.includes(pid));
+    if (viewMode === 'relational') return allPatterns.filter(pid => RELATIONAL_PATTERNS.includes(pid));
+    return allPatterns;
+  }, [viewMode, hasExpPattern, expIds, allPatterns]);
 
   const patternColor = useCallback(
     (pid: string) => LINE_COLORS[allPatterns.indexOf(pid) % LINE_COLORS.length],
@@ -218,6 +302,17 @@ function PatternTrendsCompact({
                 label={{ value: STRINGS.progressPage.baseline, position: 'insideTopRight', fontSize: 10, fill: '#78716C' }}
               />
             )}
+            {viewMode === 'focus' && experimentStartDate && (() => {
+              const expPoint = chartData.find((p) => p.date >= experimentStartDate && !p.isBaseline);
+              return expPoint ? (
+                <ReferenceLine
+                  x={expPoint.label}
+                  stroke="#0891b2"
+                  strokeDasharray="3 3"
+                  label={{ value: 'Exp start', position: 'insideTopLeft', fontSize: 10, fill: '#0891b2' }}
+                />
+              ) : null;
+            })()}
           </LineChart>
         </ResponsiveContainer>
       ) : (
@@ -300,12 +395,18 @@ function PatternTrendsCompact({
             return (
               <span key={pid} className={`flex items-center text-xs ${isExp ? 'font-semibold text-cv-stone-900' : 'text-cv-stone-600'}`}>
                 <span className="inline-block w-2.5 h-2.5 rounded-full mr-1 shrink-0" style={{ background: patternColor(pid) }} />
+                {PATTERN_ICONS[pid] && (
+                  <span className="text-cv-stone-400 inline-flex items-center mr-1 shrink-0">
+                    {PATTERN_ICONS[pid]}
+                  </span>
+                )}
                 {STRINGS.patternLabels[pid] ?? pid}
                 {isExp && (
                   <span className="ml-1 text-[9px] font-semibold uppercase tracking-wide bg-cv-teal-50 text-cv-teal-700 border border-cv-teal-700 px-1 py-0.5 rounded-full leading-none">
                     Exp
                   </span>
                 )}
+                <InfoPopover patternId={pid} hoverColor={patternColor(pid)} />
               </span>
             );
           })}
@@ -338,40 +439,163 @@ function ProposedExperimentRow({ experiment }: { experiment: Experiment }) {
   );
 }
 
-// ─── Past experiment row ──────────────────────────────────────────────────────
+// ─── Past experiment card ─────────────────────────────────────────────────────
 
-function PastExperimentRow({ exp }: { exp: Record<string, unknown> }) {
+function PastExperimentCard({
+  exp,
+  patternHistory,
+}: {
+  exp: PastExperiment;
+  patternHistory: RunHistoryPoint[];
+}) {
+  const [open, setOpen] = useState(false);
+
   const statusCls =
     exp.status === 'completed' ? 'bg-cv-teal-50 text-cv-teal-700 border-cv-teal-700'
     : exp.status === 'parked'  ? 'bg-cv-amber-100 text-cv-amber-700 border-cv-amber-700'
     : 'bg-cv-red-100 text-cv-red-700 border-cv-red-700';
 
+  const statusLabel =
+    exp.status === 'completed' ? STRINGS.experimentStatus.completed
+    : exp.status === 'parked'  ? STRINGS.experimentStatus.parked
+    : STRINGS.experimentStatus.abandoned;
+
   const dateRange =
     exp.started_at || exp.ended_at
-      ? `${fmtDate(exp.started_at as string)} – ${fmtDate(exp.ended_at as string)}`
+      ? `${fmtDate(exp.started_at)} – ${fmtDate(exp.ended_at)}`
       : null;
 
+  const pids = exp.related_patterns?.length ? exp.related_patterns : (exp.pattern_id ? [exp.pattern_id] : []);
+
+  const toDateOnly = (s: string) => s.slice(0, 10);
+  const expHistory = patternHistory.filter((run) => {
+    if (!run.meeting_date) return false;
+    const md = toDateOnly(run.meeting_date);
+    if (exp.started_at && md < toDateOnly(exp.started_at)) return false;
+    if (exp.ended_at && md > toDateOnly(exp.ended_at))     return false;
+    return run.patterns.some((p) => pids.includes(p.pattern_id));
+  });
+
+  const chartData = expHistory.length > 0 && pids.length > 0 ? buildChartData(expHistory, pids, 1) : [];
+
+  const axisStyle = { fontSize: 10, fill: S.chartAxisFill };
+
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-white border border-cv-warm-300 rounded">
-      <div className="flex items-center gap-3 min-w-0">
-        <span className={`text-2xs font-semibold px-2 py-0.5 rounded-full border shrink-0 ${statusCls}`}>
-          {STRINGS.experimentStatus[exp.status as string] ?? exp.status}
-        </span>
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-cv-stone-800 truncate">{exp.title as string}</p>
-          <p className="text-xs text-cv-stone-400">
-            {(() => {
-              const rp = exp.related_patterns as string[] | undefined;
-              const pid = exp.pattern_id as string | undefined;
-              const pids = rp?.length ? rp : pid ? [pid] : [];
-              return pids.map(p => STRINGS.patternLabels[p] ?? p).join(', ');
-            })()}
-            {exp.attempt_count != null && ` · ${STRINGS.progressPage.attemptsAcross(exp.attempt_count as number, (exp.meeting_count as number) ?? 0)}`}
-          </p>
+    <div className="border border-cv-warm-300 rounded">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-cv-warm-50 transition-colors text-left rounded-t"
+        type="button"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <span className={`text-2xs font-semibold px-2 py-0.5 rounded-full border shrink-0 ${statusCls}`}>
+            {statusLabel}
+          </span>
+          <span className="font-medium text-cv-stone-800 truncate text-sm">{exp.title}</span>
         </div>
-      </div>
-      {dateRange && (
-        <span className="text-xs text-cv-stone-400 whitespace-nowrap ml-3">{dateRange}</span>
+        <svg
+          className={`w-4 h-4 text-cv-stone-400 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
+          viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={2}
+          strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+        >
+          <path d="M5 8l5 5 5-5" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="px-5 py-4 bg-cv-warm-50 border-t border-cv-warm-300 rounded-b space-y-4">
+          <div className="grid grid-cols-3 gap-3 text-sm">
+            {dateRange && (
+              <div>
+                <span className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400">{STRINGS.progressPage.dateRange}</span>
+                <p className="font-medium text-cv-stone-800 mt-0.5">{dateRange}</p>
+              </div>
+            )}
+            {exp.attempt_count != null && (
+              <div>
+                <span className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400">{STRINGS.progressPage.attempts}</span>
+                <p className="font-medium text-cv-stone-800 mt-0.5">
+                  {STRINGS.progressPage.attemptsAcross(exp.attempt_count!, exp.meeting_count ?? 0)}
+                </p>
+              </div>
+            )}
+            <div>
+              <span className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400">{STRINGS.progressPage.id}</span>
+              <p className="font-mono text-xs text-cv-stone-400 mt-0.5">{exp.experiment_id}</p>
+            </div>
+          </div>
+
+          {chartData.length >= 2 && pids.length > 0 ? (
+            <div>
+              <p className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400 mb-2">
+                {STRINGS.progressPage.duringExperimentHeading}
+              </p>
+              <ResponsiveContainer width="100%" height={160}>
+                <LineChart data={chartData} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={S.chartGrid} />
+                  <XAxis dataKey="label" tick={axisStyle} tickLine={false} />
+                  <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={axisStyle} tickLine={false} axisLine={false} />
+                  <Tooltip
+                    labelStyle={{ fontSize: 11 }}
+                    formatter={(v: any, name: any) => {
+                      const n = String(name ?? '');
+                      if (n.endsWith('_raw')) return [null, null];
+                      return [v != null ? `${v}%` : '—', STRINGS.patternLabels[n] ?? n];
+                    }}
+                  />
+                  {pids.map((pid, i) => {
+                    const lineColor = LINE_COLORS[i % LINE_COLORS.length];
+                    return [
+                      <Line key={`${pid}_raw`} type="monotone" dataKey={rawKey(pid)} stroke="none"
+                        dot={{ r: 2, fill: lineColor, opacity: 0.3 }} activeDot={false}
+                        connectNulls={false} legendType="none" isAnimationActive={false}
+                      />,
+                      <Line key={pid} type="monotone" dataKey={pid} stroke={lineColor} strokeWidth={2}
+                        dot={false} activeDot={{ r: 4, fill: lineColor }} connectNulls
+                        isAnimationActive={false}
+                      />,
+                    ];
+                  })}
+                </LineChart>
+              </ResponsiveContainer>
+              <div className="flex flex-wrap gap-3 mt-2">
+                {pids.map((pid, i) => (
+                  <span key={pid} className="flex items-center text-xs text-cv-stone-600">
+                    <span className="inline-block w-2.5 h-2.5 rounded-full mr-1 shrink-0"
+                      style={{ background: LINE_COLORS[i % LINE_COLORS.length] }}
+                    />
+                    {PATTERN_ICONS[pid] && (
+                      <span className="text-cv-stone-400 inline-flex items-center mr-1 shrink-0">
+                        {PATTERN_ICONS[pid]}
+                      </span>
+                    )}
+                    {STRINGS.patternLabels[pid] ?? pid}
+                    <InfoPopover patternId={pid} hoverColor={LINE_COLORS[i % LINE_COLORS.length]} />
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : chartData.length === 1 && pids.length > 0 ? (
+            <div>
+              <p className="text-2xs font-semibold uppercase tracking-[0.12em] text-cv-stone-400 mb-1">
+                {STRINGS.progressPage.duringExperimentHeading}
+              </p>
+              {pids.map((pid, i) => (
+                <p key={pid} className="text-sm font-medium text-cv-stone-800 flex items-center">
+                  <span className="inline-block w-2 h-2 rounded-full mr-1.5 shrink-0" style={{ background: LINE_COLORS[i % LINE_COLORS.length] }} />
+                  {PATTERN_ICONS[pid] && (
+                    <span className="text-cv-stone-400 inline-flex items-center mr-1 shrink-0">
+                      {PATTERN_ICONS[pid]}
+                    </span>
+                  )}
+                  {STRINGS.patternLabels[pid] ?? pid}: {chartData[0][pid] != null ? `${chartData[0][pid]}%` : '—'}
+                  {i === 0 && <span className="text-cv-stone-400 font-normal ml-1">{STRINGS.progressPage.oneMeeting}</span>}
+                  <InfoPopover patternId={pid} hoverColor={LINE_COLORS[i % LINE_COLORS.length]} />
+                </p>
+              ))}
+            </div>
+          ) : null}
+        </div>
       )}
     </div>
   );
@@ -1034,6 +1258,7 @@ export default function CoacheeDetailPage() {
   const [progress, setProgress]             = useState<ClientProgress | null>(null);
   const [baselinePack, setBaselinePack]     = useState<BaselinePack | null>(null);
   const [openMeetingIdx, setOpenMeetingIdx] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('all');
   const [loading, setLoading]               = useState(true);
   const [progressLoading, setProgressLoading] = useState(true);
 
@@ -1075,22 +1300,13 @@ export default function CoacheeDetailPage() {
       {/* Back + header */}
       <div>
         <Link href="/coach" className="text-sm text-cv-stone-500 hover:text-cv-stone-700 transition-colors">
-          ← {STRINGS.coacheeDetail.backToDashboard}
+          {STRINGS.coacheeDetail.backToDashboard}
         </Link>
-        <div className="flex items-start justify-between mt-2">
-          <div>
-            <h1 className="font-serif text-2xl text-cv-stone-900">
-              {data.coachee.display_name ?? data.coachee.email}
-            </h1>
-            <p className="text-sm text-cv-stone-500">{data.coachee.email}</p>
-          </div>
-          <Link
-            href={`/coach/analyze?coachee=${id}`}
-            className="flex items-center gap-2 px-4 py-2 bg-cv-navy-600 text-white rounded text-sm font-medium hover:bg-cv-navy-700 transition-colors shadow-sm"
-          >
-            <span className="shrink-0"><svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true"><path d="M8 1v3M8 12v3M1 8h3M12 8h3M3.05 3.05l2.12 2.12M10.83 10.83l2.12 2.12M3.05 12.95l2.12-2.12M10.83 5.17l2.12-2.12" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"/></svg></span>
-            {STRINGS.coacheeDetail.analyzeForCoachee}
-          </Link>
+        <div className="mt-2">
+          <h1 className="font-serif text-2xl text-cv-stone-900">
+            {data.coachee.display_name ?? data.coachee.email}
+          </h1>
+          <p className="text-sm text-cv-stone-500">{data.coachee.email}</p>
         </div>
       </div>
 
@@ -1125,19 +1341,55 @@ export default function CoacheeDetailPage() {
       {/* Pattern trends */}
       <section className={cardCls}>
         <SectionHeading text={STRINGS.coacheeDetail.progressTitle} />
-        {progressLoading ? (
-          <div className="flex items-center gap-2 text-cv-stone-400 text-sm py-8 justify-center">
-            <span className="w-4 h-4 border-2 border-cv-teal-500 border-t-transparent rounded-full animate-spin" />
-            {STRINGS.common.loading}
-          </div>
-        ) : progress && progress.pattern_history.length > 0 ? (
-          <PatternTrendsCompact
-            history={progress.pattern_history}
-            experimentPatternIds={experimentPatternIds}
-          />
-        ) : (
-          <p className="text-sm text-cv-stone-400 py-4 text-center">{STRINGS.coacheeDetail.noProgressYet}</p>
-        )}
+        {(() => {
+          const hasExpPattern = experimentPatternIds.length > 0;
+          const viewOptions: { key: ViewMode; label: string }[] = [
+            ...(hasExpPattern ? [{ key: 'focus' as ViewMode, label: STRINGS.progressPage.experimentPatterns }] : []),
+            { key: 'all', label: STRINGS.progressPage.allPatterns },
+            { key: 'task', label: STRINGS.clusterLabels?.task_effectiveness ?? 'Task' },
+            { key: 'relational', label: STRINGS.clusterLabels?.relational_effectiveness ?? 'Relational' },
+          ];
+          const effectiveViewMode = viewMode === 'focus' && !hasExpPattern ? 'all' : viewMode;
+          const experimentStartDate = data.active_experiment?.started_at ?? null;
+
+          return (
+            <>
+              {!progressLoading && progress && progress.pattern_history.length > 0 && (
+                <div className="inline-flex rounded-full border border-cv-warm-300 overflow-hidden mb-4">
+                  {viewOptions.map((opt) => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => setViewMode(opt.key)}
+                      className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                        effectiveViewMode === opt.key
+                          ? 'bg-cv-stone-800 text-white'
+                          : 'bg-white text-cv-stone-600 hover:bg-cv-warm-100'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {progressLoading ? (
+                <div className="flex items-center gap-2 text-cv-stone-400 text-sm py-8 justify-center">
+                  <span className="w-4 h-4 border-2 border-cv-teal-500 border-t-transparent rounded-full animate-spin" />
+                  {STRINGS.common.loading}
+                </div>
+              ) : progress && progress.pattern_history.length > 0 ? (
+                <PatternTrendsCompact
+                  history={progress.pattern_history}
+                  experimentPatternIds={experimentPatternIds}
+                  viewMode={effectiveViewMode}
+                  experimentStartDate={experimentStartDate}
+                />
+              ) : (
+                <p className="text-sm text-cv-stone-400 py-4 text-center">{STRINGS.coacheeDetail.noProgressYet}</p>
+              )}
+            </>
+          );
+        })()}
       </section>
 
       {/* Baseline pack */}
@@ -1199,7 +1451,7 @@ export default function CoacheeDetailPage() {
           <SectionHeading text={STRINGS.coacheeDetail.pastExperiments} />
           <div className="space-y-2">
             {progress.past_experiments.map((exp) => (
-              <PastExperimentRow key={exp.experiment_record_id} exp={exp as unknown as Record<string, unknown>} />
+              <PastExperimentCard key={exp.experiment_record_id} exp={exp} patternHistory={progress?.pattern_history ?? []} />
             ))}
           </div>
         </section>

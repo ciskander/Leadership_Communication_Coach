@@ -398,6 +398,11 @@ function PatternTrendsChart({
                   className={`inline-block rounded-full mr-1.5 shrink-0 ${isExp ? 'w-3.5 h-3.5 ring-2 ring-offset-1 ring-current' : 'w-3 h-3'}`}
                   style={{ background: patternColor(pid) }}
                 />
+                {PATTERN_ICONS[pid] && (
+                  <span className="text-cv-stone-400 inline-flex items-center mr-1 shrink-0">
+                    {PATTERN_ICONS[pid]}
+                  </span>
+                )}
                 {STRINGS.patternLabels[pid] ?? pid}
                 {isExp && (
                   <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide bg-cv-teal-50 text-cv-teal-700 border border-cv-teal-700 px-1.5 py-0.5 rounded-full leading-none">
