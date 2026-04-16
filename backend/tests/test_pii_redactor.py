@@ -333,6 +333,18 @@ class TestCustomRecognizers:
         assert "whsec_7fGh3Jk2NmPqRs8TuVwXy" not in text
         assert "<API_KEY_" in text
 
+    def test_api_key_escaped_underscore(self, _presidio_available):
+        """Webhook secrets with escaped underscores (VTT/markdown artifact)."""
+        transcript = _make_transcript(
+            [("Alice Johnson", r"The webhook secret is whsec\_7fGh3Jk2NmPqRs8TuVwXy.")],
+            speakers=["Alice Johnson"],
+        )
+        config = _default_config(speaker_whitelist=["Alice Johnson"])
+        result = redact_transcript(transcript, config)
+        text = result.redacted_transcript.turns[0].text
+        assert "whsec" not in text
+        assert "<API_KEY_" in text
+
     def test_employee_id_redacted(self, _presidio_available):
         transcript = _make_transcript(
             [("Alice Johnson", "His employee ID is EMP-77423 if you need it.")],

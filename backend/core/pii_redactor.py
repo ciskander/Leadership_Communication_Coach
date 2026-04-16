@@ -144,12 +144,12 @@ def _build_custom_recognizers() -> list:
             supported_entity="API_KEY",
             supported_language="en",
             patterns=[
-                # OpenAI-style: sk-..., pk-...
-                Pattern("sk_key", r"\b(?:sk|pk)-[A-Za-z0-9_\-]{16,}\b", 0.95),
+                # OpenAI-style: sk-..., pk-... (handles escaped underscores)
+                Pattern("sk_key", r"\b(?:sk|pk)-[A-Za-z0-9\\_ \-]{16,}\b", 0.95),
                 # Stripe-style: sk_test_..., pk_live_...
-                Pattern("stripe_key", r"\b(?:pk|sk|rk)_(?:test|live|staging)_[A-Za-z0-9]{16,}\b", 0.95),
-                # Webhook secrets: whsec_...
-                Pattern("webhook_secret", r"\bwhsec_[A-Za-z0-9]{16,}\b", 0.95),
+                Pattern("stripe_key", r"\b(?:pk|sk|rk)\\?_(?:test|live|staging)\\?_[A-Za-z0-9]{16,}\b", 0.95),
+                # Webhook secrets: whsec_... (handles escaped underscores from VTT/markdown)
+                Pattern("webhook_secret", r"\bwhsec\\?_[A-Za-z0-9]{16,}\b", 0.95),
                 # Generic secret/token: long alphanumeric after a label
                 Pattern(
                     "labeled_secret",
