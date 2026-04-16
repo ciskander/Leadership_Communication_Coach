@@ -46,10 +46,10 @@ function VerifyEmailContent() {
 
         {status === 'success' && (
           <div className="space-y-4">
-            <p className="text-sm text-cv-emerald-700 bg-cv-emerald-50 border border-cv-emerald-200 rounded px-4 py-3">
+            <p className="text-sm text-cv-teal-700 bg-cv-teal-50 border border-cv-teal-200 rounded px-4 py-3">
               {message}
             </p>
-            <a href="/" className="inline-block text-sm text-cv-emerald-600 hover:text-cv-emerald-700 font-medium">
+            <a href="/" className="inline-block text-sm text-cv-teal-600 hover:text-cv-teal-700 font-medium">
               {STRINGS.app.signInLink}
             </a>
           </div>
@@ -60,7 +60,7 @@ function VerifyEmailContent() {
             <p className="text-sm text-cv-red-600 bg-cv-red-50 border border-cv-red-200 rounded px-4 py-3">
               {message}
             </p>
-            <a href="/" className="inline-block text-sm text-cv-emerald-600 hover:text-cv-emerald-700 font-medium">
+            <a href="/" className="inline-block text-sm text-cv-teal-600 hover:text-cv-teal-700 font-medium">
               {STRINGS.app.backToSignIn}
             </a>
           </div>

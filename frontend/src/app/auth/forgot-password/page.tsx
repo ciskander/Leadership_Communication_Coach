@@ -43,10 +43,10 @@ export default function ForgotPasswordPage() {
 
         {sent ? (
           <div className="space-y-4">
-            <p className="text-sm text-cv-emerald-700 bg-cv-emerald-50 border border-cv-emerald-200 rounded px-4 py-3">
+            <p className="text-sm text-cv-teal-700 bg-cv-teal-50 border border-cv-teal-200 rounded px-4 py-3">
               {STRINGS.app.forgotPasswordSent}
             </p>
-            <a href="/" className="inline-block text-sm text-cv-emerald-600 hover:text-cv-emerald-700 font-medium">
+            <a href="/" className="inline-block text-sm text-cv-teal-600 hover:text-cv-teal-700 font-medium">
               {STRINGS.app.backToSignIn}
             </a>
           </div>
@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
               <input
                 id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full border border-cv-warm-300 rounded px-3 py-2 text-sm text-cv-stone-900 focus:outline-none focus:ring-2 focus:ring-cv-emerald-500 focus:border-transparent"
+                className="w-full border border-cv-warm-300 rounded px-3 py-2 text-sm text-cv-stone-900 focus:outline-none focus:ring-2 focus:ring-cv-teal-500 focus:border-transparent"
               />
             </div>
 
@@ -71,14 +71,14 @@ export default function ForgotPasswordPage() {
 
             <button
               type="submit" disabled={loading}
-              className="w-full bg-cv-emerald-600 text-white rounded px-5 py-2.5 text-sm font-medium hover:bg-cv-emerald-700 transition-colors disabled:opacity-50"
+              className="w-full bg-cv-teal-600 text-white rounded px-5 py-2.5 text-sm font-medium hover:bg-cv-teal-700 transition-colors disabled:opacity-50"
             >
               {loading ? 'Sending\u2026' : STRINGS.app.sendResetLink}
             </button>
           </form>
         )}
 
-        <a href="/" className="inline-block text-xs text-cv-stone-500 hover:text-cv-emerald-600 transition-colors">
+        <a href="/" className="inline-block text-xs text-cv-stone-500 hover:text-cv-teal-600 transition-colors">
           {STRINGS.app.backToSignIn}
         </a>
       </div>

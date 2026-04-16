@@ -117,7 +117,7 @@ export default function RootPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full border border-cv-warm-300 rounded px-3 py-2 text-sm text-cv-stone-900 focus:outline-none focus:ring-2 focus:ring-cv-emerald-500 focus:border-transparent"
+              className="w-full border border-cv-warm-300 rounded px-3 py-2 text-sm text-cv-stone-900 focus:outline-none focus:ring-2 focus:ring-cv-teal-500 focus:border-transparent"
             />
           </div>
           <div>
@@ -130,7 +130,7 @@ export default function RootPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full border border-cv-warm-300 rounded px-3 py-2 text-sm text-cv-stone-900 focus:outline-none focus:ring-2 focus:ring-cv-emerald-500 focus:border-transparent"
+              className="w-full border border-cv-warm-300 rounded px-3 py-2 text-sm text-cv-stone-900 focus:outline-none focus:ring-2 focus:ring-cv-teal-500 focus:border-transparent"
             />
           </div>
 
@@ -143,7 +143,7 @@ export default function RootPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-cv-emerald-600 text-white rounded px-5 py-2.5 text-sm font-medium hover:bg-cv-emerald-700 transition-colors disabled:opacity-50"
+            className="w-full bg-cv-teal-600 text-white rounded px-5 py-2.5 text-sm font-medium hover:bg-cv-teal-700 transition-colors disabled:opacity-50"
           >
             {loading ? 'Signing in\u2026' : STRINGS.app.signIn}
           </button>
@@ -151,12 +151,12 @@ export default function RootPage() {
 
         {/* Links */}
         <div className="space-y-2 text-xs text-cv-stone-500">
-          <a href="/auth/forgot-password" className="hover:text-cv-emerald-600 transition-colors">
+          <a href="/auth/forgot-password" className="hover:text-cv-teal-600 transition-colors">
             {STRINGS.app.forgotPassword}
           </a>
           <p>
             {STRINGS.app.noAccount}{' '}
-            <a href="/auth/register" className="text-cv-emerald-600 hover:text-cv-emerald-700 font-medium">
+            <a href="/auth/register" className="text-cv-teal-600 hover:text-cv-teal-700 font-medium">
               {STRINGS.app.registerLink}
             </a>
           </p>

@@ -20,6 +20,7 @@ export const STRINGS = {
     signOut: 'Sign out',
     redirectingToSignIn: 'Redirecting to sign in\u2026',
     orSignInWithEmail: 'Or sign in with email',
+    orRegisterWithEmail: 'Or register with email',
     email: 'Email',
     password: 'Password',
     signIn: 'Sign in',
