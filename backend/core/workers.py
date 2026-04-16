@@ -86,6 +86,9 @@ from .airtable_client import (
     F_RUN_STAGE2_TOKENS,
     F_RUN_STAGE2_RAW_OUTPUT,
     F_RUN_SCORING_VALID,
+    F_RUN_REDACTION_AUDIT,
+    F_TRANSCRIPT_REDACTED_TEXT,
+    F_TRANSCRIPT_REDACTION_MAPPING,
 )
 from .config import CONFIG_VERSION
 from .gate1_validator import validate as gate1_validate
@@ -101,6 +104,7 @@ from .llm_client import call_llm
 from .openai_client import load_baseline_system_prompt, load_next_experiment_system_prompt
 from .prompt_builder import build_baseline_pack_prompt, build_memory_block, build_single_meeting_prompt
 from .output_patches import patch_analysis_output
+from .pii_redactor import load_redaction_config, redact_transcript, turns_to_text
 from .quote_cleanup import cleanup_parsed_json
 from .transcript_parser import parse_transcript
 
@@ -541,6 +545,27 @@ def process_single_meeting_analysis(
         source_id=transcript_id_str,
     )
 
+    # 2b. PII redaction (before any LLM call)
+    redaction_config = load_redaction_config(cfg_fields, speaker_labels=parsed.speaker_labels)
+    redaction_audit: list = []
+    redaction_mapping_json: str | None = None
+
+    if redaction_config.enabled:
+        redaction_result = redact_transcript(parsed, redaction_config)
+        parsed = redaction_result.redacted_transcript
+        redaction_audit = redaction_result.audit_entries
+        redaction_mapping_json = (
+            json.dumps(redaction_result.mapping.token_to_original)
+            if redaction_config.reversible else None
+        )
+        try:
+            client.update_record("transcripts", transcript_record_id, {
+                F_TRANSCRIPT_REDACTED_TEXT: turns_to_text(redaction_result.redacted_transcript),
+                F_TRANSCRIPT_REDACTION_MAPPING: redaction_mapping_json,
+            })
+        except Exception:
+            logger.warning("Failed to store redacted text for transcript %s", transcript_record_id, exc_info=True)
+
     # Progress: transcript parsed
     try:
         client.update_run_request_progress(run_request_id, "Preparing analysis…")
@@ -790,6 +815,16 @@ def process_single_meeting_analysis(
     # Persist validation issues if any
     if gate2_result.issues:
         client.bulk_create_validation_issues(run_record_id, gate2_result.issues)
+
+    # Persist redaction audit if any
+    if redaction_audit:
+        try:
+            from dataclasses import asdict
+            client.update_run(run_record_id, {
+                F_RUN_REDACTION_AUDIT: json.dumps([asdict(e) for e in redaction_audit]),
+            })
+        except Exception:
+            logger.warning("Failed to store redaction audit for run %s", run_record_id, exc_info=True)
 
     # 8. Post-pass actions
     if gate2_result.passed:

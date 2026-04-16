@@ -40,3 +40,8 @@ celery[redis]>=5.4.0
 # python-docx — already above
 # pdfplumber  — already above
 python-multipart
+
+# PII redaction
+presidio-analyzer>=2.2.0
+presidio-anonymizer>=2.2.0
+spacy>=3.7.0

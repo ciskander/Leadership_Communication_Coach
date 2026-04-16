@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Download spaCy model for PII redaction (separate layer for caching)
+RUN python -m spacy download en_core_web_lg
+
 # Copy source
 COPY backend/ ./backend/
 COPY system_prompt_baseline_pack_v0_6_0.txt ./system_prompt_baseline_pack_v0_6_0.txt

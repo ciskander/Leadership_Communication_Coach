@@ -198,6 +198,20 @@ F_CFG_SCHEMA_VERSION = "Schema Version"
 F_CFG_MAX_OUTPUT_TOKENS = "Max Output Tokens"
 F_CFG_TREND_WINDOW_SIZE = "Trend Window Size"
 
+# config — redaction
+F_CFG_REDACTION_ENABLED = "Redaction Enabled"
+F_CFG_REDACTION_AGGRESSIVENESS = "Redaction Aggressiveness"
+F_CFG_REDACTION_REVERSIBLE = "Redaction Reversible"
+F_CFG_REDACTION_ORG_NAMES = "Redaction Org Names"
+F_CFG_SHARE_ORIGINAL = "Share Original Enabled"
+
+# transcript — redaction
+F_TRANSCRIPT_REDACTED_TEXT = "Redacted Text"
+F_TRANSCRIPT_REDACTION_MAPPING = "Redaction Mapping JSON"
+
+# run — redaction
+F_RUN_REDACTION_AUDIT = "Redaction Audit JSON"
+
 
 # ── Retry decorator ───────────────────────────────────────────────────────────
 

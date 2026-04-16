@@ -318,3 +318,21 @@ class ClientProgressResponse(BaseModel):
     pattern_history: list[RunHistoryPoint]
     past_experiments: list[PastExperiment]
     trend_window_size: int = 3
+
+
+# ── Redaction Settings ───────────────────────────────────────────────────────
+
+class RedactionSettingsResponse(BaseModel):
+    redaction_enabled: bool
+    aggressiveness: str
+    reversible: bool
+    redact_org_names: bool
+    share_original_enabled: bool
+
+
+class RedactionSettingsUpdate(BaseModel):
+    redaction_enabled: Optional[bool] = None
+    aggressiveness: Optional[str] = None
+    reversible: Optional[bool] = None
+    redact_org_names: Optional[bool] = None
+    share_original_enabled: Optional[bool] = None
