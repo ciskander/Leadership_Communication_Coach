@@ -88,7 +88,8 @@ def build_turn_map_from_record(tr_record: dict) -> dict[int, Turn]:
     try:
         tr_fields = tr_record.get("fields", {})
         transcript_text = (
-            tr_fields.get("Transcript (extracted)")
+            tr_fields.get("Redacted Text")
+            or tr_fields.get("Transcript (extracted)")
             or tr_fields.get("Raw Transcript Text")
             or ""
         )

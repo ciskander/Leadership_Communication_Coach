@@ -26,23 +26,30 @@ logger = logging.getLogger(__name__)
 
 _AGGRESSIVENESS_LEVELS = {"conservative", "standard", "permissive"}
 
+# Custom entity types detected by our PatternRecognizers (high-precision
+# regex patterns with minimal false positives — enabled at ALL levels).
+_CUSTOM_ENTITIES = {
+    "API_KEY", "EMPLOYEE_ID", "PARTIAL_CREDIT_CARD",
+    "DATE_OF_BIRTH", "PHYSICAL_ADDRESS",
+}
+
 # Entities enabled per aggressiveness level
 _ENTITIES_BY_LEVEL: dict[str, set[str]] = {
     "conservative": {
         "PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER",
         "US_SSN", "CREDIT_CARD", "US_PASSPORT", "US_DRIVER_LICENSE",
         "IP_ADDRESS", "LOCATION", "URL", "NRP", "MEDICAL_LICENSE",
-    },
+    } | _CUSTOM_ENTITIES,
     "standard": {
         "PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER",
         "US_SSN", "CREDIT_CARD", "US_PASSPORT", "US_DRIVER_LICENSE",
         "IP_ADDRESS", "NRP", "MEDICAL_LICENSE",
-    },
+    } | _CUSTOM_ENTITIES,
     "permissive": {
         "EMAIL_ADDRESS", "PHONE_NUMBER",
         "US_SSN", "CREDIT_CARD", "US_PASSPORT", "US_DRIVER_LICENSE",
         "MEDICAL_LICENSE",
-    },
+    } | _CUSTOM_ENTITIES,
 }
 
 
@@ -86,14 +93,139 @@ _analyzer_engine = None
 _anonymizer_engine = None
 
 
+def _build_custom_recognizers() -> list:
+    """Build custom PatternRecognizer instances for PII types not covered
+    by Presidio's built-in recognizers."""
+    from presidio_analyzer import Pattern, PatternRecognizer
+
+    # Street type keywords shared across address patterns
+    _STREET_TYPES = (
+        r"(?:Street|St|Avenue|Ave|Boulevard|Blvd|Drive|Dr|Road|Rd"
+        r"|Lane|Ln|Court|Ct|Way|Place|Pl|Close|Crescent|Terrace)"
+    )
+
+    return [
+        # ── Physical addresses ────────────────────────────────────────────
+        PatternRecognizer(
+            supported_entity="PHYSICAL_ADDRESS",
+            supported_language="en",
+            patterns=[
+                # US: number + street + city, STATE ZIP
+                Pattern(
+                    "us_address",
+                    rf"\d{{2,5}}\s+[A-Za-z\s]+{_STREET_TYPES}.*?\b[A-Z]{{2}}\s+\d{{5}}(?:-\d{{4}})?",
+                    0.90,
+                ),
+                # Canada: number + street + city, PROV POSTAL
+                Pattern(
+                    "ca_address",
+                    rf"\d{{2,5}}\s+[A-Za-z\s]+{_STREET_TYPES}.*?\b[A-Z]{{2}}\s+[A-Z]\d[A-Z]\s*\d[A-Z]\d",
+                    0.90,
+                ),
+                # UK: number + street + postcode
+                Pattern(
+                    "uk_address",
+                    rf"\d{{1,5}}\s+[A-Za-z\s]+{_STREET_TYPES}.*?\b[A-Z]{{1,2}}\d[A-Z\d]?\s*\d[A-Z]{{2}}",
+                    0.85,
+                ),
+                # Generic: number + street + suite/unit + location + digits
+                Pattern(
+                    "generic_address",
+                    rf"\d{{2,5}}\s+[A-Za-z\s]+{_STREET_TYPES}"
+                    r"[.,]?\s+(?:Suite|Building|Apt|Unit|#)\s*[A-Za-z0-9]+"
+                    r"[,]\s+[A-Za-z\s]+,\s+[A-Za-z\s]+\b\d{4,6}",
+                    0.85,
+                ),
+            ],
+        ),
+
+        # ── API keys / secrets ────────────────────────────────────────────
+        PatternRecognizer(
+            supported_entity="API_KEY",
+            supported_language="en",
+            patterns=[
+                # OpenAI-style: sk-..., pk-...
+                Pattern("sk_key", r"\b(?:sk|pk)-[A-Za-z0-9_\-]{16,}\b", 0.95),
+                # Stripe-style: sk_test_..., pk_live_...
+                Pattern("stripe_key", r"\b(?:pk|sk|rk)_(?:test|live|staging)_[A-Za-z0-9]{16,}\b", 0.95),
+                # Webhook secrets: whsec_...
+                Pattern("webhook_secret", r"\bwhsec_[A-Za-z0-9]{16,}\b", 0.95),
+                # Generic secret/token: long alphanumeric after a label
+                Pattern(
+                    "labeled_secret",
+                    r"(?i)(?:api[_\s-]?key|secret|token|credential)[:\s]+[A-Za-z0-9_\-]{20,}",
+                    0.80,
+                ),
+            ],
+        ),
+
+        # ── Employee IDs ──────────────────────────────────────────────────
+        PatternRecognizer(
+            supported_entity="EMPLOYEE_ID",
+            supported_language="en",
+            patterns=[
+                Pattern("emp_id", r"\b(?:EMP|EMPID|STAFF|ID)[-_]?\d{4,8}\b", 0.90),
+            ],
+        ),
+
+        # ── Partial credit card info ──────────────────────────────────────
+        PatternRecognizer(
+            supported_entity="PARTIAL_CREDIT_CARD",
+            supported_language="en",
+            patterns=[
+                # "Amex ending in 4491" / "Visa ending in 1234"
+                Pattern(
+                    "card_ending_in",
+                    r"(?i)(?:amex|visa|mastercard|american\s+express|discover|card)"
+                    r"[\s\S]{0,30}?(?:ending\s+in|ends?\s+in|last\s+4)\s*\d{4}",
+                    0.90,
+                ),
+                # Card last 4 + expiry: "4491, expiry 09/27"
+                Pattern(
+                    "card_with_expiry",
+                    r"(?i)(?:ending\s+in|last\s+4[:\s]*)\s*\d{4}[,\s]+(?:expir|exp)[yiry:\s]*\d{2}/\d{2,4}",
+                    0.90,
+                ),
+            ],
+        ),
+
+        # ── Date of birth (context-aware) ─────────────────────────────────
+        PatternRecognizer(
+            supported_entity="DATE_OF_BIRTH",
+            supported_language="en",
+            patterns=[
+                # "DOB March 14, 1968" or "DOB 03/14/1968"
+                Pattern(
+                    "dob_label",
+                    r"(?i)(?:dob|date\s+of\s+birth|d\.o\.b\.?)[:\s]*"
+                    r"(?:[A-Za-z]+\s+\d{1,2},?\s*\d{4}|\d{1,2}[/\-]\d{1,2}[/\-]\d{2,4})",
+                    0.95,
+                ),
+                # "born March 14, 1968" or "born on 03/14/1968"
+                Pattern(
+                    "born_label",
+                    r"(?i)\bborn\s+(?:on\s+)?(?:[A-Za-z]+\s+\d{1,2},?\s*\d{4}|\d{1,2}[/\-]\d{1,2}[/\-]\d{2,4})",
+                    0.90,
+                ),
+            ],
+        ),
+    ]
+
+
 def _get_analyzer():
-    """Return a cached AnalyzerEngine (loads spaCy model on first call)."""
+    """Return a cached AnalyzerEngine with custom recognizers."""
     global _analyzer_engine
     if _analyzer_engine is None:
         from presidio_analyzer import AnalyzerEngine
         logger.info("Initializing Presidio AnalyzerEngine (loading spaCy model)…")
         _analyzer_engine = AnalyzerEngine()
-        logger.info("Presidio AnalyzerEngine ready.")
+
+        custom = _build_custom_recognizers()
+        for recognizer in custom:
+            _analyzer_engine.registry.add_recognizer(recognizer)
+        logger.info(
+            "Presidio AnalyzerEngine ready with %d custom recognizers.", len(custom)
+        )
     return _analyzer_engine
 
 
@@ -154,6 +286,28 @@ class _TokenCounter:
         token = f"<{entity_type}_{self._counters[entity_type]}>"
         self._seen[key] = token
         return token
+
+
+# ---------------------------------------------------------------------------
+# Overlap resolution
+# ---------------------------------------------------------------------------
+
+def _remove_overlaps(results: list) -> list:
+    """Remove overlapping entity detections, keeping the highest-score match.
+
+    On equal score, prefer the longer span.
+    """
+    # Sort by score desc, then by span length desc (longer = more specific)
+    ranked = sorted(results, key=lambda r: (-r.score, -(r.end - r.start)))
+    kept: list = []
+    for candidate in ranked:
+        if any(
+            candidate.start < existing.end and candidate.end > existing.start
+            for existing in kept
+        ):
+            continue  # overlaps with a higher-ranked result
+        kept.append(candidate)
+    return kept
 
 
 # ---------------------------------------------------------------------------
@@ -227,6 +381,9 @@ def redact_transcript(
         if not results:
             redacted_turns.append(turn.model_copy(deep=True))
             continue
+
+        # Remove overlapping detections: keep highest-score (longest on tie)
+        results = _remove_overlaps(results)
 
         # Sort results by start position descending so we can replace
         # from right to left without shifting offsets

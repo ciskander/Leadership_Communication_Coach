@@ -292,6 +292,104 @@ class TestRedactTranscript:
 
 
 # ---------------------------------------------------------------------------
+# Custom recognizer tests
+# ---------------------------------------------------------------------------
+
+class TestCustomRecognizers:
+    """Tests for custom PatternRecognizer-based PII types."""
+
+    def test_us_address_redacted(self, _presidio_available):
+        transcript = _make_transcript(
+            [("Alice Johnson", "Send it to 4400 Riverside Drive, Suite 210, Columbus, OH 43215 please.")],
+            speakers=["Alice Johnson"],
+        )
+        config = _default_config(speaker_whitelist=["Alice Johnson"])
+        result = redact_transcript(transcript, config)
+        text = result.redacted_transcript.turns[0].text
+        assert "4400 Riverside Drive" not in text
+        assert "43215" not in text
+        assert "<PHYSICAL_ADDRESS_1>" in text
+
+    def test_canadian_address_redacted(self, _presidio_available):
+        transcript = _make_transcript(
+            [("Alice Johnson", "Our office is at 150 Elgin Street, Suite 400, Ottawa, ON K2P 1L4.")],
+            speakers=["Alice Johnson"],
+        )
+        config = _default_config(speaker_whitelist=["Alice Johnson"])
+        result = redact_transcript(transcript, config)
+        text = result.redacted_transcript.turns[0].text
+        assert "150 Elgin Street" not in text
+        assert "K2P 1L4" not in text
+
+    def test_api_key_redacted(self, _presidio_available):
+        transcript = _make_transcript(
+            [("Alice Johnson", "The API key is sk-staging-4kR9mXvL02pBqTnYwZeA and the webhook secret is whsec_7fGh3Jk2NmPqRs8TuVwXy.")],
+            speakers=["Alice Johnson"],
+        )
+        config = _default_config(speaker_whitelist=["Alice Johnson"])
+        result = redact_transcript(transcript, config)
+        text = result.redacted_transcript.turns[0].text
+        assert "sk-staging-4kR9mXvL02pBqTnYwZeA" not in text
+        assert "whsec_7fGh3Jk2NmPqRs8TuVwXy" not in text
+        assert "<API_KEY_" in text
+
+    def test_employee_id_redacted(self, _presidio_available):
+        transcript = _make_transcript(
+            [("Alice Johnson", "His employee ID is EMP-77423 if you need it.")],
+            speakers=["Alice Johnson"],
+        )
+        config = _default_config(speaker_whitelist=["Alice Johnson"])
+        result = redact_transcript(transcript, config)
+        text = result.redacted_transcript.turns[0].text
+        assert "EMP-77423" not in text
+        assert "<EMPLOYEE_ID_1>" in text
+
+    def test_partial_credit_card_redacted(self, _presidio_available):
+        transcript = _make_transcript(
+            [("Alice Johnson", "We'll put this on the corporate Amex ending in 4491, expiry 09/27.")],
+            speakers=["Alice Johnson"],
+        )
+        config = _default_config(speaker_whitelist=["Alice Johnson"])
+        result = redact_transcript(transcript, config)
+        text = result.redacted_transcript.turns[0].text
+        assert "4491" not in text
+        assert "<PARTIAL_CREDIT_CARD_" in text
+
+    def test_date_of_birth_redacted(self, _presidio_available):
+        transcript = _make_transcript(
+            [("Alice Johnson", "The patient's DOB March 14, 1968 is on file.")],
+            speakers=["Alice Johnson"],
+        )
+        config = _default_config(speaker_whitelist=["Alice Johnson"])
+        result = redact_transcript(transcript, config)
+        text = result.redacted_transcript.turns[0].text
+        assert "March 14, 1968" not in text
+        assert "<DATE_OF_BIRTH_1>" in text
+
+    def test_dob_numeric_format(self, _presidio_available):
+        transcript = _make_transcript(
+            [("Alice Johnson", "Date of birth: 03/14/1968.")],
+            speakers=["Alice Johnson"],
+        )
+        config = _default_config(speaker_whitelist=["Alice Johnson"])
+        result = redact_transcript(transcript, config)
+        text = result.redacted_transcript.turns[0].text
+        assert "03/14/1968" not in text
+
+    def test_generic_date_not_redacted(self, _presidio_available):
+        """Generic dates without DOB context should NOT be redacted."""
+        transcript = _make_transcript(
+            [("Alice Johnson", "The meeting is scheduled for March 14, 2026.")],
+            speakers=["Alice Johnson"],
+        )
+        config = _default_config(speaker_whitelist=["Alice Johnson"])
+        result = redact_transcript(transcript, config)
+        text = result.redacted_transcript.turns[0].text
+        # Generic date should remain (no DOB/born context)
+        assert "March 14, 2026" in text
+
+
+# ---------------------------------------------------------------------------
 # turns_to_text
 # ---------------------------------------------------------------------------
 
