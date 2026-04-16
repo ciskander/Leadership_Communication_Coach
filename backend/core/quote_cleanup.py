@@ -237,6 +237,7 @@ def _call_cleanup_batch_openai(
         max_completion_tokens=16384,
         response_format={"type": "json_object"},
         temperature=0.0,
+        store=False,
     )
 
     finish_reason = response.choices[0].finish_reason

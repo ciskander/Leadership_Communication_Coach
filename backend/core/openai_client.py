@@ -86,6 +86,7 @@ def call_openai(
                 messages=messages,
                 max_completion_tokens=effective_max_tokens,
                 response_format={"type": "json_object"},
+                store=False,
             )
             choice = response.choices[0]
             raw_text = choice.message.content or ""
